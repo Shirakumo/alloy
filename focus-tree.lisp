@@ -32,13 +32,15 @@
 
 (defmethod initialize-instance :after ((element focus-element) &key focus)
   ;; Tie-up with focus-tree root.
-  (when (typep (parent element) 'focus-tree)
-    (let ((focus-tree (parent element)))
-      (setf (slot-value element 'focus-tree) focus-tree)
-      (setf (slot-value element 'parent) element)
-      (setf (root focus-tree) element)))
-  (setf (focus-tree element) (focus-tree (parent element)))
-  (setf (focus element) focus))
+  (cond ((typep (parent element) 'focus-tree)
+         (let ((focus-tree (parent element)))
+           (setf (slot-value element 'focus-tree) focus-tree)
+           (setf (slot-value element 'parent) element)
+           (setf (root focus-tree) element)))
+        (T
+         (setf (slot-value element 'focus-tree) (focus-tree (parent element)))
+         (enter element (parent element))
+         (setf (focus element) focus))))
 
 (defmethod print-object ((element focus-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -137,6 +139,37 @@
   (if (eql :strong (focus chain))
       (activate (focused chain))
       (call-next-method)))
+
+(defmethod enter :before ((element focus-element) (chain focus-chain) &key)
+  (unless (eq chain (parent element))
+    (error "Cannot enter~%  ~a~%into the chain~%  ~a~%as it has another parent~%  ~a"
+           element chain (parent element))))
+
+(defmethod enter ((element focus-element) (chain focus-chain) &key index)
+  (if index
+      (array-utils:vector-push-extend-position element (children chain) index)
+      (vector-push-extend element (children chain)))
+  element)
+
+(defmethod leave :before ((element focus-element) (chain focus-chain))
+  (unless (eq chain (parent element))
+    (error "Cannot leave~%  ~a~%from the chain~%  ~a~%as it has another parent~%  ~a"
+           element chain (parent element))))
+
+(defmethod leave ((element focus-element) (chain focus-chain))
+  (array-utils:vector-pop-position (children chain) (position element (children chain)))
+  element)
+
+(defmethod update ((element focus-element) (chain focus-chain) &key index)
+  (when index
+    (let ((pos (position element (children chain))))
+      (array-utils:vector-pop-position (children chain) pos)
+      (array-utils:vector-push-extend-position element (children chain) (if (< pos index) (1- index)))))
+  element)
+
+(defmethod call-with-elements (function (chain focus-chain))
+  (loop for element across (children chain)
+        do (funcall function element)))
 
 (defclass focus-list (focus-chain)
   ())

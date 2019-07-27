@@ -17,4 +17,5 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "container")
                (:file "focus-tree")
                (:file "documentation"))
-  :depends-on (:documentation-utils))
+  :depends-on (:documentation-utils
+               :array-utils))
