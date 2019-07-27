@@ -19,6 +19,7 @@
 (defgeneric (setf index) (index focus-chain))
 (defgeneric focused (focus-chain))
 (defgeneric (setf focused) (focus-element focus-chain))
+(defgeneric element-index (focus-element focus-chain))
 (defgeneric focus-next (focus-chain))
 (defgeneric focus-prev (focus-chain))
 (defgeneric focus-up (focus-grid))
@@ -27,7 +28,7 @@
 (defgeneric root (focus-tree))
 (defgeneric focus-element (component focus-tree))
 
-(defclass focus-element ()
+(defclass focus-element (element)
   ((focus-tree :initform NIL :reader focus-tree)
    (parent :initarg :parent :initform (error "PARENT required") :reader parent)
    (focus :initform NIL :accessor focus)))
@@ -60,12 +61,14 @@
 
 (defmethod activate ((element focus-element))
   (unless (eql :strong (focus element))
-    (setf (focus element) :strong)))
+    (setf (focus element) :strong))
+  element)
 
 (defmethod exit ((element focus-element))
   (unless (eql NIL (focus element))
     (setf (focus element) NIL)
-    (setf (focus (parent element)) :strong)))
+    (setf (focus (parent element)) :strong)
+    (parent element)))
 
 (defclass focus-entry (focus-element)
   ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
@@ -73,22 +76,21 @@
 (defmethod initialize-instance :after ((element focus-entry) &key)
   (associate element (component element) (focus-tree element)))
 
-(defclass focus-chain (focus-element container)
+(defclass focus-chain (focus-element vector-container)
   ((index :initform -1 :accessor index)
-   (focused :initform NIL :accessor focused)
-   (children :initform (make-array 0 :adjustable T :fill-pointer T) :reader children)))
+   (focused :initform NIL :accessor focused)))
 
-(defmethod initialize-instance :after ((element focus-chain) &key children)
-  (when children
-    (adjust-array (children element) (length children) :initial-contents children)))
+(defmethod initialize-instance :after ((element focus-chain) &key elements)
+  (when elements
+    (adjust-array (elements element) (length elements) :initial-contents elements)))
 
-(defmethod reinitialize-instance :after ((element focus-chain) &key children)
-  (when children
-    (when (find (focused element) children)
+(defmethod reinitialize-instance :after ((element focus-chain) &key elements)
+  (when elements
+    (when (find (focused element) elements)
       (exit (focused element))
       (setf (focused element) NIL))
-    (adjust-array (children element) (length children))
-    (replace (children element) children)))
+    (adjust-array (elements element) (length elements))
+    (replace (elements element) elements)))
 
 (defmethod (setf focused) :before ((none null) (chain focus-chain))
   (setf (slot-value chain 'index) -1)
@@ -96,7 +98,7 @@
     (setf (focus (focused chain)) NIL)))
 
 (defmethod (setf focused) :before ((element focus-element) (chain focus-chain))
-  (setf (slot-value chain 'index) (or (position element (children chain))
+  (setf (slot-value chain 'index) (or (position element (elements chain))
                                       (error "The element~%  ~a~%is not a part of the chain~%  ~a"
                                              element chain)))
   (when (focused chain)
@@ -107,20 +109,35 @@
     (setf (focus element) :weak)))
 
 (defmethod (setf index) :before ((index integer) (chain focus-chain))
-  (unless (<= 0 index (1- (length (children chain))))
+  (unless (<= 0 index (1- (length (elements chain))))
     (error "Child index ~d is outside of [0,~d[."
-           index (length (children chain))))
+           index (length (elements chain))))
   (when (focused chain)
     (setf (slot-value (focused chain) 'focus) NIL))
-  (setf (slot-value chain 'focused) (aref (children chain) index)))
+  (setf (slot-value chain 'focused) (aref (elements chain) index)))
 
 (defmethod (setf index) :after ((index integer) (chain focus-chain))
   (when (eql NIL (focus (focused chain)))
     (setf (focus (focused chain)) :weak)))
 
+(defmethod element-index :before ((element focus-element) (chain focus-chain))
+  (unless (eq chain (parent element))
+    (error "The element~%  ~a~%is not in~%  ~a"
+           element chain)))
+
+(defmethod element-index ((element focus-element) (chain focus-chain))
+  (position element (elements chain)))
+
 (defmethod notice-focus ((element focus-element) (chain focus-chain))
   (case (focus element)
-    ((:strong :weak)
+    (:strong
+     (unless (eq element (focused chain))
+       (setf (focused chain) element))
+     ;; Propagate all the way down
+     (loop until (eq chain (parent chain))
+           do (setf (focus chain) :weak)
+              (setf chain (parent chain))))
+    (:weak
      (unless (eq element (focused chain))
        (setf (focused chain) element)))
     ((NIL)
@@ -128,15 +145,18 @@
        (setf (focus element) :weak)))))
 
 (defmethod focus-next ((chain focus-chain))
-  (unless (= 0 (length (children chain)))
-    (setf (index chain) (mod (1+ (index chain)) (length (children chain))))))
+  (unless (= 0 (length (elements chain)))
+    (setf (index chain) (mod (1+ (index chain)) (length (elements chain))))
+    (focused chain)))
 
 (defmethod focus-prev ((chain focus-chain))
-  (unless (= 0 (length (children chain)))
-    (setf (index chain) (mod (1- (index chain)) (length (children chain))))))
+  (unless (= 0 (length (elements chain)))
+    (setf (index chain) (mod (1- (index chain)) (length (elements chain))))
+    (focused chain)))
 
 (defmethod activate :around ((chain focus-chain))
-  (if (eql :strong (focus chain))
+  (if (and (eql :strong (focus chain))
+           (focused chain))
       (activate (focused chain))
       (call-next-method)))
 
@@ -145,31 +165,18 @@
     (error "Cannot enter~%  ~a~%into the chain~%  ~a~%as it has another parent~%  ~a"
            element chain (parent element))))
 
-(defmethod enter ((element focus-element) (chain focus-chain) &key index)
-  (if index
-      (array-utils:vector-push-extend-position element (children chain) index)
-      (vector-push-extend element (children chain)))
-  element)
-
 (defmethod leave :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (parent element))
     (error "Cannot leave~%  ~a~%from the chain~%  ~a~%as it has another parent~%  ~a"
            element chain (parent element))))
 
-(defmethod leave ((element focus-element) (chain focus-chain))
-  (array-utils:vector-pop-position (children chain) (position element (children chain)))
-  element)
+(defmethod leave :after ((element focus-entry) (chain focus-chain))
+  (disassociate element (component element) (focus-tree chain)))
 
-(defmethod update ((element focus-element) (chain focus-chain) &key index)
-  (when index
-    (let ((pos (position element (children chain))))
-      (array-utils:vector-pop-position (children chain) pos)
-      (array-utils:vector-push-extend-position element (children chain) (if (< pos index) (1- index)))))
-  element)
-
-(defmethod call-with-elements (function (chain focus-chain))
-  (loop for element across (children chain)
-        do (funcall function element)))
+(defmethod update :after ((element focus-element) (chain focus-chain) &key index)
+  ;; Fixup index position
+  (when (and index (focused chain))
+    (setf (slot-value chain 'index) (position (focused chain) (elements chain)))))
 
 (defclass focus-list (focus-chain)
   ())
