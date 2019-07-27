@@ -18,4 +18,5 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "focus-tree")
                (:file "documentation"))
   :depends-on (:documentation-utils
-               :array-utils))
+               :array-utils)
+  :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))
