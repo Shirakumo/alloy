@@ -13,9 +13,15 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   :homepage "https://github.com/Shirakumo/alloy"
   :serial T
   :components ((:file "package")
+               (:file "extent")
+               (:file "renderer")
                (:file "component")
                (:file "container")
                (:file "focus-tree")
+               (:file "layout")
+               (:file "ui")
+               (:module "layouts"
+                :components ((:file "fixed")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)

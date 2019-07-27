@@ -22,7 +22,8 @@
   (let ((thunk (gensym "THUNK")))
     `(flet ((,thunk (,element)
               ,@body))
-       (call-with-elements #',thunk ,container)
+       (block NIL
+         (call-with-elements #',thunk ,container))
        ,result)))
 
 (defmethod describe-object :after ((container container) stream)

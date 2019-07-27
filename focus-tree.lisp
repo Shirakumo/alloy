@@ -173,6 +173,15 @@
 (defmethod leave :after ((element focus-entry) (chain focus-chain))
   (disassociate element (component element) (focus-tree chain)))
 
+(defmethod enter ((component component) (chain focus-chain) &key)
+  (make-instance 'focus-entry :component component :parent chain))
+
+(defmethod leave ((component component) (chain focus-chain))
+  (leave (focus-element component (focus-tree chain)) chain))
+
+(defmethod update ((component component) (chain focus-chain) &rest args)
+  (apply #'update (focus-element component (focus-tree chain)) chain args))
+
 (defmethod update :after ((element focus-element) (chain focus-chain) &key index)
   ;; Fixup index position
   (when (and index (focused chain))

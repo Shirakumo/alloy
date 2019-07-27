@@ -6,5 +6,5 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass component ()
+(defclass component (renderable)
   ())
