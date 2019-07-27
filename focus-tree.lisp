@@ -15,6 +15,8 @@
 (defgeneric handle (event focus-element ui))
 (defgeneric notice-focus (focused parent))
 
+(defgeneric index (focus-chain))
+(defgeneric (setf index) (index focus-chain))
 (defgeneric focused (focus-chain))
 (defgeneric (setf focused) (focus-element focus-chain))
 (defgeneric focus-next (focus-chain))
@@ -49,19 +51,12 @@
 (defmethod (setf focus) :before (focus (element focus-element))
   (check-type focus (member NIL :weak :strong)))
 
-(defmethod (setf focus) :around (focus (element focus-element))
-  (cond ((and (eql :strong (focus element))
-              (or (eql :weak focus) (eql NIL focus)))
-         (call-next-method)
-         (activate (parent element)))
-        (T
-         (call-next-method))))
-
 (defmethod (setf focus) :after ((focus (eql :strong)) (element focus-element))
-  (setf (focused (focus-tree element)) focus))
+  (setf (focused (focus-tree element)) element))
 
 (defmethod (setf focus) :after (focus (element focus-element))
-  (notice-focus element (parent element)))
+  (unless (eq element (parent element))
+    (notice-focus element (parent element))))
 
 (defmethod activate ((element focus-element))
   (unless (eql :strong (focus element))
@@ -69,7 +64,8 @@
 
 (defmethod exit ((element focus-element))
   (unless (eql NIL (focus element))
-    (setf (focus element) NIL)))
+    (setf (focus element) NIL)
+    (setf (focus (parent element)) :strong)))
 
 (defclass focus-entry (focus-element)
   ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
@@ -95,14 +91,16 @@
     (replace (children element) children)))
 
 (defmethod (setf focused) :before ((none null) (chain focus-chain))
-  (setf (slot-value 'index chain) -1)
+  (setf (slot-value chain 'index) -1)
   (when (focused chain)
     (setf (focus (focused chain)) NIL)))
 
 (defmethod (setf focused) :before ((element focus-element) (chain focus-chain))
-  (setf (slot-value 'index chain) (or (position element (children chain))
+  (setf (slot-value chain 'index) (or (position element (children chain))
                                       (error "The element~%  ~a~%is not a part of the chain~%  ~a"
-                                             element chain))))
+                                             element chain)))
+  (when (focused chain)
+    (setf (slot-value (focused chain) 'focus) NIL)))
 
 (defmethod (setf focused) :after ((element focus-element) (chain focus-chain))
   (when (eql NIL (focus element))
@@ -112,7 +110,9 @@
   (unless (<= 0 index (1- (length (children chain))))
     (error "Child index ~d is outside of [0,~d[."
            index (length (children chain))))
-  (setf (slot-value 'focused chain) (aref (children chain) index)))
+  (when (focused chain)
+    (setf (slot-value (focused chain) 'focus) NIL))
+  (setf (slot-value chain 'focused) (aref (children chain) index)))
 
 (defmethod (setf index) :after ((index integer) (chain focus-chain))
   (when (eql NIL (focus (focused chain)))
@@ -189,7 +189,7 @@
 
 (defclass focus-tree (element-table)
   ((root :initform NIL :accessor root)
-   (focused :accessor focused)))
+   (focused :initform NIL :accessor focused)))
 
 (defmethod (setf root) :before ((element focus-element) (tree focus-tree))
   (when (root tree)
@@ -199,10 +199,16 @@
 (defmethod (setf root) :after ((element focus-element) (tree focus-tree))
   (setf (focused tree) element))
 
+(defmethod (setf focused) :around ((element focus-element) (tree focus-tree))
+  (unless (eq element (focused tree))
+    (call-next-method)))
+
 (defmethod (setf focused) :before ((element focus-element) (tree focus-tree))
   (unless (eq (focus-tree element) tree)
     (error "The element~%  ~a~%cannot be focused on~%  ~a~%because the element comes from the tree~%  ~a"
-           element tree (focus-tree element))))
+           element tree (focus-tree element)))
+  (when (focused tree)
+    (setf (focus (focused tree)) NIL)))
 
 (defmethod (setf focused) :after ((element focus-element) (tree focus-tree))
   (unless (eq :strong (focus element))
