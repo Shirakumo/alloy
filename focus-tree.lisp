@@ -12,7 +12,6 @@
 (defgeneric (setf focus) (focus-state focus-element))
 (defgeneric exit (focus-element))
 (defgeneric activate (focus-element))
-(defgeneric handle (event focus-element ui))
 (defgeneric notice-focus (focused parent))
 
 (defgeneric index (focus-chain))
@@ -70,11 +69,24 @@
     (setf (focus (parent element)) :strong)
     (parent element)))
 
+(defmethod handle ((event event) (element focus-element) ui)
+  (unless (eq element (parent element))
+    (handle event (parent element) ui)))
+
+(defmethod handle ((event activate) (element focus-element) ui)
+  (activate element))
+
+(defmethod handle ((event exit) (element focus-element) ui)
+  (exit element))
+
 (defclass focus-entry (focus-element)
   ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
 
 (defmethod initialize-instance :after ((element focus-entry) &key)
   (associate element (component element) (focus-tree element)))
+
+(defmethod handle ((event event) (element focus-entry) ui)
+  (handle event (component element) ui))
 
 (defclass focus-chain (focus-element vector-container)
   ((index :initform -1 :accessor index)
@@ -187,6 +199,12 @@
   (when (and index (focused chain))
     (setf (slot-value chain 'index) (position (focused chain) (elements chain)))))
 
+(defmethod handle ((event focus-next) (chain focus-chain) ui)
+  (focus-next chain))
+
+(defmethod handle ((event focus-prev) (chain focus-chain) ui)
+  (focus-prev chain))
+
 (defclass focus-list (focus-chain)
   ())
 
@@ -202,6 +220,12 @@
   (let ((col (mod (index chain) (width chain)))
         (row (1+ (floor (index chain) (width chain)))))
     (setf (index chain) (+ col (* row (width chain))))))
+
+(defmethod handle ((event focus-up) (grid focus-grid) ui)
+  (focus-up grid))
+
+(defmethod handle ((event focus-down) (grid focus-grid) ui)
+  (focus-down grid))
 
 (defclass focus-tree (element-table)
   ((root :initform NIL :accessor root)
@@ -232,6 +256,9 @@
 
 (defmethod focus-element ((component component) (tree focus-tree))
   (associated-element component tree))
+
+(defmethod handle ((event event) (tree focus-tree) ui)
+  (handle event (focused tree) ui))
 
 ;;; NOTE: Initialisation of the tree must happen roughly as follows:
 ;;;         (let ((tree (make-instance 'focus-tree))

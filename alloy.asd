@@ -14,6 +14,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   :serial T
   :components ((:file "package")
                (:file "extent")
+               (:file "events")
                (:file "renderer")
                (:file "component")
                (:file "container")

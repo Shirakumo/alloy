@@ -9,6 +9,12 @@
 (defgeneric extent-for (component ui))
 (defgeneric focus-for (component ui))
 
+;;; Provided by the backend
+(defgeneric clipboard (ui))
+(defgeneric (setf clipboard) (content ui))
+(defgeneric cursor (ui))
+(defgeneric (setf cursor) (cursor ui))
+
 (defclass ui ()
   ((layout-tree :initarg :layout-tree :reader layout-tree)
    (focus-tree :initarg :focus-tree :reader focus-tree)))
@@ -25,11 +31,11 @@
 (defmethod focus-for ((component component) (ui ui))
   (focus (focus-element component (focus-tree ui))))
 
-(defmethod handle (event (ui ui) (all (eql T)))
-  (handle event (focus-tree ui)))
+(defmethod handle ((event direct-event) (all (eql T)) (ui ui))
+  (handle event (focus-tree ui) ui))
 
-(defmethod handle (event (all (eql T)) (ui ui))
-  (handle event (focus-tree ui)))
+(defmethod handle ((event pointer-event) (all (eql T)) (ui ui))
+  (handle event (layout-tree ui) ui))
 
 (defmethod render ((renderer renderer) (all (eql T)) (ui ui))
   (render renderer (layout-tree ui) ui))

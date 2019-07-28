@@ -43,6 +43,12 @@
 (defmethod w ((element layout-element)) (extent-w (extent element)))
 (defmethod h ((element layout-element)) (extent-h (extent element)))
 
+(defmethod handle ((event event) (element layout-element) ui))
+
+(defmethod handle :around ((event pointer-event) (element layout-element) ui)
+  (when (contained-p (point event) (extent element))
+    (call-next-method)))
+
 (defclass layout-entry (layout-element)
   ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
 
@@ -57,6 +63,12 @@
 
 (defmethod maybe-render ((element layout-entry) (renderer renderer) ui)
   (maybe-render (component element) renderer ui))
+
+(defmethod handle ((event event) (element layout-entry) ui)
+  (handle event (component element) ui))
+
+(defmethod handle :after ((event pointer-down) (element layout-entry) ui)
+  (activate (focus-element (component element) ui)))
 
 (defclass layout (layout-element container)
   ())
@@ -98,6 +110,11 @@
   (do-elements (element layout)
     (maybe-render element renderer ui)))
 
+(defmethod handle ((event event) (layout layout) ui)
+  (do-elements (element layout)
+    (when (handle event element ui)
+      (return))))
+
 (defclass layout-tree (element-table)
   ((root :initform NIL :accessor root)))
 
@@ -117,3 +134,6 @@
 
 (defmethod maybe-render ((tree layout-tree) (renderer renderer) ui)
   (maybe-render (root tree) renderer ui))
+
+(defmethod handle ((event pointer-event) (tree layout-tree) ui)
+  (handle event (root tree) ui))

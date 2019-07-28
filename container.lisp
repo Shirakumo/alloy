@@ -20,11 +20,11 @@
 
 (defmacro do-elements ((element container &optional result) &body body)
   (let ((thunk (gensym "THUNK")))
-    `(flet ((,thunk (,element)
-              ,@body))
-       (block NIL
-         (call-with-elements #',thunk ,container))
-       ,result)))
+    `(block NIL
+       (flet ((,thunk (,element)
+                ,@body))
+         (call-with-elements #',thunk ,container)
+         ,result))))
 
 (defmethod describe-object :after ((container container) stream)
   (format stream "~&~%Container Tree:~%")
