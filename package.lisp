@@ -24,6 +24,18 @@
    #:associate
    #:disassociate
    #:associated-element)
+  ;; extent.lisp
+  (:export
+   #:x
+   #:y
+   #:w
+   #:h
+   #:extent
+   #:make-extent
+   #:copy-extent
+   #:extent-p
+   #:destructure-extent
+   #:with-extent)
   ;; focus-tree.lisp
   (:export
    #:focus-element
@@ -47,4 +59,34 @@
    #:focus-chain
    #:focus-list
    #:focus-grid
+   #:focus-tree)
+  ;; layout.lisp
+  (:export
+   #:layout-tree
+   #:extent
+   #:layout-element
+   #:notice-extent
+   #:layout-element
+   #:extent
+   #:layout-entry
+   #:component
+   #:layout
+   #:layout-tree)
+  ;; renderer
+  (:export
+   #:allocate
+   #:deallocate
+   #:register
+   #:render-needed-p
+   #:mark-for-render
+   #:render
+   #:maybe-render
+   #:renderer
+   #:renderable)
+  ;; ui.lisp
+  (:export
+   #:extent-for
+   #:focus-for
+   #:ui
+   #:layout-tree
    #:focus-tree))

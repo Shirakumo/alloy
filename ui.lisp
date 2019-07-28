@@ -25,7 +25,10 @@
 (defmethod focus-for ((component component) (ui ui))
   (focus (focus-element component (focus-tree ui))))
 
-(defmethod handle (event (ui ui))
+(defmethod handle (event (ui ui) (all (eql T)))
+  (handle event (focus-tree ui)))
+
+(defmethod handle (event (all (eql T)) (ui ui))
   (handle event (focus-tree ui)))
 
 (defmethod render ((renderer renderer) (all (eql T)) (ui ui))

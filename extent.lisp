@@ -41,3 +41,14 @@
                     when var
                     collect `(,var (,func ,extentg))))
        ,@body)))
+
+(defmacro with-extent ((&rest args &key x y w h) extent &body body)
+  (declare (ignore x y w h))
+  (let ((extentg (gensym "EXTENT")))
+    `(let ((,extentg ,extent))
+       (symbol-macrolet
+           ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
+                   for var = (getf args name)
+                   when var
+                   collect `(,var (,func ,extentg)))
+         ,@body))))
