@@ -17,7 +17,7 @@
 
 (defmethod enter ((component component) (layout fixed-layout) &key x y w h)
   (make-instance 'fixed-entry :component component :porent layout :extent
-                 (make-extent x y w h)))
+                 (extent x y w h)))
 
 (defmethod update ((element fixed-entry) (layout fixed-layout) &key x y w h)
   (let ((e (extent element)))

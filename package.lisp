@@ -24,18 +24,35 @@
    #:associate
    #:disassociate
    #:associated-element)
-  ;; extent.lisp
+  ;; events.lisp
   (:export
-   #:x
-   #:y
-   #:w
-   #:h
-   #:extent
-   #:make-extent
-   #:copy-extent
-   #:extent-p
-   #:destructure-extent
-   #:with-extent)
+   #:handle
+   #:event
+   #:decline
+   #:pointer-event
+   #:location
+   #:pointer-move
+   #:old-location
+   #:pointer-down
+   #:kind
+   #:pointer-up
+   #:kind
+   #:scroll
+   #:direct-event
+   #:text-event
+   #:text
+   #:key-event
+   #:key
+   #:code
+   #:key-down
+   #:key-up
+   #:focus-event
+   #:focus-next
+   #:focus-prev
+   #:focus-up
+   #:focus-down
+   #:activate
+   #:exit)
   ;; focus-tree.lisp
   (:export
    #:focus-element
@@ -44,7 +61,6 @@
    #:focus
    #:exit
    #:activate
-   #:handle
    #:notice-focus
    #:index
    #:focused
@@ -60,14 +76,36 @@
    #:focus-list
    #:focus-grid
    #:focus-tree)
+  ;; geometry.lisp
+  (:export
+   #:x
+   #:y
+   #:w
+   #:h
+   #:contained-p
+   #:point
+   #:point-p
+   #:copy-point
+   #:point-x
+   #:point-y
+   #:point=
+   #:extent
+   #:copy-extent
+   #:extent-p
+   #:extent-x
+   #:extent-y
+   #:extent-w
+   #:extent-h
+   #:extent=
+   #:destructure-extent
+   #:with-extent)
   ;; layout.lisp
   (:export
    #:layout-tree
-   #:extent
+   #:bounds
    #:layout-element
-   #:notice-extent
+   #:notice-bounds
    #:layout-element
-   #:extent
    #:layout-entry
    #:component
    #:layout
@@ -87,6 +125,8 @@
   (:export
    #:extent-for
    #:focus-for
+   #:clipboard
+   #:cursor
    #:ui
    #:layout-tree
    #:focus-tree))

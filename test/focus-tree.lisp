@@ -160,3 +160,23 @@
     (is eq e3 (alloy:focused root))
     (is eq e3e1 (alloy:focused e3))
     (is eq e3e1e1 (alloy:focused e3e1))))
+
+(define-test focus-tree-component
+  :parent focus-tree
+  :depends-on (element-table multi-level-focus-list)
+  (let* ((tree (make-instance 'alloy:focus-tree))
+         (root (make-instance 'alloy:focus-list :parent tree))
+         (c1 (make-instance 'alloy:component))
+         (c2 (make-instance 'alloy:component))
+         (e1 (make-instance 'alloy:focus-entry :parent root :component c1))
+         (e2 (make-instance 'alloy:focus-list :parent root))
+         (e3 (make-instance 'alloy:focus-list :parent root))
+         (e3e1 (make-instance 'alloy:focus-list :parent e3))
+         (e3e1e1 (make-instance 'alloy:focus-entry :parent e3e1 :component c2)))
+    (is eq e1 (alloy:focus-element c1 tree))
+    (is eq e3e1e1 (alloy:focus-element c2 tree))
+    (is eq e1 (alloy:leave e1 root))
+    (fail (alloy:focus-element c1 tree))
+    (is eq e3e1e1 (alloy:focus-element c2 tree))
+    (is eq e1 (alloy:enter e1 root))
+    (is eq e1 (alloy:focus-element c1 tree))))

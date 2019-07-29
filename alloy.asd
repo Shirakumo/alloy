@@ -13,7 +13,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   :homepage "https://github.com/Shirakumo/alloy"
   :serial T
   :components ((:file "package")
-               (:file "extent")
+               (:file "geometry")
                (:file "events")
                (:file "renderer")
                (:file "component")

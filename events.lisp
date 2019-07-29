@@ -23,10 +23,10 @@
       NIL)))
 
 (defclass pointer-event (event)
-  ((point :initarg :point :initform (error "POINT required") :reader point)))
+  ((location :initarg :location :initform (error "LOCATION required") :reader location)))
 
 (defclass pointer-move (pointer-event)
-  ((old-point :initarg :old-point :initform (error "OLD-POINT required") :reader old-point)))
+  ((old-location :initarg :old-location :initform (error "OLD-LOCATION required") :reader old-location)))
 
 (defclass pointer-down (pointer-event)
   ((kind :initarg :kind :initform :left :reader kind)))

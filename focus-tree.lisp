@@ -82,9 +82,6 @@
 (defclass focus-entry (focus-element)
   ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
 
-(defmethod initialize-instance :after ((element focus-entry) &key)
-  (associate element (component element) (focus-tree element)))
-
 (defmethod handle ((event event) (element focus-entry) ui)
   (handle event (component element) ui))
 
@@ -181,6 +178,9 @@
   (unless (eq chain (parent element))
     (error "Cannot leave~%  ~a~%from the chain~%  ~a~%as it has another parent~%  ~a"
            element chain (parent element))))
+
+(defmethod enter :after ((element focus-entry) (chain focus-chain) &key)
+  (associate element (component element) (focus-tree chain)))
 
 (defmethod leave :after ((element focus-entry) (chain focus-chain))
   (disassociate element (component element) (focus-tree chain)))

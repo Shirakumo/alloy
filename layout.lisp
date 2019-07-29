@@ -7,15 +7,15 @@
 (in-package #:org.shirakumo.alloy)
 
 (defgeneric layout-tree (layout-element))
-(defgeneric extent (layout-element))
-(defgeneric (setf extent) (extent layout-element))
+(defgeneric bounds (layout-element))
+(defgeneric (setf bounds) (extent layout-element))
 (defgeneric layout-element (component layout-tree))
-(defgeneric notice-extent (changed parent))
+(defgeneric notice-bounds (changed parent))
 
 (defclass layout-element (element renderable)
   ((layout-tree :initform NIL :reader layout-tree)
    (parent :initarg :parent :initform (error "PARENT required.") :reader parent)
-   (extent :initform (make-extent) :reader extent)))
+   (bounds :initform (extent) :reader bounds)))
 
 (defmethod initialize-instance :after ((element layout-element) &key)
   (cond ((typep (parent element) 'layout-tree)
@@ -27,26 +27,26 @@
          (setf (slot-value element 'layout-tree) (layout-tree (parent element)))
          (enter element (parent element)))))
 
-(defmethod (setf extent) ((extent extent) (element layout-element))
+(defmethod (setf bounds) ((extent extent) (element layout-element))
   (let ((current (extent element)))
     (setf (extent-x current) (extent-x extent))
     (setf (extent-y current) (extent-y extent))
     (setf (extent-w current) (extent-w extent))
     (setf (extent-h current) (extent-h extent))
-    (extent)))
+    extent))
 
-(defmethod (setf extent) :after (extent (element layout-element))
-  (notice-extent element (parent element)))
+(defmethod (setf bounds) :after (extent (element layout-element))
+  (notice-bounds element (parent element)))
 
-(defmethod x ((element layout-element)) (extent-x (extent element)))
-(defmethod y ((element layout-element)) (extent-y (extent element)))
-(defmethod w ((element layout-element)) (extent-w (extent element)))
-(defmethod h ((element layout-element)) (extent-h (extent element)))
+(defmethod x ((element layout-element)) (extent-x (bounds element)))
+(defmethod y ((element layout-element)) (extent-y (bounds element)))
+(defmethod w ((element layout-element)) (extent-w (bounds element)))
+(defmethod h ((element layout-element)) (extent-h (bounds element)))
 
 (defmethod handle ((event event) (element layout-element) ui))
 
 (defmethod handle :around ((event pointer-event) (element layout-element) ui)
-  (when (contained-p (point event) (extent element))
+  (when (contained-p (point event) (bounds element))
     (call-next-method)))
 
 (defclass layout-entry (layout-element)
@@ -79,7 +79,7 @@
            element layout (parent element))))
 
 (defmethod enter :after ((element layout-element) (layout layout) &key)
-  (notice-extent element layout))
+  (notice-bounds element layout))
 
 (defmethod leave :before ((element layout-element) (layout layout))
   (unless (eq layout (parent element))
@@ -96,7 +96,7 @@
   (apply #'update (layout-element component (layout-tree layout)) layout args))
 
 (defmethod update :after ((element layout-element) (layout layout) &key)
-  (notice-extent element layout))
+  (notice-bounds element layout))
 
 (defmethod register :after ((layout layout) (renderer renderer))
   (do-elements (element layout)

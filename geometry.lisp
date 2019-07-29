@@ -12,38 +12,53 @@
 (defgeneric h (extent))
 (defgeneric contained-p (point extent))
 
-(defstruct (point (:constructor %make-point (x y)))
+(defstruct (point (:constructor %point (x y)))
   (x 0.0f0 :type single-float)
   (y 0.0f0 :type single-float))
 
-(defun make-point (&optional (x 0) (y 0))
-  (%make-point (float x 0f0) (float y 0f0)))
+(defmethod print-object ((point point) stream)
+  (format stream "~s" (list 'point (point-x point) (point-y point))))
 
-(define-compiler-macro make-point (&optional (x 0) (y 0) &environment env)
+(defun point (&optional (x 0) (y 0))
+  (%point (float x 0f0) (float y 0f0)))
+
+(define-compiler-macro point (&optional (x 0) (y 0) &environment env)
   (flet ((fold (arg)
            (if (constantp arg env)
                `(load-time-value (float ,arg 0f0))
                `(float ,arg 0f0))))
-    `(%make-point ,(fold x) ,(fold y))))
+    `(%point ,(fold x) ,(fold y))))
 
 (defmethod x ((point point)) (point-x point))
 (defmethod y ((point point)) (point-y point))
 
-(defstruct (extent (:constructor %make-extent (x y w h)))
-  (x 0.0f0 :type single-float)
-  (y 0.0f0 :type single-float)
+(defun point= (a b)
+  (and (= (point-x a) (point-x b))
+       (= (point-y a) (point-y b))))
+
+(defstruct (extent (:include point)
+                   (:constructor %extent (x y w h)))
   (w 0.0f0 :type single-float)
   (h 0.0f0 :type single-float))
 
-(defun make-extent (&optional (x 0) (y 0) (w 0) (h 0))
-  (%make-extent (float x 0f0) (float y 0f0) (float w 0f0) (float h 0f0)))
+(defmethod print-object ((extent extent) stream)
+  (format stream "~s" (list 'extent (extent-x extent) (extent-y extent) (extent-w extent) (extent-h extent))))
 
-(define-compiler-macro make-extent (&optional (x 0) (y 0) (w 0) (h 0) &environment env)
+(defun extent (&optional (x 0) (y 0) (w 0) (h 0))
+  (%extent (float x 0f0) (float y 0f0) (float w 0f0) (float h 0f0)))
+
+(define-compiler-macro extent (&optional (x 0) (y 0) (w 0) (h 0) &environment env)
   (flet ((fold (arg)
            (if (constantp arg env)
                `(load-time-value (float ,arg 0f0))
                `(float ,arg 0f0))))
-    `(%make-extent ,(fold x) ,(fold y) ,(fold w) ,(fold h))))
+    `(%extent ,(fold x) ,(fold y) ,(fold w) ,(fold h))))
+
+(defun extent= (a b)
+  (and (= (extent-x a) (extent-x b))
+       (= (extent-y a) (extent-y b))
+       (= (extent-w a) (extent-w b))
+       (= (extent-h a) (extent-h b))))
 
 (defmethod x ((extent extent)) (extent-x extent))
 (defmethod y ((extent extent)) (extent-y extent))
@@ -51,12 +66,12 @@
 (defmethod h ((extent extent)) (extent-h extent))
 
 (defmethod contained-p ((point point) (extent extent))
-  (and (<= (- (point-x point) (extent-x extent)) (extent-w extent))
-       (<= (- (point-y point) (extent-y extent)) (extent-h extent))))
+  (and (<= 0 (- (point-x point) (extent-x extent)) (extent-w extent))
+       (<= 0 (- (point-y point) (extent-y extent)) (extent-h extent))))
 
 (defmethod contained-p ((inner extent) (outer extent))
-  (and (<= (- (extent-x inner) (extent-x outer)) (- (extent-w outer) (extent-w inner)))
-       (<= (- (extent-y inner) (extent-y outer)) (- (extent-h outer) (extent-h inner)))))
+  (and (<= 0 (- (extent-x inner) (extent-x outer)) (- (extent-w outer) (extent-w inner)))
+       (<= 0 (- (extent-y inner) (extent-y outer)) (- (extent-h outer) (extent-h inner)))))
 
 (defmacro destructure-extent ((&rest args &key x y w h) extent &body body)
   (declare (ignore x y w h))
@@ -73,8 +88,8 @@
   (let ((extentg (gensym "EXTENT")))
     `(let ((,extentg ,extent))
        (symbol-macrolet
-           ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
-                   for var = (getf args name)
-                   when var
-                   collect `(,var (,func ,extentg)))
+           ,(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
+                  for var = (getf args name)
+                  when var
+                  collect `(,var (,func ,extentg)))
          ,@body))))
