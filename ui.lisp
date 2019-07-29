@@ -15,7 +15,7 @@
 (defgeneric cursor (ui))
 (defgeneric (setf cursor) (cursor ui))
 
-(defclass ui ()
+(defclass ui (renderer)
   ((layout-tree :initarg :layout-tree :reader layout-tree)
    (focus-tree :initarg :focus-tree :reader focus-tree)))
 
@@ -37,17 +37,11 @@
 (defmethod handle ((event pointer-event) (all (eql T)) (ui ui))
   (handle event (layout-tree ui) ui))
 
-(defmethod render ((renderer renderer) (all (eql T)) (ui ui))
-  (render renderer (layout-tree ui) ui))
+(defmethod render ((ui ui) (thing (eql T)))
+  (render ui (layout-tree ui)))
 
-(defmethod render ((renderer renderer) (ui ui) (all (eql T)))
-  (render renderer (layout-tree ui) ui))
-
-(defmethod maybe-render ((renderer renderer) (all (eql T)) (ui ui))
-  (maybe-render renderer (layout-tree ui) ui))
-
-(defmethod maybe-render ((renderer renderer) (ui ui) (all (eql T)))
-  (maybe-render renderer (layout-tree ui) ui))
+(defmethod maybe-render ((ui ui) (thing (eql T)))
+  (maybe-render ui (layout-tree ui)))
 
 (defmethod activate ((ui ui))
   (mark-for-render (root (layout-tree ui))))

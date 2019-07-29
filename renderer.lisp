@@ -12,8 +12,8 @@
 
 (defgeneric render-needed-p (renderable))
 (defgeneric mark-for-render (renderable))
-(defgeneric render (renderer renderable ui))
-(defgeneric maybe-render (renderer renderable ui))
+(defgeneric render (renderer renderable))
+(defgeneric maybe-render (renderer renderable))
 
 (defclass renderer ()
   ())
@@ -24,11 +24,11 @@
 (defmethod mark-for-render ((renderable renderable))
   (setf (slot-value renderable 'render-needed-p) T))
 
-(defmethod render :after ((renderer renderer) (renderable renderable) ui)
+(defmethod render :after ((renderer renderer) (renderable renderable))
   (setf (slot-value renderable 'render-needed-p) NIL))
 
-(defmethod maybe-render :around ((renderer renderer) (renderable renderable) ui)
+(defmethod maybe-render :around ((renderer renderer) (renderable renderable))
   (if (render-needed-p renderable)
-      (render renderer renderable ui)
+      (render renderer renderable)
       (call-next-method)))
 

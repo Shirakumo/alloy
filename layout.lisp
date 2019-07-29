@@ -58,11 +58,11 @@
 (defmethod register :after ((element layout-entry) (renderer renderer))
   (register (component element) renderer))
 
-(defmethod render ((renderer renderer) (element layout-entry) ui)
-  (render renderer (component element) ui))
+(defmethod render ((renderer renderer) (element layout-entry))
+  (render renderer (component element)))
 
-(defmethod maybe-render ((element layout-entry) (renderer renderer) ui)
-  (maybe-render (component element) renderer ui))
+(defmethod maybe-render ((element layout-entry) (renderer renderer))
+  (maybe-render (component element) renderer))
 
 (defmethod handle ((event event) (element layout-entry) ui)
   (handle event (component element) ui))
@@ -102,13 +102,13 @@
   (do-elements (element layout)
     (register element renderer)))
 
-(defmethod render ((renderer renderer) (layout layout) ui)
+(defmethod render ((renderer renderer) (layout layout))
   (do-elements (element layout)
-    (render renderer element ui)))
+    (render renderer element)))
 
-(defmethod maybe-render ((layout layout) (renderer renderer) ui)
+(defmethod maybe-render ((layout layout) (renderer renderer))
   (do-elements (element layout)
-    (maybe-render element renderer ui)))
+    (maybe-render element renderer)))
 
 (defmethod handle ((event event) (layout layout) ui)
   (do-elements (element layout)
@@ -129,11 +129,11 @@
 (defmethod register ((tree layout-tree) (renderer renderer))
   (register (root tree) renderer))
 
-(defmethod render ((renderer renderer) (tree layout-tree) ui)
-  (render renderer (root tree) ui))
+(defmethod render ((renderer renderer) (tree layout-tree))
+  (render renderer (root tree)))
 
-(defmethod maybe-render ((tree layout-tree) (renderer renderer) ui)
-  (maybe-render (root tree) renderer ui))
+(defmethod maybe-render ((tree layout-tree) (renderer renderer))
+  (maybe-render (root tree) renderer))
 
 (defmethod handle ((event pointer-event) (tree layout-tree) ui)
   (handle event (root tree) ui))
