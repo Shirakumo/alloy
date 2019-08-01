@@ -17,6 +17,7 @@
    #:leave
    #:update
    #:elements
+   #:element-count
    #:call-with-elements
    #:do-elements
    #:vector-container

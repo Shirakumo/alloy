@@ -15,6 +15,7 @@
 (defgeneric enter (element container &key &allow-other-keys))
 (defgeneric leave (element container))
 (defgeneric update (element container &key &allow-other-keys))
+(defgeneric element-count (container))
 (defgeneric elements (container))
 (defgeneric call-with-elements (function container))
 
@@ -38,6 +39,9 @@
                    (do-elements (element thing)
                      (traverse element))))))
       (traverse container))))
+
+(defmethod element-count ((container container))
+  (length (elements container)))
 
 (defclass vector-container (container)
   ((elements :initform (make-array 0 :adjustable T :fill-pointer T) :reader elements)))
