@@ -106,6 +106,7 @@
    #:bounds
    #:layout-element
    #:notice-bounds
+   #:suggest-bounds
    #:layout-element
    #:layout-entry
    #:component

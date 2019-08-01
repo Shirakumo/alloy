@@ -11,6 +11,7 @@
 (defgeneric (setf bounds) (extent layout-element))
 (defgeneric layout-element (component layout-tree))
 (defgeneric notice-bounds (changed parent))
+(defgeneric suggest-bounds (extent layout-element ui))
 
 (defclass layout-element (element renderable)
   ((layout-tree :initform NIL :reader layout-tree)
