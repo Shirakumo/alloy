@@ -19,6 +19,10 @@
 (defmethod print-object ((point point) stream)
   (format stream "~s" (list 'point (point-x point) (point-y point))))
 
+(defmethod make-load-form ((point point) &optional env)
+  (declare (ignore env))
+  (list '%point (point-x point) (point-y point)))
+
 (defun point (&optional (x 0) (y 0))
   (%point (float x 0f0) (float y 0f0)))
 
@@ -42,6 +46,10 @@
 
 (defmethod print-object ((size size) stream)
   (format stream "~s" (list 'size (size-w size) (size-h size))))
+
+(defmethod make-load-form ((size size) &optional env)
+  (declare (ignore env))
+  (list '%size (size-w size) (size-h size)))
 
 (defun size (&optional (w 0) (h 0))
   (%size (float w 0f0) (float h 0f0)))
@@ -67,6 +75,10 @@
 
 (defmethod print-object ((extent extent) stream)
   (format stream "~s" (list 'extent (extent-x extent) (extent-y extent) (extent-w extent) (extent-h extent))))
+
+(defmethod make-load-form ((extent extent) &optional env)
+  (declare (ignore env))
+  (list '%extent (extent-x extent) (extent-y extent) (extent-w extent) (extent-h extent)))
 
 (defun extent (&optional (x 0) (y 0) (w 0) (h 0))
   (%extent (float x 0f0) (float y 0f0) (float w 0f0) (float h 0f0)))
