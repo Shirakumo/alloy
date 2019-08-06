@@ -23,6 +23,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "ui")
                (:module "layouts"
                 :components ((:file "fixed")))
+               (:module "renderers"
+                :components ((:module "simple"
+                              :components ((:file "protocol")
+                                           (:file "style")
+                                           (:file "transforms")))))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)

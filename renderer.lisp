@@ -8,6 +8,7 @@
 
 (defgeneric allocate (renderer))
 (defgeneric deallocate (renderer))
+(defgeneric allocated-p (renderer))
 (defgeneric register (renderable renderer))
 
 (defgeneric render-needed-p (renderable))
@@ -16,7 +17,13 @@
 (defgeneric maybe-render (renderer renderable))
 
 (defclass renderer ()
-  ())
+  ((allocated-p :initform NIL :reader allocated-p)))
+
+(defmethod allocate :after ((renderer renderer))
+  (setf (slot-value renderer 'allocated-p) T))
+
+(defmethod deallocate :after ((renderer renderer))
+  (setf (slot-value renderer 'allocated-p) NIL))
 
 (defclass renderable ()
   ((render-needed-p :initform T :reader render-needed-p)))
