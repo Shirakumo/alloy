@@ -71,6 +71,9 @@
 (defmethod handle :after ((event pointer-down) (element layout-entry) ui)
   (activate (focus-element (component element) ui)))
 
+(defmethod suggest-bounds (extent (element layout-entry) ui)
+  (suggest-bounds extent (component element) ui))
+
 (defclass layout (layout-element container)
   ())
 

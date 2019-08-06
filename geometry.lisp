@@ -36,6 +36,30 @@
   (and (= (point-x a) (point-x b))
        (= (point-y a) (point-y b))))
 
+(defstruct (size (:constructor %size (w h)))
+  (w 0.0f0 :type single-float)
+  (h 0.0f0 :type single-float))
+
+(defmethod print-object ((size size) stream)
+  (format stream "~s" (list 'size (size-w size) (size-h size))))
+
+(defun size (&optional (w 0) (h 0))
+  (%size (float w 0f0) (float h 0f0)))
+
+(define-compiler-macro size (&optional (w 0) (h 0) &environment env)
+  (flet ((fold (arg)
+           (if (constantp arg env)
+               `(load-time-value (float ,arg 0f0))
+               `(float ,arg 0f0))))
+    `(%size ,(fold w) ,(fold h))))
+
+(defmethod w ((size size)) (size-w size))
+(defmethod h ((size size)) (size-h size))
+
+(defun size= (a b)
+  (and (= (size-w a) (size-w b))
+       (= (size-h a) (size-h b))))
+
 (defstruct (extent (:include point)
                    (:constructor %extent (x y w h)))
   (w 0.0f0 :type single-float)
