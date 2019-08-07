@@ -11,7 +11,7 @@
 (defgeneric (setf bounds) (extent layout-element))
 (defgeneric layout-element (component layout-tree))
 (defgeneric notice-bounds (changed parent))
-(defgeneric suggest-bounds (extent layout-element ui))
+(defgeneric suggest-bounds (extent layout-element))
 
 (defclass layout-element (element renderable)
   ((layout-tree :initform NIL :reader layout-tree)
@@ -71,8 +71,8 @@
 (defmethod handle :after ((event pointer-down) (element layout-entry) ui)
   (activate (focus-element (component element) ui)))
 
-(defmethod suggest-bounds (extent (element layout-entry) ui)
-  (suggest-bounds extent (component element) ui))
+(defmethod suggest-bounds (extent (element layout-entry))
+  (suggest-bounds extent (component element)))
 
 (defclass layout (layout-element container)
   ())
