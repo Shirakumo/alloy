@@ -78,7 +78,7 @@
                                 0 1 (alloy:point-y point)
                                 0 0 1)))
 
-(defmethod scale ((transform transform) (size size))
+(defmethod scale ((transform transform) (size alloy:size))
   (add-matrix transform (matrix (alloy:size-w size) 0 0
                                 0 (alloy:size-h size) 0
                                 0 0 1)))
