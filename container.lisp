@@ -17,14 +17,14 @@
 (defgeneric update (element container &key &allow-other-keys))
 (defgeneric element-count (container))
 (defgeneric elements (container))
-(defgeneric call-with-elements (function container))
+(defgeneric call-with-elements (function container &key start end))
 
-(defmacro do-elements ((element container &optional result) &body body)
+(defmacro do-elements ((element container &key start end result) &body body)
   (let ((thunk (gensym "THUNK")))
     `(block NIL
        (flet ((,thunk (,element)
                 ,@body))
-         (call-with-elements #',thunk ,container)
+         (call-with-elements #',thunk ,container :start ,start :end ,end)
          ,result))))
 
 (defmethod describe-object :after ((container container) stream)
@@ -63,8 +63,10 @@
       (array-utils:vector-push-extend-position element (elements container) index)))
   element)
 
-(defmethod call-with-elements (function (container vector-container))
-  (loop for element across (elements container)
+(defmethod call-with-elements (function (container vector-container) &key start end)
+  (loop with elements = (elements container)
+        for i from (or start 0) below (or end (length elements))
+        for element = (aref elements i)
         do (funcall function element)))
 
 (defclass element-table ()
