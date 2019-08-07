@@ -56,10 +56,10 @@
   (setf (slot-value style 'font-size) size))
 
 (defclass simple-styled-renderer (simple-renderer)
-  ((style-stack :accessor style-stack)))
+  ((style :accessor style)))
 
 (defmethod initialize-instance :after ((renderer simple-styled-renderer) &key)
-  (setf (style-stack renderer) (list (make-default-style renderer))))
+  (setf (style renderer) (make-default-style renderer)))
 
 (defgeneric make-default-style (renderer))
 
@@ -71,15 +71,12 @@
                         :font (request-font renderer "sans-serif")
                         :font-size 12.0f0))
 
-(defmethod push-styles ((renderer simple-styled-renderer))
-  (let ((current (car (style-stack renderer))))
-    (push (make-instance (class-of current) :parent current)
-          (style-stack renderer))))
-
-(defmethod pop-styles ((renderer simple-styled-renderer))
-  (pop (style-stack renderer))
-  (unless (style-stack renderer)
-    (setf (style-stack renderer) (list (make-default-style renderer)))))
+(defmethod call-with-pushed-styles (function (renderer simple-styled-renderer))
+  (let ((current (style renderer)))
+    (setf (style renderer) (make-instance (class-of current) :parent current))
+    (unwind-protect
+         (funcall function)
+      (setf (style renderer) current))))
 
 (defmethod fill-color ((renderer simple-styled-renderer))
   (fill-color (car (style-stack renderer))))

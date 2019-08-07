@@ -89,10 +89,10 @@
                                 0 0 1)))
 
 (defclass simple-transformed-renderer (simple-renderer)
-  ((transform-stack :accessor transform-stack)))
+  ((transform :accessor transform)))
 
 (defmethod initialize-instance :after ((renderer simple-transformed-renderer) &key)
-  (setf (transform-stack renderer) (list (make-default-transform renderer))))
+  (setf (transform renderer) (make-default-transform renderer)))
 
 (defgeneric make-default-transform (renderer))
 
@@ -101,10 +101,12 @@
                  :clip-mask NIL
                  :transform-matrix (matrix-identity)))
 
-(defmethod push-transforms ((renderer simple-transformed-renderer))
-  (let ((current (car (transform-stack renderer))))
-    (push (make-instance 'transform :parent current)
-          (transform-stack renderer))))
+(defmethod call-with-pushed-transforms (function (renderer simple-transformed-renderer))
+  (let ((current (transform renderer)))
+    (setf (transform renderer) (make-instance (class-of current) :parent current))
+    (unwind-protect
+         (funcall function)
+      (setf (transform renderer) current))))
 
 (defmethod pop-transforms ((renderer simple-transformed-renderer))
   (pop (transform-stack renderer))

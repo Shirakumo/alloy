@@ -6,15 +6,13 @@
 
 (in-package #:org.shirakumo.alloy.renderer.simple)
 
-(defgeneric push-transforms (renderer))
-(defgeneric pop-transforms (renderer))
+(defgeneric call-with-pushed-transforms (function renderer))
 (defgeneric clip (renderer extent))
 (defgeneric translate (renderer point))
 (defgeneric scale (renderer size))
 (defgeneric rotate (renderer phi))
 
-(defgeneric push-styles (renderer))
-(defgeneric pop-styles (renderer))
+(defgeneric call-with-pushed-styles (function renderer))
 (defgeneric fill-color (renderer))
 (defgeneric (setf fill-color) (color renderer))
 (defgeneric line-width (renderer))
@@ -76,17 +74,7 @@
   ())
 
 (defmacro with-pushed-transforms ((renderer) &body body)
-  (let ((r (gensym "RENDERER")))
-    `(let ((,r ,renderer))
-       (push-transforms ,r)
-       (unwind-protect
-            (progn ,@body)
-         (pop-transforms ,r)))))
+  `(call-with-pushed-transforms (lambda () ,@body) ,renderer))
 
 (defmacro with-pushed-styles ((renderer) &body body)
-  (let ((r (gensym "RENDERER")))
-    `(let ((,r ,renderer))
-       (push-styles ,r)
-       (unwind-protect
-            (progn ,@body)
-         (pop-styles ,r)))))
+  `(call-with-pushed-styles (lambda () ,@body) ,renderer))
