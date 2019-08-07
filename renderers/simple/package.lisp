@@ -29,7 +29,6 @@
    #:text
    #:image
    #:clear
-   #:wrap-text
    #:request-font
    #:request-image
    #:color

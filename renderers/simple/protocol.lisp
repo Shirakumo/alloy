@@ -35,7 +35,6 @@
 (defgeneric image (renderer point image &key size))
 (defgeneric clear (renderer extent))
 
-(defgeneric wrap-text (renderer string extent &key font size))
 (defgeneric request-font (renderer fontspec))
 (defgeneric request-image (renderer imagespec))
 
