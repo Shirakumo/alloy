@@ -4,7 +4,7 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(defpackage #:org.shirakumo.alloy.renderer.simple
+(defpackage #:org.shirakumo.alloy.renderers.simple
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy))
@@ -28,6 +28,8 @@
    #:polygon
    #:text
    #:image
+   #:size
+   #:data
    #:clear
    #:request-font
    #:request-image
@@ -39,6 +41,11 @@
    #:b
    #:a
    #:font
+   #:family
+   #:style
+   #:variant
+   #:weight
+   #:stretch
    #:image
    #:simple-renderer
    #:with-pushed-transforms

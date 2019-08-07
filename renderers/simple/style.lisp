@@ -4,7 +4,7 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:org.shirakumo.alloy.renderer.simple)
+(in-package #:org.shirakumo.alloy.renderers.simple)
 
 (defclass style ()
   ((fill-color :reader fill-color)
@@ -38,7 +38,7 @@
     (init-slot composite-mode)))
 
 (defmethod (setf fill-color) ((color color) (style style))
-  (setf (slot-value style 'color) color))
+  (setf (slot-value style 'fill-color) color))
 
 (defmethod (setf line-width) ((width float) (style style))
   (setf (slot-value style 'line-width) width))
@@ -64,11 +64,11 @@
 (defgeneric make-default-style (renderer))
 
 (defmethod make-default-style ((renderer simple-styled-renderer))
-  (make-instance 'style :fill-color (color 1 1 1)
+  (make-instance 'style :fill-color (color 0 0 0)
                         :line-width 1.0f0
                         :fill-mode :lines
                         :composite-mode :source-over
-                        :font (request-font renderer "sans-serif")
+                        :font (request-font renderer :default)
                         :font-size 12.0f0))
 
 (defmethod call-with-pushed-styles (function (renderer simple-styled-renderer))
@@ -79,37 +79,37 @@
       (setf (style renderer) current))))
 
 (defmethod fill-color ((renderer simple-styled-renderer))
-  (fill-color (car (style-stack renderer))))
+  (fill-color (style renderer)))
 
 (defmethod (setf fill-color) (color (renderer simple-styled-renderer))
-  (setf (fill-color (car (style-stack renderer))) color))
+  (setf (fill-color (style renderer)) color))
 
 (defmethod line-width ((renderer simple-styled-renderer))
-  (line (car (style-stack renderer))))
+  (line (style renderer)))
 
 (defmethod (setf line-width) (width (renderer simple-styled-renderer))
-  (setf (line-width (car (style-stack renderer))) width))
+  (setf (line-width (style renderer)) width))
 
 (defmethod fill-mode ((renderer simple-styled-renderer))
-  (fill-mode (car (style-stack renderer))))
+  (fill-mode (style renderer)))
 
 (defmethod (setf fill-mode) (mode (renderer simple-styled-renderer))
-  (setf (fill-mode (car (style-stack renderer))) mode))
+  (setf (fill-mode (style renderer)) mode))
 
 (defmethod composite-mode ((renderer simple-styled-renderer))
-  (composite-mode (car (style-stack renderer))))
+  (composite-mode (style renderer)))
 
 (defmethod (setf composite-mode) (mode (renderer simple-styled-renderer))
-  (setf (composite-mode (car (style-stack renderer))) mode))
+  (setf (composite-mode (style renderer)) mode))
 
 (defmethod font ((renderer simple-styled-renderer))
-  (font (car (style-stack renderer))))
+  (font (style renderer)))
 
 (defmethod (setf font) (font (renderer simple-styled-renderer))
-  (setf (font (car (style-stack renderer))) font))
+  (setf (font (style renderer)) font))
 
 (defmethod font-size ((renderer simple-styled-renderer))
-  (font (car (style-stack renderer))))
+  (font-size (style renderer)))
 
 (defmethod (setf font-size) (size (renderer simple-styled-renderer))
-  (setf (font-size (car (style-stack renderer))) size))
+  (setf (font-size (style renderer)) size))

@@ -10,7 +10,7 @@
   ((min-size :initarg :min-size :initform (size) :accessor min-size)
    (stretch :initarg :stretch :initform T :accessor stretch)))
 
-(defgeneric update-linear-layout (layout index extent ui))
+(defgeneric update-linear-layout (layout index extent))
 
 (defmethod notice-bounds :after ((element layout-element) (layout linear-layout))
   (let ((updated (update-linear-layout layout (element-index element layout) (bounds layout))))

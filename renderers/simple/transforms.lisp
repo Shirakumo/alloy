@@ -4,7 +4,7 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:org.shirakumo.alloy.renderer.simple)
+(in-package #:org.shirakumo.alloy.renderers.simple)
 
 (defun matrix (&rest values)
   (let ((matrix (make-array 9 :element-type 'single-float)))
@@ -47,9 +47,9 @@
   ((clip-mask :accessor clip-mask)
    (transform-matrix :accessor transform-matrix)))
 
-(defmethod shared-initialize :after ((transform transform) slots &key (clip-mask NIL c-p) matrix)
+(defmethod shared-initialize :after ((transform transform) slots &key (clip-mask NIL c-p) transform-matrix)
   (when c-p (clip transform clip-mask))
-  (when matrix (setf (transform-matrix transform) matrix)))
+  (when transform-matrix (setf (transform-matrix transform) transform-matrix)))
 
 (defmethod initialize-instance :after ((transform transform) &key parent)
   (macrolet ((init-slot (slot)
@@ -114,13 +114,13 @@
     (setf (transform-stack renderer) (list (make-default-transform renderer)))))
 
 (defmethod clip ((renderer simple-transformed-renderer) region)
-  (clip (car (transform-stack renderer)) region))
+  (clip (transform renderer) region))
 
 (defmethod translate ((renderer simple-transformed-renderer) point)
-  (translate (car (transform-stack renderer)) point))
+  (translate (transform renderer) point))
 
 (defmethod scale ((renderer simple-transformed-renderer) size)
-  (scale (car (transform-stack renderer)) size))
+  (scale (transform renderer) size))
 
 (defmethod rotate ((renderer simple-transformed-renderer) phi)
-  (rotate (car (transform-stack renderer)) phi))
+  (rotate (transform renderer) phi))

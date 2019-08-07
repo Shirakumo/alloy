@@ -4,7 +4,7 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:org.shirakumo.alloy.renderer.simple)
+(in-package #:org.shirakumo.alloy.renderers.simple)
 
 (defgeneric call-with-pushed-transforms (function renderer))
 (defgeneric clip (renderer extent))
@@ -31,7 +31,7 @@
 (defgeneric rectangle (renderer extent))
 (defgeneric ellipse (renderer extent))
 (defgeneric polygon (renderer points))
-(defgeneric text (renderer string &key font size))
+(defgeneric text (renderer point string &key font size))
 (defgeneric image (renderer point image &key size))
 (defgeneric clear (renderer extent))
 
@@ -56,7 +56,7 @@
 (defun color (r g b &optional (a 1.0f0))
   (%color (float r 0f0) (float g 0f0) (float b 0f0) (float a 0f0)))
 
-(define-compiler-macro color (r g b &optional (a 0) &environment env)
+(define-compiler-macro color (r g b &optional (a 1) &environment env)
   (flet ((fold (arg)
            (if (constantp arg env)
                `(load-time-value (float ,arg 0f0))
@@ -64,13 +64,24 @@
     `(%color ,(fold r) ,(fold g) ,(fold b) ,(fold a))))
 
 (defclass font ()
-  ())
+  ((family :initarg :family :initform (error "FAMILY required.") :reader family)
+   (style :initarg :style :initform :normal :reader style)
+   (variant :initarg :variant :initform :normal :reader variant)
+   (weight :initarg :weight :initform :normal :reader weight)
+   (stretch :initarg :stretch :initform :normal :reader stretch)))
 
 (defclass image ()
-  ())
+  ((size :initarg :size :reader size)
+   (data :initarg :data :reader data)))
 
 (defclass simple-renderer (alloy:renderer)
   ())
+
+(defmethod request-font ((renderer simple-renderer) (fontspec string))
+  (request-font renderer (make-instance 'font :family fontspec)))
+
+(defmethod request-font ((renderer simple-renderer) (fontspec (eql :default)))
+  (request-font renderer "sans-serif"))
 
 (defmacro with-pushed-transforms ((renderer) &body body)
   `(call-with-pushed-transforms (lambda () ,@body) ,renderer))

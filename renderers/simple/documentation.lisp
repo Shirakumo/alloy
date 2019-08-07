@@ -4,4 +4,4 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:org.shirakumo.alloy.renderer.simple)
+(in-package #:org.shirakumo.alloy.renderers.simple)
