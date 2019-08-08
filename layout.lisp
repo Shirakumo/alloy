@@ -107,9 +107,9 @@
   (do-elements (element layout)
     (render renderer element)))
 
-(defmethod maybe-render ((layout layout) (renderer renderer))
+(defmethod maybe-render ((renderer renderer) (layout layout))
   (do-elements (element layout)
-    (maybe-render element renderer)))
+    (maybe-render renderer element)))
 
 (defmethod handle ((event event) (layout layout) ui)
   (do-elements (element layout)
@@ -133,8 +133,8 @@
 (defmethod render ((renderer renderer) (tree layout-tree))
   (render renderer (root tree)))
 
-(defmethod maybe-render ((tree layout-tree) (renderer renderer))
-  (maybe-render (root tree) renderer))
+(defmethod maybe-render ((renderer renderer) (tree layout-tree))
+  (maybe-render renderer (root tree)))
 
 (defmethod handle ((event pointer-event) (tree layout-tree) ui)
   (handle event (root tree) ui))
