@@ -83,7 +83,8 @@
   ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
 
 (defmethod handle ((event event) (element focus-entry) ui)
-  (handle event (component element) ui))
+  (unless (handle event (component element) ui)
+    (call-next-method)))
 
 (defclass focus-chain (focus-element vector-container)
   ((index :initform -1 :accessor index)

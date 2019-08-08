@@ -8,3 +8,6 @@
 
 (defclass component ()
   ())
+
+(defmethod handle ((event event) (component component) ctx)
+  (decline))
