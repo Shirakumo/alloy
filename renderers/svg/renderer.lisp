@@ -138,7 +138,9 @@
                             (- (alloy:h renderer) (alloy:y point)))))))
 
 (defmethod simple:text ((renderer renderer) point string &key (font (simple:font renderer))
-                                                              (size (simple:font-size renderer)))
+                                                              (size (simple:font-size renderer))
+                                                              (align :start)
+                                                              (direction :right))
   (simple:with-pushed-transforms (renderer)
     (simple:scale renderer (alloy:size 1 -1))
     (let ((element (cl-svg::make-svg-element
@@ -147,6 +149,11 @@
                                   :y (- (alloy:y point))
                                   :color (->svg (simple:fill-color renderer))
                                   :opacity (simple:a (simple:fill-color renderer))
+                                  :text-anchor align
+                                  :writing-mode (ecase direction
+                                                  (:right :lr-tb)
+                                                  (:left :rl-tb)
+                                                  (:down :tb-rl))
                                   :font-family (simple:family font)
                                   :font-style (simple:style font)
                                   :font-variant (simple:variant font)

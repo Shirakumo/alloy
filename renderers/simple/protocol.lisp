@@ -31,7 +31,7 @@
 (defgeneric rectangle (renderer extent))
 (defgeneric ellipse (renderer extent))
 (defgeneric polygon (renderer points))
-(defgeneric text (renderer point string &key font size))
+(defgeneric text (renderer point string &key font size align direction))
 (defgeneric image (renderer point image &key size))
 (defgeneric clear (renderer extent))
 
