@@ -9,6 +9,23 @@
   ;; component.lisp
   (:export
    #:component)
+  ;; components/base.lisp
+  (:export
+   #:text-component
+   #:text
+   #:image-component
+   #:image
+   #:label
+   #:icon
+   #:button
+   #:pressed
+   #:switch
+   #:state
+   #:text-input-component
+   #:cursor
+   #:text
+   #:input-line
+   #:input-box)
   ;; container.lisp
   (:export
    #:element

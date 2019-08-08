@@ -24,6 +24,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:module "layouts"
                 :components ((:file "fixed")
                              (:file "linear")))
+               (:module "components"
+                :components ((:file "base")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)
