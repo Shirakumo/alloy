@@ -40,6 +40,8 @@
    #:kind
    #:scroll
    #:direct-event
+   #:paste-event
+   #:content
    #:text-event
    #:text
    #:key-event
@@ -47,6 +49,11 @@
    #:code
    #:key-down
    #:key-up
+   #:button-event
+   #:button
+   #:device
+   #:button-down
+   #:button-up
    #:focus-event
    #:focus-next
    #:focus-prev

@@ -40,6 +40,9 @@
 (defclass direct-event (event)
   ())
 
+(defclass paste-event (direct-event)
+  ((content :initarg :content :initform (error "CONTENT required.") :reader content)))
+
 (defclass text-event (direct-event)
   ((text :initarg :text :initform (error "TEXT required.") :reader text)))
 
@@ -52,6 +55,18 @@
 
 (defclass key-up (key-event)
   ())
+
+(defclass button-event (direct-event)
+  ((button :initarg :button :initform (error "BUTTON required.") :reader button)
+   (device :initarg :device :initform (error "DEVICE required.") :reader device)))
+
+(defclass button-down (button-event)
+  ())
+
+(defclass button-up (button-event)
+  ())
+
+;; TODO: standard translation of button/key/pointer etc events to focus events.
 
 (defclass focus-event (direct-event)
   ())
