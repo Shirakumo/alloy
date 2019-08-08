@@ -15,6 +15,7 @@
 (defgeneric mark-for-render (renderable))
 (defgeneric render (renderer renderable))
 (defgeneric maybe-render (renderer renderable))
+(defgeneric render-with (renderer renderable thing))
 
 (defclass renderer ()
   ((allocated-p :initform NIL :reader allocated-p)))

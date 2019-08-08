@@ -128,6 +128,7 @@
    #:mark-for-render
    #:render
    #:maybe-render
+   #:render-with
    #:renderer
    #:renderable)
   ;; ui.lisp

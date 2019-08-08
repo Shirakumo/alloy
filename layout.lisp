@@ -59,17 +59,14 @@
 (defmethod register :after ((element layout-entry) (renderer renderer))
   (register (component element) renderer))
 
-(defmethod render ((renderer renderer) (element layout-entry))
-  (render renderer (component element)))
-
-(defmethod maybe-render ((element layout-entry) (renderer renderer))
-  (maybe-render (component element) renderer))
-
 (defmethod handle ((event event) (element layout-entry) ui)
   (handle event (component element) ui))
 
 (defmethod handle :after ((event pointer-down) (element layout-entry) ui)
   (activate (focus-element (component element) ui)))
+
+(defmethod render ((renderer renderer) (element layout-entry))
+  (render-with renderer element (component element)))
 
 (defmethod suggest-bounds (extent (element layout-entry))
   (suggest-bounds extent (component element)))
