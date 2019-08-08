@@ -56,7 +56,7 @@
 (defclass renderer (simple:simple-styled-renderer
                     simple:simple-transformed-renderer)
   ((scene :accessor scene)
-   (size :initarg :size :initform (alloy:size 800 600) :accessor size)))
+   (size :initarg :size :initform (alloy:size 800 600) :reader size)))
 
 (defmethod alloy:h ((renderer renderer))
   (alloy:h (size renderer)))
@@ -91,6 +91,14 @@
            file)
       (alloy:deallocate renderer))))
 
+(defmethod simple:make-default-transform ((renderer renderer))
+  (let ((transform (call-next-method)))
+    (setf (simple:transform-matrix transform)
+          (simple:matrix 1  0 0
+                         0 -1 (alloy:h renderer)
+                         0  0 1))
+    transform))
+
 (defmethod draw ((renderer renderer) type &rest parameters)
   (cl-svg:add-element
    (scene *container*)
@@ -103,21 +111,21 @@
 (defmethod simple:line ((renderer renderer) point-a point-b)
   (draw renderer :line
         :x1 (alloy:x point-a)
-        :y1 (- (alloy:h renderer) (alloy:y point-a))
+        :y1 (alloy:y point-a)
         :x2 (alloy:x point-b)
-        :y2 (- (alloy:h renderer) (alloy:y point-b))))
+        :y2 (alloy:y point-b)))
 
 (defmethod simple:rectangle ((renderer renderer) extent)
   (draw renderer :rect
         :x (alloy:x extent)
-        :y (- (alloy:h renderer) (alloy:y extent) (alloy:h extent))
+        :y (alloy:y extent)
         :width (alloy:w extent)
         :height (alloy:h extent)))
 
 (defmethod simple:ellipse ((renderer renderer) extent)
   (draw renderer :ellipse
         :cx (+ (alloy:x extent) (/ (alloy:w extent) 2))
-        :cy (- (alloy:h renderer) (alloy:y extent) (/ (alloy:h extent) 2))
+        :cy (+ (alloy:y extent) (/ (alloy:h extent) 2))
         :rx (/ (alloy:w extent) 2)
         :ry (/ (alloy:h extent) 2)))
 
@@ -131,32 +139,39 @@
 
 (defmethod simple:text ((renderer renderer) point string &key (font (simple:font renderer))
                                                               (size (simple:font-size renderer)))
-  (cl-svg:text (scene renderer)
-      (:x (alloy:x point)
-       :y (- (alloy:h renderer) (alloy:y point))
-       :color (->svg (simple:fill-color renderer))
-       :opacity (simple:a (simple:fill-color renderer))
-       :font-family (simple:family font)
-       :font-style (simple:style font)
-       :font-variant (simple:variant font)
-       :font-weight (simple:weight font)
-       :font-stretch (simple:stretch font)
-       :font-size size)
-    string))
+  (simple:with-pushed-transforms (renderer)
+    (simple:scale renderer (alloy:size 1 -1))
+    (let ((element (cl-svg::make-svg-element
+                    :text
+                    (append (list :x (alloy:x point)
+                                  :y (- (alloy:y point))
+                                  :color (->svg (simple:fill-color renderer))
+                                  :opacity (simple:a (simple:fill-color renderer))
+                                  :font-family (simple:family font)
+                                  :font-style (simple:style font)
+                                  :font-variant (simple:variant font)
+                                  :font-weight (simple:weight font)
+                                  :font-stretch (simple:stretch font)
+                                  :font-size size)
+                            (svg-parameters (simple:transform renderer))))))
+      (cl-svg:add-element (scene *container*) element)
+      (cl-svg:add-element element string))))
 
-(defmethod simple:image ((renderer renderer) point image &key (size (size image)))
-  (draw renderer :image
-        :x (alloy:x point)
-        :y (- (alloy:h renderer) (alloy:y point))
-        :width (alloy:w size)
-        :height (alloy:h size)
-        :xlink-href (data image)))
+(defmethod simple:image ((renderer renderer) point (image image) &key (size (size image)))
+  (simple:with-pushed-transforms (renderer)
+    (simple:scale renderer (alloy:size 1 -1))
+    (draw renderer :image
+          :x (alloy:x point)
+          :y (- (+ (alloy:y point) (alloy:h size)))
+          :width (alloy:w size)
+          :height (alloy:h size)
+          :xlink-href (simple:data image))))
 
 (defmethod simple:clear ((renderer renderer) extent)
   ;; DUMB
   (draw renderer :rect
         :x (alloy:x extent)
-        :y (- (alloy:h renderer) (alloy:y extent) (alloy:h extent))
+        :y (alloy:y extent)
         :width (alloy:w extent)
         :height (alloy:h extent)
         :fill "white"))
@@ -165,7 +180,23 @@
 (defmethod simple:request-font ((renderer renderer) (font simple:font))
   font)
 
+(defun to-uri (mime-type octets)
+  (with-output-to-string (stream)
+    (format stream "data:~a;base64," mime-type)
+    (base64:usb8-array-to-base64-stream octets stream)))
+
 (defmethod simple:request-image ((renderer renderer) (image simple:image))
-  ;; FIXME: implement
   (make-instance 'image :size (simple:size image)
-                        :data (format NIL "data:image/bmp;base64,")))
+                        :data (to-uri "image/raw" (simple:data image))))
+
+(defmethod simple:request-image ((renderer renderer) (image pathname))
+  (let ((mime (cond ((string-equal "png" (pathname-type image)) "image/png")
+                    ((string-equal "gif" (pathname-type image)) "image/gif")
+                    ((string-equal "jpg" (pathname-type image)) "image/jpeg")
+                    ((string-equal "bmp" (pathname-type image)) "image/bmp"))))
+    (with-open-file (stream image :direction :input
+                                  :element-type '(unsigned-byte 8))
+      (let ((vec (make-array (file-length stream) :element-type '(unsigned-byte 8))))
+        (read-sequence vec stream)
+        (make-instance 'image :size NIL
+                              :data (to-uri mime vec))))))

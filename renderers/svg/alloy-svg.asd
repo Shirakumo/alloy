@@ -17,5 +17,6 @@
                (:file "documentation"))
   :depends-on (:documentation-utils
                :alloy-simple
-               :cl-svg)
+               :cl-svg
+               :cl-base64)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))
