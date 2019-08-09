@@ -101,7 +101,7 @@
 (defclass input-line (text-input-component)
   ())
 
-(defmethod handle ((event key-up) (component input-box) ctx)
+(defmethod handle ((event key-up) (component input-line) ctx)
   (case (key event)
     (:return
       (exit (focus-element component ctx)))
