@@ -16,6 +16,9 @@
                (:file "protocol")
                (:file "style")
                (:file "transforms")
+               (:file "presentation")
+               (:module "look-and-feels"
+                :components ((:file "gray")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :alloy)
