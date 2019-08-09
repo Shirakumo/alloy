@@ -11,3 +11,6 @@
 
 (defmethod handle ((event event) (component component) ctx)
   (decline))
+
+(defmethod suggest-bounds (extent (component component))
+  extent)
