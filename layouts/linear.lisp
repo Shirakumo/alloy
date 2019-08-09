@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass linear-layout (layout)
+(defclass linear-layout (layout vector-container)
   ((min-size :initarg :min-size :initform (size) :accessor min-size)
    (stretch :initarg :stretch :initform T :accessor stretch)
    (align :initarg :align :initform :start :accessor align)))
@@ -22,8 +22,9 @@
 (defmethod (setf min-size) :after (value (layout linear-layout))
   (update-linear-layout layout 0 (bounds layout)))
 
-(defmethod notice-bounds :after ((element layout-element) (layout linear-layout))
-  (let ((updated (update-linear-layout layout (element-index element layout) (bounds layout))))
+(defmethod notice-bounds ((element layout-element) (layout linear-layout))
+  ;; FIXME: optimise bounds update.
+  (let ((updated (update-linear-layout layout 0 (bounds layout))))
     (unless (extent= (bounds layout) updated)
       (setf (bounds layout) updated))))
 

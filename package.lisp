@@ -142,6 +142,14 @@
    #:component
    #:layout
    #:layout-tree)
+  ;; layouts/fixed.lisp
+  (:export
+   #:fixed-layout)
+  ;; layouts/linear.lisp
+  (:export
+   #:linear-layout
+   #:vertical-linear-layout
+   #:horizontal-linear-layout)
   ;; renderer
   (:export
    #:allocate

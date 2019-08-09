@@ -23,13 +23,17 @@
          (let ((layout-tree (parent element)))
            (setf (slot-value element 'layout-tree) layout-tree)
            (setf (slot-value element 'parent) NIL)
-           (setf (root (parent element)) element)))
+           (setf (root layout-tree) element)))
         (T
          (setf (slot-value element 'layout-tree) (layout-tree (parent element)))
          (enter element (parent element)))))
 
+(defmethod print-object ((element layout-element) stream)
+  (print-unreadable-object (element stream :type T :identity T)
+    (format stream "~a" (bounds element))))
+
 (defmethod (setf bounds) ((extent extent) (element layout-element))
-  (let ((current (extent element)))
+  (let ((current (bounds element)))
     (setf (extent-x current) (extent-x extent))
     (setf (extent-y current) (extent-y extent))
     (setf (extent-w current) (extent-w extent))
@@ -37,7 +41,8 @@
     extent))
 
 (defmethod (setf bounds) :after (extent (element layout-element))
-  (notice-bounds element (parent element)))
+  (when (parent element)
+    (notice-bounds element (parent element))))
 
 (defmethod x ((element layout-element)) (extent-x (bounds element)))
 (defmethod y ((element layout-element)) (extent-y (bounds element)))
