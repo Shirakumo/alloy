@@ -17,6 +17,7 @@
 (defgeneric update (element container &key &allow-other-keys))
 (defgeneric element-count (container))
 (defgeneric elements (container))
+(defgeneric element-index (element container))
 (defgeneric call-with-elements (function container &key start end))
 
 (defmacro do-elements ((element container &key start end result) &body body)
@@ -68,6 +69,9 @@
         for i from (or start 0) below (or end (length elements))
         for element = (aref elements i)
         do (funcall function element)))
+
+(defmethod element-index ((element element) (container vector-container))
+  (position element (elements container)))
 
 (defclass element-table ()
   ((component-map :initform (make-hash-table :test 'eq) :reader component-map)))

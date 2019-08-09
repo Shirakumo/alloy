@@ -99,6 +99,11 @@
 (defmethod update :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))
 
+(defmethod element-index :before ((element layout-element) (layout layout))
+  (unless (eq layout (parent element))
+    (error "The element~%  ~a~%is not in~%  ~a"
+           element layout)))
+
 (defmethod register :after ((layout layout) (renderer renderer))
   (do-elements (element layout)
     (register element renderer)))

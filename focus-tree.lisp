@@ -18,7 +18,6 @@
 (defgeneric (setf index) (index focus-chain))
 (defgeneric focused (focus-chain))
 (defgeneric (setf focused) (focus-element focus-chain))
-(defgeneric element-index (focus-element focus-chain))
 (defgeneric focus-next (focus-chain))
 (defgeneric focus-prev (focus-chain))
 (defgeneric focus-up (focus-grid))
@@ -134,9 +133,6 @@
   (unless (eq chain (parent element))
     (error "The element~%  ~a~%is not in~%  ~a"
            element chain)))
-
-(defmethod element-index ((element focus-element) (chain focus-chain))
-  (position element (elements chain)))
 
 (defmethod notice-focus ((element focus-element) (chain focus-chain))
   (case (focus element)
