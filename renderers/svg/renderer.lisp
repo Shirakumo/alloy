@@ -54,9 +54,14 @@
      (list :clip (->svg (simple:clip-mask transform))))))
 
 (defclass renderer (simple:simple-styled-renderer
-                    simple:simple-transformed-renderer)
+                    simple:simple-transformed-renderer
+                    simple:look-and-feel-renderer)
   ((scene :accessor scene)
-   (size :initarg :size :initform (alloy:size 800 600) :reader size)))
+   (size :initarg :size :initform (alloy:size 800 600) :reader size))
+  (:default-initargs :look-and-feel (make-instance 'simple::gray)))
+
+(defclass svg-ui (renderer alloy:ui)
+  ())
 
 (defmethod alloy:h ((renderer renderer))
   (alloy:h (size renderer)))
@@ -68,15 +73,17 @@
   (unless (slot-boundp renderer 'scene)
     (setf (scene renderer) (cl-svg:make-svg-toplevel 'cl-svg:svg-1.1-toplevel
                                                      :width (alloy:w (size renderer))
-                                                     :height (alloy:h (size renderer))))))
+                                                     :height (alloy:h (size renderer))))
+    (alloy:suggest-bounds (alloy:extent 0 0 (alloy:w (size renderer)) (alloy:h (size renderer)))
+                          (alloy:root (alloy:layout-tree renderer)))))
 
 (defmethod alloy:deallocate ((renderer renderer))
   (slot-makunbound renderer 'scene))
 
 (defmethod alloy:register (renderable (renderer renderer)))
 
-(defmethod alloy:render :around ((renderer renderer) (ui alloy:ui))
-  (let ((*container* (scene renderer)))
+(defmethod alloy:render :around ((renderer renderer) (self (eql T)))
+  (let ((*container* renderer))
     (call-next-method)))
 
 (defmethod render-to-file (renderable file (renderer renderer) &key (if-exists :supersede))
