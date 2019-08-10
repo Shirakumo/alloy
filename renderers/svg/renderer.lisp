@@ -166,7 +166,7 @@
                                   :font-variant (simple:variant font)
                                   :font-weight (simple:weight font)
                                   :font-stretch (simple:stretch font)
-                                  :font-size size)
+                                  :font-size (format NIL "~apx" size))
                             (svg-parameters (simple:transform renderer))))))
       (cl-svg:add-element (scene *container*) element)
       (cl-svg:add-element element string))))
