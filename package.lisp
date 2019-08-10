@@ -120,6 +120,14 @@
    #:size-w
    #:size-h
    #:size=
+   #:margins
+   #:margins-p
+   #:copy-margins
+   #:margins-l
+   #:margins-u
+   #:margins-r
+   #:margins-b
+   #:margins=
    #:extent
    #:copy-extent
    #:extent-p

@@ -68,6 +68,35 @@
   (and (= (size-w a) (size-w b))
        (= (size-h a) (size-h b))))
 
+(defstruct (margins (:constructor %margins (l u r b)))
+  (l 0.0f0 :type single-float)
+  (u 0.0f0 :type single-float)
+  (r 0.0f0 :type single-float)
+  (b 0.0f0 :type single-float))
+
+(defmethod print-object ((margins margins) stream)
+  (format stream "~s" (list 'margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins))))
+
+(defmethod make-load-form ((margins margins) &optional env)
+  (declare (ignore env))
+  (list '%margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins)))
+
+(defun margins (&key l u r b)
+  (%margins (float l 0f0) (float u 0f0) (float r 0f0) (float b 0f0)))
+
+(define-compiler-macro margins (&optional (l 0) (u 0) (r 0) (b 0) &environment env)
+  (flet ((fold (arg)
+           (if (constantp arg env)
+               `(load-time-value (float ,arg 0f0))
+               `(float ,arg 0f0))))
+    `(%margins ,(fold l) ,(fold u) ,(fold r) ,(fold b))))
+
+(defun margins= (a b)
+  (and (= (margins-l a) (margins-l b))
+       (= (margins-u a) (margins-u b))
+       (= (margins-r a) (margins-r b))
+       (= (margins-b a) (margins-b b))))
+
 (defstruct (extent (:include point)
                    (:constructor %extent (x y w h)))
   (w 0.0f0 :type single-float)
