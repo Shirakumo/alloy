@@ -153,9 +153,18 @@
   ;; layouts/fixed.lisp
   (:export
    #:fixed-layout)
+  ;; layouts/grid.lisp
+  (:export
+   #:grid-layout
+   #:row-sizes
+   #:col-sizes
+   #:stretch)
   ;; layouts/linear.lisp
   (:export
    #:linear-layout
+   #:min-size
+   #:stretch
+   #:align
    #:vertical-linear-layout
    #:horizontal-linear-layout)
   ;; renderer
