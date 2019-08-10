@@ -84,7 +84,7 @@
 (defun margins (&key l u r b)
   (%margins (float l 0f0) (float u 0f0) (float r 0f0) (float b 0f0)))
 
-(define-compiler-macro margins (&optional (l 0) (u 0) (r 0) (b 0) &environment env)
+(define-compiler-macro margins (&key (l 0) (u 0) (r 0) (b 0) &environment env)
   (flet ((fold (arg)
            (if (constantp arg env)
                `(load-time-value (float ,arg 0f0))
@@ -96,6 +96,16 @@
        (= (margins-u a) (margins-u b))
        (= (margins-r a) (margins-r b))
        (= (margins-b a) (margins-b b))))
+
+(defmacro destructure-margins ((&rest args &key l u r b) margins &body body)
+  (declare (ignore l u r b))
+  (let ((marginsg (gensym "EXTENT")))
+    `(let* ((,marginsg ,margins)
+            ,@(loop for (name func) in '((:l margins-l) (:u margins-u) (:r margins-r) (:b margins-b))
+                    for var = (getf args name)
+                    when var
+                    collect `(,var (,func ,marginsg))))
+       ,@body)))
 
 (defstruct (extent (:include point)
                    (:constructor %extent (x y w h)))

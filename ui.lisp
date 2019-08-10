@@ -17,7 +17,10 @@
 
 (defclass ui (renderer)
   ((layout-tree :initarg :layout-tree :reader layout-tree)
-   (focus-tree :initarg :focus-tree :reader focus-tree)))
+   (focus-tree :initarg :focus-tree :reader focus-tree))
+  (:default-initargs
+   :layout-tree (make-instance 'layout-tree)
+   :focus-tree (make-instance 'focus-tree)))
 
 (defmethod layout-element ((component component) (ui ui))
   (layout-element component (layout-tree ui)))

@@ -26,13 +26,6 @@
 (defmethod ->svg ((thing float))
   (format NIL "~fpx" thing))
 
-(defmethod ->svg ((thing alloy:extent))
-  (format NIL "rect(~dpx, ~dpx, ~dpx, ~dpx)"
-          (- (alloy:h *container*) (alloy:y thing) (alloy:h thing))
-          (- (alloy:w *container*) (alloy:x thing) (alloy:w thing))
-          (alloy:y thing)
-          (alloy:x thing)))
-
 (defgeneric svg-parameters (thing)
   (:method-combination append))
 
@@ -48,16 +41,15 @@
       (list :fill (->svg (simple:fill-color style)))))))
 
 (defmethod svg-parameters append ((transform simple:transform))
-  (list*
-   :transform (->svg (simple:transform-matrix transform))
-   (when (simple:clip-mask transform)
-     (list :clip (->svg (simple:clip-mask transform))))))
+  (list
+   :transform (->svg (simple:transform-matrix transform))))
 
 (defclass renderer (simple:simple-styled-renderer
                     simple:simple-transformed-renderer
                     simple:look-and-feel-renderer)
   ((scene :accessor scene)
-   (size :initarg :size :initform (alloy:size 800 600) :reader size))
+   (size :initarg :size :initform (alloy:size 800 600) :reader size)
+   (clips :initform () :accessor clips))
   (:default-initargs :look-and-feel (make-instance 'simple::gray)))
 
 (defclass svg-ui (renderer alloy:ui)
@@ -84,7 +76,17 @@
 
 (defmethod alloy:render :around ((renderer renderer) (self (eql T)))
   (let ((*container* renderer))
-    (call-next-method)))
+    (setf (clips renderer) ())
+    (call-next-method)
+    (loop for (extent transforms name) in (clips renderer)
+          do (let ((el (make-instance 'cl-svg::svg-element :name "clipPath" :attributes (list "id" name))))
+               (cl-svg:add-element (scene renderer) el)
+               (cl-svg:add-element el (make-instance 'cl-svg::svg-element :name "rect"
+                                                                          :attributes (list "x" (alloy:x extent)
+                                                                                            "y" (alloy:y extent)
+                                                                                            "width" (alloy:w extent)
+                                                                                            "height" (alloy:h extent)
+                                                                                            "transform" (->svg transforms))))))))
 
 (defmethod render-to-file (renderable file (renderer renderer) &key (if-exists :supersede))
   (with-open-file (stream file :direction :output
@@ -106,14 +108,29 @@
                          0  0 1))
     transform))
 
+(defun enter! (element renderer)
+  (let ((transform (simple:transform renderer)))
+    (if (simple:clip-mask transform)
+        (let* ((path (or (third (assoc (simple:clip-mask transform) (clips renderer)
+                                     :test #'alloy:extent=))
+                         (let ((el (list (simple:clip-mask transform)
+                                         (simple:transform-matrix transform)
+                                         (string (gensym "clip")))))
+                           (push el (clips renderer))
+                           (third el))))
+               (g (cl-svg::make-svg-element :group (list :clip-path (format NIL "url(#~a)" path)))))
+          (cl-svg:add-element (scene renderer) g)
+          (cl-svg:add-element g element))
+        (cl-svg:add-element (scene renderer) element))
+    element))
+
 (defmethod draw ((renderer renderer) type &rest parameters)
-  (cl-svg:add-element
-   (scene *container*)
-   (cl-svg::make-svg-element
-    type
-    (append parameters
-            (svg-parameters (simple:style renderer))
-            (svg-parameters (simple:transform renderer))))))
+  (let* ((element (cl-svg::make-svg-element
+                   type
+                   (append parameters
+                           (svg-parameters (simple:style renderer))
+                           (svg-parameters (simple:transform renderer))))))
+    (enter! element renderer)))
 
 (defmethod simple:line ((renderer renderer) point-a point-b)
   (draw renderer :line
@@ -149,32 +166,33 @@
                                                               (align :start)
                                                               (vertical-align :bottom)
                                                               (direction :right))
-  (simple:with-pushed-transforms (renderer)
-    (simple:scale renderer (alloy:size 1 -1))
-    (let ((element (cl-svg::make-svg-element
-                    :text
-                    (append (list :x (alloy:x point)
-                                  :y (- (alloy:y point))
-                                  :color (->svg (simple:fill-color renderer))
-                                  :opacity (simple:a (simple:fill-color renderer))
-                                  :text-anchor (string-downcase align)
-                                  :dominant-baseline (ecase vertical-align
-                                                       (:top "before-edge")
-                                                       (:middle "central")
-                                                       (:bottom "after-edge"))
-                                  :writing-mode (ecase direction
-                                                  (:right "lr-tb")
-                                                  (:left "rl-tb")
-                                                  (:down "tb-rl"))
-                                  :font-family (simple:family font)
-                                  :font-style (string-downcase (simple:style font))
-                                  :font-variant (string-downcase (simple:variant font))
-                                  :font-weight (string-downcase (simple:weight font))
-                                  :font-stretch (string-downcase (simple:stretch font))
-                                  :font-size (format NIL "~apx" size))
-                            (svg-parameters (simple:transform renderer))))))
-      (cl-svg:add-element (scene *container*) element)
-      (cl-svg:add-element element string))))
+  (let (element)
+    (simple:with-pushed-transforms (renderer)
+      (simple:scale renderer (alloy:size 1 -1))
+      (setf element (cl-svg::make-svg-element
+                     :text
+                     (append (list :x (alloy:x point)
+                                   :y (- (alloy:y point))
+                                   :color (->svg (simple:fill-color renderer))
+                                   :opacity (simple:a (simple:fill-color renderer))
+                                   :text-anchor (string-downcase align)
+                                   :dominant-baseline (ecase vertical-align
+                                                        (:top "before-edge")
+                                                        (:middle "central")
+                                                        (:bottom "after-edge"))
+                                   :writing-mode (ecase direction
+                                                   (:right "lr-tb")
+                                                   (:left "rl-tb")
+                                                   (:down "tb-rl"))
+                                   :font-family (simple:family font)
+                                   :font-style (string-downcase (simple:style font))
+                                   :font-variant (string-downcase (simple:variant font))
+                                   :font-weight (string-downcase (simple:weight font))
+                                   :font-stretch (string-downcase (simple:stretch font))
+                                   :font-size (format NIL "~apx" size))
+                             (svg-parameters (simple:transform renderer)))))
+      (cl-svg:add-element element string))
+    (enter! element renderer)))
 
 (defmethod simple:image ((renderer renderer) point (image image) &key (size (size image)))
   (simple:with-pushed-transforms (renderer)

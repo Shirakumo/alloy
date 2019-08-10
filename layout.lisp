@@ -25,8 +25,7 @@
            (setf (slot-value element 'parent) NIL)
            (setf (root layout-tree) element)))
         (T
-         (setf (slot-value element 'layout-tree) (layout-tree (parent element)))
-         (enter element (parent element)))))
+         (setf (slot-value element 'layout-tree) (layout-tree (parent element))))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -78,6 +77,12 @@
 
 (defclass layout (layout-element container)
   ())
+
+(defmethod enter ((component component) (layout layout) &rest args)
+  (apply #'enter
+         (make-instance 'layout-entry :component component :parent layout)
+         layout
+         args))
 
 (defmethod enter :before ((element layout-element) (layout layout) &key)
   (unless (eq layout (parent element))
