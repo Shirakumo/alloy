@@ -31,7 +31,7 @@
 (defgeneric rectangle (renderer extent))
 (defgeneric ellipse (renderer extent))
 (defgeneric polygon (renderer points))
-(defgeneric text (renderer point string &key font size align direction))
+(defgeneric text (renderer point string &key font size align direction vertical-align))
 (defgeneric image (renderer point image &key size))
 (defgeneric clear (renderer extent))
 
@@ -82,6 +82,9 @@
 
 (defmethod request-font ((renderer simple-renderer) (fontspec (eql :default)))
   (request-font renderer "sans-serif"))
+
+(defmethod register ((component alloy:image-component) (renderer simple-renderer))
+  (setf (alloy:image component) (request-image renderer (alloy:image component))))
 
 (defmacro with-pushed-transforms ((renderer) &body body)
   `(call-with-pushed-transforms (lambda () ,@body) ,renderer))

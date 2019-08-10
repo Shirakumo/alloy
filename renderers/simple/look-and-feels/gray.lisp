@@ -10,12 +10,10 @@
 
 (defmethod default-presentation ((gray gray) component)
   (make-instance 'presentation
-                 :padding 2.0
-                 :background-color (color 0.95 0.95 0.95)
-                 :border-color (color 0 0 0)
-                 :border-thickness 1.0
+                 :padding (alloy:margins 2 2 2 2)
                  :text-color (color 0 0 0)
-                 :text-alignment :start
+                 :text-alignment :middle
+                 :text-vertical-alignment :middle
                  :text-direction :right
                  :text-size 12
                  :font-family "sans-serif"
@@ -26,3 +24,17 @@
                  :image-size (alloy:size 16 16)
                  :image-fill :stretch
                  :image-alignment :left))
+
+(defmethod default-presentation ((gray gray) (component alloy:label))
+  (merge-presentation-into
+   (make-instance 'presentation
+                  :text-alignment :start)
+   (call-next-method)))
+
+(defmethod default-presentation ((gray gray) (component alloy:button))
+  (merge-presentation-into
+   (make-instance 'presentation
+                  :background-color (color 0.95 0.95 0.95)
+                  :border-color (color 0 0 0)
+                  :border-thickness 1.0)
+   (call-next-method)))

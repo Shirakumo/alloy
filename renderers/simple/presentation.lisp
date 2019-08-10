@@ -19,6 +19,7 @@
    (border-thickness :initarg :border-thickness :initform NIL :accessor border-thickness)
    (text-color :initarg :text-color :initform NIL :accessor text-color)
    (text-alignment :initarg :text-alignment :initform NIL :accessor text-alignment)
+   (text-vertical-alignment :initarg :text-vertical-alignment :initform NIL :accessor text-vertical-alignment)
    (text-direction :initarg :text-direction :initform NIL :accessor text-direction)
    (text-size :initarg :text-size :initform NIL :accessor text-size)
    (font-family :initarg :font-family :initform NIL :accessor font-family)
@@ -45,7 +46,7 @@
                           collect `(unless (,accessor into)
                                      (setf (,accessor into) (,accessor from)))))))
     (%merge padding background-color border-color border-thickness
-            text-color text-alignment text-direction text-size
+            text-color text-alignment text-vertical-alignment text-direction text-size
             font-family font-style font-variant font-weight font-stretch
             image-size image-fill image-alignment)
     into))
@@ -82,8 +83,37 @@
     (setf (fill-color renderer) (border-color presentation))
     (setf (line-width renderer) (border-thickness presentation))
     (setf (fill-mode renderer) :lines)
-    ;; FIXME: Not quite correct, should be either strictly inside or outside.
-    (rectangle renderer extent)))
+    (rectangle renderer (alloy:extent (+ (alloy:extent-x extent) (/ (border-thickness presentation) 2))
+                                      (+ (alloy:extent-y extent) (/ (border-thickness presentation) 2))
+                                      (- (alloy:extent-w extent) (border-thickness presentation))
+                                      (- (alloy:extent-h extent) (border-thickness presentation))))))
+
+(defun align-point (direction halign valign padding extent)
+  (alloy:point
+   (+ (alloy:extent-x extent)
+      (ecase halign
+        (:start
+         (ecase direction
+           (:right (alloy:margins-l padding))
+           ((:left :down) (- (alloy:extent-w extent) (alloy:margins-r padding)))))
+        (:middle
+         (+ (alloy:margins-l padding)
+            (/ (- (alloy:extent-w extent) (alloy:margins-l padding) (alloy:margins-l padding))
+               2)))
+        (:end
+         (ecase direction
+           (:right (- (alloy:extent-w extent) (alloy:margins-r padding)))
+           ((:left :down) (alloy:margins-l padding))))))
+   (+ (alloy:extent-y extent)
+      (ecase valign
+        (:top
+         (- (alloy:extent-h extent) (alloy:margins-u padding)))
+        (:middle
+         (+ (alloy:margins-b padding)
+            (/ (- (alloy:extent-h extent) (alloy:margins-b padding) (alloy:margins-u padding))
+               2)))
+        (:bottom
+         (alloy:margins-b padding))))))
 
 (defmethod render-presentation ((renderer simple-renderer)
                                 (presentation presentation)
@@ -99,11 +129,15 @@
                                      :variant (font-variant presentation)
                                      :weight (font-weight presentation)
                                      :stretch (font-stretch presentation)))
-          ;; FIXME: proper alignment and direction resolution
           ;; FIXME: proper alignment in presence of image
-          (point extent))
+          (point (align-point (text-direction presentation)
+                              (text-alignment presentation)
+                              (text-vertical-alignment presentation)
+                              (padding presentation)
+                              extent)))
       (text renderer point (alloy:text component)
         :align (text-alignment presentation)
+        :vertical-align (text-vertical-alignment presentation)
         :direction (text-direction presentation)
         :size (text-size presentation)
         :font font))))
