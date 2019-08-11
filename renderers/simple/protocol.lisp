@@ -74,16 +74,16 @@
   ((size :initarg :size :reader size)
    (data :initarg :data :reader data)))
 
-(defclass simple-renderer (alloy:renderer)
+(defclass renderer (alloy:renderer)
   ())
 
-(defmethod request-font ((renderer simple-renderer) (fontspec string))
+(defmethod request-font ((renderer renderer) (fontspec string))
   (request-font renderer (make-instance 'font :family fontspec)))
 
-(defmethod request-font ((renderer simple-renderer) (fontspec (eql :default)))
+(defmethod request-font ((renderer renderer) (fontspec (eql :default)))
   (request-font renderer "sans-serif"))
 
-(defmethod register ((component alloy:image-component) (renderer simple-renderer))
+(defmethod register ((component alloy:image-component) (renderer renderer))
   (setf (alloy:image component) (request-image renderer (alloy:image component))))
 
 (defmacro with-pushed-transforms ((renderer) &body body)

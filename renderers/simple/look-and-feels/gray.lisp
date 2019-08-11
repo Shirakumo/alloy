@@ -10,7 +10,7 @@
 
 (defmethod default-presentation ((gray gray) component)
   (make-instance 'presentation
-                 :padding (alloy:margins 2 2 2 2)
+                 :padding (alloy:margins :l 2 :u 2 :r 2 :b 2)
                  :text-color (color 0 0 0)
                  :text-alignment :middle
                  :text-vertical-alignment :middle

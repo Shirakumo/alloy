@@ -74,7 +74,7 @@
    #:weight
    #:stretch
    #:image
-   #:simple-renderer
+   #:renderer
    #:with-pushed-transforms
    #:with-pushed-styles)
   ;; transforms.lisp
@@ -86,10 +86,10 @@
    #:clip-mask
    #:transform-matrix
    #:add-matrix
-   #:simple-transformed-renderer
+   #:transformed-renderer
    #:make-default-transform)
   ;; style.lisp
   (:export
    #:style
-   #:simple-styled-renderer
+   #:styled-renderer
    #:make-default-style))

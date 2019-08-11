@@ -44,8 +44,8 @@
   (list
    :transform (->svg (simple:transform-matrix transform))))
 
-(defclass renderer (simple:simple-styled-renderer
-                    simple:simple-transformed-renderer
+(defclass renderer (simple:styled-renderer
+                    simple:transformed-renderer
                     simple:look-and-feel-renderer)
   ((scene :accessor scene)
    (size :initarg :size :initform (alloy:size 800 600) :reader size)

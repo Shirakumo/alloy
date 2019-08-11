@@ -88,39 +88,39 @@
                                 (sin phi) (cos phi) 0
                                 0 0 1)))
 
-(defclass simple-transformed-renderer (simple-renderer)
+(defclass transformed-renderer (renderer)
   ((transform :accessor transform)))
 
-(defmethod initialize-instance :after ((renderer simple-transformed-renderer) &key)
+(defmethod initialize-instance :after ((renderer transformed-renderer) &key)
   (setf (transform renderer) (make-default-transform renderer)))
 
 (defgeneric make-default-transform (renderer))
 
-(defmethod make-default-transform ((renderer simple-transformed-renderer))
+(defmethod make-default-transform ((renderer transformed-renderer))
   (make-instance 'transform
                  :clip-mask NIL
                  :transform-matrix (matrix-identity)))
 
-(defmethod call-with-pushed-transforms (function (renderer simple-transformed-renderer))
+(defmethod call-with-pushed-transforms (function (renderer transformed-renderer))
   (let ((current (transform renderer)))
     (setf (transform renderer) (make-instance (class-of current) :parent current))
     (unwind-protect
          (funcall function)
       (setf (transform renderer) current))))
 
-(defmethod pop-transforms ((renderer simple-transformed-renderer))
+(defmethod pop-transforms ((renderer transformed-renderer))
   (pop (transform-stack renderer))
   (unless (transform-stack renderer)
     (setf (transform-stack renderer) (list (make-default-transform renderer)))))
 
-(defmethod clip ((renderer simple-transformed-renderer) region)
+(defmethod clip ((renderer transformed-renderer) region)
   (clip (transform renderer) region))
 
-(defmethod translate ((renderer simple-transformed-renderer) point)
+(defmethod translate ((renderer transformed-renderer) point)
   (translate (transform renderer) point))
 
-(defmethod scale ((renderer simple-transformed-renderer) size)
+(defmethod scale ((renderer transformed-renderer) size)
   (scale (transform renderer) size))
 
-(defmethod rotate ((renderer simple-transformed-renderer) phi)
+(defmethod rotate ((renderer transformed-renderer) phi)
   (rotate (transform renderer) phi))

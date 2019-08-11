@@ -6,6 +6,7 @@
 
 (in-package #:org.shirakumo.alloy.renderers.simple)
 
+;; FIXME: overrides for focus states
 ;; FIXME: cache defaults
 (defgeneric default-presentation (renderer thing))
 (defgeneric render-presentation (renderer presentation component extent))
@@ -57,13 +58,13 @@
 (defclass presentable-layout-entry (alloy:layout-entry presentable-layout-element)
   ())
 
-(defmethod alloy:render-with ((renderer simple-renderer) (element alloy:layout-element) thing)
+(defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) thing)
   (render-presentation renderer
                        (default-presentation renderer thing)
                        thing
                        (alloy:bounds element)))
 
-(defmethod alloy:render-with ((renderer simple-renderer) (element presentable-layout-element) thing)
+(defmethod alloy:render-with ((renderer renderer) (element presentable-layout-element) thing)
   (render-presentation renderer
                        (merge-presentation
                         (presentation element)
@@ -71,7 +72,7 @@
                        thing
                        (alloy:bounds element)))
 
-(defmethod render-presentation ((renderer simple-renderer)
+(defmethod render-presentation ((renderer renderer)
                                 (presentation presentation)
                                 thing
                                 extent)
@@ -115,7 +116,7 @@
         (:bottom
          (alloy:margins-b padding))))))
 
-(defmethod render-presentation ((renderer simple-renderer)
+(defmethod render-presentation ((renderer renderer)
                                 (presentation presentation)
                                 (component alloy:text-component)
                                 extent)
@@ -144,7 +145,7 @@
           :size (text-size presentation)
           :font font)))))
 
-(defmethod render-presentation ((renderer simple-renderer)
+(defmethod render-presentation ((renderer renderer)
                                 (presentation presentation)
                                 (component alloy:image-component)
                                 extent)
@@ -161,7 +162,7 @@
 (defclass look-and-feel ()
   ())
 
-(defclass look-and-feel-renderer (simple-renderer)
+(defclass look-and-feel-renderer (renderer)
   ((look-and-feel :initarg :look-and-feel :accessor look-and-feel)))
 
 (defmethod default-presentation ((renderer look-and-feel-renderer) component)

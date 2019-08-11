@@ -55,15 +55,15 @@
 (defmethod (setf font-size) ((size float) (style style))
   (setf (slot-value style 'font-size) size))
 
-(defclass simple-styled-renderer (simple-renderer)
+(defclass styled-renderer (renderer)
   ((style :accessor style)))
 
-(defmethod initialize-instance :after ((renderer simple-styled-renderer) &key)
+(defmethod initialize-instance :after ((renderer styled-renderer) &key)
   (setf (style renderer) (make-default-style renderer)))
 
 (defgeneric make-default-style (renderer))
 
-(defmethod make-default-style ((renderer simple-styled-renderer))
+(defmethod make-default-style ((renderer styled-renderer))
   (make-instance 'style :fill-color (color 0 0 0)
                         :line-width 1.0f0
                         :fill-mode :lines
@@ -71,45 +71,45 @@
                         :font (request-font renderer :default)
                         :font-size 12.0f0))
 
-(defmethod call-with-pushed-styles (function (renderer simple-styled-renderer))
+(defmethod call-with-pushed-styles (function (renderer styled-renderer))
   (let ((current (style renderer)))
     (setf (style renderer) (make-instance (class-of current) :parent current))
     (unwind-protect
          (funcall function)
       (setf (style renderer) current))))
 
-(defmethod fill-color ((renderer simple-styled-renderer))
+(defmethod fill-color ((renderer styled-renderer))
   (fill-color (style renderer)))
 
-(defmethod (setf fill-color) (color (renderer simple-styled-renderer))
+(defmethod (setf fill-color) (color (renderer styled-renderer))
   (setf (fill-color (style renderer)) color))
 
-(defmethod line-width ((renderer simple-styled-renderer))
+(defmethod line-width ((renderer styled-renderer))
   (line (style renderer)))
 
-(defmethod (setf line-width) (width (renderer simple-styled-renderer))
+(defmethod (setf line-width) (width (renderer styled-renderer))
   (setf (line-width (style renderer)) width))
 
-(defmethod fill-mode ((renderer simple-styled-renderer))
+(defmethod fill-mode ((renderer styled-renderer))
   (fill-mode (style renderer)))
 
-(defmethod (setf fill-mode) (mode (renderer simple-styled-renderer))
+(defmethod (setf fill-mode) (mode (renderer styled-renderer))
   (setf (fill-mode (style renderer)) mode))
 
-(defmethod composite-mode ((renderer simple-styled-renderer))
+(defmethod composite-mode ((renderer styled-renderer))
   (composite-mode (style renderer)))
 
-(defmethod (setf composite-mode) (mode (renderer simple-styled-renderer))
+(defmethod (setf composite-mode) (mode (renderer styled-renderer))
   (setf (composite-mode (style renderer)) mode))
 
-(defmethod font ((renderer simple-styled-renderer))
+(defmethod font ((renderer styled-renderer))
   (font (style renderer)))
 
-(defmethod (setf font) (font (renderer simple-styled-renderer))
+(defmethod (setf font) (font (renderer styled-renderer))
   (setf (font (style renderer)) font))
 
-(defmethod font-size ((renderer simple-styled-renderer))
+(defmethod font-size ((renderer styled-renderer))
   (font-size (style renderer)))
 
-(defmethod (setf font-size) (size (renderer simple-styled-renderer))
+(defmethod (setf font-size) (size (renderer styled-renderer))
   (setf (font-size (style renderer)) size))
