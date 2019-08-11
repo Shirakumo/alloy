@@ -6,6 +6,15 @@
 
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
+;; Required GL state before ALLOY:RENDER call:
+;; enable: :blend :stencil-test :line-smooth
+;; disable: :depth-test
+;; stencil-func: :always 1 #xFF
+;; blend-func: :src-alpha :one-minus-src-alpha
+;; font-face: :ccw
+;; cull-fuace: :back
+;; clear-stencil: #x00
+
 ;; alloy:allocate
 ;; alloy:deallocate
 (defgeneric bind (resource))
