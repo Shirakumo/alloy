@@ -9,4 +9,15 @@
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
    (#:simple #:org.shirakumo.alloy.renderers.simple))
-  (:export))
+  ;; protocol.lisp
+  (:export
+   #:bind
+   #:make-shader
+   #:uniform
+   #:make-vertex-buffer
+   #:update-vertex-buffer
+   #:make-vertex-array
+   #:draw-vertex-array)
+  ;; renderer.lisp
+  (:export
+   #:renderer))

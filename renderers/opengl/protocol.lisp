@@ -7,16 +7,23 @@
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
 ;; Required GL state before ALLOY:RENDER call:
-;; enable: :blend :stencil-test :line-smooth
-;; disable: :depth-test
-;; stencil-func: :always 1 #xFF
-;; blend-func: :src-alpha :one-minus-src-alpha
-;; font-face: :ccw
-;; cull-fuace: :back
-;; clear-stencil: #x00
+;;   (gl:enable :blend :stencil-test :line-smooth)
+;;   (gl:disable :depth-test)
+;;   (gl:stencil-func :always 1 #xFF)
+;;   (gl:clear-stencil #x00)
+;;   (gl:blend-func :src-alpha :one-minus-src-alpha)
+;; If cull-face is enabled:
+;;   (gl:front-face :ccw)
+;;   (gl:cull-face :back)
+;; The target being rendered to must have a color
+;; and stencil attachment. A depth attachment is not
+;; required, as all UI is drawn at Z 0.
 
 ;; alloy:allocate
 ;; alloy:deallocate
+;; simple:text
+;; simple:request-font
+;; simple:request-image
 (defgeneric bind (resource))
 
 (defgeneric make-shader (renderer &key vertex-shader fragment-shader))
