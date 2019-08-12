@@ -56,6 +56,7 @@
    #:pointer-up
    #:kind
    #:scroll
+   #:delta
    #:direct-event
    #:paste-event
    #:content

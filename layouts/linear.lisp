@@ -52,7 +52,14 @@
              (incf y (extent-h bounds)))
             (:end
              (decf y (extent-h bounds))
-             (setf (extent-y bounds) y))))))))
+             (setf (extent-y bounds) y)))))
+      (ecase (align layout)
+        (:start
+         (setf (extent-h extent) (- y oy)))
+        (:end
+         (setf (extent-y extent) y)
+         (setf (extent-h extent) (- h (- y oy)))))
+      extent)))
 
 (defclass horizontal-linear-layout (linear-layout)
   ())
@@ -75,4 +82,11 @@
              (incf x (extent-w bounds)))
             (:end
              (decf x (extent-w bounds))
-             (setf (extent-x bounds) x))))))))
+             (setf (extent-x bounds) x)))))
+      (ecase (align layout)
+        (:start
+         (setf (extent-w extent) (- x ox)))
+        (:end
+         (setf (extent-x extent) x)
+         (setf (extent-w extent) (- w (- x ox)))))
+      extent)))

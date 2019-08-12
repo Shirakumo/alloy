@@ -21,11 +21,16 @@
 (defclass button (text-component image-component)
   ((pressed :initform NIL :accessor pressed)))
 
+(defmethod handle ((event pointer-move) (button button) ctx)
+  (unless (eql :strong (focus-for button ctx))
+    (setf (focus-for button ctx) :weak)))
+
 (defmethod handle ((event pointer-down) (button button) ctx)
   (setf (pressed button) T))
 
 (defmethod handle ((event pointer-up) (button button) ctx)
-  (setf (pressed button) NIL))
+  (setf (pressed button) NIL)
+  (setf (focus-for button ctx) :weak))
 
 (defmethod handle ((event button-down) (button button) ctx)
   (case (button event)
@@ -36,9 +41,6 @@
   (case (button event)
     (:a (setf (pressed button) NIL))
     (T (call-next-method))))
-
-(defmethod (setf focus) :after (focus (button button))
-  (when (eql NIL focus) (setf (pressed button) NIL)))
 
 (defclass switch ()
   ((state :initarg :state :initform NIL :accessor state)))

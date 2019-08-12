@@ -8,7 +8,7 @@
 
 ;; FIXME: overrides for focus states
 ;; FIXME: cache defaults
-(defgeneric default-presentation (renderer thing))
+(defgeneric default-presentation (renderer thing focus))
 (defgeneric render-presentation (renderer presentation component extent))
 (defgeneric merge-presentation (into from))
 (defgeneric merge-presentation-into (into from))
@@ -60,7 +60,7 @@
 
 (defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) thing)
   (render-presentation renderer
-                       (default-presentation renderer thing)
+                       (default-presentation renderer thing (alloy:focus-for thing renderer))
                        thing
                        (alloy:bounds element)))
 
@@ -68,7 +68,7 @@
   (render-presentation renderer
                        (merge-presentation
                         (presentation element)
-                        (default-presentation renderer thing))
+                        (default-presentation renderer thing (alloy:focus-for thing renderer)))
                        thing
                        (alloy:bounds element)))
 
@@ -165,6 +165,6 @@
 (defclass look-and-feel-renderer (renderer)
   ((look-and-feel :initarg :look-and-feel :accessor look-and-feel)))
 
-(defmethod default-presentation ((renderer look-and-feel-renderer) component)
-  (default-presentation (look-and-feel renderer) component))
+(defmethod default-presentation ((renderer look-and-feel-renderer) component focus)
+  (default-presentation (look-and-feel renderer) component focus))
 

@@ -35,7 +35,7 @@
   ((kind :initarg :kind :initform :left :reader kind)))
 
 (defclass scroll (pointer-event)
-  ())
+  ((delta :initarg :delta :initform (error "DELTA required.") :reader delta)))
 
 (defclass direct-event (event)
   ())

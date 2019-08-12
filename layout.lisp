@@ -51,7 +51,7 @@
 (defmethod handle ((event event) (element layout-element) ui))
 
 (defmethod handle :around ((event pointer-event) (element layout-element) ui)
-  (when (contained-p (point event) (bounds element))
+  (when (contained-p (location event) (bounds element))
     (call-next-method)))
 
 (defclass layout-entry (layout-element)
@@ -153,3 +153,12 @@
 
 (defmethod handle ((event pointer-event) (tree layout-tree) ui)
   (handle event (root tree) ui))
+
+(defmethod suggest-bounds (extent (tree layout-tree))
+  (let ((ideal (suggest-bounds extent (root tree)))
+        (bounds (bounds (root tree))))
+    (declare (ignore ideal))
+    (setf (extent-x bounds) (extent-x extent))
+    (setf (extent-y bounds) (extent-y extent))
+    (setf (extent-w bounds) (extent-w extent))
+    (setf (extent-h bounds) (extent-h extent))))

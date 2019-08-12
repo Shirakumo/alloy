@@ -34,6 +34,9 @@
 (defmethod focus-for ((component component) (ui ui))
   (focus (focus-element component (focus-tree ui))))
 
+(defmethod (setf focus-for) (focus (component component) (ui ui))
+  (setf (focus (focus-element component (focus-tree ui))) focus))
+
 (defmethod handle ((event direct-event) (all (eql T)) (ui ui))
   (handle event (focus-tree ui) ui))
 
@@ -48,3 +51,6 @@
 
 (defmethod activate ((ui ui))
   (mark-for-render (root (layout-tree ui))))
+
+(defmethod suggest-bounds (extent (ui ui))
+  (suggest-bounds extent (layout-tree ui)))
