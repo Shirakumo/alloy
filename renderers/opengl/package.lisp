@@ -20,4 +20,5 @@
    #:draw-vertex-array)
   ;; renderer.lisp
   (:export
-   #:renderer))
+   #:renderer
+   #:resource))
