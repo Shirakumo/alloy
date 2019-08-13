@@ -6,7 +6,6 @@
 
 (in-package #:org.shirakumo.alloy.renderers.simple)
 
-;; FIXME: overrides for focus states
 ;; FIXME: cache defaults
 (defgeneric default-presentation (renderer thing focus))
 (defgeneric render-presentation (renderer presentation component extent))
