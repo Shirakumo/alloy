@@ -32,7 +32,8 @@
   (extent (layout-element component (layout-tree ui))))
 
 (defmethod focus-for ((component component) (ui ui))
-  (focus (focus-element component (focus-tree ui))))
+  (ignore-errors ;; FIXME: gross
+   (focus (focus-element component (focus-tree ui)))))
 
 (defmethod (setf focus-for) (focus (component component) (ui ui))
   (setf (focus (focus-element component (focus-tree ui))) focus))

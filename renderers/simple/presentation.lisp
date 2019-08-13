@@ -123,12 +123,13 @@
   (when (and (text-color presentation)
              (alloy:text component))
     (setf (fill-color renderer) (text-color presentation))
-    ;; FIXME: Cache font instance during allocation
-    (let ((font (make-instance 'font :family (font-family presentation)
-                                     :style (font-style presentation)
-                                     :variant (font-variant presentation)
-                                     :weight (font-weight presentation)
-                                     :stretch (font-stretch presentation)))
+    (let ((font (request-font
+                 renderer
+                 (make-instance 'font :family (font-family presentation)
+                                      :style (font-style presentation)
+                                      :variant (font-variant presentation)
+                                      :weight (font-weight presentation)
+                                      :stretch (font-stretch presentation))))
           ;; FIXME: proper alignment in presence of image
           (point (align-point (text-direction presentation)
                               (text-alignment presentation)

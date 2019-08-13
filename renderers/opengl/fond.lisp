@@ -23,7 +23,7 @@
 ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")
 
 (defclass renderer (opengl:renderer)
-  ())
+  ((font-cache :initform () :accessor font-cache)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (setf (opengl:resource 'text-vbo renderer)
@@ -35,42 +35,71 @@
                                    :data-usage :dynamic-draw))
   (setf (opengl:resource 'text-vao renderer)
         (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 16 :offset 0)
-                                    (,(opengl:resource 'text-vbo renderer) :size 2 :stride 16 :offset 8)
-                                    ,(opengl:resource 'text-ebo renderer))))
+                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 16 :offset 8)
+                                             ,(opengl:resource 'text-ebo renderer))))
   (setf (opengl:resource 'text-shader renderer)
         (opengl:make-shader renderer
                             :vertex-shader "#version 330 core
-layout (location=0) in vec3 pos;
+layout (location=0) in vec2 pos;
 layout (location=1) in vec2 in_uv;
+uniform mat3 transform;
 out vec2 uv;
 
-uniform mat3 transform;
-
 void main(){
-  gl_Position = vec4(transform*vec3(pos.xy,1), 1);
+  gl_Position = vec4(transform*vec3(pos, 1), 1);
   uv = in_uv;
 }"
                             :fragment-shader "#version 330 core
-in vec2 uv;
-out vec4 out_color;
-
 uniform sampler2D image;
 uniform vec4 color;
+in vec2 uv;
+out vec4 out_color;
 
 void main(){
   out_color = color * texture(image, uv, -0.65).r;
 }")))
+
+(defmethod alloy:deallocate :after ((renderer renderer))
+  (setf (font-cache renderer) ()))
 
 (defclass font (simple:font)
   ((atlas :accessor atlas)
    (charset :initarg :charset :initform *default-charset* :reader charset)
    (base-size :initarg :base-size :initform 24 :reader base-size)))
 
+(defmethod ensure-font ((font simple:font) (renderer renderer))
+  (loop for f in (font-cache renderer)
+        do (when (or (eq font f)
+                     (font= font f))
+             (return f))
+        finally (push (etypecase font
+                        (font font)
+                        (simple:font (change-class font 'font)))
+                      (font-cache renderer))
+                (return font)))
+
+(defmethod font= ((a simple:font) (b simple:font))
+  (and (equal (simple:family a) (simple:family b))
+       (eql (simple:style a) (simple:style b))
+       (eql (simple:variant a) (simple:variant b))
+       (eql (simple:weight a) (simple:weight b))
+       (eql (simple:stretch a) (simple:stretch b))))
+
+(defmethod font= ((a font) (b font))
+  (and (call-next-method)
+       (string= (charset a) (charset b))
+       (= (base-size a) (base-size b))))
+
 (defmethod alloy:allocate ((font font))
-  (setf (atlas font) (cl-fond:make-font (simple:family font) (charset font) :size (base-size font))))
+  (unless (slot-boundp font 'atlas)
+    (setf (atlas font) (cl-fond:make-font (simple:family font) (charset font)
+                                          :size (base-size font)
+                                          :oversample 2))))
 
 (defmethod alloy:deallocate ((font font))
-  (cl-fond:free (atlas font)))
+  (when (slot-boundp font 'atlas)
+    (cl-fond:free (atlas font))
+    (slot-makunbound font 'atlas)))
 
 (defmethod simple:request-font ((renderer renderer) (fontspec string))
   (simple:request-font renderer (make-instance 'font :family fontspec)))
@@ -79,20 +108,17 @@ void main(){
   (simple:request-font renderer (make-instance 'font :family fontspec)))
 
 (defmethod simple:request-font ((renderer renderer) (font simple:font))
-  (cond ((string= "" (simple:family font))
-         (simple:request-font renderer :default))
+  (cond ((equal "" (simple:family font))
+         (ensure-font (simple:request-font renderer :default) renderer))
         ((stringp (simple:family font))
          ;; FIXME: load up system fonts
          (error "Don't know how to load system fonts."))
         (T
-         (change-class font 'font))))
-
-(defmethod simple:request-font ((renderer renderer) (font font))
-  font)
+         (ensure-font font renderer))))
 
 (defun text-point (point atlas text align direction vertical-align)
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent atlas text)
-    (declare (ignore b gap))
+    (declare (ignore gap))
     (ecase direction
       (:right
        (alloy:point
@@ -107,9 +133,9 @@ void main(){
           (:bottom
            (alloy:y point))
           (:middle
-           (- (alloy:y point) (/ u 2)))
+           (- (alloy:y point) (/ (- u b) 2)))
           (:top
-           (- (alloy:y point) u))))))))
+           (- (alloy:y point) (- u b)))))))))
 
 (defmethod simple:text ((renderer renderer) point string &key (font (simple:font renderer))
                                                               (size (simple:font-size renderer))
@@ -119,10 +145,11 @@ void main(){
   (let ((atlas (atlas font))
         (shader (opengl:resource 'text-shader renderer)))
     (opengl:bind shader)
+    (gl:active-texture :texture0)
     (gl:bind-texture :texture-2d (cl-fond:texture atlas))
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer (text-point point atlas string align direction vertical-align))
-      (let ((s (/ size (cl-fond:size atlas))))
+      (let ((s (* 2 (/ size (cl-fond:size atlas)))))
         (simple:scale renderer (alloy:size s s)))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (opengl:uniform shader "color") (simple:fill-color renderer))
