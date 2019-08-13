@@ -47,7 +47,7 @@ out vec2 uv;
 uniform mat3 transform;
 
 void main(){
-  gl_Position = vec4(transform*pos, 1);
+  gl_Position = vec4(transform*vec3(pos.xy,1), 1);
   uv = in_uv;
 }"
                             :fragment-shader "#version 330 core
@@ -79,11 +79,13 @@ void main(){
   (simple:request-font renderer (make-instance 'font :family fontspec)))
 
 (defmethod simple:request-font ((renderer renderer) (font simple:font))
-  (let ((font (change-class font 'font)))
-    (when (stringp (simple:family font))
-      ;; FIXME: load up system fonts
-      (error "Don't know how to load system fonts."))
-    font))
+  (cond ((string= "" (simple:family font))
+         (simple:request-font renderer :default))
+        ((stringp (simple:family font))
+         ;; FIXME: load up system fonts
+         (error "Don't know how to load system fonts."))
+        (T
+         (change-class font 'font))))
 
 (defmethod simple:request-font ((renderer renderer) (font font))
   font)
@@ -125,6 +127,6 @@ void main(){
       (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (opengl:uniform shader "color") (simple:fill-color renderer))
     (let ((count (cl-fond:update-text atlas string
-                                      (opengl:resource 'text-vbo renderer)
-                                      (opengl:resource 'text-ebo renderer))))
+                                      (opengl:gl-name (opengl:resource 'text-vbo renderer))
+                                      (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))

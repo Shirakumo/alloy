@@ -239,9 +239,13 @@ void main(){
 (defmethod simple:request-image :around ((renderer renderer) imagespec)
   (or (resource imagespec renderer NIL)
       (let ((image (call-next-method)))
+        (when (alloy:allocated-p renderer)
+          (alloy:allocate image))
         (setf (resource imagespec renderer) image))))
 
 (defmethod simple:request-font :around ((renderer renderer) fontspec)
   (or (resource fontspec renderer NIL)
       (let ((font (call-next-method)))
+        (when (alloy:allocated-p renderer)
+          (alloy:allocate font))
         (setf (resource fontspec renderer) font))))

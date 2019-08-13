@@ -16,7 +16,7 @@
                  :text-vertical-alignment :middle
                  :text-direction :right
                  :text-size 12
-                 :font-family "sans-serif"
+                 :font-family ""
                  :font-style :normal
                  :font-variant :normal
                  :font-weight :normal

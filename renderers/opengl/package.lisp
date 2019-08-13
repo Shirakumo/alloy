@@ -12,6 +12,7 @@
   ;; protocol.lisp
   (:export
    #:bind
+   #:gl-name
    #:make-shader
    #:uniform
    #:make-vertex-buffer

@@ -25,6 +25,7 @@
 ;; simple:request-font
 ;; simple:request-image
 (defgeneric bind (resource))
+(defgeneric gl-name (resource))
 
 (defgeneric make-shader (renderer &key vertex-shader fragment-shader))
 (defgeneric (setf uniform) (value shader uniform))
