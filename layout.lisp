@@ -39,10 +39,6 @@
     (setf (extent-h current) (extent-h extent))
     extent))
 
-(defmethod (setf bounds) :after (extent (element layout-element))
-  (when (parent element)
-    (notice-bounds element (parent element))))
-
 (defmethod x ((element layout-element)) (extent-x (bounds element)))
 (defmethod y ((element layout-element)) (extent-y (bounds element)))
 (defmethod w ((element layout-element)) (extent-w (bounds element)))
@@ -156,10 +152,6 @@
   (handle event (root tree) ui))
 
 (defmethod suggest-bounds (extent (tree layout-tree))
-  (let ((ideal (suggest-bounds extent (root tree)))
-        (bounds (bounds (root tree))))
-    (declare (ignore ideal))
-    (setf (extent-x bounds) (extent-x extent))
-    (setf (extent-y bounds) (extent-y extent))
-    (setf (extent-w bounds) (extent-w extent))
-    (setf (extent-h bounds) (extent-h extent))))
+  (let ((root (root tree)))
+    (suggest-bounds extent root)
+    (setf (bounds root) extent)))

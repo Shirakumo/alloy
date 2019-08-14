@@ -21,6 +21,8 @@
               lw (- r l) lh (- u b)))))
   (notice-extent layout (parent layout)))
 
+(defmethod suggest-bounds (extent (layout fixed-layout)))
+
 (defmethod enter :before ((element layout-element) (layout fixed-layout) &key x y w h)
   (unless (and x y w h)
     (error "Must specify X Y W H.")))
