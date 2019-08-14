@@ -36,14 +36,14 @@
    (make-instance 'presentation
                   :background-color (ecase focus
                                       ((NIL) (color 0.95 0.95 0.95))
-                                      (:weak (color 0.5 0.5 0.5))
+                                      (:weak (color 0.8 0.8 0.8))
                                       (:strong (color 0.2 0.2 0.2)))
                   :text-color (case focus
                                 (:strong (color 1 1 1))
                                 (T (color 0 0 0)))
                   :border-color (ecase focus
                                   ((NIL) (color 0.75 0.75 0.75))
-                                  (:weak (color 0.3 0.3 0.3))
+                                  (:weak (color 0.75 0.75 0.75))
                                   (:strong (color 0 0 0)))
                   :border-thickness 1.0)
    (call-next-method)))
