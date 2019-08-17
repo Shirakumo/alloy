@@ -14,5 +14,6 @@
   :serial T
   :components ((:file "fond"))
   :depends-on (:alloy-opengl
+               :font-discovery
                :cl-fond)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))

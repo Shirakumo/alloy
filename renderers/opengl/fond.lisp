@@ -111,8 +111,17 @@ void main(){
   (cond ((equal "" (simple:family font))
          (ensure-font (simple:request-font renderer :default) renderer))
         ((stringp (simple:family font))
-         ;; FIXME: load up system fonts
-         (error "Don't know how to load system fonts."))
+         (let ((font (font-discovery:find-font
+                      :family (family font)
+                      :weight (weight font)
+                      :stretch (stretch font)
+                      :spacing (spacing font)
+                      :slant (style font))))
+           (make-instance 'font :family (font-discovery:file font)
+                                :weight (font-discovery:weight font)
+                                :stretch (font-discovery:stretch font)
+                                :spacing (font-discovery:spacing font)
+                                :slant (font-discovery:slant font))))
         (T
          (ensure-font font renderer))))
 
