@@ -157,6 +157,18 @@
       (image renderer point (alloy:image component)
              :size (image-size presentation)))))
 
+(defmethod render-presentation-content ((renderer renderer) (presentation presentation) (component alloy:switch) extent)
+  (with-pushed-transforms (renderer)
+    (setf (fill-mode renderer) :fill)
+    (setf (fill-color renderer) (text-color presentation))
+    (rectangle renderer (alloy:extent (+ (alloy:extent-x extent)
+                                         (if (alloy:state component)
+                                             (- (alloy:extent-w extent) (/ (alloy:extent-w extent) 2.5))
+                                             0))
+                                      (alloy:extent-y extent)
+                                      (/ (alloy:extent-w extent) 2.5)
+                                      (alloy:extent-h extent)))))
+
 ;;; LAF protocol
 
 (defclass look-and-feel ()
@@ -167,4 +179,3 @@
 
 (defmethod default-presentation ((renderer look-and-feel-renderer) component focus)
   (default-presentation (look-and-feel renderer) component focus))
-

@@ -12,6 +12,13 @@
 (defclass image-component (component)
   ((image :initarg :image :initform NIL :accessor image)))
 
+(defclass interactable-component (component)
+  ())
+
+(defmethod handle ((event pointer-move) (component interactable-component) ctx)
+  (unless (eql :strong (focus-for component ctx))
+    (setf (focus-for component ctx) :weak)))
+
 (defclass label (text-component)
   ())
 
@@ -21,12 +28,8 @@
 (defclass icon (image-component)
   ())
 
-(defclass button (text-component image-component)
+(defclass button (text-component image-component interactable-component)
   ((pressed :initform NIL :accessor pressed)))
-
-(defmethod handle ((event pointer-move) (button button) ctx)
-  (unless (eql :strong (focus-for button ctx))
-    (setf (focus-for button ctx) :weak)))
 
 (defmethod handle ((event pointer-down) (button button) ctx)
   (setf (pressed button) T))
@@ -45,17 +48,17 @@
     (:a (setf (pressed button) NIL))
     (T (call-next-method))))
 
-(defclass switch (component)
+(defclass switch (interactable-component)
   ((state :initarg :state :initform NIL :accessor state)))
 
 (defmethod activate ((switch switch))
   (setf (state switch) (not (state switch))))
 
 ;; TODO: slider
-(defclass slider (component)
+(defclass slider (interactable-component)
   ())
 
-(defclass text-input-component (text-component)
+(defclass text-input-component (interactable-component text-component)
   ((cursor :initform 0 :accessor cursor)
    (text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character))))
 

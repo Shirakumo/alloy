@@ -43,8 +43,8 @@
                                 (:strong (color 1 1 1))
                                 (T (color 0 0 0)))
                   :border-color (ecase focus
-                                  ((NIL) (color 0.75 0.75 0.75))
-                                  (:weak (color 0.75 0.75 1))
+                                  ((NIL) (color 0.5 0.5 0.5))
+                                  (:weak (color 0.5 0.5 1))
                                   (:strong (color 0 0.5 1))))
    (call-next-method)))
 
@@ -53,8 +53,8 @@
    (make-instance 'presentation
                   :background-color (color 0.95 0.95 0.95)
                   :border-color (ecase focus
-                                  ((NIL) (color 0.75 0.75 0.75))
-                                  (:weak (color 0.75 0.75 1))
+                                  ((NIL) (color 0.5 0.5 0.5))
+                                  (:weak (color 0.5 0.5 1))
                                   (:strong (color 0 0.5 1)))
                   :text-alignment :start)
    (call-next-method)))
@@ -62,11 +62,13 @@
 (defmethod default-presentation ((gray gray) (component alloy:switch) focus)
   (merge-presentation-into
    (make-instance 'presentation
-                  :background-color (if (alloy:state component)
-                                        (color 0.9 0.9 0.9)
-                                        (color 0.5 0.5 0.5))
+                  :padding (alloy:margins)
+                  :background-color (color 0.2 0.2 0.2)
+                  :text-color (if (alloy:state component)
+                                  (color 0 0.5 1)
+                                  (color 0.5 0.5 0.5))
                   :border-color (ecase focus
-                                  ((NIL) (color 0.5 0.5 0.5))
+                                  ((NIL) (color 0.1 0.1 0.1))
                                   (:weak (color 0.75 0.75 1))
                                   (:strong (color 0 0.5 1))))
    (call-next-method)))

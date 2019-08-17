@@ -85,6 +85,12 @@
   (unless (handle event (component element) ui)
     (call-next-method)))
 
+(defmethod activate :after ((element focus-element))
+  (activate (component element)))
+
+(defmethod exit :after ((element focus-element))
+  (exit (component element)))
+
 (defclass focus-chain (focus-element vector-container)
   ((index :initform -1 :accessor index)
    (focused :initform NIL :accessor focused)))

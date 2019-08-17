@@ -14,3 +14,7 @@
 
 (defmethod suggest-bounds (extent (component component))
   extent)
+
+(defmethod activate ((component component)))
+
+(defmethod exit ((component component)))
