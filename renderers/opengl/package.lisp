@@ -8,8 +8,7 @@
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
-   (#:simple #:org.shirakumo.alloy.renderers.simple)
-   (#:font-discovery #:org.shirakumo.font-discovery))
+   (#:simple #:org.shirakumo.alloy.renderers.simple))
   ;; protocol.lisp
   (:export
    #:bind

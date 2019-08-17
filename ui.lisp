@@ -38,6 +38,9 @@
 (defmethod (setf focus-for) (focus (component component) (ui ui))
   (setf (focus (focus-element component (focus-tree ui))) focus))
 
+(defmethod focused ((ui ui))
+  (focused (focus-tree ui)))
+
 (defmethod handle ((event direct-event) (all (eql T)) (ui ui))
   (handle event (focus-tree ui) ui))
 

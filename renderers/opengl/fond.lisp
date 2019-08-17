@@ -9,7 +9,8 @@
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
    (#:simple #:org.shirakumo.alloy.renderers.simple)
-   (#:opengl #:org.shirakumo.alloy.renderers.opengl))
+   (#:opengl #:org.shirakumo.alloy.renderers.opengl)
+   (#:font-discovery #:org.shirakumo.font-discovery))
   (:export
    #:*default-charset*
    #:renderer
@@ -80,8 +81,8 @@ void main(){
 
 (defmethod font= ((a simple:font) (b simple:font))
   (and (equal (simple:family a) (simple:family b))
-       (eql (simple:style a) (simple:style b))
-       (eql (simple:variant a) (simple:variant b))
+       (eql (simple:slant a) (simple:slant b))
+       (eql (simple:spacing a) (simple:spacing b))
        (eql (simple:weight a) (simple:weight b))
        (eql (simple:stretch a) (simple:stretch b))))
 
@@ -125,7 +126,7 @@ void main(){
         (T
          (ensure-font font renderer))))
 
-(defun text-point (point atlas text align direction vertical-align)
+(defun text-point (point atlas text align direction vertical-align scale)
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent atlas text)
     (declare (ignore gap))
     (ecase direction
@@ -135,16 +136,16 @@ void main(){
           (:start
            (alloy:x point))
           (:middle
-           (- (alloy:x point) (/ (- r l) 2)))
+           (- (alloy:x point) (/ (* scale (- r l)) 2)))
           (:end
-           (- (alloy:x point) (- r l))))
+           (- (alloy:x point) (* scale (- r l)))))
         (ecase vertical-align
           (:bottom
            (alloy:y point))
           (:middle
-           (- (alloy:y point) (/ (- u b) 2)))
+           (- (alloy:y point) (/ (* scale (- u b)) 2)))
           (:top
-           (- (alloy:y point) (- u b)))))))))
+           (- (alloy:y point) (* scale (- u b))))))))))
 
 (defmethod simple:text ((renderer renderer) point string &key (font (simple:font renderer))
                                                               (size (simple:font-size renderer))
@@ -157,8 +158,8 @@ void main(){
     (gl:active-texture :texture0)
     (gl:bind-texture :texture-2d (cl-fond:texture atlas))
     (simple:with-pushed-transforms (renderer)
-      (simple:translate renderer (text-point point atlas string align direction vertical-align))
       (let ((s (* 2 (/ size (cl-fond:size atlas)))))
+        (simple:translate renderer (text-point point atlas string align direction vertical-align s))
         (simple:scale renderer (alloy:size s s)))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (opengl:uniform shader "color") (simple:fill-color renderer))
@@ -166,3 +167,41 @@ void main(){
                                       (opengl:gl-name (opengl:resource 'text-vbo renderer))
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
+
+(defmethod simple:render-presentation-content :before ((renderer renderer)
+                                                       (presentation simple:presentation)
+                                                       (component alloy:input-line)
+                                                       extent)
+  (when (eq :strong (alloy:focus-for component renderer))
+    (let* ((font (simple:request-font
+                  renderer
+                  (make-instance 'font :family (simple:font-family presentation)
+                                       :slant (simple:font-slant presentation)
+                                       :spacing (simple:font-spacing presentation)
+                                       :weight (simple:font-weight presentation)
+                                       :stretch (simple:font-stretch presentation))))
+           (text (subseq (alloy:text component) 0 (alloy:cursor component)))
+           ;; FIXME: proper alignment in presence of image
+           (s (* 2 (/ (simple:text-size presentation) (cl-fond:size (atlas font)))))
+           (point (simple::align-point (simple:text-direction presentation)
+                                       (simple:text-alignment presentation)
+                                       (simple:text-vertical-alignment presentation)
+                                       extent)))
+      (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas font) text)
+        (declare (ignore gap))
+        (let ((cursor (alloy:extent (+ (alloy:point-x point) (* s (- r l)))
+                                    (- (alloy:point-y point) (/ (* s (- u b)) 2))
+                                    (if (eq :down (simple:text-direction presentation))
+                                        (* s (- u b))
+                                        1)
+                                    (if (eq :down (simple:text-direction presentation))
+                                        1
+                                        (* s (- u b))))))
+          (simple:with-pushed-styles (renderer)
+            (setf (simple:composite-mode renderer) :difference)
+            (setf (simple:fill-color renderer) (simple:color 1 1 1))
+            (setf (simple:fill-mode renderer) :fill)
+            (when (< (+ (alloy:extent-x extent) (alloy:extent-w extent)) (+ (alloy:extent-x cursor) 2))
+              (simple:translate renderer (alloy:point (- (+ (alloy:extent-x extent) (alloy:extent-w extent)) (alloy:extent-x cursor) 2) 0)))
+            
+            (simple:rectangle renderer cursor)))))))

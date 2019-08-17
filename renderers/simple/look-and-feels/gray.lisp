@@ -16,11 +16,11 @@
                  :text-alignment :middle
                  :text-vertical-alignment :middle
                  :text-direction :right
-                 :text-size 12
+                 :text-size 10
                  :font-family ""
-                 :font-style :normal
-                 :font-variant :normal
-                 :font-weight :normal
+                 :font-slant :roman
+                 :font-spacing :proportional
+                 :font-weight :regular
                  :font-stretch :normal
                  :image-size (alloy:size 16 16)
                  :image-fill :stretch

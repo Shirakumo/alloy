@@ -129,18 +129,21 @@ void main(){
 
 (defmethod simple:clip :before ((renderer renderer) extent)
   ;; Render to the stencil buffer only
-  (gl:clear :stencil-buffer)
-  (gl:stencil-op :keep :keep :replace)
-  (gl:stencil-func :always 1 #xFF)
   (gl:stencil-mask #xFF)
+  (gl:clear :stencil-buffer)
+  (gl:stencil-op :replace :replace :replace)
+  (gl:stencil-func :always 1 #xFF)
   (gl:color-mask NIL NIL NIL NIL)
   (gl:depth-mask NIL)
-  (unwind-protect
-       (simple:rectangle renderer extent)
-    (gl:stencil-func :equal 1 #xFF)
-    (gl:stencil-mask #x00)
-    (gl:color-mask T T T T)
-    (gl:depth-mask T)))
+  (let ((mode (simple:fill-mode renderer)))
+    (setf (simple:fill-mode renderer) :fill)
+    (unwind-protect
+         (simple:rectangle renderer extent)
+      (setf (simple:fill-mode renderer) mode)
+      (gl:stencil-func :equal 1 #xFF)
+      (gl:stencil-mask #x00)
+      (gl:color-mask T T T T)
+      (gl:depth-mask T))))
 
 (defmethod simple:call-with-pushed-transforms (function (renderer renderer))
   (let* ((current (simple:transform renderer))
@@ -157,13 +160,65 @@ void main(){
             (T
              (gl:stencil-func :always 1 #xFF))))))
 
+(defmethod simple:call-with-pushed-styles :after (function (renderer renderer))
+  (setf (simple:composite-mode renderer) (simple:composite-mode renderer)))
+
 (defmethod (setf simple:line-width) :before (width (renderer renderer))
   (gl:line-width width))
 
 (defmethod (setf simple:composite-mode) :before (mode (renderer renderer))
   (ecase mode
-    ;; FIXME: implement other blending modes
-    (:source-over (gl:blend-func :src-alpha :one-minus-src-alpha))))
+    (:source-over
+     (gl:blend-func :src-alpha :one-minus-src-alpha)
+     (gl:blend-equation :func-add))
+    (:destination-over
+     (gl:blend-func :one-minus-dst-alpha :one)
+     (gl:blend-equation :func-add))
+    (:clear
+     (gl:blend-func :zero :zero)
+     (gl:blend-equation :func-add))
+    (:source
+     (gl:blend-func :one :zero)
+     (gl:blend-equation :func-add))
+    (:destination
+     (gl:blend-func :zero :one)
+     (gl:blend-equation :func-add))
+    (:source-in
+     (gl:blend-func :dst-alpha :zero)
+     (gl:blend-equation :func-add))
+    (:destination-in
+     (gl:blend-func :zero :src-alpha)
+     (gl:blend-equation :func-add))
+    (:source-out
+     (gl:blend-func :one-minus-dst-alpha :zero)
+     (gl:blend-equation :func-add))
+    (:destination-out
+     (gl:blend-func :zero :one-minus-src-alpha)
+     (gl:blend-equation :func-add))
+    (:destination-atop
+     (gl:blend-func :one-minus-dst-alpha :src-alpha)
+     (gl:blend-equation :func-add))
+    (:xor
+     (gl:blend-func :one-minus-dst-alpha :one-minus-src-alpha)
+     (gl:blend-equation :func-add))
+    (:add
+     (gl:blend-func :one :one)
+     (gl:blend-equation :func-add))
+    (:multiply
+     (gl:blend-func :dst-color :one-minus-src-alpha)
+     (gl:blend-equation :func-add))
+    (:screen
+     (gl:blend-func :one :one-minus-src-color)
+     (gl:blend-equation :func-add))
+    (:darken
+     (gl:blend-func :one :one)
+     (gl:blend-equation :func-max))
+    (:difference
+     (gl:blend-func :one :one)
+     (gl:blend-equation :func-subtract))
+    (:invert
+     (gl:blend-func :one :one)
+     (gl:blend-equation :func-reverse-subtract))))
 
 (defmethod simple:line ((renderer renderer) point-a point-b)
   (let ((shader (resource 'line-shader renderer)))
@@ -231,10 +286,11 @@ void main(){
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
 (defmethod simple:clear ((renderer renderer) extent)
-  (gl:blend-func :zero :zero)
-  (unwind-protect
-       (simple:rectangle renderer extent)
-    (setf (simple:composite-mode renderer) (simple:composite-mode renderer))))
+  (let ((mode (simple:composite-mode renderer)))
+    (setf (simple:composite-mode renderer) :clear)
+    (unwind-protect
+         (simple:rectangle renderer extent)
+      (setf (simple:composite-mode renderer) mode))))
 
 (defmethod simple:request-image :around ((renderer renderer) imagespec)
   (or (resource imagespec renderer NIL)

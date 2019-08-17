@@ -9,6 +9,7 @@
 ;; FIXME: cache defaults
 (defgeneric default-presentation (renderer thing focus))
 (defgeneric render-presentation (renderer presentation component extent))
+(defgeneric render-presentation-content (renderer presentation component extent))
 (defgeneric merge-presentation (into from))
 (defgeneric merge-presentation-into (into from))
 
@@ -47,7 +48,7 @@
                                      (setf (,accessor into) (,accessor from)))))))
     (%merge padding background-color border-color border-thickness
             text-color text-alignment text-vertical-alignment text-direction text-size
-            font-family font-style font-variant font-weight font-stretch
+            font-family font-slant font-spacing font-weight font-stretch
             image-size image-fill image-alignment)
     into))
 
@@ -88,37 +89,42 @@
                                       (- (alloy:extent-w extent) (border-thickness presentation))
                                       (- (alloy:extent-h extent) (border-thickness presentation))))))
 
-(defun align-point (direction halign valign padding extent)
+(defmethod render-presentation :after ((renderer renderer)
+                                       (presentation presentation)
+                                       thing
+                                       extent)
+  (let ((padding (padding presentation)))
+    (with-pushed-transforms (renderer)
+      (let ((inner (alloy:extent (+ (alloy:extent-x extent) (alloy:margins-l padding) (border-thickness presentation))
+                                 (+ (alloy:extent-y extent) (alloy:margins-b padding) (border-thickness presentation))
+                                 (- (alloy:extent-w extent) (alloy:margins-l padding) (alloy:margins-r padding) (* 2 (border-thickness presentation)))
+                                 (- (alloy:extent-h extent) (alloy:margins-b padding) (alloy:margins-u padding) (* 2 (border-thickness presentation))))))
+        (clip renderer inner)
+        (render-presentation-content renderer presentation thing inner)))))
+
+(defmethod render-presentation-content ((renderer renderer) (presentation presentation) (component alloy:component) extent))
+
+(defun align-point (direction halign valign extent)
   (alloy:point
    (+ (alloy:extent-x extent)
       (ecase halign
         (:start
          (ecase direction
-           (:right (alloy:margins-l padding))
-           ((:left :down) (- (alloy:extent-w extent) (alloy:margins-r padding)))))
+           (:right 0)
+           ((:left :down) (alloy:extent-w extent))))
         (:middle
-         (+ (alloy:margins-l padding)
-            (/ (- (alloy:extent-w extent) (alloy:margins-l padding) (alloy:margins-l padding))
-               2)))
+         (/ (alloy:extent-w extent) 2))
         (:end
          (ecase direction
-           (:right (- (alloy:extent-w extent) (alloy:margins-r padding)))
-           ((:left :down) (alloy:margins-l padding))))))
+           (:right (alloy:extent-w extent))
+           ((:left :down) 0)))))
    (+ (alloy:extent-y extent)
       (ecase valign
-        (:top
-         (- (alloy:extent-h extent) (alloy:margins-u padding)))
-        (:middle
-         (+ (alloy:margins-b padding)
-            (/ (- (alloy:extent-h extent) (alloy:margins-b padding) (alloy:margins-u padding))
-               2)))
-        (:bottom
-         (alloy:margins-b padding))))))
+        (:top (alloy:extent-h extent))
+        (:middle (/ (alloy:extent-h extent) 2))
+        (:bottom 0)))))
 
-(defmethod render-presentation ((renderer renderer)
-                                (presentation presentation)
-                                (component alloy:text-component)
-                                extent)
+(defmethod render-presentation-content ((renderer renderer) (presentation presentation) (component alloy:text-component) extent)
   (call-next-method)
   (when (and (text-color presentation)
              (alloy:text component))
@@ -134,21 +140,15 @@
           (point (align-point (text-direction presentation)
                               (text-alignment presentation)
                               (text-vertical-alignment presentation)
-                              (padding presentation)
                               extent)))
-      (with-pushed-transforms (renderer)
-        (clip renderer extent)
-        (text renderer point (alloy:text component)
-          :align (text-alignment presentation)
-          :vertical-align (text-vertical-alignment presentation)
-          :direction (text-direction presentation)
-          :size (text-size presentation)
-          :font font)))))
+      (text renderer point (alloy:text component)
+            :align (text-alignment presentation)
+            :vertical-align (text-vertical-alignment presentation)
+            :direction (text-direction presentation)
+            :size (text-size presentation)
+            :font font))))
 
-(defmethod render-presentation ((renderer renderer)
-                                (presentation presentation)
-                                (component alloy:image-component)
-                                extent)
+(defmethod render-presentation-content ((renderer renderer) (presentation presentation) (component alloy:image-component) extent)
   (call-next-method)
   (when (and (image-size presentation)
              (alloy:image component))

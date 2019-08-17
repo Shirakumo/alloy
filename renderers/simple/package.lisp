@@ -12,6 +12,7 @@
   (:export
    #:default-presentation
    #:render-presentation
+   #:render-presentation-content
    #:merge-presentation
    #:merge-presentation-into
    #:presentation
@@ -21,6 +22,7 @@
    #:border-thickness
    #:text-color
    #:text-alignment
+   #:text-vertical-alignment
    #:text-direction
    #:text-size
    #:font-family
