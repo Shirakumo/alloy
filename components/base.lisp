@@ -61,7 +61,7 @@
 
 (defmethod handle ((event text-event) (component text-input-component) ctx)
   (loop for char across (text event)
-        do (vector-push-extend char (text component))
+        do (array-utils:vector-push-extend-position char (text component) (cursor component))
            (incf (cursor component))))
 
 (defmethod handle ((event key-up) (component text-input-component) ctx)
@@ -77,13 +77,13 @@
        (decf (cursor component))
        (array-utils:vector-pop-position (text component) (cursor component))))
     (:delete
-     (when (< (cursor component) (1- (length (text component))))
+     (when (< (cursor component) (length (text component)))
        (array-utils:vector-pop-position (text component) (cursor component))))
     (:left
      (when (< 0 (cursor component))
        (decf (cursor component))))
     (:right
-     (when (< (cursor component) (1- (length (text component))))
+     (when (< (cursor component) (length (text component)))
        (incf (cursor component))))
     (:home
      (setf (cursor component) 0))
