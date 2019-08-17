@@ -23,8 +23,8 @@
    (text-direction :initarg :text-direction :initform NIL :accessor text-direction)
    (text-size :initarg :text-size :initform NIL :accessor text-size)
    (font-family :initarg :font-family :initform NIL :accessor font-family)
-   (font-style :initarg :font-style :initform NIL :accessor font-style)
-   (font-variant :initarg :font-variant :initform NIL :accessor font-variant)
+   (font-slant :initarg :font-slant :initform NIL :accessor font-slant)
+   (font-spacing :initarg :font-spacing :initform NIL :accessor font-spacing)
    (font-weight :initarg :font-weight :initform NIL :accessor font-weight)
    (font-stretch :initarg :font-stretch :initform NIL :accessor font-stretch)
    ;; FIXME: rethink this.
@@ -126,8 +126,8 @@
     (let ((font (request-font
                  renderer
                  (make-instance 'font :family (font-family presentation)
-                                      :style (font-style presentation)
-                                      :variant (font-variant presentation)
+                                      :slant (font-slant presentation)
+                                      :spacing (font-spacing presentation)
                                       :weight (font-weight presentation)
                                       :stretch (font-stretch presentation))))
           ;; FIXME: proper alignment in presence of image

@@ -65,9 +65,9 @@
 
 (defclass font ()
   ((family :initarg :family :initform (error "FAMILY required.") :reader family)
-   (style :initarg :style :initform :normal :reader style)
-   (variant :initarg :variant :initform :normal :reader variant)
-   (weight :initarg :weight :initform :normal :reader weight)
+   (slant :initarg :slant :initform :roman :reader slant)
+   (spacing :initarg :spacing :initform :proportional :reader spacing)
+   (weight :initarg :weight :initform :regular :reader weight)
    (stretch :initarg :stretch :initform :normal :reader stretch)))
 
 (defclass image ()

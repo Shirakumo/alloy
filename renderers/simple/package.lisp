@@ -24,7 +24,8 @@
    #:text-direction
    #:text-size
    #:font-family
-   #:font-variant
+   #:font-slant
+   #:font-spacing
    #:font-weight
    #:font-stretch
    #:image-size
@@ -69,8 +70,8 @@
    #:a
    #:font
    #:family
-   #:style
-   #:variant
+   #:slant
+   #:spacing
    #:weight
    #:stretch
    #:image
