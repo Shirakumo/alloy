@@ -13,6 +13,8 @@
    (col-sizes :initform #() :reader col-sizes)
    (elements :initform (make-array (list 0 0) :adjustable T :initial-element NIL) :reader elements)))
 
+;; FIXME: allow stretch columns
+
 (defmethod initialize-instance :after ((layout grid-layout) &key row-sizes col-sizes)
   (setf (row-sizes layout) row-sizes)
   (setf (col-sizes layout) col-sizes))
@@ -78,7 +80,7 @@
     (unless (extent= (bounds layout) updated)
       (setf (bounds layout) updated))))
 
-(defmethod suggest-bounds (extent (layout grid-layout))
+(defmethod (setf bounds) :after (extent (layout grid-layout))
   (destructure-margins (:l ml :u mu :r mr :b mb) (cell-margins layout)
     (loop with elements = (elements layout)
           for y = (+ (extent-y extent) mb) then (+ y h)
@@ -99,6 +101,10 @@
                                  (setf (extent-h bounds) (- h mb mu)))
                                 (T
                                  (setf (extent-w bounds) (extent-w ideal))
-                                 (setf (extent-h bounds) (extent-h ideal)))))))))
-  ;; FIXME: report proper bounds
-  extent)
+                                 (setf (extent-h bounds) (extent-h ideal))))))))))
+
+(defmethod suggest-bounds (extent (layout grid-layout))
+  (extent (extent-x extent)
+          (extent-y extent)
+          (loop for col across (col-sizes layout) sum col)
+          (loop for row across (row-sizes layout) sum row)))

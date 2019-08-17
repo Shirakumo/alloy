@@ -15,6 +15,9 @@
 (defclass label (text-component)
   ())
 
+(defmethod enter ((string string) (layout layout) &rest args)
+  (apply #'enter (make-instance 'label :text string) layout args))
+
 (defclass icon (image-component)
   ())
 
@@ -42,23 +45,24 @@
     (:a (setf (pressed button) NIL))
     (T (call-next-method))))
 
-(defclass switch ()
+(defclass switch (component)
   ((state :initarg :state :initform NIL :accessor state)))
 
 (defmethod activate ((switch switch))
   (setf (state switch) (not (state switch))))
 
 ;; TODO: slider
-(defclass slider ()
+(defclass slider (component)
   ())
 
 (defclass text-input-component (text-component)
   ((cursor :initform 0 :accessor cursor)
-   (text :initform (make-array 0 :adjustable T :fill-pointer T))))
+   (text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character))))
 
 (defmethod handle ((event text-event) (component text-input-component) ctx)
   (loop for char across (text event)
-        do (vector-push-extend char (text component))))
+        do (vector-push-extend char (text component))
+           (incf (cursor component))))
 
 (defmethod handle ((event key-up) (component text-input-component) ctx)
   ;; TODO: insert mode

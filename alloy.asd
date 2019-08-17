@@ -23,7 +23,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "ui")
                (:module "layouts"
                 :components ((:file "fixed")
-                             (:file "linear")))
+                             (:file "linear")
+                             (:file "grid")))
                (:module "components"
                 :components ((:file "base")))
                (:file "documentation"))
