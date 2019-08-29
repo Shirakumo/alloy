@@ -168,6 +168,7 @@ void main(){
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
 
+;; KLUDGE: it's real stanky that we have to do this here.
 (defmethod simple:render-presentation-content :before ((renderer renderer)
                                                        (presentation simple:presentation)
                                                        (component alloy:input-line)

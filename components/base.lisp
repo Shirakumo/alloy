@@ -118,6 +118,7 @@
      (call-next-method))))
 
 (defmethod handle ((event paste-event) (component text-input-component) ctx)
+  ;; Override to leave out returns and linefeeds.
   (let ((content (content event))
         (text (text component)))
     (typecase content
