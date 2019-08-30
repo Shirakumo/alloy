@@ -71,78 +71,11 @@
   (with-vars (x y w h layout) layout
     (alloy:extent (cass:value x) (cass:value y) (cass:value w) (cass:value h))))
 
-(defun rewrite-variable (var element layout)
-  (with-vars (rx ry rw rh layout) layout
-    (with-vars (x y w h layout) element
-      (case var
-        (:x x)
-        (:y y)
-        (:w w)
-        (:h h)
-        (:l `(- x rx))
-        (:b `(- y ry))
-        (:r `(- (+ ,rx ,rw) (+ ,x ,w)))
-        (:u `(- (+ ,ry ,rh) (+ ,y ,h)))
-        (:rx rx)
-        (:ry ry)
-        (:rw rw)
-        (:rh rh)
-        (T var)))))
-
-(defun rewrite-expression (expression element layout)
-  (etypecase expression
-    ((or real cass:variable) expression)
-    (symbol (rewrite-variable expression element layout))
-    (cons
-     (flet ((r (expr)
-              (rewrite-expression expr element layout)))
-       (case (first expression)
-         ((:x :y :w :h :l :b :r :u)
-          (rewrite-variable (first expression) (second expression) layout))
-         (:left-to
-          (r `(= :r (:l ,(second expression)))))
-         (:right-to
-          (r `(= :l (:r ,(second expression)))))
-         (:above
-          (r `(<= (+ (:y ,(second expression))
-                     (:h ,(second expression)))
-                  :y)))
-         (:below
-          (r `(<= (+ :y :h)
-                  (:y ,(second expression)))))
-         (:aspect-ratio
-          (r `(= :w (* :h ,(second expression)))))
-         (:min-width
-          (r `(<= ,(second expression) :w)))
-         (:min-height
-          (r `(<= ,(second expression) :h)))
-         (:max-width
-          (r `(<= :w ,(second expression))))
-         (:max-height
-          (r `(<= :h ,(second expression))))
-         (:width
-          (r `(= :w ,(second expression))))
-         (:height
-          (r `(= :h ,(second expression))))
-         (T
-          (list* (first expression)
-                 (loop for term in (rest expression)
-                       collect (r term)))))))))
-
 (defun apply-constraints (constraints element layout)
   ;; FIXME: how to remove constraints?
   ;; (dolist (constraint (gethash element (constraints layout)))
   ;;   (cass:delete-constraint constraint))
-  (flet ((add (expression &key (strength :required))
-           (push (cass:constrain-with (solver layout) (rewrite-expression expression element layout) :strength strength)
-                 (gethash element (constraints layout)))))
-    (dolist (constraint constraints layout)
-      (case constraint
-        (:square
-         (add `(= :w :h)))
-        (:contained
-         (add `(<= 0 :l))
-         (add `(<= 0 :r))
-         (add `(<= 0 :u))
-         (add `(<= 0 :b)))
-        (T (add constraint))))))
+  (dolist (expression constraints layout)
+    (dolist (expression (transform-expression expression))
+      (push (cass:constrain-with (solver layout) (rewrite-expression expression element layout))
+            (gethash element (constraints layout))))))

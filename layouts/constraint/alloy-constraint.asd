@@ -13,6 +13,7 @@
   :homepage "https://github.com/Shirakumo/alloy"
   :serial T
   :components ((:file "package")
+               (:file "constraints")
                (:file "layout")
                (:file "documentation"))
   :depends-on (:documentation-utils
