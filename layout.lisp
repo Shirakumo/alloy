@@ -56,6 +56,10 @@
 (defmethod initialize-instance :after ((element layout-entry) &key)
   (associate element (component element) (layout-tree element)))
 
+(defmethod print-object ((element layout-entry) stream)
+  (print-unreadable-object (element stream :type T :identity T)
+    (format stream "~a" (component element))))
+
 (defmethod register :after ((element layout-entry) (renderer renderer))
   (register (component element) renderer))
 
