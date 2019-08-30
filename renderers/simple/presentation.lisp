@@ -169,6 +169,11 @@
                                       (/ (alloy:extent-w extent) 2.5)
                                       (alloy:extent-h extent)))))
 
+(defmethod render-presentation-content ((renderer renderer) (presentation presentation) (component alloy:icon) extent)
+  (let ((point extent))
+    (image renderer point (alloy:image component)
+           :size (alloy:size (alloy:extent-w extent) (alloy:extent-h extent)))))
+
 ;;; LAF protocol
 
 (defclass look-and-feel ()
