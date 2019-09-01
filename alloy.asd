@@ -26,7 +26,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "linear")
                              (:file "grid")))
                (:module "components"
-                :components ((:file "base")))
+                :components ((:file "base")
+                             (:file "text-input")
+                             (:file "slider")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)
