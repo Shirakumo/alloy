@@ -8,36 +8,6 @@
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy))
-  ;; presentation.lisp
-  (:export
-   #:default-presentation
-   #:render-presentation
-   #:render-presentation-content
-   #:merge-presentation
-   #:merge-presentation-into
-   #:presentation
-   #:padding
-   #:background-color
-   #:border-color
-   #:border-thickness
-   #:text-color
-   #:text-alignment
-   #:text-vertical-alignment
-   #:text-direction
-   #:text-size
-   #:font-family
-   #:font-slant
-   #:font-spacing
-   #:font-weight
-   #:font-stretch
-   #:image-size
-   #:image-fill
-   #:image-alignment
-   #:presentable-layout-element
-   #:presentation
-   #:presentable-layout-entry
-   #:look-and-feel
-   #:look-and-feel-renderer)
   ;; protocol.lisp
   (:export
    #:call-with-pushed-transforms

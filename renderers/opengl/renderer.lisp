@@ -9,10 +9,8 @@
 (defvar *circ-polycount* 100)
 
 (defclass renderer (simple:transformed-renderer
-                    simple:styled-renderer
-                    simple:look-and-feel-renderer)
-  ((resources :initform (make-hash-table :test 'equal) :reader resources))
-  (:default-initargs :look-and-feel (make-instance 'simple::gray)))
+                    simple:styled-renderer)
+  ((resources :initform (make-hash-table :test 'equal) :reader resources)))
 
 (defmethod resource (name (renderer renderer) &optional (errorp T))
   (or (gethash name (resources renderer))

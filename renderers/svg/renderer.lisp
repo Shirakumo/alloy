@@ -45,12 +45,10 @@
    :transform (->svg (simple:transform-matrix transform))))
 
 (defclass renderer (simple:styled-renderer
-                    simple:transformed-renderer
-                    simple:look-and-feel-renderer)
+                    simple:transformed-renderer)
   ((scene :accessor scene)
    (size :initarg :size :initform (alloy:size 800 600) :reader size)
-   (clips :initform () :accessor clips))
-  (:default-initargs :look-and-feel (make-instance 'simple::gray)))
+   (clips :initform () :accessor clips)))
 
 (defclass svg-ui (renderer alloy:ui)
   ())
