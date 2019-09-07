@@ -26,6 +26,8 @@
 (defgeneric font-size (renderer))
 (defgeneric (setf font-size) (size renderer))
 ;;; TODO: gradients?
+;;; TODO: bezier curves?
+;;; TODO: paths
 
 (defgeneric line (renderer point-a point-b))
 (defgeneric rectangle (renderer extent))
