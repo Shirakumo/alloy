@@ -19,7 +19,7 @@
   (setf (simple:fill-mode renderer) :lines))
 
 (defclass box ()
-  ((extent)))
+  ((extent :initarg :extent :initform (error "EXTENT required") :accessor extent)))
 
 (defmethod render ((box box) (renderer renderer))
   (simple:rectangle renderer (extent box)))
@@ -28,7 +28,7 @@
 (defclass outlined-box (box outlined-shape) ())
 
 (defclass circle ()
-  ((extent)))
+  ((extent :initarg :extent :initform (error "EXTENT required") :accessor extent)))
 
 (defmethod render ((circle circle) (renderer renderer))
   (simple:ellipse renderer (extent circle)))
@@ -37,7 +37,7 @@
 (defclass outlined-circle (circle outlined-shape) ())
 
 (defclass polygon ()
-  ((points)))
+  ((points :initarg :points :initform (error "POINTS required") :accessor points)))
 
 (defmethod render ((polygon polygon) (renderer renderer))
   (simple:polygon renderer (points polygon)))
@@ -46,8 +46,8 @@
 (defclass outlined-polygon (polygon outlined-shape) ())
 
 (defclass line ()
-  ((point-a)
-   (point-b)))
+  ((point-a :initarg :point-a :initform (error "POINT-A required") :accessor point-a)
+   (point-b :initarg :point-b :initform (error "POINT-B required") :accessor point-b)))
 
 (defmethod render ((line line) (renderer renderer))
   (simple:line renderer (point-a line) (point-b line)))

@@ -12,12 +12,8 @@
 (defclass shape ()
   ())
 
-(defclass style ()
-  ((fill-color :initarg :fill-color :initform NIL :accessor fill-color)
-   (line-width :initarg :line-width :initform NIL :accessor line-width)
-   (font :initarg :font :initform NIL :accessor font)
-   (font-size :initarg :font-size :initform NIL :accessor font-size)
-   (offset :initarg :offset :initform NIL :accessor offset)
+(defclass style (simple:style)
+  ((offset :initarg :offset :initform NIL :accessor offset)
    (scale :initarg :scale :initform NIL :accessor scale)
    (rotation :initarg :rotation :initform NIL :accessor rotation)
    (pivot :initarg :pivot :initform NIL :accessor pivot)))
@@ -28,8 +24,8 @@
 (defgeneric merge-style-into (target source))
 (defgeneric activate-style (style renderer))
 
-(stealth-mixin:define-stealth-mixin component () (alloy:component)
-  ((shapes :initform () :reader shapes)))
+(stealth-mixin:define-stealth-mixin component () alloy:component
+  ((shapes :initform () :accessor shapes)))
 
 (defgeneric realise-component (renderer component))
 (defgeneric shape-style (renderer shape component))
@@ -37,8 +33,8 @@
 (defgeneric find-shape (id component &optional errorp))
 (defgeneric (setf find-shape) (shape id component))
 
-(defmethod alloy:regiser ((component component) (renderer renderer))
-  (realise-component (look renderer) component))
+(defmethod alloy:register ((component component) (renderer renderer))
+  (realise-component renderer component))
 
 (defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) (component component))
   (simple:with-pushed-transforms (renderer)
@@ -57,20 +53,29 @@
   target)
 
 (defmethod activate-style ((style style) (renderer renderer))
-  (setf (simple:fill-color renderer) (fill-color style))
-  (setf (simple:line-width renderer) (line-width style))
-  (setf (simple:font renderer) (font style))
-  (setf (simple:font-size renderer) (font-size style))
+  (setf (simple:fill-color renderer) (simple:fill-color style))
+  (setf (simple:line-width renderer) (simple:line-width style))
+  (setf (simple:font renderer) (simple:font style))
+  (setf (simple:font-size renderer) (simple:font-size style))
+  (setf (simple:composite-mode renderer) (simple:composite-mode style))
   ;; TODO: Not sure this is quite right.
   (simple:translate renderer (offset style))
   (simple:translate renderer (pivot style))
   (simple:rotate renderer (rotation style))
   (simple:scale renderer (scale style))
-  (simple:translate renderer (simple:point (- (simple:point-x (pivot style)))
-                                           (- (simple:point-y (pivot style))))))
+  (simple:translate renderer (alloy:point (- (alloy:point-x (pivot style)))
+                                          (- (alloy:point-y (pivot style))))))
 
 (defmethod shape-style ((renderer renderer) (shape shape) (component component))
-  (style))
+  (style :fill-color (simple:color 0 0 0)
+         :line-width 1.0
+         :font :default
+         :font-size 12.0
+         :composite-mode :source-over
+         :offset (alloy:point 0 0)
+         :scale (alloy:point 1 1)
+         :rotation 0.0
+         :pivot (alloy:point 0 0)))
 
 (defmethod clear-shapes ((component component))
   (setf (shapes component) ()))
