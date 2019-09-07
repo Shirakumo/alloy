@@ -27,11 +27,27 @@
 (stealth-mixin:define-stealth-mixin component () alloy:component
   ((shapes :initform () :accessor shapes)))
 
-(defgeneric realise-component (renderer component))
+(defgeneric realize-component (renderer component))
 (defgeneric shape-style (renderer shape component))
 (defgeneric clear-shapes (component))
 (defgeneric find-shape (id component &optional errorp))
 (defgeneric (setf find-shape) (shape id component))
+
+(defmacro define-realisation ((renderer component) &body shapes)
+  `(defmethod realize-component ((,renderer ,renderer) (,component ,component))
+     (clear-shapes ,component)
+     ,@(loop for ((name type) . initargs) in shapes
+             collect `(setf (find-shape ',name ,component)
+                            (make-instance ',type ,@initargs)))
+     ,component))
+
+(defmacro define-style ((renderer component) &body shapes)
+  (let* ((default (find T shapes :key #'car))
+         (shapes (if default (remove default shapes) shapes)))
+    `(defmethod shape-style ((,renderer ,renderer) (shape symbol) (,component ,component))
+       (ecase shape
+         ,@(loop for (name . initargs) in shapes
+                 collect `(,name (style ,@initargs ,@default)))))))
 
 (defmethod alloy:register ((component component) (renderer renderer))
   (realise-component renderer component))
@@ -40,11 +56,11 @@
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:extent element))
     (loop for shape in (shapes renderer)
-          for style = (shape-style renderer shape component)
+          for style = (shape-style renderer (car shape) component)
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
                  (activate-style style renderer)
-                 (render shape renderer))))))
+                 (render (cdr shape) renderer))))))
 
 (defmethod merge-style-into ((target style) (source style))
   (loop for slot in '(fill-color line-width font font-size offset scale rotation pivot)
@@ -66,7 +82,7 @@
   (simple:translate renderer (alloy:point (- (alloy:point-x (pivot style)))
                                           (- (alloy:point-y (pivot style))))))
 
-(defmethod shape-style ((renderer renderer) (shape shape) (component component))
+(defmethod shape-style ((renderer renderer) shape (component component))
   (style :fill-color (simple:color 0 0 0)
          :line-width 1.0
          :font :default
