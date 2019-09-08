@@ -11,14 +11,12 @@
 
 (define-realisation (default-look-and-feel alloy:button)
   ((:background filled-box)
-   :extent (alloy:extent 0 0 0 0))
+   :extent (alloy:margins))
   ((:border outlined-box)
-   ;; FIXME: this
-   :extent (alloy:extent -2 -2 +2 +2))
+   :extent (alloy:margins :l -2 :u -2 :r -2 :b -2))
   ((:label text)
    :text (alloy:text alloy:button)
-   ;; FIXME: this
-   :point (alloy:point 1/2 1/2)
+   :extent (alloy:margins :l 1 :u 1 :r 1 :b 1)
    :valign :center
    :halign :center))
 

@@ -60,7 +60,7 @@
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
                  (activate-style style renderer)
-                 (render (cdr shape) renderer))))))
+                 (render-with (cdr shape) element renderer))))))
 
 (defmethod merge-style-into ((target style) (source style))
   (loop for slot in '(fill-color line-width font font-size offset scale rotation pivot)
