@@ -22,19 +22,19 @@
                 (- (alloy:extent-w bounds) (alloy:margins-l margins) (alloy:margins-r margins))
                 (- (alloy:extent-h bounds) (alloy:margins-b margins) (alloy:margins-u margins))))
 
-(defclass filled-shape ()
+(defclass filled-shape (shape)
   ())
 
 (defmethod alloy:render-with :before ((shape filled-shape) element (renderer renderer))
   (setf (simple:fill-mode renderer) :fill))
 
-(defclass outlined-shape ()
+(defclass outlined-shape (shape)
   ())
 
 (defmethod alloy:render-with :before ((shape outlined-shape) element (renderer renderer))
   (setf (simple:fill-mode renderer) :lines))
 
-(defclass box ()
+(defclass box (shape)
   ((extent :initarg :extent :initform (error "EXTENT required") :accessor extent)))
 
 (defmethod alloy:render-with ((box box) element (renderer renderer))
@@ -43,7 +43,7 @@
 (defclass filled-box (box filled-shape) ())
 (defclass outlined-box (box outlined-shape) ())
 
-(defclass circle ()
+(defclass circle (shape)
   ((extent :initarg :extent :initform (error "EXTENT required") :accessor extent)))
 
 (defmethod alloy:render-with ((circle circle) element (renderer renderer))
@@ -52,7 +52,7 @@
 (defclass filled-circle (circle filled-shape) ())
 (defclass outlined-circle (circle outlined-shape) ())
 
-(defclass polygon ()
+(defclass polygon (shape)
   ((points :initarg :points :initform (error "POINTS required") :accessor points)))
 
 (defmethod alloy:render-with ((polygon polygon) element (renderer renderer))
@@ -61,18 +61,18 @@
 (defclass filled-polygon (polygon filled-shape) ())
 (defclass outlined-polygon (polygon outlined-shape) ())
 
-(defclass line ()
+(defclass line (shape)
   ((point-a :initarg :point-a :initform (error "POINT-A required") :accessor point-a)
    (point-b :initarg :point-b :initform (error "POINT-B required") :accessor point-b)))
 
 (defmethod alloy:render-with ((line line) element (renderer renderer))
   (simple:line renderer (point-a line) (point-b line)))
 
-(defclass text ()
+(defclass text (shape)
   ((text :initarg :text :initform (error "TEXT required.") :accessor text)
    (extent :initarg :extent :initform (alloy:margins) :accessor extent)
-   (valign :initarg :valign :initform :center :accessor valign)
-   (halign :initarg :halign :initform :left :accessor halign)
+   (valign :initarg :valign :initform :middle :accessor valign)
+   (halign :initarg :halign :initform :start :accessor halign)
    (direction :initarg :direction :initform :right :accessor direction)))
 
 (defmethod alloy:render-with ((text text) element (renderer renderer))
@@ -80,13 +80,13 @@
     (simple:clip renderer extent)
     (let ((point (alloy:point (+ (alloy:extent-x extent)
                                  (ecase (halign text)
-                                   (:left 0)
-                                   (:center (/ (alloy:extent-w extent) 2))
-                                   (:right (alloy:extent-w extent))))
+                                   (:start 0)
+                                   (:middle (/ (alloy:extent-w extent) 2))
+                                   (:end (alloy:extent-w extent))))
                               (+ (alloy:extent-y extent)
                                  (ecase (valign text)
                                    (:bottom 0)
-                                   (:center (/ (alloy:extent-h extent) 2))
+                                   (:middle (/ (alloy:extent-h extent) 2))
                                    (:top (alloy:extent-h extent)))))))
       (simple:text renderer point (text text)
                    :direction (direction text)

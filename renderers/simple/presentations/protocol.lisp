@@ -13,7 +13,13 @@
   ())
 
 (defclass style (simple:style)
-  ((offset :initarg :offset :initform NIL :accessor offset)
+  ((simple:fill-color :initform NIL)
+   (simple:font :initform NIL)
+   (simple:font-size :initform NIL)
+   (simple:line-width :initform NIL)
+   (simple:fill-mode :initform NIL)
+   (simple:composite-mode :initform NIL)
+   (offset :initarg :offset :initform NIL :accessor offset)
    (scale :initarg :scale :initform NIL :accessor scale)
    (rotation :initarg :rotation :initform NIL :accessor rotation)
    (pivot :initarg :pivot :initform NIL :accessor pivot)))
@@ -25,7 +31,7 @@
 (defgeneric activate-style (style renderer))
 
 (stealth-mixin:define-stealth-mixin component () alloy:component
-  ((shapes :initform () :accessor shapes)))
+  ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
 
 (defgeneric realize-component (renderer component))
 (defgeneric shape-style (renderer shape component))
@@ -50,18 +56,19 @@
               (alloy:bounds ()
                 (alloy:extent-for alloy:component alloy:renderer)))
          (declare (ignorable #'alloy:focus #'alloy:bounds))
-         (ecase shape
+         (case shape
            ,@(loop for (name . initargs) in shapes
-                   collect `(,name (merge-style-into (style ,@initargs ,@default)
-                                                     (call-next-method)))))))))
+                   collect `(,name (merge-style-into (call-next-method)
+                                                     (style ,@initargs ,@default))))
+           (T (call-next-method)))))))
 
-(defmethod alloy:register ((component component) (renderer renderer))
-  (realise-component renderer component))
+(defmethod alloy:register :after ((component component) (renderer renderer))
+  (realize-component renderer component))
 
 (defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) (component component))
   (simple:with-pushed-transforms (renderer)
-    (simple:translate renderer (alloy:extent element))
-    (loop for shape in (shapes renderer)
+    (simple:translate renderer (alloy:bounds element))
+    (loop for shape across (shapes component)
           for style = (shape-style renderer (car shape) component)
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
@@ -69,7 +76,9 @@
                  (alloy:render-with (cdr shape) element renderer))))))
 
 (defmethod merge-style-into ((target style) (source style))
-  (loop for slot in '(fill-color line-width font font-size offset scale rotation pivot)
+  (loop for slot in '(simple:fill-color simple:font simple:font-size
+                      simple:line-width simple:composite-mode
+                      offset scale rotation pivot)
         for src = (slot-value source slot)
         do (when src (setf (slot-value target slot) src)))
   target)
@@ -91,25 +100,26 @@
 (defmethod shape-style ((renderer renderer) shape (component component))
   (style :fill-color (simple:color 0 0 0)
          :line-width 1.0
-         :font :default
+         :font (simple:request-font renderer :default)
          :font-size 12.0
          :composite-mode :source-over
          :offset (alloy:point 0 0)
-         :scale (alloy:point 1 1)
+         :scale (alloy:size 1 1)
          :rotation 0.0
          :pivot (alloy:point 0 0)))
 
 (defmethod clear-shapes ((component component))
-  (setf (shapes component) ()))
+  (setf (fill-pointer (shapes component)) 0))
 
 (defmethod find-shape (id (component component) &optional errorp)
-  (or (cdr (assoc id (shapes component)))
+  (or (cdr (find id (shapes component) :key #'car))
       (when errorp (error "No such shape~%  ~s~%in~%  ~s"
                           id component))))
 
 (defmethod (setf find-shape) ((shape shape) id (component component))
   ;; FIXME: mark dirty somehow (mark-for-render component)
-  (let ((record (assoc id (shapes component))))
+  (let ((record (find id (shapes component) :key #'car)))
     (if record
         (setf (cdr record) shape)
-        (push (cons id shape) (shapes component)))))
+        (vector-push-extend (cons id shape) (shapes component)))
+    shape))
