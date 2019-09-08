@@ -13,8 +13,6 @@
    (col-sizes :initform #() :reader col-sizes)
    (elements :initform (make-array (list 0 0) :adjustable T :initial-element NIL) :reader elements)))
 
-;; FIXME: allow stretch columns
-
 (defmethod initialize-instance :after ((layout grid-layout) &key row-sizes col-sizes)
   (setf (row-sizes layout) row-sizes)
   (setf (col-sizes layout) col-sizes))
@@ -22,11 +20,16 @@
 (defmethod (setf stretch) :after (value (layout grid-layout))
   (suggest-bounds (bounds layout) layout))
 
+(defun coerce-grid-size (v)
+  (etypecase v
+    (real (float v))
+    ((eql T) T)))
+
 (defmethod (setf row-sizes) ((value sequence) (layout grid-layout))
-  (setf (slot-value layout 'row-sizes) (map 'vector #'float value)))
+  (setf (slot-value layout 'row-sizes) (map 'vector #'coerce-grid-size value)))
 
 (defmethod (setf col-sizes) ((value sequence) (layout grid-layout))
-  (setf (slot-value layout 'col-sizes) (map 'vector #'float value)))
+  (setf (slot-value layout 'col-sizes) (map 'vector #'coerce-grid-size value)))
 
 (defmethod (setf row-sizes) :after (value (layout grid-layout))
   (adjust-array (elements layout) (list (length (row-sizes layout))
@@ -80,31 +83,50 @@
     (unless (extent= (bounds layout) updated)
       (setf (bounds layout) updated))))
 
+(defun spanning-size (sizes total)
+  (let ((count 0))
+    (loop for size across sizes
+          do (etypecase size
+               (single-float (decf total size))
+               ((eql T) (incf count))))
+    (if (< 0 count)
+        (/ total count)
+        total)))
+
 (defmethod (setf bounds) :after (extent (layout grid-layout))
   (destructure-margins (:l ml :u mu :r mr :b mb) (cell-margins layout)
-    (loop with elements = (elements layout)
-          for y = (+ (extent-y extent) mb) then (+ y h)
-          for h across (row-sizes layout)
-          for i from 0
-          do (loop for x = (+ (extent-x extent) ml) then (+ x w)
-                   for w across (col-sizes layout)
-                   for j from 0
-                   for element = (aref elements i j)
-                   do (when element
-                        (let ((ideal (suggest-bounds (extent x y (- w ml mr) (- h mb mu))
-                                                     element))
-                              (bounds (bounds element)))
-                          (setf (extent-x bounds) x)
-                          (setf (extent-y bounds) y)
-                          (cond ((stretch layout)
-                                 (setf (extent-w bounds) (- w ml mr))
-                                 (setf (extent-h bounds) (- h mb mu)))
-                                (T
-                                 (setf (extent-w bounds) (extent-w ideal))
-                                 (setf (extent-h bounds) (extent-h ideal))))))))))
+    (let ((th (spanning-size (row-sizes layout) (extent-h extent)))
+          (tw (spanning-size (col-sizes layout) (extent-w extent))))
+      (loop with elements = (elements layout)
+            for y = (+ (extent-y extent) mb) then (+ y h)
+            for hish across (row-sizes layout)
+            for h = (if (eql T hish) th hish)
+            for i from 0
+            do (loop for x = (+ (extent-x extent) ml) then (+ x w)
+                     for wish across (col-sizes layout)
+                     for w = (if (eql T wish) tw wish)
+                     for j from 0
+                     for element = (aref elements i j)
+                     do (when element
+                          (let ((ideal (suggest-bounds (extent x y (- w ml mr) (- h mb mu))
+                                                       element))
+                                (bounds (bounds element)))
+                            (setf (extent-x bounds) x)
+                            (setf (extent-y bounds) y)
+                            (cond ((stretch layout)
+                                   (setf (extent-w bounds) (- w ml mr))
+                                   (setf (extent-h bounds) (- h mb mu)))
+                                  (T
+                                   (setf (extent-w bounds) (extent-w ideal))
+                                   (setf (extent-h bounds) (extent-h ideal)))))))))))
 
 (defmethod suggest-bounds (extent (layout grid-layout))
-  (extent (extent-x extent)
-          (extent-y extent)
-          (loop for col across (col-sizes layout) sum col)
-          (loop for row across (row-sizes layout) sum row)))
+  (destructure-margins (:l ml :u mu :r mr :b mb) (cell-margins layout)
+    (extent (extent-x extent)
+            (extent-y extent)
+            (loop for col across (col-sizes layout)
+                  if (eql T col) sum (+ ml mr)
+                  else sum col)
+            (loop for row across (row-sizes layout)
+                  if (eql T row) sum (+ mu mb)
+                  else sum row))))
