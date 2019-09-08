@@ -15,6 +15,7 @@
    #:translate
    #:scale
    #:rotate
+   #:z-index
    #:call-with-pushed-styles
    #:fill-color
    #:line-width

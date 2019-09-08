@@ -88,6 +88,12 @@
                                 (sin phi) (cos phi) 0
                                 0 0 1)))
 
+(defmethod z-index ((transform transform))
+  (aref (transform-matrix transform) 8))
+
+(defmethod (setf z-index) (z-index (transform transform))
+  (setf (aref (transform-matrix transform) 8) (float z-index)))
+
 (defclass transformed-renderer (renderer)
   ((transform :accessor transform)))
 
@@ -124,3 +130,9 @@
 
 (defmethod rotate ((renderer transformed-renderer) phi)
   (rotate (transform renderer) phi))
+
+(defmethod z-index ((renderer transformed-renderer))
+  (z-index (transform renderer)))
+
+(defmethod (setf z-index) (z-index (renderer transformed-renderer))
+  (setf (z-index (transform renderer)) z-index))

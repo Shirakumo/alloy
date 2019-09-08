@@ -6,6 +6,8 @@
 
 (in-package #:org.shirakumo.alloy.renderers.simple.presentations)
 
+;; TODO: Pallettes
+
 (defclass default-look-and-feel (renderer)
   ())
 
@@ -18,7 +20,8 @@
   (:border
    :fill-color (case (alloy:focus)
                  ((:weak :strong) (simple:color 0.9 0.9 0.9))
-                 (T (simple:color 0 0 0 0))))
+                 (T (simple:color 0 0 0 0)))
+   :z-index -1)
   (:label
    :fill-color (case (alloy:focus)
                  ((:weak :strong) (simple:color 0 0 0))
@@ -71,5 +74,6 @@
 (define-style (default-look-and-feel alloy:input-line)
   (:background
    :fill-color (case (alloy:focus)
-                 (:strong (simple:color 1 1 1))
+                 (:strong (simple:color 0.9 0.9 0.9))
+                 (:weak (simple:color 0.7 0.7 0.7))
                  (T (simple:color 0.15 0.15 0.15)))))

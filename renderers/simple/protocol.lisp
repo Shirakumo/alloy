@@ -11,6 +11,8 @@
 (defgeneric translate (renderer point))
 (defgeneric scale (renderer size))
 (defgeneric rotate (renderer phi))
+(defgeneric z-index (renderer))
+(defgeneric (setf z-index) (z-index renderer))
 
 (defgeneric call-with-pushed-styles (function renderer))
 (defgeneric fill-color (renderer))

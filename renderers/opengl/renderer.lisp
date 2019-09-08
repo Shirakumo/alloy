@@ -8,6 +8,9 @@
 
 (defvar *circ-polycount* 100)
 
+;; FIXME: With a UBO we could avoid having to re-set uniforms at ever draw
+;;        and instead change them when the style is set.
+
 (defclass renderer (simple:transformed-renderer
                     simple:styled-renderer)
   ((resources :initform (make-hash-table :test 'equal) :reader resources)))

@@ -19,6 +19,7 @@
    (simple:line-width :initform NIL)
    (simple:fill-mode :initform NIL)
    (simple:composite-mode :initform NIL)
+   (z-index :initarg :z-index :initform NIL :accessor z-index)
    (offset :initarg :offset :initform NIL :accessor offset)
    (scale :initarg :scale :initform NIL :accessor scale)
    (rotation :initarg :rotation :initform NIL :accessor rotation)
@@ -78,7 +79,7 @@
 (defmethod merge-style-into ((target style) (source style))
   (loop for slot in '(simple:fill-color simple:font simple:font-size
                       simple:line-width simple:composite-mode
-                      offset scale rotation pivot)
+                      z-index offset scale rotation pivot)
         for src = (slot-value source slot)
         do (when src (setf (slot-value target slot) src)))
   target)
@@ -90,6 +91,7 @@
   (setf (simple:font-size renderer) (simple:font-size style))
   (setf (simple:composite-mode renderer) (simple:composite-mode style))
   ;; TODO: Not sure this is quite right.
+  (setf (simple:z-index renderer) (z-index style))
   (simple:translate renderer (offset style))
   (simple:translate renderer (pivot style))
   (simple:rotate renderer (rotation style))
@@ -103,6 +105,7 @@
          :font (simple:request-font renderer :default)
          :font-size 12.0
          :composite-mode :source-over
+         :z-index 0
          :offset (alloy:point 0 0)
          :scale (alloy:size 1 1)
          :rotation 0.0
