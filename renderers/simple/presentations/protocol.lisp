@@ -31,6 +31,7 @@
 (defgeneric merge-style-into (target source))
 (defgeneric activate-style (style renderer))
 
+;; FIXME: change this to be RENDERABLE so that layouts can be styled too.
 (stealth-mixin:define-stealth-mixin component () alloy:component
   ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
 

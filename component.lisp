@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass component ()
+(defclass component (renderable)
   ())
 
 (defmethod handle ((event event) (component component) ctx)
