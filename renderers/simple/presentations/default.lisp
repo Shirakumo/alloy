@@ -72,6 +72,4 @@
   (:background
    :fill-color (case (alloy:focus)
                  (:strong (simple:color 1 1 1))
-                 (T (simple:color 0.3 0.3 0.3))))
-  (:label
-   :fill-color (simple:color 0 0 0)))
+                 (T (simple:color 0.15 0.15 0.15)))))
