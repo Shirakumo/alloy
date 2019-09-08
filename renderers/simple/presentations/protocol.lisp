@@ -34,20 +34,26 @@
 (defgeneric (setf find-shape) (shape id component))
 
 (defmacro define-realisation ((renderer component) &body shapes)
-  `(defmethod realize-component ((,renderer ,renderer) (,component ,component))
-     (clear-shapes ,component)
+  `(defmethod realize-component ((alloy:renderer ,renderer) (alloy:component ,component))
+     (clear-shapes alloy:component)
      ,@(loop for ((name type) . initargs) in shapes
-             collect `(setf (find-shape ',name ,component)
+             collect `(setf (find-shape ',name alloy:component)
                             (make-instance ',type ,@initargs)))
-     ,component))
+     alloy:component))
 
 (defmacro define-style ((renderer component) &body shapes)
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
-    `(defmethod shape-style ((,renderer ,renderer) (shape symbol) (,component ,component))
-       (ecase shape
-         ,@(loop for (name . initargs) in shapes
-                 collect `(,name (style ,@initargs ,@default)))))))
+    `(defmethod shape-style ((alloy:renderer ,renderer) (shape symbol) (alloy:component ,component))
+       (flet ((alloy:focus ()
+                (alloy:focus-for alloy:component alloy:renderer))
+              (alloy:bounds ()
+                (alloy:extent-for alloy:component alloy:renderer)))
+         (declare (ignorable #'alloy:focus #'alloy:bounds))
+         (ecase shape
+           ,@(loop for (name . initargs) in shapes
+                   collect `(,name (merge-style-into (style ,@initargs ,@default)
+                                                     (call-next-method)))))))))
 
 (defmethod alloy:register ((component component) (renderer renderer))
   (realise-component renderer component))
@@ -60,7 +66,7 @@
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
                  (activate-style style renderer)
-                 (render-with (cdr shape) element renderer))))))
+                 (alloy:render-with (cdr shape) element renderer))))))
 
 (defmethod merge-style-into ((target style) (source style))
   (loop for slot in '(fill-color line-width font font-size offset scale rotation pivot)

@@ -16,10 +16,11 @@
   extent)
 
 (defmethod to-extent ((margins alloy:margins) (bounds alloy:extent))
+  ;; We ignore the bounds' x/y since we already have translated to that in local frame.
   (alloy:extent (alloy:margins-l margins)
                 (alloy:margins-b margins)
-                (- (alloy:margins-r margins) (alloy:extent-w bounds))
-                (- (alloy:margins-u margins) (alloy:extent-h bounds))))
+                (- (alloy:extent-w bounds) (alloy:margins-l margins) (alloy:margins-r margins))
+                (- (alloy:extent-h bounds) (alloy:margins-b margins) (alloy:margins-u margins))))
 
 (defclass filled-shape ()
   ())
