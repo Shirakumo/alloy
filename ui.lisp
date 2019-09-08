@@ -29,7 +29,7 @@
   (focus-element component (focus-tree ui)))
 
 (defmethod extent-for ((component component) (ui ui))
-  (extent (layout-element component (layout-tree ui))))
+  (bounds (layout-element component (layout-tree ui))))
 
 (defmethod focus-for ((component component) (ui ui))
   (ignore-errors ;; FIXME: gross
@@ -58,3 +58,6 @@
 
 (defmethod suggest-bounds (extent (ui ui))
   (suggest-bounds extent (layout-tree ui)))
+
+(defmethod register ((source ui) (target ui))
+  (register (layout-tree source) target))
