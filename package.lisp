@@ -21,12 +21,23 @@
    #:button
    #:pressed
    #:switch
-   #:state
+   #:state)
+  ;; components/text-input.lisp
+  (:export
    #:text-input-component
    #:cursor
    #:text
    #:input-line
    #:input-box)
+  ;; components/slider.lisp
+  (:export
+   #:slider
+   #:range
+   #:value
+   #:step
+   #:state
+   #:minimum
+   #:maximum)
   ;; container.lisp
   (:export
    #:element
