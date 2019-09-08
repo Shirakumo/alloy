@@ -7,20 +7,26 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass slider (interactable-component)
-  ((min :initarg :min :initform 0 :accessor min)
-   (max :initarg :max :initform 100 :accessor max)
+  ((range :initarg :range :initform '(0 . 100) :accessor range)
    (value :initarg :value :initform 0 :accessor value)
    (step :initarg :step :initform 1 :accessor step)
    (state :initform NIL :accessor state)))
 
-(defmethod (setf min) :after (value (slider slider))
-  (setf (value slider) (value slider)))
+(defmethod minimum ((slider slider))
+  (car (range slider)))
 
-(defmethod (setf max) :after (value (slider slider))
+(defmethod maximum ((slider slider))
+  (cdr (range slider)))
+
+(defmethod (setf range) :before (value (slider slider))
+  (assert (< (car value) (cdr value))))
+
+(defmethod (setf range) :after (value (slider slider))
   (setf (value slider) (value slider)))
 
 (defmethod (setf value) :around (value (slider slider))
-  (call-next-method (max (min slider) (min (max slider) value)) slider))
+  (destructuring-bind (min . max) (range slider)
+    (call-next-method (max min (min max value)) slider)))
 
 (defmethod (setf step) :before (value (slider slider))
   (assert (< 0 value) (value)))
@@ -35,9 +41,9 @@
     ((:up :right)
      (incf (value slider) (step slider)))
     (:home
-     (setf (value slider) (min slider)))
+     (setf (value slider) (minimum slider)))
     (:end
-     (setf (value slider) (max slider)))
+     (setf (value slider) (maximum slider)))
     (T
      (call-next-method))))
 
@@ -47,7 +53,7 @@
      (let ((range (/ (- (point-x (location event))
                         (extent-x (extent-for slider ctx)))
                      (extent-w (extent-for slider ctx)))))
-       (setf (value event) (* range (- (max slider) (min slider))))))
+       (setf (value event) (* range (- (maximum slider) (minimum slider))))))
     (T
      (call-next-method))))
 
