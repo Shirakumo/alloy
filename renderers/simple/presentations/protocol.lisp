@@ -31,32 +31,37 @@
 (defgeneric merge-style-into (target source))
 (defgeneric activate-style (style renderer))
 
-;; FIXME: change this to be RENDERABLE so that layouts can be styled too.
-(stealth-mixin:define-stealth-mixin component () alloy:component
+(stealth-mixin:define-stealth-mixin renderable () alloy:renderable
   ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
 
-(defgeneric realize-component (renderer component))
-(defgeneric shape-style (renderer shape component))
-(defgeneric clear-shapes (component))
-(defgeneric find-shape (id component &optional errorp))
-(defgeneric (setf find-shape) (shape id component))
+(defgeneric realize-renderable (renderer renderable))
+(defgeneric shape-style (renderer shape renderable))
+(defgeneric clear-shapes (renderable))
+(defgeneric find-shape (id renderable &optional errorp))
+(defgeneric (setf find-shape) (shape id renderable))
 
-(defmacro define-realisation ((renderer component) &body shapes)
-  `(defmethod realize-component ((alloy:renderer ,renderer) (alloy:component ,component))
-     (clear-shapes alloy:component)
-     ,@(loop for ((name type) . initargs) in shapes
-             collect `(setf (find-shape ',name alloy:component)
-                            (make-instance ',type ,@initargs)))
-     alloy:component))
+(defmacro define-realisation ((renderer renderable) &body shapes)
+  `(defmethod realize-renderable ((alloy:renderer ,renderer) (alloy:renderable ,renderable))
+     (clear-shapes alloy:renderable)
+     ,@(loop for shape in shapes
+             collect (destructuring-bind ((name type &key when) &body initargs) shape
+                       `(when ,(or when T)
+                          (setf (find-shape ',name alloy:renderable)
+                                (make-instance ',type ,@initargs)))))
+     alloy:renderable))
 
-(defmacro define-style ((renderer component) &body shapes)
+(defmacro define-style ((renderer renderable) &body shapes)
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
-    `(defmethod shape-style ((alloy:renderer ,renderer) (shape symbol) (alloy:component ,component))
-       (flet ((alloy:focus ()
-                (alloy:focus-for alloy:component alloy:renderer))
-              (alloy:bounds ()
-                (alloy:extent-for alloy:component alloy:renderer)))
+    `(defmethod shape-style ((alloy:renderer ,renderer) (shape symbol) (alloy:renderable ,renderable))
+       (flet ((alloy:focus (&optional thing)
+                (if thing
+                    (alloy:focus thing)
+                    (alloy:focus-for alloy:renderable alloy:renderer)))
+              (alloy:bounds (&optional thing)
+                (if thing
+                    (alloy:bounds thing)
+                    (alloy:extent-for alloy:renderable alloy:renderer))))
          (declare (ignorable #'alloy:focus #'alloy:bounds))
          (case shape
            ,@(loop for (name . initargs) in shapes
@@ -64,10 +69,20 @@
                                                      (style ,@initargs ,@default))))
            (T (call-next-method)))))))
 
-(defmethod alloy:register :after ((component component) (renderer renderer))
-  (realize-component renderer component))
+(defmethod alloy:register :after ((renderable renderable) (renderer renderer))
+  (realize-renderable renderer renderable))
 
-(defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) (component component))
+(defmethod alloy:render :before ((renderer renderer) (element alloy:layout))
+  (simple:with-pushed-transforms (renderer)
+    (simple:translate renderer (alloy:bounds element))
+    (loop for shape across (shapes element)
+          for style = (shape-style renderer (car shape) element)
+          do (simple:with-pushed-transforms (renderer)
+               (simple:with-pushed-styles (renderer)
+                 (activate-style style renderer)
+                 (alloy:render-with (cdr shape) element renderer))))))
+
+(defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) (component alloy:component))
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds element))
     (loop for shape across (shapes component)
@@ -100,7 +115,7 @@
   (simple:translate renderer (alloy:point (- (alloy:point-x (pivot style)))
                                           (- (alloy:point-y (pivot style))))))
 
-(defmethod shape-style ((renderer renderer) shape (component component))
+(defmethod shape-style ((renderer renderer) shape (renderable renderable))
   (style :fill-color (simple:color 0 0 0)
          :line-width 1.0
          :font (simple:request-font renderer :default)
@@ -112,18 +127,20 @@
          :rotation 0.0
          :pivot (alloy:point 0 0)))
 
-(defmethod clear-shapes ((component component))
-  (setf (fill-pointer (shapes component)) 0))
+(defmethod realize-renderable ((renderer renderer) (renderable renderable)))
 
-(defmethod find-shape (id (component component) &optional errorp)
-  (or (cdr (find id (shapes component) :key #'car))
+(defmethod clear-shapes ((renderable renderable))
+  (setf (fill-pointer (shapes renderable)) 0))
+
+(defmethod find-shape (id (renderable renderable) &optional errorp)
+  (or (cdr (find id (shapes renderable) :key #'car))
       (when errorp (error "No such shape~%  ~s~%in~%  ~s"
-                          id component))))
+                          id renderable))))
 
-(defmethod (setf find-shape) ((shape shape) id (component component))
-  ;; FIXME: mark dirty somehow (mark-for-render component)
-  (let ((record (find id (shapes component) :key #'car)))
+(defmethod (setf find-shape) ((shape shape) id (renderable renderable))
+  (alloy:mark-for-render renderable)
+  (let ((record (find id (shapes renderable) :key #'car)))
     (if record
         (setf (cdr record) shape)
-        (vector-push-extend (cons id shape) (shapes component)))
+        (vector-push-extend (cons id shape) (shapes renderable)))
     shape))

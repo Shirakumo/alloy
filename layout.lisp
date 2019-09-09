@@ -13,7 +13,7 @@
 (defgeneric notice-bounds (changed parent))
 (defgeneric suggest-bounds (extent layout-element))
 
-(defclass layout-element (element renderable)
+(defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree)
    (parent :initarg :parent :initform (error "PARENT required.") :reader parent)
    (bounds :initform (extent) :reader bounds)))
@@ -60,7 +60,7 @@
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a" (component element))))
 
-(defmethod register :after ((element layout-entry) (renderer renderer))
+(defmethod register ((element layout-entry) (renderer renderer))
   (register (component element) renderer))
 
 (defmethod handle ((event event) (element layout-entry) ui)
@@ -76,7 +76,7 @@
 (defmethod suggest-bounds (extent (element layout-entry))
   (suggest-bounds extent (component element)))
 
-(defclass layout (layout-element container)
+(defclass layout (layout-element container renderable)
   ())
 
 (defmethod enter ((component component) (layout layout) &rest args)

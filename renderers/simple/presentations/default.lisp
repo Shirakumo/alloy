@@ -11,7 +11,7 @@
 (defclass default-look-and-feel (renderer)
   ())
 
-(define-style (default-look-and-feel component)
+(define-style (default-look-and-feel renderable)
   (:background
    :fill-color (simple:color 0.15 0.15 0.15))
   (:border
@@ -26,7 +26,7 @@
 
 (define-realisation (default-look-and-feel alloy:label)
   ((:label text)
-   :text (alloy:text alloy:component)
+   :text (alloy:text alloy:renderable)
    :extent (alloy:margins)))
 
 (define-realisation (default-look-and-feel alloy:button)
@@ -34,8 +34,12 @@
    :extent (alloy:margins))
   ((:border outlined-box)
    :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
-  ((:label text)
-   :text (alloy:text alloy:component)
+  ((:icon icon :when (alloy:image alloy:renderable))
+   :image (simple:request-image alloy:renderer (alloy:image alloy:renderable))
+   :extent (alloy:margins :l 1 :u 1 :r 1 :b 1)
+   :halign :middle)
+  ((:label text :when (alloy:text alloy:renderable))
+   :text (alloy:text alloy:renderable)
    :extent (alloy:margins :l 1 :u 1 :r 1 :b 1)
    :halign :middle))
 
@@ -57,7 +61,7 @@
 
 (define-style (default-look-and-feel alloy:switch)
   (:switch
-   :offset (alloy:point (if (alloy:state alloy:component)
+   :offset (alloy:point (if (alloy:state alloy:renderable)
                             (- (alloy:extent-w (alloy:bounds)) 20)
                             0))
    :fill-color (case (alloy:focus)
@@ -70,7 +74,7 @@
   ((:border outlined-box)
    :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
   ((:label text)
-   :text (alloy:text alloy:component)
+   :text (alloy:text alloy:renderable)
    :extent (alloy:margins :l 1 :u 1 :r 1 :b 1))
   ((:cursor filled-box)
    :extent (alloy:extent 0 0 1 25)))
@@ -97,8 +101,8 @@
 (define-style (default-look-and-feel alloy:slider)
   (:handle
    :offset (alloy:point (- (* (alloy:extent-w (alloy:bounds))
-                              (/ (- (alloy:value alloy:component) (alloy:minimum alloy:component))
-                                 (- (alloy:maximum alloy:component) (alloy:minimum alloy:component))))
+                              (/ (- (alloy:value alloy:renderable) (alloy:minimum alloy:renderable))
+                                 (- (alloy:maximum alloy:renderable) (alloy:minimum alloy:renderable))))
                            5))
    :fill-color (case (alloy:focus)
                  (:strong (simple:color 1 1 1))
