@@ -85,7 +85,7 @@
   (setf (fill-color (style renderer)) color))
 
 (defmethod line-width ((renderer styled-renderer))
-  (line (style renderer)))
+  (line-width (style renderer)))
 
 (defmethod (setf line-width) (width (renderer styled-renderer))
   (setf (line-width (style renderer)) width))

@@ -114,11 +114,6 @@
          (funcall function)
       (setf (transform renderer) current))))
 
-(defmethod pop-transforms ((renderer transformed-renderer))
-  (pop (transform-stack renderer))
-  (unless (transform-stack renderer)
-    (setf (transform-stack renderer) (list (make-default-transform renderer)))))
-
 (defmethod clip ((renderer transformed-renderer) region)
   (clip (transform renderer) region))
 
