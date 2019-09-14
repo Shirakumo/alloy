@@ -28,6 +28,9 @@
   (destructuring-bind (min . max) (range slider)
     (call-next-method (max min (min max value)) slider)))
 
+(defmethod (setf value) :after (value (slider slider))
+  (mark-for-render slider))
+
 (defmethod (setf step) :before (value (slider slider))
   (assert (< 0 value) (value)))
 

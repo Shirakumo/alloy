@@ -19,6 +19,9 @@
   (unless (eql :strong (focus-for component ctx))
     (setf (focus-for component ctx) :weak)))
 
+(defmethod (setf focus) :after (value (component interactable-component))
+  (mark-for-render component))
+
 (defclass label (text-component)
   ())
 
@@ -30,6 +33,9 @@
 
 (defclass button (text-component image-component interactable-component)
   ((pressed :initform NIL :accessor pressed)))
+
+(defmethod (setf pressed) :after (value (button button))
+  (mark-for-render button))
 
 (defmethod handle ((event pointer-down) (button button) ctx)
   (setf (pressed button) T))
@@ -53,6 +59,9 @@
 
 (defclass switch (interactable-component)
   ((state :initarg :state :initform NIL :accessor state)))
+
+(defmethod (setf state) :after (value (switch switch))
+  (mark-for-render switch))
 
 (defmethod activate ((switch switch))
   (setf (state switch) (not (state switch))))

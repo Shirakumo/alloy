@@ -10,6 +10,12 @@
   ((cursor :initform 0 :accessor cursor)
    (text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character))))
 
+(defmethod (setf text) :after (value (component text-input-component))
+  (mark-for-render component))
+
+(defmethod (setf cursor) :after (value (component text-input-component))
+  (mark-for-render component))
+
 (defmethod handle ((event text-event) (component text-input-component) ctx)
   (loop for char across (text event)
         do (array-utils:vector-push-extend-position char (text component) (cursor component))
@@ -44,14 +50,16 @@
      (call-next-method))))
 
 (defmethod handle ((event paste-event) (component text-input-component) ctx)
+  ;; FIXME: Insert at cursor instead
   (let ((content (content event))
         (text (text component)))
     (typecase content
       (string
        (when (< (+ (length text) (length content))
                 (array-total-size text))
-         (adjust-array text (+ (length text) (length content)) :fill-pointer T)
-         (replace text content :start1 (- (length text) (length content)))))
+         (adjust-array text (+ (length text) (length content)) :fill-pointer T))
+       (replace text content :start1 (- (length text) (length content)))
+       (mark-for-render component))
       (T
        (call-next-method)))))
 
@@ -74,8 +82,9 @@
        (setf content (remove-if (lambda (c) (find c '(#\Return #\Linefeed))) content))
        (when (< (+ (length text) (length content))
                 (array-total-size text))
-         (adjust-array text (+ (length text) (length content)) :fill-pointer T)
-         (replace text content :start1 (- (length text) (length content)))))
+         (adjust-array text (+ (length text) (length content)) :fill-pointer T))
+       (replace text content :start1 (- (length text) (length content)))
+       (mark-for-render component))
       (T
        (call-next-method)))))
 
