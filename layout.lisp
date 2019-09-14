@@ -119,11 +119,15 @@
   (do-elements (element layout)
     (register element renderer)))
 
-(defmethod render ((renderer renderer) (layout layout))
+(defmethod render ((renderer renderer) (layout layout)))
+
+(defmethod render :after ((renderer renderer) (layout layout))
   (do-elements (element layout)
     (render renderer element)))
 
-(defmethod maybe-render ((renderer renderer) (layout layout))
+(defmethod maybe-render ((renderer renderer) (layout layout)))
+
+(defmethod maybe-render :after ((renderer renderer) (layout layout))
   (do-elements (element layout)
     (maybe-render renderer element)))
 
