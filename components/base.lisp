@@ -57,8 +57,10 @@
 (defmethod exit :after ((button button))
   (setf (pressed button) NIL))
 
-(defclass switch (interactable-component)
-  ((state :initarg :state :initform NIL :accessor state)))
+(defclass switch (interactable-component) ())
+
+(defgeneric state (switch))
+(defgeneric (setf state) (value switch))
 
 (defmethod (setf state) :after (value (switch switch))
   (mark-for-render switch))
@@ -69,3 +71,13 @@
 ;; TODO: combobox
 (defclass combobox (interactable-component)
   ())
+
+
+(defclass switch* (switch)
+  ((state :initarg :state :initform NIL :accessor state)))
+
+(defclass input-line* (input-line)
+  ((text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character) :accessor text)))
+
+(defclass input-box* (input-box)
+  ((text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character) :accessor text)))
