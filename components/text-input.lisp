@@ -7,8 +7,12 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass text-input-component (interactable-component text-component)
-  ((cursor :initform 0 :accessor cursor)
-   (text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character))))
+  ((insert-mode :initform :add :initarg :insert-mode :accessor insert-mode)
+   ;; TODO: Maybe make cursors multiple?
+   (cursor :initform 0 :accessor cursor)))
+
+(defgeneric text (text-input-component))
+(defgeneric (setf text) (value text-input-component))
 
 (defmethod (setf text) :after (value (component text-input-component))
   (mark-for-render component))
@@ -16,13 +20,28 @@
 (defmethod (setf cursor) :after (value (component text-input-component))
   (mark-for-render component))
 
+(defmethod insert-text (text (component text-input-component))
+  (let ((old (text component))
+        (cursor (cursor component)))
+    ;; Convert to adjustable array first if it's not already.
+    ;; This should be a one-time cost unless the user mucks about.
+    (unless (adjustable-array-p old)
+      (let ((new (make-array (+ (length old) (length text)) :element-type 'character :adjustable T :fill-pointer T)))
+        (setf old (replace new old))))
+    ;; Now either add by shifting or replace (and extend).
+    (ecase (insert-mode component)
+      (:add
+       (array-utils:array-shift old :n (length text) :from cursor :contents text))
+      (:replace
+       (adjust-array old (max (length old) (+ cursor (length text))))
+       (replace old text :start1 cursor)))
+    (setf (text component) old)
+    (setf (cursor component) (+ cursor (length text)))))
+
 (defmethod handle ((event text-event) (component text-input-component) ctx)
-  (loop for char across (text event)
-        do (array-utils:vector-push-extend-position char (text component) (cursor component))
-           (incf (cursor component))))
+  (insert-text (text event) component))
 
 (defmethod handle ((event key-up) (component text-input-component) ctx)
-  ;; TODO: insert mode
   ;; TODO: selection
   ;; TODO: key repeats
   ;; TODO: copy
@@ -46,20 +65,19 @@
      (setf (cursor component) 0))
     (:end
      (setf (cursor component) (length (text component))))
+    (:insert
+     (setf (insert-mode component)
+           (ecase (insert-mode component)
+             (:replace :add)
+             (:add :replace))))
     (T
      (call-next-method))))
 
 (defmethod handle ((event paste-event) (component text-input-component) ctx)
-  ;; FIXME: Insert at cursor instead
-  (let ((content (content event))
-        (text (text component)))
+  (let ((content (content event)))
     (typecase content
       (string
-       (when (< (+ (length text) (length content))
-                (array-total-size text))
-         (adjust-array text (+ (length text) (length content)) :fill-pointer T))
-       (replace text content :start1 (- (length text) (length content)))
-       (mark-for-render component))
+       (insert-text content component))
       (T
        (call-next-method)))))
 
@@ -75,16 +93,10 @@
 
 (defmethod handle ((event paste-event) (component text-input-component) ctx)
   ;; Override to leave out returns and linefeeds.
-  (let ((content (content event))
-        (text (text component)))
+  (let ((content (content event)))
     (typecase content
       (string
-       (setf content (remove-if (lambda (c) (find c '(#\Return #\Linefeed))) content))
-       (when (< (+ (length text) (length content))
-                (array-total-size text))
-         (adjust-array text (+ (length text) (length content)) :fill-pointer T))
-       (replace text content :start1 (- (length text) (length content)))
-       (mark-for-render component))
+       (insert-text (remove-if (lambda (c) (find c '(#\Return #\Linefeed))) content) component))
       (T
        (call-next-method)))))
 
