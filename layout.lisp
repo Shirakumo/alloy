@@ -66,10 +66,6 @@
 (defmethod handle ((event event) (element layout-entry) ui)
   (handle event (component element) ui))
 
-(defmethod handle :after ((event pointer-down) (element layout-entry) ui)
-  (ignore-errors ;; FIXME: gross
-   (activate (focus-element (component element) ui))))
-
 (defmethod render ((renderer renderer) (element layout-entry))
   (render-with renderer element (component element)))
 

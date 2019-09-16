@@ -103,5 +103,4 @@
 
 (defmethod associated-element ((component component) (table element-table))
   (or (gethash component (component-map table))
-      (error "The component~%  ~a~%is not associated with any element in~%  ~a"
-             component table)))
+      (error 'no-associated-element :component component :container table)))

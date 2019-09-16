@@ -15,6 +15,9 @@
 (defclass interactable-component (component)
   ())
 
+(defmethod handle ((event pointer-down) (component interactable-component) ctx)
+  (activate (focus-element component ctx)))
+
 (defmethod handle ((event pointer-move) (component interactable-component) ctx)
   (unless (eql :strong (focus-for component ctx))
     (setf (focus-for component ctx) :weak)))
