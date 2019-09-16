@@ -33,8 +33,7 @@
 (defgeneric activate-style (style renderer))
 
 (stealth-mixin:define-stealth-mixin renderable () alloy:renderable
-  ((renderer :initarg :renderer :accessor renderer)
-   (shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
+  ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
 
 (defgeneric override-shapes (renderable shapes))
 (defgeneric override-style (renderable shape style))
@@ -73,21 +72,16 @@
                                                      (make-style ,@initargs ,@default))))
            (T (call-next-method)))))))
 
-(defmethod initialize-instance :after ((renderable renderable) &key renderer style shapes)
-  (when renderer
-    (alloy:register renderable renderer)
-    (when shapes
-      (override-shapes renderable shapes))
-    (loop for (shape . style) in shapes
-          do (override-style renderable shape
-                             (etypecase style
-                               (style style)
-                               (cons (apply #'make-style style))))))
-  (when (and (not renderer) (or style shapes))
-    (error "Must pass RENDERER if STYLE or SHAPES is passed.")))
-
-(defmethod alloy:register :after ((renderable renderable) (renderer renderer))
-  (setf (renderer renderable) renderer))
+(defmethod initialize-instance :after ((renderable renderable) &key style shapes)
+  (when (and (not (slot-boundp renderable 'alloy:renderer)) (or style shapes))
+    (error "Must pass RENDERER if STYLE or SHAPES is passed."))
+  (when shapes
+    (override-shapes renderable shapes))
+  (loop for (shape . style) in shapes
+        do (override-style renderable shape
+                           (etypecase style
+                             (style style)
+                             (cons (apply #'make-style style))))))
 
 (defun make-default-style (renderer)
   (make-style :fill-color (simple:color 0 0 0)
@@ -137,8 +131,8 @@
   (setf (simple:font renderer) (simple:font style))
   (setf (simple:font-size renderer) (simple:font-size style))
   (setf (simple:composite-mode renderer) (simple:composite-mode style))
-  ;; TODO: Not sure this is quite right.
   (setf (simple:z-index renderer) (z-index style))
+  ;; TODO: Not sure this is quite right.
   (simple:translate renderer (offset style))
   (simple:translate renderer (pivot style))
   (simple:rotate renderer (rotation style))
@@ -156,7 +150,7 @@
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
 
 (defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
-  (loop with renderer = (renderer renderable)
+  (loop with renderer = (alloy:renderer renderable)
         for (name . shape) in (shapes renderable)
         do (setf (style shape) (compute-shape-style renderer shape renderable))))
 
@@ -167,7 +161,7 @@
   (setf (style-override shape) style))
 
 (defmethod override-style :after ((renderable renderable) (shape shape) (style style))
-  (setf (style shape) (compute-shape-style (renderer renderable) shape renderable)))
+  (setf (style shape) (compute-shape-style (alloy:renderer renderable) shape renderable)))
 
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))
@@ -186,4 +180,4 @@
 
 (defmethod mark-for-render :after ((renderable renderable))
   ;; Might be too expensive.
-  (realize-renderable (renderer renderable) renderable))
+  (realize-renderable (alloy:renderer renderable) renderable))

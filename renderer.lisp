@@ -10,6 +10,7 @@
 (defgeneric deallocate (renderer))
 (defgeneric allocated-p (renderer))
 (defgeneric register (renderable renderer))
+;; TODO: maybe a clone-for-renderer method?
 
 (defgeneric render-needed-p (renderable))
 (defgeneric mark-for-render (renderable))
@@ -27,7 +28,20 @@
   (setf (slot-value renderer 'allocated-p) NIL))
 
 (defclass renderable ()
-  ((render-needed-p :initform T :reader render-needed-p)))
+  ((render-needed-p :initform T :reader render-needed-p)
+   (renderer :reader renderer)))
+
+(defmethod initialize-instance :after ((renderable renderable) &key renderer)
+  (when renderer (register renderable renderer)))
+
+(defmethod register :before ((renderable renderable) (renderer renderer))
+  (when (and (slot-boundp renderable 'renderer)
+             (not (eql (renderer renderable) renderer)))
+    (error "The renderable~%  ~s~%cannot be registered with~%  ~s~%as it is already registered with~%  ~s"
+           renderable renderer (renderer renderable))))
+
+(defmethod register :after ((renderable renderable) (renderer renderer))
+  (setf (renderer renderable) renderer))
 
 (defmethod mark-for-render ((renderable renderable))
   (setf (slot-value renderable 'render-needed-p) T))
