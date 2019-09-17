@@ -19,7 +19,7 @@
             (u (max (+ ly lh) (+ ey eh))))
         (setf lx l ly b
               lw (- r l) lh (- u b)))))
-  (notice-extent layout (parent layout)))
+  (notice-bounds layout (parent layout)))
 
 (defmethod suggest-bounds (extent (layout fixed-layout)))
 

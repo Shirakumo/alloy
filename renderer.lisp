@@ -41,7 +41,7 @@
            renderable renderer (renderer renderable))))
 
 (defmethod register :after ((renderable renderable) (renderer renderer))
-  (setf (renderer renderable) renderer))
+  (setf (slot-value renderable 'renderer) renderer))
 
 (defmethod mark-for-render ((renderable renderable))
   (setf (slot-value renderable 'render-needed-p) T))
