@@ -33,7 +33,7 @@
 (defgeneric activate-style (style renderer))
 
 (stealth-mixin:define-stealth-mixin renderable () alloy:renderable
-  ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
+  ((shapes :initform () :accessor shapes)))
 
 (defgeneric override-shapes (renderable shapes))
 (defgeneric override-style (renderable shape style))
@@ -72,7 +72,9 @@
                                                      (make-style ,@initargs ,@default))))
            (T (call-next-method)))))))
 
-(defmethod initialize-instance :after ((renderable renderable) &key style shapes)
+(defmethod initialize-instance :around ((renderable renderable) &key style shapes)
+  ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
+  (call-next-method)
   (when (and (not (slot-boundp renderable 'alloy:renderer)) (or style shapes))
     (arg! :renderer))
   (when shapes
@@ -95,21 +97,23 @@
               :rotation 0.0
               :pivot (alloy:point 0 0)))
 
-(defmethod alloy:register :after ((renderable renderable) (renderer renderer))
+(defmethod alloy:register :around ((renderable renderable) (renderer renderer))
+  ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
+  (call-next-method)
   (realize-renderable renderer renderable))
 
-(defmethod alloy:render ((renderer renderer) (element alloy:layout-element))
+(defmethod alloy:render ((renderer renderer) (renderable renderable))
   (simple:with-pushed-transforms (renderer)
-    (simple:translate renderer (alloy:bounds element))
-    (loop for shape across (shapes element)
+    (simple:translate renderer (alloy:bounds renderable))
+    (loop for shape in (shapes renderable)
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
-                 (alloy:render-with renderer element (cdr shape)))))))
+                 (alloy:render-with renderer renderable (cdr shape)))))))
 
-(defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) (component alloy:component))
+(defmethod alloy:render-with ((renderer renderer) (element alloy:layout-element) (renderable renderable))
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds element))
-    (loop for shape across (shapes component)
+    (loop for shape in (shapes renderable)
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
                  (alloy:render-with renderer element (cdr shape)))))))
@@ -140,19 +144,22 @@
   (simple:translate renderer (alloy:point (- (alloy:point-x (pivot style)))
                                           (- (alloy:point-y (pivot style))))))
 
-(defmethod compute-shape-style ((renderer renderer) (shape shape) (renderable renderable))
+(defmethod compute-shape-style ((renderer renderer) shape (renderable renderable))
   (make-default-style renderer))
 
 (defmethod compute-shape-style :around ((renderer renderer) (shape shape) (renderable renderable))
   (merge-style-into (call-next-method)
                     (style-override shape)))
 
+(defmethod compute-shape-style ((renderer renderer) (shape shape) (renderable renderable))
+  (compute-shape-style renderer (car (find shape (shapes renderable) :key #'cdr)) renderable))
+
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
 
 (defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
   (loop with renderer = (alloy:renderer renderable)
         for (name . shape) in (shapes renderable)
-        do (setf (style shape) (compute-shape-style renderer shape renderable))))
+        do (setf (style shape) (compute-shape-style renderer name renderable))))
 
 (defmethod override-style ((renderable renderable) (shape symbol) style)
   (override-style renderable (find-shape shape renderable T) style))
@@ -164,19 +171,22 @@
   (setf (style shape) (compute-shape-style (alloy:renderer renderable) shape renderable)))
 
 (defmethod clear-shapes ((renderable renderable))
-  (setf (fill-pointer (shapes renderable)) 0))
+  (setf (shapes renderable) ()))
 
 (defmethod find-shape (id (renderable renderable) &optional errorp)
-  (or (cdr (find id (shapes renderable) :key #'car))
+  (or (cdr (assoc id (shapes renderable)))
       (when errorp (error "No such shape~%  ~s~%in~%  ~s"
                           id renderable))))
 
 (defmethod (setf find-shape) ((shape shape) id (renderable renderable))
-  (let ((record (find id (shapes renderable) :key #'car)))
+  (let ((record (assoc id (shapes renderable))))
     (if record
         (setf (cdr record) shape)
-        (vector-push-extend (cons id shape) (shapes renderable)))
+        (push (cons id shape) (shapes renderable)))
     shape))
+
+(defmethod (setf find-shape) ((null null) id (renderable renderable))
+  (setf (shapes renderable) (remove id (shapes renderable) :key #'car)))
 
 (defmethod mark-for-render :after ((renderable renderable))
   ;; Might be too expensive.
