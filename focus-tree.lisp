@@ -28,7 +28,7 @@
 
 (defclass focus-element (element)
   ((focus-tree :initform NIL :reader focus-tree)
-   (parent :initarg :parent :initform (error "PARENT required") :reader parent)
+   (parent :initarg :parent :initform (arg! :parent) :reader parent)
    (focus :initform NIL :accessor focus)))
 
 (defmethod initialize-instance :after ((element focus-element) &key focus)
@@ -79,7 +79,7 @@
   (exit element))
 
 (defclass focus-entry (focus-element)
-  ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
+  ((component :initarg :component :initform (arg! :component) :reader component)))
 
 (defmethod handle ((event event) (element focus-entry) ui)
   (unless (handle event (component element) ui)
@@ -114,8 +114,8 @@
 
 (defmethod (setf focused) :before ((element focus-element) (chain focus-chain))
   (setf (slot-value chain 'index) (or (position element (elements chain))
-                                      (error "The element~%  ~a~%is not a part of the chain~%  ~a"
-                                             element chain)))
+                                      (error 'element-has-different-parent
+                                             :element element :parent chain)))
   (when (focused chain)
     (setf (slot-value (focused chain) 'focus) NIL)))
 
@@ -125,8 +125,8 @@
 
 (defmethod (setf index) :before ((index integer) (chain focus-chain))
   (unless (<= 0 index (1- (length (elements chain))))
-    (error "Child index ~d is outside of [0,~d[."
-           index (length (elements chain))))
+    (error 'index-out-of-range
+           :index index :range (list 0 (length (elements chain)))))
   (when (focused chain)
     (setf (slot-value (focused chain) 'focus) NIL))
   (setf (slot-value chain 'focused) (aref (elements chain) index)))
@@ -137,8 +137,8 @@
 
 (defmethod element-index :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (parent element))
-    (error "The element~%  ~a~%is not in~%  ~a"
-           element chain)))
+    (error 'element-not-contained
+           :element element :container chain)))
 
 (defmethod notice-focus ((element focus-element) (chain focus-chain))
   (case (focus element)
@@ -174,13 +174,13 @@
 
 (defmethod enter :before ((element focus-element) (chain focus-chain) &key)
   (unless (eq chain (parent element))
-    (error "Cannot enter~%  ~a~%into the chain~%  ~a~%as it has another parent~%  ~a"
-           element chain (parent element))))
+    (error 'element-has-different-parent
+           :element element :container chain)))
 
 (defmethod leave :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (parent element))
-    (error "Cannot leave~%  ~a~%from the chain~%  ~a~%as it has another parent~%  ~a"
-           element chain (parent element))))
+    (error 'element-has-different-parent
+           :element element :container chain)))
 
 (defmethod enter :after ((element focus-entry) (chain focus-chain) &key)
   (associate element (component element) (focus-tree chain)))
@@ -212,7 +212,7 @@
   ())
 
 (defclass focus-grid (focus-chain)
-  ((width :initarg :width :initform (error "WIDTH required.") :accessor width)))
+  ((width :initarg :width :initform (arg! :width) :accessor width)))
 
 (defmethod focus-up ((chain focus-chain))
   (let ((col (mod (index chain) (width chain)))
@@ -236,8 +236,8 @@
 
 (defmethod (setf root) :before ((element focus-element) (tree focus-tree))
   (when (root tree)
-    (error "Cannot set~%  ~a~%as the root of~%  ~a~%as it already has a root in~%  ~a"
-           element tree (root tree))))
+    (error 'root-already-established
+           :element element :tree tree)))
 
 (defmethod (setf root) :after ((element focus-element) (tree focus-tree))
   (setf (focused tree) element))
@@ -248,8 +248,8 @@
 
 (defmethod (setf focused) :before ((element focus-element) (tree focus-tree))
   (unless (eq (focus-tree element) tree)
-    (error "The element~%  ~a~%cannot be focused on~%  ~a~%because the element comes from the tree~%  ~a"
-           element tree (focus-tree element)))
+    (error 'element-has-different-root
+           :element element :container tree))
   (when (focused tree)
     (setf (focus (focused tree)) NIL)))
 

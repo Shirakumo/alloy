@@ -15,7 +15,7 @@
 
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree)
-   (parent :initarg :parent :initform (error "PARENT required.") :reader parent)
+   (parent :initarg :parent :initform (arg! :parent) :reader parent)
    (bounds :initform (extent) :reader bounds)))
 
 (defmethod initialize-instance :after ((element layout-element) &key)
@@ -51,7 +51,7 @@
     (call-next-method)))
 
 (defclass layout-entry (layout-element)
-  ((component :initarg :component :initform (error "COMPONENT required.") :reader component)))
+  ((component :initarg :component :initform (arg! :component) :reader component)))
 
 (defmethod initialize-instance :after ((element layout-entry) &key)
   (associate element (component element) (layout-tree element)))
@@ -83,16 +83,16 @@
 
 (defmethod enter :before ((element layout-element) (layout layout) &key)
   (unless (eq layout (parent element))
-    (error "Cannot enter~%  ~a~%into the layout~%  ~a~%as it has another parent~%  ~a"
-           element layout (parent element))))
+    (error 'element-has-different-parent
+           :element element :container layout)))
 
 (defmethod enter :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))
 
 (defmethod leave :before ((element layout-element) (layout layout))
   (unless (eq layout (parent element))
-    (error "Cannot leave~%  ~a~%from the layout~%  ~a~%as it has another parent~%  ~a"
-           element layout (parent element))))
+    (error 'element-has-different-parent
+           :element element :container layout)))
 
 (defmethod leave :after ((element layout-entry) (layout layout))
   (disassociate element (component element) (layout-tree layout)))
@@ -108,8 +108,8 @@
 
 (defmethod element-index :before ((element layout-element) (layout layout))
   (unless (eq layout (parent element))
-    (error "The element~%  ~a~%is not in~%  ~a"
-           element layout)))
+    (error 'element-not-contained
+           :element element :container layout)))
 
 (defmethod register :after ((layout layout) (renderer renderer))
   (do-elements (element layout)
@@ -137,8 +137,8 @@
 
 (defmethod (setf root) :before ((element layout-element) (tree layout-tree))
   (when (root tree)
-    (error "Cannot set~%  ~a~%as the root of~%  ~a~%as it already has a root in~%  ~a"
-           element tree (root tree))))
+    (error 'root-already-established
+           :element element :tree tree)))
 
 (defmethod layout-element ((component component) (tree layout-tree))
   (associated-element component tree))

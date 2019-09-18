@@ -8,6 +8,7 @@
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy))
+  (:import-from #:org.shirakumo.alloy #:arg!)
   ;; protocol.lisp
   (:export
    #:call-with-pushed-transforms

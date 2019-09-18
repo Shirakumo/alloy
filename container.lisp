@@ -84,19 +84,19 @@
   (let ((pelm (gethash component (component-map table)))
         (pcomp (gethash element (component-map table))))
     (unless (or (not pelm) (eq pelm element))
-      (error "The component~%  ~a~%is already associated with the element~%  ~a~%in~%  ~a"
-             component pelm table))
+      (error 'component-already-associated
+             :component component :element pelm :container table))
     (unless (or (not pcomp) (eq pcomp component))
-      (error "The element~%  ~a~%is already associated with the component~%  ~a~%in~%  ~a"
-             element pcomp table))
+      (error 'element-already-associated
+             :component component :element pelm :container table))
     (setf (gethash component (component-map table)) element)
     (setf (gethash element (component-map table)) component)
     element))
 
 (defmethod disassociate ((element element) (component component) (table element-table))
   (unless (eq element (gethash component (component-map table)))
-    (error "The element~%  ~a~%is not associated with the component~%  ~a~%in~%  ~a"
-           element component table))
+    (error 'element-not-associated
+           :component component :element element :container table))
   (remhash component (component-map table))
   (remhash element (component-map table))
   element)

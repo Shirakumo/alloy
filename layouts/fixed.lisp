@@ -23,11 +23,7 @@
 
 (defmethod suggest-bounds (extent (layout fixed-layout)))
 
-(defmethod enter :before ((element layout-element) (layout fixed-layout) &key x y w h)
-  (unless (and x y w h)
-    (error "Must specify X Y W H.")))
-
-(defmethod enter ((element layout-element) (layout fixed-layout) &key x y w h)
+(defmethod enter ((element layout-element) (layout fixed-layout) &key (x (arg! :x)) (y (arg! :y)) (w (arg! :w)) (h (arg! :h)))
   (call-next-method)
   (setf (extent-x (extent element)) x)
   (setf (extent-x (extent element)) y)

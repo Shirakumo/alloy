@@ -8,4 +8,5 @@
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
-   (#:simple #:org.shirakumo.alloy.renderers.simple)))
+   (#:simple #:org.shirakumo.alloy.renderers.simple))
+  (:import-from #:org.shirakumo.alloy #:arg!))

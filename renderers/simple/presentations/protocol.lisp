@@ -74,7 +74,7 @@
 
 (defmethod initialize-instance :after ((renderable renderable) &key style shapes)
   (when (and (not (slot-boundp renderable 'alloy:renderer)) (or style shapes))
-    (error "Must pass RENDERER if STYLE or SHAPES is passed."))
+    (arg! :renderer))
   (when shapes
     (override-shapes renderable shapes))
   (loop for (shape . style) in shapes

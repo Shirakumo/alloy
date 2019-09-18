@@ -37,8 +37,8 @@
 (defmethod register :before ((renderable renderable) (renderer renderer))
   (when (and (slot-boundp renderable 'renderer)
              (not (eql (renderer renderable) renderer)))
-    (error "The renderable~%  ~s~%cannot be registered with~%  ~s~%as it is already registered with~%  ~s"
-           renderable renderer (renderer renderable))))
+    (error 'renderable-already-registered
+           :renderable renderable :renderer renderer)))
 
 (defmethod register :after ((renderable renderable) (renderer renderer))
   (setf (slot-value renderable 'renderer) renderer))

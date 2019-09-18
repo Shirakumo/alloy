@@ -35,7 +35,7 @@
   (setf (simple:fill-mode renderer) :lines))
 
 (defclass box (shape)
-  ((extent :initarg :extent :initform (error "EXTENT required") :accessor extent)))
+  ((extent :initarg :extent :initform (arg! :extent) :accessor extent)))
 
 (defmethod alloy:render-with ((renderer renderer) element (box box))
   (simple:rectangle renderer (to-extent box element)))
@@ -44,7 +44,7 @@
 (defclass outlined-box (box outlined-shape) ())
 
 (defclass circle (shape)
-  ((extent :initarg :extent :initform (error "EXTENT required") :accessor extent)))
+  ((extent :initarg :extent :initform (arg! :extent) :accessor extent)))
 
 (defmethod alloy:render-with ((renderer renderer) element (circle circle))
   (simple:ellipse renderer (to-extent circle element)))
@@ -53,7 +53,7 @@
 (defclass outlined-circle (circle outlined-shape) ())
 
 (defclass polygon (shape)
-  ((points :initarg :points :initform (error "POINTS required") :accessor points)))
+  ((points :initarg :points :initform (arg! :points) :accessor points)))
 
 (defmethod alloy:render-with ((renderer renderer) element (polygon polygon))
   (simple:polygon renderer (points polygon)))
@@ -62,14 +62,14 @@
 (defclass outlined-polygon (polygon outlined-shape) ())
 
 (defclass line (shape)
-  ((point-a :initarg :point-a :initform (error "POINT-A required") :accessor point-a)
-   (point-b :initarg :point-b :initform (error "POINT-B required") :accessor point-b)))
+  ((point-a :initarg :point-a :initform (arg! :point-a) :accessor point-a)
+   (point-b :initarg :point-b :initform (arg! :point-b) :accessor point-b)))
 
 (defmethod alloy:render-with ((renderer renderer) element (line line))
   (simple:line renderer (point-a line) (point-b line)))
 
 (defclass text (shape)
-  ((text :initarg :text :initform (error "TEXT required.") :accessor text)
+  ((text :initarg :text :initform (arg! :text) :accessor text)
    (extent :initarg :extent :initform (alloy:margins) :accessor extent)
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)
@@ -94,7 +94,7 @@
                    :vertical-align (valign text)))))
 
 (defclass icon (shape)
-  ((image :initarg :image :initform (error "IMAGE required.") :accessor image)
+  ((image :initarg :image :initform (arg! :image) :accessor image)
    (extent :initarg :extent :initform (alloy:margins) :accessor extent)
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :left :accessor halign)

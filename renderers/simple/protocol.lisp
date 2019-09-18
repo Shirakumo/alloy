@@ -68,7 +68,7 @@
     `(%color ,(fold r) ,(fold g) ,(fold b) ,(fold a))))
 
 (defclass font ()
-  ((family :initarg :family :initform (error "FAMILY required.") :reader family)
+  ((family :initarg :family :initform (arg! :family) :reader family)
    (slant :initarg :slant :initform :roman :reader slant)
    (spacing :initarg :spacing :initform :proportional :reader spacing)
    (weight :initarg :weight :initform :regular :reader weight)

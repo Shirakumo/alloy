@@ -10,6 +10,34 @@
   ;; component.lisp
   (:export
    #:component)
+  ;; conditions.lisp
+  (:export
+   #:alloy-condition
+   #:define-alloy-condition
+   #:argument-missing
+   #:initarg
+   #:arg!
+   #:association-error
+   #:component
+   #:container
+   #:element
+   #:no-associated-element
+   #:component-already-associated
+   #:element-already-associated
+   #:element-not-associated
+   #:index-out-of-range
+   #:index
+   #:range
+   #:hierarchy-error
+   #:element-has-different-parent
+   #:element-not-contained
+   #:element-has-different-root
+   #:root-already-established
+   #:layout-condition
+   #:layout
+   #:renderer-condition
+   #:renderer
+   #:renderable-already-registered)
   ;; components/base.lisp
   (:export
    #:text-component
@@ -171,7 +199,10 @@
    #:grid-layout
    #:row-sizes
    #:col-sizes
-   #:stretch)
+   #:stretch
+   #:grid-cell-already-occupied
+   #:row
+   #:col)
   ;; layouts/linear.lisp
   (:export
    #:linear-layout

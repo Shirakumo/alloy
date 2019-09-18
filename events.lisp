@@ -23,10 +23,10 @@
       NIL)))
 
 (defclass pointer-event (event)
-  ((location :initarg :location :initform (error "LOCATION required") :reader location)))
+  ((location :initarg :location :initform (arg! :location) :reader location)))
 
 (defclass pointer-move (pointer-event)
-  ((old-location :initarg :old-location :initform (error "OLD-LOCATION required") :reader old-location)))
+  ((old-location :initarg :old-location :initform (arg! :old-location) :reader old-location)))
 
 (defclass pointer-down (pointer-event)
   ((kind :initarg :kind :initform :left :reader kind)))
@@ -35,20 +35,20 @@
   ((kind :initarg :kind :initform :left :reader kind)))
 
 (defclass scroll (pointer-event)
-  ((delta :initarg :delta :initform (error "DELTA required.") :reader delta)))
+  ((delta :initarg :delta :initform (arg! :delta) :reader delta)))
 
 (defclass direct-event (event)
   ())
 
 (defclass paste-event (direct-event)
-  ((content :initarg :content :initform (error "CONTENT required.") :reader content)))
+  ((content :initarg :content :initform (arg! :content) :reader content)))
 
 (defclass text-event (direct-event)
-  ((text :initarg :text :initform (error "TEXT required.") :reader text)))
+  ((text :initarg :text :initform (arg! :text) :reader text)))
 
 (defclass key-event (direct-event)
-  ((key :initarg :key :initform (error "KEY required.") :reader key)
-   (code :initarg :code :initform (error "CODE required.") :reader code)))
+  ((key :initarg :key :initform (arg! :key) :reader key)
+   (code :initarg :code :initform (arg! :code) :reader code)))
 
 (defclass key-down (key-event)
   ())
@@ -57,8 +57,8 @@
   ())
 
 (defclass button-event (direct-event)
-  ((button :initarg :button :initform (error "BUTTON required.") :reader button)
-   (device :initarg :device :initform (error "DEVICE required.") :reader device)))
+  ((button :initarg :button :initform (arg! :button) :reader button)
+   (device :initarg :device :initform (arg! :device) :reader device)))
 
 (defclass button-down (button-event)
   ())

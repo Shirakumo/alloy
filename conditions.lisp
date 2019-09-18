@@ -8,10 +8,72 @@
 
 (define-condition alloy-condition (condition) ())
 
-(define-condition no-associated-element (error alloy-condition)
-  ((component :initarg :component :reader component)
-   (container :initarg :container :reader container))
-  (:report (lambda (c s) (format s "The component~%  ~a~%is not associated with any element in~%  ~a"
-                                 (component c) (container c)))))
+(defmacro define-alloy-condition (name superclasses format &body slotsargs)
+  (let ((slots (loop for slot in slotsargs
+                     unless (listp slot)
+                     collect (list slot :initarg (intern (string slot) "KEYWORD") :reader slot)))
+        (args (loop for arg in slotsargs
+                    collect (if (listp arg) arg `(,arg c)))))
+    `(define-condition ,name (,@superclasses alloy-condition)
+       ,slots
+       ,@(when format
+           `((:report (lambda (c s) (format s ,format ,@args))))))))
 
-;; TODO: this
+(define-alloy-condition argument-missing (error)
+    "The initarg ~s is required but was not passed."
+  initarg)
+
+(defun arg! (initarg)
+  (error 'argument-missing :initarg initarg))
+
+(define-alloy-condition association-error (error)
+    NIL component container)
+
+(define-alloy-condition no-associated-element (association-error)
+    "The component~%  ~a~%is not associated with any element in~%  ~a"
+  component container)
+
+(define-alloy-condition component-already-associated (association-error)
+    "The component~%  ~a~%is already associated with the element~%  ~a~%in~%  ~a"
+  component element container)
+
+(define-alloy-condition element-already-associated (association-error)
+    "The element~%  ~a~%is already associated with the component~%  ~a~%in~%  ~a"
+  element component container)
+
+(define-alloy-condition element-not-associated (association-error)
+    "The element~%  ~a~%is not associated with the component~%  ~a~%in~%  ~a"
+  element component container)
+
+(define-alloy-condition index-out-of-range (error)
+    "The index ~d is outside of [~{~d~^,~}[."
+  index range)
+
+(define-alloy-condition hierarchy-error (error)
+    NIL container element)
+
+(define-alloy-condition element-has-different-parent (hierarchy-error)
+    "Cannot perform operation with~%  ~s~%on~%  ~s~%as it is a parent on~%  ~s"
+  element container (parent (element c)))
+
+(define-alloy-condition element-not-contained (hierarchy-error)
+    "The element~%  ~s~%is not a child of~%  ~s"
+  element container)
+
+(define-alloy-condition element-has-different-root (hierarchy-error)
+    "The element~%  ~s~%comes from the tree~%  ~s~%which is not~%  ~s"
+  element (focus-tree (element c)) container)
+
+(define-alloy-condition root-already-established (error)
+    "Cannot set~%  ~a~%as the root of~%  ~a~%as it already has a root in~%  ~a"
+  element tree (root (tree c)))
+
+(define-alloy-condition layout-condition ()
+    NIL layout)
+
+(define-alloy-condition renderer-condition ()
+    NIL renderer)
+
+(define-alloy-condition renderable-already-registered (error renderer-condition)
+    "The renderable~%  ~s~%cannot be registered with~%  ~s~%as it is already registered with~%  ~s"
+  renderable renderer (renderer (renderable c)))
