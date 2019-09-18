@@ -7,6 +7,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defgeneric layout-tree (layout-element))
+(defgeneric layout-parent (layout-element))
 (defgeneric bounds (layout-element))
 (defgeneric (setf bounds) (extent layout-element))
 (defgeneric layout-element (component layout-tree))
@@ -15,17 +16,18 @@
 
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree)
-   (parent :initarg :parent :initform (arg! :parent) :reader parent)
+   (layout-parent :initarg :layout-parent :initform (arg! :layout-parent) :reader layout-parent)
    (bounds :initform (extent) :reader bounds)))
 
 (defmethod initialize-instance :after ((element layout-element) &key)
-  (cond ((typep (parent element) 'layout-tree)
-         (let ((layout-tree (parent element)))
-           (setf (slot-value element 'layout-tree) layout-tree)
-           (setf (slot-value element 'parent) NIL)
-           (setf (root layout-tree) element)))
-        (T
-         (setf (slot-value element 'layout-tree) (layout-tree (parent element))))))
+  (etypecase (layout-parent element)
+    (layout-tree
+     (let ((layout-tree (layout-parent element)))
+       (setf (slot-value element 'layout-tree) layout-tree)
+       (setf (slot-value element 'layout-parent) NIL)
+       (setf (root layout-tree) element)))
+    (layout-element
+     (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element))))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -77,12 +79,12 @@
 
 (defmethod enter ((component component) (layout layout) &rest args)
   (apply #'enter
-         (make-instance 'layout-entry :component component :parent layout)
+         (make-instance 'layout-entry :component component :layout-parent layout)
          layout
          args))
 
 (defmethod enter :before ((element layout-element) (layout layout) &key)
-  (unless (eq layout (parent element))
+  (unless (eq layout (layout-parent element))
     (error 'element-has-different-parent
            :element element :container layout)))
 
@@ -90,7 +92,7 @@
   (notice-bounds element layout))
 
 (defmethod leave :before ((element layout-element) (layout layout))
-  (unless (eq layout (parent element))
+  (unless (eq layout (layout-parent element))
     (error 'element-has-different-parent
            :element element :container layout)))
 
@@ -107,7 +109,7 @@
   (notice-bounds element layout))
 
 (defmethod element-index :before ((element layout-element) (layout layout))
-  (unless (eq layout (parent element))
+  (unless (eq layout (layout-parent element))
     (error 'element-not-contained
            :element element :container layout)))
 

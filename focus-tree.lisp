@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defgeneric focus-tree (focus-element))
-(defgeneric parent (focus-element))
+(defgeneric focus-parent (focus-element))
 (defgeneric focus (focus-element))
 (defgeneric (setf focus) (focus-state focus-element))
 (defgeneric exit (focus-element))
@@ -28,20 +28,21 @@
 
 (defclass focus-element (element)
   ((focus-tree :initform NIL :reader focus-tree)
-   (parent :initarg :parent :initform (arg! :parent) :reader parent)
+   (focus-parent :initarg :focus-parent :initform (arg! :focus-parent) :reader focus-parent)
    (focus :initform NIL :accessor focus)))
 
 (defmethod initialize-instance :after ((element focus-element) &key focus)
   ;; Tie-up with focus-tree root.
-  (cond ((typep (parent element) 'focus-tree)
-         (let ((focus-tree (parent element)))
-           (setf (slot-value element 'focus-tree) focus-tree)
-           (setf (slot-value element 'parent) element)
-           (setf (root focus-tree) element)))
-        (T
-         (setf (slot-value element 'focus-tree) (focus-tree (parent element)))
-         (enter element (parent element))
-         (setf (focus element) focus))))
+  (etypecase (focus-parent element)
+    (focus-tree
+     (let ((focus-tree (focus-parent element)))
+       (setf (slot-value element 'focus-tree) focus-tree)
+       (setf (slot-value element 'focus-parent) element)
+       (setf (root focus-tree) element)))
+    (focus-element
+     (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))
+     (enter element (focus-parent element))
+     (setf (focus element) focus))))
 
 (defmethod print-object ((element focus-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -54,8 +55,8 @@
   (setf (focused (focus-tree element)) element))
 
 (defmethod (setf focus) :after (focus (element focus-element))
-  (unless (eq element (parent element))
-    (notice-focus element (parent element))))
+  (unless (eq element (focus-parent element))
+    (notice-focus element (focus-parent element))))
 
 (defmethod activate ((element focus-element))
   (unless (eql :strong (focus element))
@@ -65,12 +66,12 @@
 (defmethod exit ((element focus-element))
   (unless (eql NIL (focus element))
     (setf (focus element) NIL)
-    (setf (focus (parent element)) :strong)
-    (parent element)))
+    (setf (focus (focus-parent element)) :strong)
+    (focus-parent element)))
 
 (defmethod handle ((event event) (element focus-element) ui)
-  (unless (eq element (parent element))
-    (handle event (parent element) ui)))
+  (unless (eq element (focus-parent element))
+    (handle event (focus-parent element) ui)))
 
 (defmethod handle ((event activate) (element focus-element) ui)
   (activate element))
@@ -136,7 +137,7 @@
     (setf (focus (focused chain)) :weak)))
 
 (defmethod element-index :before ((element focus-element) (chain focus-chain))
-  (unless (eq chain (parent element))
+  (unless (eq chain (focus-parent element))
     (error 'element-not-contained
            :element element :container chain)))
 
@@ -146,9 +147,9 @@
      (unless (eq element (focused chain))
        (setf (focused chain) element))
      ;; Propagate all the way down
-     (loop until (eq chain (parent chain))
+     (loop until (eq chain (focus-parent chain))
            do (setf (focus chain) :weak)
-              (setf chain (parent chain))))
+              (setf chain (focus-parent chain))))
     (:weak
      (unless (eq element (focused chain))
        (setf (focused chain) element)))
@@ -173,12 +174,12 @@
       (call-next-method)))
 
 (defmethod enter :before ((element focus-element) (chain focus-chain) &key)
-  (unless (eq chain (parent element))
+  (unless (eq chain (focus-parent element))
     (error 'element-has-different-parent
            :element element :container chain)))
 
 (defmethod leave :before ((element focus-element) (chain focus-chain))
-  (unless (eq chain (parent element))
+  (unless (eq chain (focus-parent element))
     (error 'element-has-different-parent
            :element element :container chain)))
 
@@ -189,7 +190,7 @@
   (disassociate element (component element) (focus-tree chain)))
 
 (defmethod enter ((component component) (chain focus-chain) &key)
-  (make-instance 'focus-entry :component component :parent chain))
+  (make-instance 'focus-entry :component component :focus-parent chain))
 
 (defmethod leave ((component component) (chain focus-chain))
   (leave (focus-element component (focus-tree chain)) chain))
@@ -265,5 +266,5 @@
 
 ;;; NOTE: Initialisation of the tree must happen roughly as follows:
 ;;;         (let ((tree (make-instance 'focus-tree))
-;;;               (element (make-instance 'focus-element :parent tree)))
+;;;               (element (make-instance 'focus-element :focus-parent tree)))
 ;;;           ...)
