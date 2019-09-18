@@ -8,9 +8,10 @@
 
 (defclass slider (interactable-component)
   ((range :initarg :range :initform '(0 . 100) :accessor range)
-   (value :initarg :value :initform 0 :accessor value)
    (step :initarg :step :initform 1 :accessor step)
    (state :initform NIL :accessor state)))
+
+(defgeneric value (slider))
 
 (defmethod minimum ((slider slider))
   (car (range slider)))

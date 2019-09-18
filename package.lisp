@@ -49,7 +49,11 @@
    #:button
    #:pressed
    #:switch
-   #:state)
+   #:state
+   #:switch*
+   #:input-line*
+   #:input-box*
+   #:slider*)
   ;; components/text-input.lisp
   (:export
    #:text-input-component

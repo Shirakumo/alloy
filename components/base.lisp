@@ -84,3 +84,6 @@
 
 (defclass input-box* (input-box)
   ((text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character) :accessor text)))
+
+(defclass slider* (slider)
+  ((value :initarg :value :initform 0 :accessor value)))
