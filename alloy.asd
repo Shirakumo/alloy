@@ -16,6 +16,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "conditions")
                (:file "geometry")
                (:file "events")
+               (:file "observable")
                (:file "renderer")
                (:file "component")
                (:file "container")
