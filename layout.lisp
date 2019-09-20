@@ -10,7 +10,6 @@
 (defgeneric layout-parent (layout-element))
 (defgeneric bounds (layout-element))
 (defgeneric (setf bounds) (extent layout-element))
-(defgeneric layout-element (component layout-tree))
 (defgeneric notice-bounds (changed parent))
 (defgeneric suggest-bounds (extent layout-element))
 
@@ -46,42 +45,15 @@
 (defmethod w ((element layout-element)) (extent-w (bounds element)))
 (defmethod h ((element layout-element)) (extent-h (bounds element)))
 
-(defmethod handle ((event event) (element layout-element) ui))
+(defmethod handle ((event event) (element layout-element) ui)
+  (decline))
 
 (defmethod handle :around ((event pointer-event) (element layout-element) ui)
   (when (contained-p (location event) (bounds element))
     (call-next-method)))
 
-(defclass layout-entry (layout-element)
-  ((component :initarg :component :initform (arg! :component) :reader component)))
-
-(defmethod initialize-instance :after ((element layout-entry) &key)
-  (associate element (component element) (layout-tree element)))
-
-(defmethod print-object ((element layout-entry) stream)
-  (print-unreadable-object (element stream :type T :identity T)
-    (format stream "~a" (component element))))
-
-(defmethod register ((element layout-entry) (renderer renderer))
-  (register (component element) renderer))
-
-(defmethod handle ((event event) (element layout-entry) ui)
-  (handle event (component element) ui))
-
-(defmethod render ((renderer renderer) (element layout-entry))
-  (render-with renderer element (component element)))
-
-(defmethod suggest-bounds (extent (element layout-entry))
-  (suggest-bounds extent (component element)))
-
 (defclass layout (layout-element container renderable)
   ())
-
-(defmethod enter ((component component) (layout layout) &rest args)
-  (apply #'enter
-         (make-instance 'layout-entry :component component :layout-parent layout)
-         layout
-         args))
 
 (defmethod enter :before ((element layout-element) (layout layout) &key)
   (unless (eq layout (layout-parent element))
@@ -95,15 +67,6 @@
   (unless (eq layout (layout-parent element))
     (error 'element-has-different-parent
            :element element :container layout)))
-
-(defmethod leave :after ((element layout-entry) (layout layout))
-  (disassociate element (component element) (layout-tree layout)))
-
-(defmethod leave ((component component) (layout layout))
-  (leave (layout-element component (layout-tree layout)) layout))
-
-(defmethod update ((component component) (layout layout) &rest args)
-  (apply #'update (layout-element component (layout-tree layout)) layout args))
 
 (defmethod update :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))
@@ -134,16 +97,13 @@
     (when (handle event element ui)
       (return))))
 
-(defclass layout-tree (element-table)
+(defclass layout-tree ()
   ((root :initform NIL :accessor root)))
 
 (defmethod (setf root) :before ((element layout-element) (tree layout-tree))
   (when (root tree)
     (error 'root-already-established
            :element element :tree tree)))
-
-(defmethod layout-element ((component component) (tree layout-tree))
-  (associated-element component tree))
 
 (defmethod register ((tree layout-tree) (renderer renderer))
   (register (root tree) renderer))

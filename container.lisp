@@ -72,35 +72,3 @@
 
 (defmethod element-index ((element element) (container vector-container))
   (position element (elements container)))
-
-(defclass element-table ()
-  ((component-map :initform (make-hash-table :test 'eq) :reader component-map)))
-
-(defgeneric associate (element component element-table))
-(defgeneric disassociate (element component element-table))
-(defgeneric associated-element (component element-table))
-
-(defmethod associate ((element element) (component component) (table element-table))
-  (let ((pelm (gethash component (component-map table)))
-        (pcomp (gethash element (component-map table))))
-    (unless (or (not pelm) (eq pelm element))
-      (error 'component-already-associated
-             :component component :element pelm :container table))
-    (unless (or (not pcomp) (eq pcomp component))
-      (error 'element-already-associated
-             :component component :element pelm :container table))
-    (setf (gethash component (component-map table)) element)
-    (setf (gethash element (component-map table)) component)
-    element))
-
-(defmethod disassociate ((element element) (component component) (table element-table))
-  (unless (eq element (gethash component (component-map table)))
-    (error 'element-not-associated
-           :component component :element element :container table))
-  (remhash component (component-map table))
-  (remhash element (component-map table))
-  element)
-
-(defmethod associated-element ((component component) (table element-table))
-  (or (gethash component (component-map table))
-      (error 'no-associated-element :component component :container table)))

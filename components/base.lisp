@@ -6,84 +6,40 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass text-component (component)
-  ((text :initarg :text :initform "" :accessor text)))
-
-(defclass image-component (component)
-  ((image :initarg :image :initform NIL :accessor image)))
-
-(defclass interactable-component (component)
-  ())
-
-(defmethod handle ((event pointer-down) (component interactable-component) ctx)
-  (activate (focus-element component ctx)))
-
-(defmethod handle ((event pointer-move) (component interactable-component) ctx)
-  (unless (eql :strong (focus-for component ctx))
-    (setf (focus-for component ctx) :weak)))
-
-(defmethod (setf focus) :after (value (component interactable-component))
-  (mark-for-render component))
-
-(defclass label (text-component)
+(defclass label (component)
   ())
 
 (defmethod enter ((string string) (layout layout) &rest args)
-  (apply #'enter (make-instance 'label :text string) layout args))
+  (apply #'update (represent-with 'label string layout NIL) layout args))
 
-(defclass icon (image-component)
+(defmethod component-class-for-object ((string string))
+  (find-class 'label))
+
+(defclass icon (component)
   ())
 
-(defclass button (text-component image-component interactable-component)
-  ((pressed :initform NIL :accessor pressed)))
+(defclass value-component (component)
+  ())
 
-(defmethod (setf pressed) :after (value (button button))
-  (mark-for-render button))
+(defmethod initialize-instance :after ((component value-component) &key)
+  (on (setf value) (value (data component))
+    (mark-for-render component)))
 
-(defmethod handle ((event pointer-down) (button button) ctx)
-  (setf (pressed button) T))
+(defmethod value ((component value-component))
+  (value (data component)))
 
-(defmethod handle ((event pointer-up) (button button) ctx)
-  (setf (pressed button) NIL)
-  (setf (focus-for button ctx) :weak))
+(defmethod (setf value) (new-value (component value-component))
+  (setf (value (data component)) new-value))
 
-(defmethod handle ((event button-down) (button button) ctx)
-  (case (button event)
-    (:a (setf (pressed button) T))
-    (T (call-next-method))))
+(defmethod refresh ((component value-component))
+  (setf (value component) (value component)))
 
-(defmethod handle ((event button-up) (button button) ctx)
-  (case (button event)
-    (:a (setf (pressed button) NIL))
-    (T (call-next-method))))
+(defclass direct-value-component (value-component)
+  ((value :initarg :value :accessor value)))
 
-(defmethod exit :after ((button button))
-  (setf (pressed button) NIL))
-
-(defclass switch (interactable-component) ())
-
-(defgeneric state (switch))
-(defgeneric (setf state) (value switch))
-
-(defmethod (setf state) :after (value (switch switch))
-  (mark-for-render switch))
-
-(defmethod activate ((switch switch))
-  (setf (state switch) (not (state switch))))
+(defmethod initialize-instance ((component direct-value-component) &key data)
+  (when data (error "DATA is not allowed for a ~s" (type-of component)))
+  (call-next-method)
+  (setf (data component) component))
 
 ;; TODO: combobox
-(defclass combobox (interactable-component)
-  ())
-
-
-(defclass switch* (switch)
-  ((state :initarg :state :initform NIL :accessor state)))
-
-(defclass input-line* (input-line)
-  ((text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character) :accessor text)))
-
-(defclass input-box* (input-box)
-  ((text :initform (make-array 0 :adjustable T :fill-pointer T :element-type 'character) :accessor text)))
-
-(defclass slider* (slider)
-  ((value :initarg :value :initform 0 :accessor value)))

@@ -18,6 +18,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "events")
                (:file "observable")
                (:file "renderer")
+               (:file "data")
                (:file "component")
                (:file "container")
                (:file "focus-tree")
@@ -29,6 +30,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "grid")))
                (:module "components"
                 :components ((:file "base")
+                             (:file "button")
+                             (:file "switch")
                              (:file "text-input")
                              (:file "slider")))
                (:file "documentation"))

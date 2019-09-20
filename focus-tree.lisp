@@ -24,7 +24,6 @@
 (defgeneric focus-down (focus-grid))
 
 (defgeneric root (focus-tree))
-(defgeneric focus-element (component focus-tree))
 
 (defclass focus-element (element)
   ((focus-tree :initform NIL :reader focus-tree)
@@ -37,7 +36,6 @@
     (focus-tree
      (let ((focus-tree (focus-parent element)))
        (setf (slot-value element 'focus-tree) focus-tree)
-       (setf (slot-value element 'focus-parent) element)
        (setf (root focus-tree) element)))
     (focus-element
      (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))
@@ -78,19 +76,6 @@
 
 (defmethod handle ((event exit) (element focus-element) ui)
   (exit element))
-
-(defclass focus-entry (focus-element)
-  ((component :initarg :component :initform (arg! :component) :reader component)))
-
-(defmethod handle ((event event) (element focus-entry) ui)
-  (unless (handle event (component element) ui)
-    (call-next-method)))
-
-(defmethod activate :after ((element focus-element))
-  (activate (component element)))
-
-(defmethod exit :after ((element focus-element))
-  (exit (component element)))
 
 (defclass focus-chain (focus-element vector-container)
   ((index :initform -1 :accessor index)
@@ -183,21 +168,6 @@
     (error 'element-has-different-parent
            :element element :container chain)))
 
-(defmethod enter :after ((element focus-entry) (chain focus-chain) &key)
-  (associate element (component element) (focus-tree chain)))
-
-(defmethod leave :after ((element focus-entry) (chain focus-chain))
-  (disassociate element (component element) (focus-tree chain)))
-
-(defmethod enter ((component component) (chain focus-chain) &key)
-  (make-instance 'focus-entry :component component :focus-parent chain))
-
-(defmethod leave ((component component) (chain focus-chain))
-  (leave (focus-element component (focus-tree chain)) chain))
-
-(defmethod update ((component component) (chain focus-chain) &rest args)
-  (apply #'update (focus-element component (focus-tree chain)) chain args))
-
 (defmethod update :after ((element focus-element) (chain focus-chain) &key index)
   ;; Fixup index position
   (when (and index (focused chain))
@@ -231,7 +201,7 @@
 (defmethod handle ((event focus-down) (grid focus-grid) ui)
   (focus-down grid))
 
-(defclass focus-tree (element-table)
+(defclass focus-tree ()
   ((root :initform NIL :accessor root)
    (focused :initform NIL :accessor focused)))
 
@@ -257,9 +227,6 @@
 (defmethod (setf focused) :after ((element focus-element) (tree focus-tree))
   (unless (eq :strong (focus element))
     (setf (focus element) :strong)))
-
-(defmethod focus-element ((component component) (tree focus-tree))
-  (associated-element component tree))
 
 (defmethod handle ((event event) (tree focus-tree) ui)
   (handle event (focused tree) ui))

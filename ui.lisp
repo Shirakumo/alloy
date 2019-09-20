@@ -6,9 +6,6 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defgeneric extent-for (component ui))
-(defgeneric focus-for (component ui))
-
 ;;; Provided by the backend
 (defgeneric clipboard (ui))
 (defgeneric (setf clipboard) (content ui))
@@ -21,22 +18,6 @@
   (:default-initargs
    :layout-tree (make-instance 'layout-tree)
    :focus-tree (make-instance 'focus-tree)))
-
-(defmethod layout-element ((component component) (ui ui))
-  (layout-element component (layout-tree ui)))
-
-(defmethod focus-element ((component component) (ui ui))
-  (focus-element component (focus-tree ui)))
-
-(defmethod extent-for ((component component) (ui ui))
-  (bounds (layout-element component (layout-tree ui))))
-
-(defmethod focus-for ((component component) (ui ui))
-  (handler-case (focus (focus-element component (focus-tree ui)))
-    (no-associated-element () NIL)))
-
-(defmethod (setf focus-for) (focus (component component) (ui ui))
-  (setf (focus (focus-element component (focus-tree ui))) focus))
 
 (defmethod focused ((ui ui))
   (focused (focus-tree ui)))

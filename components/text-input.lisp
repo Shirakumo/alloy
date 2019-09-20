@@ -6,22 +6,16 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass text-input-component (interactable-component text-component)
+(defclass text-input-component (value-component)
   ((insert-mode :initform :add :initarg :insert-mode :accessor insert-mode)
    ;; TODO: Maybe make cursors multiple?
    (cursor :initform 0 :accessor cursor)))
-
-(defgeneric text (text-input-component))
-(defgeneric (setf text) (value text-input-component))
-
-(defmethod (setf text) :after (value (component text-input-component))
-  (mark-for-render component))
 
 (defmethod (setf cursor) :after (value (component text-input-component))
   (mark-for-render component))
 
 (defmethod insert-text (text (component text-input-component))
-  (let ((old (text component))
+  (let ((old (value component))
         (cursor (cursor component)))
     ;; Convert to adjustable array first if it's not already.
     ;; This should be a one-time cost unless the user mucks about.
@@ -35,7 +29,7 @@
       (:replace
        (adjust-array old (max (length old) (+ cursor (length text))))
        (replace old text :start1 cursor)))
-    (setf (text component) old)
+    (setf (value component) old)
     (setf (cursor component) (+ cursor (length text)))))
 
 (defmethod handle ((event text-event) (component text-input-component) ctx)
@@ -51,20 +45,22 @@
     (:backspace
      (when (< 0 (cursor component))
        (decf (cursor component))
-       (array-utils:vector-pop-position (text component) (cursor component))))
+       (array-utils:vector-pop-position (value component) (cursor component))
+       (refresh component)))
     (:delete
-     (when (< (cursor component) (length (text component)))
-       (array-utils:vector-pop-position (text component) (cursor component))))
+     (when (< (cursor component) (length (value component)))
+       (array-utils:vector-pop-position (value component) (cursor component))
+       (refresh component)))
     (:left
      (when (< 0 (cursor component))
        (decf (cursor component))))
     (:right
-     (when (< (cursor component) (length (text component)))
+     (when (< (cursor component) (length (value component)))
        (incf (cursor component))))
     (:home
      (setf (cursor component) 0))
     (:end
-     (setf (cursor component) (length (text component))))
+     (setf (cursor component) (length (value component))))
     (:insert
      (setf (insert-mode component)
            (ecase (insert-mode component)
@@ -106,6 +102,6 @@
 (defmethod handle ((event key-up) (component input-box) ctx)
   (case (key event)
     (:return
-      (vector-push-extend #\Linefeed (text component)))
+      (insert-text (string #\Linefeed) component))
     (T
      (call-next-method))))

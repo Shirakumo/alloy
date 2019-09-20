@@ -19,7 +19,7 @@
 (defgeneric remove-observers (function observable &optional name))
 (defgeneric list-observers (function observable))
 (defgeneric invoke-observers (function observable &rest args))
-(defgeneric make-observable (function lambda-list))
+(defgeneric make-observable (function lambda-list &optional class))
 
 (defmacro define-observable (name lambda-list &rest options)
   `(progn
@@ -28,25 +28,22 @@
        (make-observable ',name ',lambda-list))))
 
 (defmacro on (function args &body body)
-  (let ((observable (extract-observable function args)))
+  (let* ((position (or (if (listp function)
+                           (get (second function) 'observable-setf-position)
+                           (get function 'observable-position))
+                       (error "The function~%  ~s~%is not observable." function)))
+         (observable (nth position args))
+         (args (copy-list args)))
+    (setf (nth position args) 'observable)
     `(observe ',function ,observable
               (lambda ,args
-                (declare (ignorable ,observable))
+                (declare (ignorable observable))
                 ,@body))))
 
-(defun extract-observable (function args)
-  ;; KLUDGE: We have to do this because we can't expect the observable to
-  ;;         have a known name.
-  (let ((position (or (if (listp function)
-                          (get function 'observable-setf-position)
-                          (get function 'observable-position))
-                      (error "The function~%  ~s~%is not observable." function))))
-    (nth position args)))
-
-(defmethod make-observable (function lambda-list)
-  (let ((pos (or (position 'observable lambda-list)
+(defmethod make-observable (function lambda-list &optional (class 'observable))
+  (let ((pos (or (position class lambda-list)
                  (error "Cannot make ~s observable: the LAMBDA-LIST~%  ~s~%does not contain ~s"
-                        function lambda-list 'observable)))
+                        function lambda-list class)))
         (lambda-list (copy-list lambda-list))
         (argvars ()))
     ;; Gather argvars and restructure lambda-list
@@ -57,8 +54,8 @@
                 (setf (cdr cons) (list (gensym "REST"))))
                (&optional)
                (observable
-                (setf (car cons) (list 'observable 'observable))
-                (push 'observable argvars))
+                (setf (car cons) (list class class))
+                (push class argvars))
                (T
                 (when (listp (car cons))
                   (setf (car cons) (caar cons)))
@@ -73,7 +70,7 @@
     (eval
      `(defmethod ,function :after ,lambda-list
         (,(if (find '&optional lambda-list) 'apply 'funcall)
-         #'invoke-observers ',function observable ,@argvars)))))
+         #'invoke-observers ',function ,class ,@argvars)))))
 
 (defmethod observe (function (observable observable) observer-function &optional (name observer-function))
   (let ((observer (find name (gethash function (observers observable)) :key #'observer-name)))
