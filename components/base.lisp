@@ -23,6 +23,7 @@
 
 (defmethod initialize-instance :after ((component value-component) &key)
   (on (setf value) (value (data component))
+    (declare (ignore value))
     (mark-for-render component)))
 
 (defmethod value ((component value-component))
@@ -40,6 +41,6 @@
 (defmethod initialize-instance ((component direct-value-component) &key data)
   (when data (error "DATA is not allowed for a ~s" (type-of component)))
   (call-next-method)
-  (setf (data component) component))
+  (setf (slot-value component 'data) component))
 
 ;; TODO: combobox

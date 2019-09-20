@@ -17,7 +17,7 @@
 
 (defmethod handle ((event pointer-up) (button button) ctx)
   (setf (pressed button) NIL)
-  (setf (focus-for button ctx) :weak))
+  (setf (focus button) :weak))
 
 (defmethod handle ((event button-down) (button button) ctx)
   (case (button event)

@@ -15,7 +15,7 @@
   ;; No focus parent, we don't expect to be focused ever, so
   ;; stub ourselves out with this.
   (unless (focus-parent component)
-    (setf (slot-value element 'focus-parent) component)))
+    (setf (slot-value component 'focus-parent) component)))
 
 (defmethod suggest-bounds (extent (component component))
   extent)

@@ -55,8 +55,8 @@
   (case (state slider)
     (:dragging
      (let ((range (/ (- (point-x (location event))
-                        (extent-x (extent-for slider ctx)))
-                     (extent-w (extent-for slider ctx)))))
+                        (extent-x (bounds slider)))
+                     (extent-w (bounds slider)))))
        (setf (value slider) (* range (- (maximum slider) (minimum slider))))))
     (T
      (call-next-method))))

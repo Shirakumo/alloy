@@ -41,7 +41,7 @@
   ;; TODO: copy
   (case (key event)
     (:escape
-     (exit (focus-element component ctx)))
+     (exit component))
     (:backspace
      (when (< 0 (cursor component))
        (decf (cursor component))
@@ -83,7 +83,7 @@
 (defmethod handle ((event key-up) (component input-line) ctx)
   (case (key event)
     (:return
-      (exit (focus-element component ctx)))
+      (exit component))
     (T
      (call-next-method))))
 

@@ -12,8 +12,8 @@
 (defgeneric expand-place-data (place))
 (defgeneric expand-compound-place-data (place args))
 
-(defmethod expand-place-data ((cons place))
-  (expand-compound-place-data (first cons) (rest cons)))
+(defmethod expand-place-data ((place cons))
+  (expand-compound-place-data (first place) (rest place)))
 
 (defclass value-data (data)
   ((value :initarg :value :accessor value)))
@@ -57,13 +57,13 @@
    (slot :initarg :slot :initform (arg! :slot) :accessor slot)))
 
 (defmethod value ((data slot-data))
-  (slot-value (slot-data-object data) (slot-data-slot data)))
+  (slot-value (object data) (slot data)))
 
 (defmethod (setf value) (new-value (data slot-data))
-  (setf (slot-value (slot-data-object data) (slot-data-slot data)) new-value))
+  (setf (slot-value (object data) (slot data)) new-value))
 
 (defmethod expand-compound-place-data ((place (eql 'slot-value)) args)
-  (destructuring-bind (object slot) body
+  (destructuring-bind (object slot) args
     `(make-instance 'slot-data :object ,object :slot ,slot)))
 
 (defclass aref-data (data)
