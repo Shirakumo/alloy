@@ -27,18 +27,32 @@
      (eval-when (:compile-toplevel :load-toplevel :execute)
        (make-observable ',name ',lambda-list))))
 
+(defun gather-declarations (body)
+  (let* ((declarations (loop for item = (car body)
+                             while (and (listp item) (eql 'declare (car item)))
+                             collect (pop body)))
+         (normalized (loop for declaration in declarations
+                           append (loop for part in (rest declaration)
+                                        collect `(declare ,part)))))
+    (values normalized body)))
+
 (defmacro on (function args &body body)
-  (let* ((position (or (if (listp function)
-                           (get (second function) 'observable-setf-position)
-                           (get function 'observable-position))
-                       (error "The function~%  ~s~%is not observable." function)))
-         (observable (nth position args))
-         (args (copy-list args)))
-    (setf (nth position args) 'observable)
-    `(observe ',function ,observable
-              (lambda ,args
-                (declare (ignorable observable))
-                ,@body))))
+  (multiple-value-bind (declarations body) (gather-declarations body)
+    (let* ((position (or (if (listp function)
+                             (get (second function) 'observable-setf-position)
+                             (get function 'observable-position))
+                         (error "The function~%  ~s~%is not observable." function)))
+           (observable (nth position args))
+           (args (copy-list args))
+           (name (second (second (find 'name declarations :key #'caadr))))
+           (declarations (remove 'name declarations :key #'caadr)))
+      (setf (nth position args) 'observable)
+      `(observe ',function ,observable
+                (lambda ,args
+                  ,@declarations
+                  (declare (ignorable observable))
+                  ,@body)
+                ',name))))
 
 (defmethod make-observable (function lambda-list &optional (class 'observable))
   (let ((pos (or (position class lambda-list)
@@ -72,8 +86,9 @@
         (,(if (find '&optional lambda-list) 'apply 'funcall)
          #'invoke-observers ',function ,class ,@argvars)))))
 
-(defmethod observe (function (observable observable) observer-function &optional (name observer-function))
-  (let ((observer (find name (gethash function (observers observable)) :key #'observer-name)))
+(defmethod observe (function (observable observable) observer-function &optional name)
+  (let* ((name (or name observer-function))
+         (observer (find name (gethash function (observers observable)) :key #'observer-name)))
     (if observer
         (setf (observer-function observer) observer-function)
         (push (make-observer name observer-function) (gethash function (observers observable))))
