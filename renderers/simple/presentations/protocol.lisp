@@ -59,14 +59,10 @@
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
     `(defmethod compute-shape-style ((alloy:renderer ,renderer) (shape symbol) (alloy:renderable ,renderable))
-       (flet ((alloy:focus (&optional thing)
-                (if thing
-                    (alloy:focus thing)
-                    (alloy:focus-for alloy:renderable alloy:renderer)))
-              (alloy:bounds (&optional thing)
-                (if thing
-                    (alloy:bounds thing)
-                    (alloy:extent-for alloy:renderable alloy:renderer))))
+       (flet ((alloy:focus (&optional (thing alloy:renderable))
+                (alloy:focus thing))
+              (alloy:bounds (&optional (thing alloy:renderable))
+                (alloy:bounds thing)))
          (declare (ignorable #'alloy:focus #'alloy:bounds))
          (case shape
            ,@(loop for (name . initargs) in shapes
