@@ -11,6 +11,18 @@
 (defclass default-look-and-feel (renderer)
   ())
 
+(defmethod update-shape ((renderer default-look-and-feel) (renderable alloy:button) (shape text))
+  (call-next-method)
+  (setf (text shape) (alloy:data renderable)))
+
+(defmethod update-shape ((renderer default-look-and-feel) (renderable alloy:label) (shape text))
+  (call-next-method)
+  (setf (text shape) (alloy:data renderable)))
+
+(defmethod update-shape ((renderer default-look-and-feel) (renderable alloy:input-line) (shape text))
+  (call-next-method)
+  (setf (text shape) (alloy:value renderable)))
+
 (define-style (default-look-and-feel renderable)
   (:background
    :fill-color (simple:color 0.15 0.15 0.15))
@@ -34,11 +46,7 @@
    :extent (alloy:margins))
   ((:border outlined-box)
    :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
-  ((:icon icon :when (typep (alloy:data alloy:renderable) 'simple:image))
-   :image (simple:request-image alloy:renderer (alloy:data alloy:renderable))
-   :extent (alloy:margins :l 1 :u 1 :r 1 :b 1)
-   :halign :middle)
-  ((:label text :when (typep (alloy:data alloy:renderable) 'string))
+  ((:label text)
    :text (alloy:data alloy:renderable)
    :extent (alloy:margins :l 1 :u 1 :r 1 :b 1)
    :halign :middle))

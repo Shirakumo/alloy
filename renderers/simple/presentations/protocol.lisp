@@ -35,12 +35,14 @@
 (defgeneric activate-style (style renderer))
 
 (stealth-mixin:define-stealth-mixin renderable () alloy:renderable
-  ((shapes :initform () :accessor shapes)))
+  ;; Reminder for future me: this has to be a vector for insertion order to stay correct.
+  ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
 
 (defgeneric override-shapes (renderable shapes))
 (defgeneric override-style (renderable shape style))
 (defgeneric realize-renderable (renderer renderable))
 (defgeneric compute-shape-style (renderer shape renderable))
+(defgeneric update-shape (renderer renderable shape))
 (defgeneric clear-shapes (renderable))
 (defgeneric find-shape (id renderable &optional errorp))
 (defgeneric (setf find-shape) (shape id renderable))
@@ -77,11 +79,13 @@
     (arg! :renderer))
   (when shapes
     (override-shapes renderable shapes))
-  (loop for (shape . style) in shapes
-        do (override-style renderable shape
-                           (etypecase style
-                             (style style)
-                             (cons (apply #'make-style style))))))
+  (when style
+    (loop for (shape . style) in style
+          do (override-style renderable shape
+                             (etypecase style
+                               (style style)
+                               (cons (apply #'make-style style)))))
+    (update-shape (alloy:renderer renderable) renderable T)))
 
 (defun make-default-style (renderer)
   (make-style :fill-color (simple:color 0 0 0)
@@ -103,7 +107,7 @@
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds renderable))
-    (loop for shape in (shapes renderable)
+    (loop for shape across (shapes renderable)
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
                  (render-sized renderer (cdr shape) (alloy:bounds renderable)))))))
@@ -148,7 +152,7 @@
 
 (defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
   (loop with renderer = (alloy:renderer renderable)
-        for (name . shape) in (shapes renderable)
+        for (name . shape) across (shapes renderable)
         do (setf (style shape) (compute-shape-style renderer name renderable))))
 
 (defmethod override-style ((renderable renderable) (shape symbol) style)
@@ -161,23 +165,34 @@
   (setf (style shape) (compute-shape-style (alloy:renderer renderable) shape renderable)))
 
 (defmethod clear-shapes ((renderable renderable))
-  (setf (shapes renderable) ()))
+  (setf (fill-pointer (shapes renderable)) 0))
 
 (defmethod find-shape (id (renderable renderable) &optional errorp)
-  (or (cdr (assoc id (shapes renderable)))
+  (or (cdr (find id (shapes renderable) :key #'car))
       (when errorp (error "No such shape~%  ~s~%in~%  ~s"
                           id renderable))))
 
 (defmethod (setf find-shape) ((shape shape) id (renderable renderable))
-  (let ((record (assoc id (shapes renderable))))
+  (let ((record (find id (shapes renderable) :key #'car)))
     (if record
         (setf (cdr record) shape)
-        (push (cons id shape) (shapes renderable)))
+        (vector-push-extend (cons id shape) (shapes renderable)))
     shape))
 
 (defmethod (setf find-shape) ((null null) id (renderable renderable))
-  (setf (shapes renderable) (remove id (shapes renderable) :key #'car)))
+  (let ((pos (position id (shapes renderable) :key #'car)))
+    (when pos
+      (setf (shapes renderable) (array-utils:vector-pop-position (shapes renderable) pos)))))
+
+(defmethod update-shape ((renderer renderer) (renderable renderable) (shape shape))
+  (setf (style shape) (compute-shape-style renderer shape renderable)))
+
+(defmethod update-shape ((renderer renderer) (renderable renderable) (name symbol))
+  (update-shape renderer renderable (find-shape name renderable T)))
+
+(defmethod update-shape ((renderer renderer) (renderable renderable) (all (eql T)))
+  (loop for (name . shape) across (shapes renderable)
+        do (update-shape renderer renderable name)))
 
 (defmethod alloy:mark-for-render :after ((renderable renderable))
-  ;; Might be too expensive.
-  (realize-renderable (alloy:renderer renderable) renderable))
+  (update-shape (alloy:renderer renderable) renderable T))
