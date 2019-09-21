@@ -15,10 +15,12 @@
   extent)
 
 (defmethod handle ((event pointer-down) (component component) ctx)
-  (activate component))
+  (when (slot-boundp component 'focus-parent)
+    (activate component)))
 
 (defmethod handle ((event pointer-move) (component component) ctx)
-  (unless (eql :strong (focus component))
+  (when (and (slot-boundp component 'focus-parent)
+             (eql NIL (focus component)))
     (setf (focus component) :weak)))
 
 (defmethod (setf focus) :after (value (component component))

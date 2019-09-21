@@ -178,6 +178,6 @@
 (defmethod (setf find-shape) ((null null) id (renderable renderable))
   (setf (shapes renderable) (remove id (shapes renderable) :key #'car)))
 
-(defmethod mark-for-render :after ((renderable renderable))
+(defmethod alloy:mark-for-render :after ((renderable renderable))
   ;; Might be too expensive.
   (realize-renderable (alloy:renderer renderable) renderable))
