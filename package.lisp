@@ -9,7 +9,10 @@
   (:shadow #:step #:variable)
   ;; component.lisp
   (:export
-   #:component)
+   #:component
+   #:component-class-for-object
+   #:represent-with
+   #:represent)
   ;; conditions.lisp
   (:export
    #:alloy-condition
@@ -17,18 +20,12 @@
    #:argument-missing
    #:initarg
    #:arg!
-   #:association-error
-   #:component
-   #:container
-   #:element
-   #:no-associated-element
-   #:component-already-associated
-   #:element-already-associated
-   #:element-not-associated
    #:index-out-of-range
    #:index
    #:range
    #:hierarchy-error
+   #:container
+   #:element
    #:element-has-different-parent
    #:element-not-contained
    #:element-has-different-root
@@ -40,32 +37,29 @@
    #:renderable-already-registered)
   ;; components/base.lisp
   (:export
-   #:text-component
-   #:text
-   #:image-component
-   #:image
    #:label
    #:icon
+   #:value-component
+   #:direct-value-component)
+  ;; components/button.lisp
+  (:export
    #:button
-   #:pressed
-   #:switch
-   #:state
-   #:switch*
-   #:input-line*
-   #:input-box*
-   #:slider*)
+   #:pressed)
+  ;; components/switch.lisp
+  (:export
+   #:switch)
   ;; components/text-input.lisp
   (:export
    #:text-input-component
+   #:insert-mode
    #:cursor
-   #:text
+   #:insert-text
    #:input-line
    #:input-box)
   ;; components/slider.lisp
   (:export
    #:slider
    #:range
-   #:value
    #:step
    #:state
    #:minimum
@@ -81,11 +75,26 @@
    #:element-count
    #:call-with-elements
    #:do-elements
-   #:vector-container
-   #:element-table
-   #:associate
-   #:disassociate
-   #:associated-element)
+   #:vector-container)
+  ;; data.lisp
+  (:export
+   #:data
+   #:refresh
+   #:expand-place-data
+   #:expand-compound-place-data
+   #:value-data
+   #:value
+   #:place-data
+   #:getter
+   #:setter
+   #:variable-data
+   #:variable
+   #:slot-data
+   #:object
+   #:slot
+   #:aref-data
+   #:object
+   #:index)
   ;; events.lisp
   (:export
    #:handle
@@ -127,7 +136,7 @@
   (:export
    #:focus-element
    #:focus-tree
-   #:parent
+   #:focus-parent
    #:focus
    #:exit
    #:activate
@@ -141,7 +150,6 @@
    #:focus-down
    #:root
    #:focus-element
-   #:focus-entry
    #:focus-chain
    #:focus-list
    #:focus-grid
@@ -188,11 +196,10 @@
    #:layout-tree
    #:bounds
    #:layout-element
+   #:layout-parent
    #:notice-bounds
    #:suggest-bounds
    #:layout-element
-   #:layout-entry
-   #:component
    #:layout
    #:layout-tree)
   ;; layouts/fixed.lisp
@@ -215,7 +222,17 @@
    #:align
    #:vertical-linear-layout
    #:horizontal-linear-layout)
-  ;; renderer
+  ;; observable.lisp
+  (:export
+   #:observable
+   #:observe
+   #:remove-observers
+   #:list-observers
+   #:notify-observers
+   #:make-observable
+   #:define-observable
+   #:on)
+  ;; renderer.lisp
   (:export
    #:allocate
    #:allocated-p
@@ -225,13 +242,10 @@
    #:mark-for-render
    #:render
    #:maybe-render
-   #:render-with
    #:renderer
    #:renderable)
   ;; ui.lisp
   (:export
-   #:extent-for
-   #:focus-for
    #:clipboard
    #:cursor
    #:ui
