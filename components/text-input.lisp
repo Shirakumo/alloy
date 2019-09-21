@@ -14,20 +14,25 @@
 (defmethod (setf cursor) :after (value (component text-input-component))
   (mark-for-render component))
 
+(defun maybe-enlarge (array size)
+  (if (< (array-total-size array) size)
+      (adjust-array array size :fill-pointer size)
+      (setf (fill-pointer array) size)))
+
 (defmethod insert-text (text (component text-input-component))
   (let ((old (value component))
         (cursor (cursor component)))
-    ;; Convert to adjustable array first if it's not already.
-    ;; This should be a one-time cost unless the user mucks about.
-    (unless (adjustable-array-p old)
-      (let ((new (make-array (+ (length old) (length text)) :element-type 'character :adjustable T :fill-pointer T)))
-        (setf old (replace new old))))
     ;; Now either add by shifting or replace (and extend).
+    (unless (adjustable-array-p old)
+      (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
     (ecase (insert-mode component)
       (:add
-       (array-utils:array-shift old :n (length text) :from cursor :contents text))
+       (maybe-enlarge old (+ (length old) (length text)))
+       (loop for i downfrom (1- (fill-pointer old)) above cursor
+             do (setf (aref old i) (aref old (- i (length text)))))
+       (replace old text :start1 cursor))
       (:replace
-       (adjust-array old (max (length old) (+ cursor (length text))))
+       (maybe-enlarge old (max (length old) (+ cursor (length text))))
        (replace old text :start1 cursor)))
     (setf (value component) old)
     (setf (cursor component) (+ cursor (length text)))))
