@@ -26,7 +26,10 @@
        (setf (slot-value element 'layout-parent) element)
        (setf (root layout-tree) element)))
     (layout-element
-     (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element))))))
+     (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element)))
+     (enter element (layout-parent element)))
+    (null
+     (slot-makunbound element 'layout-parent))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -45,6 +48,23 @@
 (defmethod w ((element layout-element)) (extent-w (bounds element)))
 (defmethod h ((element layout-element)) (extent-h (bounds element)))
 
+(defmethod enter :before ((element layout-element) (parent layout-element) &key)
+  (cond ((not (slot-boundp element 'layout-parent))
+         (setf (slot-value element 'layout-tree) (layout-tree parent))
+         (setf (slot-value element 'layout-parent) parent))
+        ((not (eq parent (layout-parent element)))
+         (error 'element-has-different-parent
+                :element element :container parent :parent (layout-parent element)))))
+
+(defmethod leave :before ((element layout-element) (parent layout-element))
+  (unless (eq layout (layout-parent element))
+    (error 'element-has-different-parent
+           :element element :container parent :parent (layout-parent element))))
+
+(defmethod leave :after ((element layout-element) (parent layout-element))
+  (slot-makunbound element 'layout-tree)
+  (slot-makunbound element 'layout-parent))
+
 (defmethod handle ((event event) (element layout-element) ui)
   (decline))
 
@@ -55,18 +75,13 @@
 (defclass layout (layout-element container renderable)
   ())
 
-(defmethod enter :before ((element layout-element) (layout layout) &key)
-  (unless (eq layout (layout-parent element))
-    (error 'element-has-different-parent
-           :element element :container layout :parent (layout-parent element))))
-
 (defmethod enter :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))
 
-(defmethod leave :before ((element layout-element) (layout layout))
-  (unless (eq layout (layout-parent element))
-    (error 'element-has-different-parent
-           :element element :container layout :parent (layout-parent element))))
+(defmethod enter :after ((renderable renderable) (layout layout) &key)
+  (when (and (slot-boundp layout 'renderer)
+             (not (slot-boundp renderable 'renderer)))
+    (register renderable (renderer layout))))
 
 (defmethod update :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))

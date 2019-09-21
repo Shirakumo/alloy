@@ -10,3 +10,6 @@
 
 (defmethod activate ((switch switch))
   (setf (value switch) (not (value switch))))
+
+(defmethod component-class-for-object ((_ (eql NIL))) 'switch)
+(defmethod component-class-for-object ((_ (eql T))) 'switch)

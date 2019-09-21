@@ -38,7 +38,7 @@
   ((extent :initarg :extent :initform (arg! :extent) :accessor extent)))
 
 (defmethod render-sized ((renderer renderer) (box box) extent)
-  (simple:rectangle renderer (to-extent box element)))
+  (simple:rectangle renderer (to-extent box extent)))
 
 (defclass filled-box (box filled-shape) ())
 (defclass outlined-box (box outlined-shape) ())

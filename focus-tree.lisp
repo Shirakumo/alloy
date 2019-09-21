@@ -40,8 +40,10 @@
        (setf (root focus-tree) element)))
     (focus-element
      (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))
-     (enter element (focus-parent element))
-     (setf (focus element) focus))))
+     (enter element (focus-parent element)))
+    (null
+     (slot-makunbound element 'focus-parent)))
+  (when focus (setf (focus element) focus)))
 
 (defmethod print-object ((element focus-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -77,6 +79,23 @@
 
 (defmethod handle ((event exit) (element focus-element) ui)
   (exit element))
+
+(defmethod enter :before ((element focus-element) (parent focus-element) &key)
+  (cond ((not (slot-boundp element 'focus-parent))
+         (setf (slot-value element 'focus-tree) (focus-tree parent))
+         (setf (slot-value element 'focus-parent) parent))
+        ((not (eq parent (focus-parent element)))
+         (error 'element-has-different-parent
+                :element element :container parent :parent (focus-parent element)))))
+
+(defmethod leave :before ((element focus-element) (parent focus-element))
+  (unless (eq parent (focus-parent element))
+    (error 'element-has-different-parent
+           :element element :container parent :parent (focus-parent element))))
+
+(defmethod leave :after ((element focus-element) (parent focus-element))
+  (slot-makunbound element 'focus-parent)
+  (slot-makunbound element 'focus-tree))
 
 (defclass focus-chain (focus-element vector-container)
   ((index :initform -1 :accessor index)
@@ -159,16 +178,6 @@
            (focused chain))
       (activate (focused chain))
       (call-next-method)))
-
-(defmethod enter :before ((element focus-element) (chain focus-chain) &key)
-  (unless (eq chain (focus-parent element))
-    (error 'element-has-different-parent
-           :element element :container chain :parent (focus-parent element))))
-
-(defmethod leave :before ((element focus-element) (chain focus-chain))
-  (unless (eq chain (focus-parent element))
-    (error 'element-has-different-parent
-           :element element :container chain :parent (focus-parent element))))
 
 (defmethod update :after ((element focus-element) (chain focus-chain) &key index)
   ;; Fixup index position

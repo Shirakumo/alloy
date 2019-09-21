@@ -16,6 +16,9 @@
 (defmethod expand-place-data ((place cons))
   (expand-compound-place-data (first place) (rest place)))
 
+(defmethod expand-place-data (atom)
+  atom)
+
 (defclass value-data (data)
   ((value :initarg :value :accessor value)))
 

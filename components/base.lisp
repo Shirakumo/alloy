@@ -10,7 +10,7 @@
   ())
 
 (defmethod enter ((string string) (layout layout) &rest args)
-  (apply #'update (represent-with 'label string layout NIL) layout args))
+  (apply #'enter (represent-with 'label string) layout args))
 
 (defmethod component-class-for-object ((string string))
   (find-class 'label))

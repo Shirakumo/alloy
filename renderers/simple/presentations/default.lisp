@@ -26,7 +26,7 @@
 
 (define-realisation (default-look-and-feel alloy:label)
   ((:label text)
-   :text (alloy:text alloy:renderable)
+   :text (alloy:data alloy:renderable)
    :extent (alloy:margins)))
 
 (define-realisation (default-look-and-feel alloy:button)
@@ -61,7 +61,7 @@
 
 (define-style (default-look-and-feel alloy:switch)
   (:switch
-   :offset (alloy:point (if (alloy:state alloy:renderable)
+   :offset (alloy:point (if (alloy:value alloy:renderable)
                             (- (alloy:extent-w (alloy:bounds)) 20)
                             0))
    :fill-color (case (alloy:focus)
@@ -74,7 +74,7 @@
   ((:border outlined-box)
    :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
   ((:label text)
-   :text (alloy:text alloy:renderable)
+   :text (alloy:value alloy:renderable)
    :extent (alloy:margins :l 1 :u 1 :r 1 :b 1))
   ((:cursor filled-box)
    :extent (alloy:extent 0 0 1 25)))
