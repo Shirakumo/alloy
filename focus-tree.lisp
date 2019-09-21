@@ -122,9 +122,11 @@
   (unless (eq chain (focus-parent element))
     (error 'element-has-different-parent
            :element element :container chain :parent (focus-parent element)))
-  (setf (slot-value chain 'index) (position element (elements chain)))
   (when (focused chain)
-    (setf (slot-value (focused chain) 'focus) NIL)))
+    (let ((focused (focused chain)))
+      (setf (slot-value chain 'focused) NIL)
+      (setf (focus focused) NIL)))
+  (setf (slot-value chain 'index) (position element (elements chain))))
 
 (defmethod (setf focused) :after ((element focus-element) (chain focus-chain))
   (when (eql NIL (focus element))
@@ -135,7 +137,9 @@
     (error 'index-out-of-range
            :index index :range (list 0 (length (elements chain)))))
   (when (focused chain)
-    (setf (slot-value (focused chain) 'focus) NIL))
+    (let ((focused (focused chain)))
+      (setf (slot-value chain 'focused) NIL)
+      (setf (focus focused) NIL)))
   (setf (slot-value chain 'focused) (aref (elements chain) index)))
 
 (defmethod (setf index) :after ((index integer) (chain focus-chain))
