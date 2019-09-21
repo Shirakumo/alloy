@@ -25,19 +25,19 @@
 (defclass filled-shape (shape)
   ())
 
-(defmethod alloy:render-with :before ((renderer renderer) element (shape filled-shape))
+(defmethod render-sized :before ((renderer renderer) (shape filled-shape) extent)
   (setf (simple:fill-mode renderer) :fill))
 
 (defclass outlined-shape (shape)
   ())
 
-(defmethod alloy:render-with :before ((renderer renderer) element (shape outlined-shape))
+(defmethod render-sized :before ((renderer renderer) (shape outlined-shape) extent)
   (setf (simple:fill-mode renderer) :lines))
 
 (defclass box (shape)
   ((extent :initarg :extent :initform (arg! :extent) :accessor extent)))
 
-(defmethod alloy:render-with ((renderer renderer) element (box box))
+(defmethod render-sized ((renderer renderer) (box box) extent)
   (simple:rectangle renderer (to-extent box element)))
 
 (defclass filled-box (box filled-shape) ())
@@ -46,8 +46,8 @@
 (defclass circle (shape)
   ((extent :initarg :extent :initform (arg! :extent) :accessor extent)))
 
-(defmethod alloy:render-with ((renderer renderer) element (circle circle))
-  (simple:ellipse renderer (to-extent circle element)))
+(defmethod render-sized ((renderer renderer) (circle circle) extent)
+  (simple:ellipse renderer (to-extent circle extent)))
 
 (defclass filled-circle (circle filled-shape) ())
 (defclass outlined-circle (circle outlined-shape) ())
@@ -55,7 +55,7 @@
 (defclass polygon (shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod alloy:render-with ((renderer renderer) element (polygon polygon))
+(defmethod render-sized ((renderer renderer) (polygon polygon) extent)
   (simple:polygon renderer (points polygon)))
 
 (defclass filled-polygon (polygon filled-shape) ())
@@ -65,7 +65,7 @@
   ((point-a :initarg :point-a :initform (arg! :point-a) :accessor point-a)
    (point-b :initarg :point-b :initform (arg! :point-b) :accessor point-b)))
 
-(defmethod alloy:render-with ((renderer renderer) element (line line))
+(defmethod render-sized ((renderer renderer) (line line) extent)
   (simple:line renderer (point-a line) (point-b line)))
 
 (defclass text (shape)
@@ -75,8 +75,8 @@
    (halign :initarg :halign :initform :start :accessor halign)
    (direction :initarg :direction :initform :right :accessor direction)))
 
-(defmethod alloy:render-with ((renderer renderer) element (text text))
-  (let ((extent (to-extent text element)))
+(defmethod render-sized ((renderer renderer) (text text) extent)
+  (let ((extent (to-extent text extent)))
     (simple:clip renderer extent)
     (let ((point (alloy:point (+ (alloy:extent-x extent)
                                  (ecase (halign text)
@@ -104,8 +104,8 @@
   (unless (slot-boundp icon 'size)
     (setf (size icon) (simple:size image))))
 
-(defmethod alloy:render-with ((renderer renderer) element (icon icon))
-  (let ((extent (to-extent icon element))
+(defmethod render-sized ((renderer renderer) (icon icon) extent)
+  (let ((extent (to-extent icon extent))
         (size (size icon)))
     (let ((point (alloy:point (+ (alloy:extent-x extent)
                                  (ecase (halign icon)

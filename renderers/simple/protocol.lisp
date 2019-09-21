@@ -87,8 +87,8 @@
 (defmethod request-font ((renderer renderer) (fontspec (eql :default)))
   (request-font renderer "sans-serif"))
 
-(defmethod register ((component alloy:image-component) (renderer renderer))
-  (setf (alloy:image component) (request-image renderer (alloy:image component))))
+(defmethod alloy:component-class-for-object ((image image))
+  (find-class 'alloy:icon))
 
 (defmacro with-pushed-transforms ((renderer) &body body)
   `(call-with-pushed-transforms (lambda () ,@body) ,renderer))

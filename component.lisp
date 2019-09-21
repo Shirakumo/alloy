@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass component (observable layout-element focus-element)
+(defclass component (observable layout-element focus-element renderable)
   ((focus-parent :initform NIL)
    (data :initarg :data :initform (arg! :data) :reader data)))
 
@@ -36,7 +36,6 @@
 (make-observable 'activate '(observable))
 (make-observable 'exit '(observable))
 
-(defgeneric refresh (component))
 (defgeneric component-class-for-object (data))
 (defgeneric represent-with (component-type data layout focus-chain &rest initargs))
 

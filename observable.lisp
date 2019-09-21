@@ -13,12 +13,12 @@
   (function NIL :type function))
 
 (defclass observable ()
-  ((observers :initform (make-hash-table :test 'eq) :accessor observers)))
+  ((observers :initform (make-hash-table :test 'equal) :accessor observers)))
 
 (defgeneric observe (function observable observer &optional name))
 (defgeneric remove-observers (function observable &optional name))
 (defgeneric list-observers (function observable))
-(defgeneric invoke-observers (function observable &rest args))
+(defgeneric notify-observers (function observable &rest args))
 (defgeneric make-observable (function lambda-list &optional class))
 
 (defmacro define-observable (name lambda-list &rest options)
@@ -84,7 +84,7 @@
     (eval
      `(defmethod ,function :after ,lambda-list
         (,(if (find '&optional lambda-list) 'apply 'funcall)
-         #'invoke-observers ',function ,class ,@argvars)))))
+         #'notify-observers ',function ,class ,@argvars)))))
 
 (defmethod observe (function (observable observable) observer-function &optional name)
   (let* ((name (or name observer-function))
@@ -104,6 +104,6 @@
   (loop for observer in (gethash function (observers observable))
         collect (observer-name observer)))
 
-(defmethod invoke-observers (function (observable observable) &rest args)
+(defmethod notify-observers (function (observable observable) &rest args)
   (loop for observer in (gethash function (observers observable))
         do (apply (observer-function observer) args)))

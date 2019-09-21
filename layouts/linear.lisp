@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass linear-layout (layout vector-container)
-  ((min-size :initarg :min-size :initform (size) :accessor min-size)
+  ((min-size :initarg :min-size :initform (size 20 20) :accessor min-size)
    (stretch :initarg :stretch :initform T :accessor stretch)
    (align :initarg :align :initform :start :accessor align)))
 

@@ -23,7 +23,7 @@
     (layout-tree
      (let ((layout-tree (layout-parent element)))
        (setf (slot-value element 'layout-tree) layout-tree)
-       (setf (slot-value element 'layout-parent) NIL)
+       (setf (slot-value element 'layout-parent) element)
        (setf (root layout-tree) element)))
     (layout-element
      (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element))))))

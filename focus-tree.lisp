@@ -36,6 +36,7 @@
     (focus-tree
      (let ((focus-tree (focus-parent element)))
        (setf (slot-value element 'focus-tree) focus-tree)
+       (setf (slot-value element 'focus-parent) element)
        (setf (root focus-tree) element)))
     (focus-element
      (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))

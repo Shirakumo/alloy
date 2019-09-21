@@ -9,6 +9,7 @@
 (defclass data (observable)
   ())
 
+(defgeneric refresh (data))
 (defgeneric expand-place-data (place))
 (defgeneric expand-compound-place-data (place args))
 
@@ -22,8 +23,11 @@
 (defgeneric (setf value) (new-value data))
 (make-observable '(setf value) '(new-value observable))
 
+(defmethod refresh ((data value-data))
+  (notify-observers '(setf value) data (value data) data))
+
 ;;; General case.
-(defclass place-data (data)
+(defclass place-data (value-data)
   ((getter :initarg :getter :initform (arg! :getter) :accessor getter)
    (setter :initarg :setter :initform (arg! :setter) :accessor setter)))
 
@@ -39,7 +43,7 @@
                     :getter (lambda () (,place ,@args))
                     :setter (lambda (,value) (setf (,place ,@args) ,value)))))
 
-(defclass variable-data (data)
+(defclass variable-data (value-data)
   ((variable :initarg :variable :initform (arg! :variable) :accessor variable)))
 
 (defmethod value ((data variable-data))
@@ -52,7 +56,7 @@
 (defmethod expand-place-data ((place symbol))
   `(make-instance 'variable-data :variable ',place))
 
-(defclass slot-data (data)
+(defclass slot-data (value-data)
   ((object :initarg :object :initform (arg! :object) :accessor object)
    (slot :initarg :slot :initform (arg! :slot) :accessor slot)))
 
@@ -66,7 +70,7 @@
   (destructuring-bind (object slot) args
     `(make-instance 'slot-data :object ,object :slot ,slot)))
 
-(defclass aref-data (data)
+(defclass aref-data (value-data)
   ((object :initarg :object :initform (arg! :object) :accessor object)
    (index :initarg :index :initform (arg! :index) :accessor index)))
 
@@ -80,3 +84,6 @@
   (let ((object (gensym "OBJECT")))
     `(let ((,object ,(first args)))
        (make-instance 'aref-data :object ,object :index (array-row-major-index ,object ,@(rest args))))))
+
+(defmethod (setf index) ((list list) (data aref-data))
+  (setf (index data) (apply #'array-row-major-index (object data) list)))
