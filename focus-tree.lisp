@@ -99,9 +99,10 @@
     (setf (focus (focused chain)) NIL)))
 
 (defmethod (setf focused) :before ((element focus-element) (chain focus-chain))
-  (setf (slot-value chain 'index) (or (position element (elements chain))
-                                      (error 'element-has-different-parent
-                                             :element element :parent chain)))
+  (unless (eq chain (focus-parent element))
+    (error 'element-has-different-parent
+           :element element :container chain :parent (focus-parent element)))
+  (setf (slot-value chain 'index) (position element (elements chain)))
   (when (focused chain)
     (setf (slot-value (focused chain) 'focus) NIL)))
 
@@ -161,12 +162,12 @@
 (defmethod enter :before ((element focus-element) (chain focus-chain) &key)
   (unless (eq chain (focus-parent element))
     (error 'element-has-different-parent
-           :element element :container chain)))
+           :element element :container chain :parent (focus-parent element))))
 
 (defmethod leave :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (focus-parent element))
     (error 'element-has-different-parent
-           :element element :container chain)))
+           :element element :container chain :parent (focus-parent element))))
 
 (defmethod update :after ((element focus-element) (chain focus-chain) &key index)
   ;; Fixup index position

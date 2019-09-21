@@ -58,7 +58,7 @@
 (defmethod enter :before ((element layout-element) (layout layout) &key)
   (unless (eq layout (layout-parent element))
     (error 'element-has-different-parent
-           :element element :container layout)))
+           :element element :container layout :parent (layout-parent element))))
 
 (defmethod enter :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))
@@ -66,7 +66,7 @@
 (defmethod leave :before ((element layout-element) (layout layout))
   (unless (eq layout (layout-parent element))
     (error 'element-has-different-parent
-           :element element :container layout)))
+           :element element :container layout :parent (layout-parent element))))
 
 (defmethod update :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))

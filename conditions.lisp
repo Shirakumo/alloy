@@ -26,25 +26,6 @@
 (defun arg! (initarg)
   (error 'argument-missing :initarg initarg))
 
-(define-alloy-condition association-error (error)
-    NIL component container)
-
-(define-alloy-condition no-associated-element (association-error)
-    "The component~%  ~a~%is not associated with any element in~%  ~a"
-  component container)
-
-(define-alloy-condition component-already-associated (association-error)
-    "The component~%  ~a~%is already associated with the element~%  ~a~%in~%  ~a"
-  component element container)
-
-(define-alloy-condition element-already-associated (association-error)
-    "The element~%  ~a~%is already associated with the component~%  ~a~%in~%  ~a"
-  element component container)
-
-(define-alloy-condition element-not-associated (association-error)
-    "The element~%  ~a~%is not associated with the component~%  ~a~%in~%  ~a"
-  element component container)
-
 (define-alloy-condition index-out-of-range (error)
     "The index ~d is outside of [~{~d~^,~}[."
   index range)
@@ -54,7 +35,7 @@
 
 (define-alloy-condition element-has-different-parent (hierarchy-error)
     "Cannot perform operation with~%  ~s~%on~%  ~s~%as it is a parent on~%  ~s"
-  element container (parent (element c)))
+  element container parent)
 
 (define-alloy-condition element-not-contained (hierarchy-error)
     "The element~%  ~s~%is not a child of~%  ~s"
