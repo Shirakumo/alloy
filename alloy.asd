@@ -14,6 +14,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   :serial T
   :components ((:file "package")
                (:file "conditions")
+               (:file "units")
                (:file "geometry")
                (:file "events")
                (:file "observable")
