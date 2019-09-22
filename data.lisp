@@ -46,18 +46,11 @@
                     :getter (lambda () (,place ,@args))
                     :setter (lambda (,value) (setf (,place ,@args) ,value)))))
 
-(defclass variable-data (value-data)
-  ((variable :initarg :variable :initform (arg! :variable) :accessor variable)))
-
-(defmethod value ((data variable-data))
-  (symbol-value (variable data)))
-
-(defmethod (setf value) (new-value (data variable-data))
-  (setf (symbol-value (variable data)) new-value))
-
-;; FIXME: this will not work correctly with lexical variables.
 (defmethod expand-place-data ((place symbol))
-  `(make-instance 'variable-data :variable ',place))
+  (let ((value (gensym "VALUE")))
+    `(make-instance 'place-data
+                    :getter (lambda () ,place)
+                    :setter (lambda (,value) (setf ,place ,value)))))
 
 (defclass slot-data (value-data)
   ((object :initarg :object :initform (arg! :object) :accessor object)

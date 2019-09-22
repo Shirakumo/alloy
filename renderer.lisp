@@ -10,7 +10,6 @@
 (defgeneric deallocate (renderer))
 (defgeneric allocated-p (renderer))
 (defgeneric register (renderable renderer))
-;; TODO: maybe a clone-for-renderer method?
 
 (defgeneric render-needed-p (renderable))
 (defgeneric mark-for-render (renderable))

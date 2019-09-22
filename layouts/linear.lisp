@@ -10,6 +10,7 @@
   ((min-size :initarg :min-size :initform (size 20 20) :accessor min-size)
    (stretch :initarg :stretch :initform T :accessor stretch)
    (align :initarg :align :initform :start :accessor align)))
+;; FIXME: cell-margins
 
 (defgeneric update-linear-layout (layout index extent))
 

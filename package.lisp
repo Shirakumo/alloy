@@ -6,7 +6,7 @@
 
 (defpackage #:org.shirakumo.alloy
   (:use #:cl)
-  (:shadow #:step #:variable)
+  (:shadow #:step)
   ;; component.lisp
   (:export
    #:component
@@ -87,8 +87,6 @@
    #:place-data
    #:getter
    #:setter
-   #:variable-data
-   #:variable
    #:slot-data
    #:object
    #:slot
