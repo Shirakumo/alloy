@@ -12,6 +12,48 @@
             (:predicate NIL))
   (value NIL :type single-float :read-only T))
 
+(defmethod print-object ((unit unit) stream)
+  (prin1 (list (type-of unit) (unit-value unit)) stream))
+
+(defmethod make-load-form ((unit unit) &optional env)
+  (declare (ignore env))
+  `(,(type-of unit) ,(unit-value unit)))
+
+(defmacro define-unit-comparator (name op)
+  `(progn (defun ,name (parent unit &rest more-units)
+            (apply #',op (to-px parent unit) (loop for unit in more-units
+                                                   collect (to-px parent unit))))
+
+          (define-compiler-macro ,name (parent unit &rest more-units)
+            (let ((parentg (gensym "PARENT")))
+              `(let ((,parentg ,parent))
+                 (,',op (to-px ,unit ,parentg)
+                        ,@(loop for unit in more-units
+                                collect `(to-px ,unit ,parentg))))))))
+
+(define-unit-comparator unit= =)
+(define-unit-comparator unit/= /=)
+(define-unit-comparator unit< <)
+(define-unit-comparator unit> >)
+(define-unit-comparator unit<= <=)
+(define-unit-comparator unit>= >=)
+
+(defun unit (unit-ish)
+  (etypecase unit-ish
+    (unit unit-ish)
+    (real (px unit-ish))))
+
+(define-compiler-macro unit (unit-ish &environment env)
+  (let* ((unit (gensym "UNIT"))
+         (inner `(let ((,unit ,unit-ish))
+                  (etypecase ,unit
+                    (unit ,unit)
+                    (real (px ,unit))))))
+    (if (constantp unit-ish env)
+        `(load-time-value ,inner)
+        inner)))
+
+(declaim (ftype (function (unit T) single-float) to-px))
 (defgeneric to-px (unit parent-element))
 
 (defmacro define-unit (name (value parent) &body conversion)
@@ -29,8 +71,8 @@
 
        (define-compiler-macro ,name (,name &environment ,env)
          (if (constantp ,name ,env)
-             (,make-fun (load-time-value (float ,name 0f0)))
-             (,make-fun (float ,name 0f0))))
+             `(,',make-fun (load-time-value (float ,,name 0f0)))
+             `(,',make-fun (float ,,name 0f0))))
        
        (defmethod to-px ((,name ,name) ,parent)
          (declare (optimize speed))
@@ -41,19 +83,19 @@
   px)
 
 (define-unit vw (vw parent)
-  (* vw (base-scale (renderer parent)) (extent-w (bounds (root (layout-tree parent))))))
+  (* vw (extent-w (bounds (root (layout-tree parent))))))
 
 (define-unit vh (vh parent)
-  (* vh (base-scale (renderer parent)) (extent-h (bounds (root (layout-tree parent))))))
+  (* vh (extent-h (bounds (root (layout-tree parent))))))
 
 (define-unit pw (pw parent)
-  (* pw (base-scale (renderer parent)) (extent-w (bounds parent))))
+  (* pw (extent-w (bounds parent))))
 
 (define-unit ph (ph parent)
-  (* ph (base-scale (renderer parent)) (extent-h (bounds parent))))
+  (* ph (extent-h (bounds parent))))
 
 (define-unit un (un parent)
-  (* un (base-scale (renderer parent)) (resolution-scale (renderer parent))))
+  (* un (resolution-scale (renderer parent)) (base-scale (renderer parent))))
 
 (define-unit cm (cm parent)
-  (* cm (pixels-per-cm (layout-tree parent))))
+  (* cm (dots-per-cm (renderer parent))))
