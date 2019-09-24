@@ -43,10 +43,10 @@
     (setf (extent-h current) (extent-h extent))
     extent))
 
-(defmethod x ((element layout-element)) (alloy:px (extent-x (bounds element))))
-(defmethod y ((element layout-element)) (alloy:px (extent-y (bounds element))))
-(defmethod w ((element layout-element)) (alloy:px (extent-w (bounds element))))
-(defmethod h ((element layout-element)) (alloy:px (extent-h (bounds element))))
+(defmethod x ((element layout-element)) (px (extent-x (bounds element))))
+(defmethod y ((element layout-element)) (px (extent-y (bounds element))))
+(defmethod w ((element layout-element)) (px (extent-w (bounds element))))
+(defmethod h ((element layout-element)) (px (extent-h (bounds element))))
 
 (defmethod enter :before ((element layout-element) (parent layout-element) &key)
   (cond ((not (slot-boundp element 'layout-parent))

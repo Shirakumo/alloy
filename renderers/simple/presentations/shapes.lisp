@@ -10,14 +10,14 @@
   (to-extent (extent shape) bounds))
 
 (defmethod to-extent ((extent alloy:extent) (element alloy:layout-element))
-  (alloy:with-unit-parent (element)
+  (alloy:with-unit-parent element
     (alloy:extent (alloy:px (alloy:extent-x extent))
                   (alloy:px (alloy:extent-y extent))
                   (alloy:px (alloy:extent-w extent))
                   (alloy:px (alloy:extent-h extent)))))
 
 (defmethod to-extent ((margins alloy:margins) (element alloy:layout-element))
-  (alloy:with-unit-parent (element)
+  (alloy:with-unit-parent element
     (let ((bounds (alloy:bounds element)))
       ;; We ignore the bounds' x/y since we already have translated to that in local frame.
       (alloy:extent (alloy:px (alloy:margins-l margins))

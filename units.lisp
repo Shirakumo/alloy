@@ -6,6 +6,9 @@
 
 (in-package #:org.shirakumo.alloy)
 
+;;; Early
+(declaim (ftype (function (T) unit) x y w h))
+
 (defvar *unit-parent*)
 
 (defmacro with-unit-parent (parent &body body)
@@ -43,8 +46,8 @@
         `(load-time-value ,inner)
         inner)))
 
-(declaim (ftype (function (T) single-float) px %px))
 (defgeneric %px (unit))
+(declaim (ftype (function (T) single-float) px %px))
 
 (defmethod %px ((real real))
   (float real 0f0))
@@ -58,7 +61,7 @@
       `(%px ,thing)))
 
 (defmacro define-unit-comparator (name op)
-  `(progn (defun ,name (parent unit &rest more-units)
+  `(progn (defun ,name (unit &rest more-units)
             (apply #',op (px unit) (loop for unit in more-units
                                             collect (px unit))))
 
@@ -97,16 +100,16 @@
            ,@conversion)))))
 
 (define-unit vw (vw)
-  (* vw (extent-w (bounds (root (layout-tree *unit-parent*))))))
+  (* vw (w (root (layout-tree *unit-parent*)))))
 
 (define-unit vh (vh)
-  (* vh (extent-h (bounds (root (layout-tree *unit-parent*))))))
+  (* vh (h (root (layout-tree *unit-parent*)))))
 
 (define-unit pw (pw)
-  (* pw (extent-w (bounds *unit-parent*))))
+  (* pw (w *unit-parent*)))
 
 (define-unit ph (ph)
-  (* ph (extent-h (bounds *unit-parent*))))
+  (* ph (h *unit-parent*)))
 
 (define-unit un (un)
   (* un (resolution-scale (renderer)) (base-scale (renderer *unit-parent*))))

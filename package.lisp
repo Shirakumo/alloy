@@ -247,4 +247,22 @@
    #:cursor
    #:ui
    #:layout-tree
-   #:focus-tree))
+   #:focus-tree)
+  ;; units.lisp
+  (:export
+   #:with-unit-parent
+   #:unit
+   #:px
+   #:unit=
+   #:unit/=
+   #:unit<
+   #:unit>
+   #:unit<=
+   #:unit>=
+   #:define-unit
+   #:vw
+   #:vh
+   #:pw
+   #:ph
+   #:un
+   #:cm))

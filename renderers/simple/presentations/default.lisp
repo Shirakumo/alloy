@@ -45,10 +45,10 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
+   :extent (alloy:margins -3))
   ((:label text)
    :text (alloy:data alloy:renderable)
-   :extent (alloy:margins :l 1 :u 1 :r 1 :b 1)
+   :extent (alloy:margins 1)
    :halign :middle))
 
 (define-style (default-look-and-feel alloy:button)
@@ -62,7 +62,7 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
+   :extent (alloy:margins -1))
   ((:switch filled-box)
    ;; FIXME: This is not good.
    :extent (alloy:extent 0 0 20 25)))
@@ -80,10 +80,10 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
+   :extent (alloy:margins -3))
   ((:label text)
    :text (alloy:value alloy:renderable)
-   :extent (alloy:margins :l 1 :u 1 :r 1 :b 1))
+   :extent (alloy:margins 1))
   ((:cursor filled-box)
    :extent (alloy:extent 0 0 1 25)))
 
@@ -102,7 +102,7 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins :l -3 :u -3 :r -3 :b -3))
+   :extent (alloy:margins -3))
   ((:handle filled-box)
    :extent (alloy:extent 0 0 10 25)))
 

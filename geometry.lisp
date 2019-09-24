@@ -6,11 +6,11 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(declaim (ftype (function (T) unit) x y w h))
 (defgeneric x (geometry))
 (defgeneric y (geometry))
 (defgeneric w (geometry))
 (defgeneric h (geometry))
+(declaim (ftype (function (T) unit) x y w h))
 (defgeneric contained-p (point extent))
 
 (defstruct (point (:constructor %point (x y)))
@@ -125,6 +125,13 @@
 (defmethod contained-p ((inner extent) (outer extent))
   (and (unit<= 0 (- (extent-x inner) (extent-x outer)) (- (extent-w outer) (extent-w inner)))
        (unit<= 0 (- (extent-y inner) (extent-y outer)) (- (extent-h outer) (extent-h inner)))))
+
+(defun absolute-extent (extent &optional (parent *unit-parent*))
+  (with-unit-parent parent
+    (extent (px (extent-x extent))
+            (px (extent-y extent))
+            (px (extent-w extent))
+            (px (extent-h extent)))))
 
 (defmacro destructure-extent ((&rest args &key x y w h) extent &body body)
   (declare (ignore x y w h))
