@@ -13,7 +13,7 @@
   ((style :initform (make-style) :accessor style)
    (style-override :initarg :style-override :initform (make-style) :accessor style-override)))
 
-(defgeneric render-sized (renderer shape extent))
+(defgeneric render-inside (renderer shape element))
 
 (defclass style (simple:style)
   ((simple:fill-color :initform NIL)
@@ -110,9 +110,9 @@
     (loop for shape across (shapes renderable)
           do (simple:with-pushed-transforms (renderer)
                (simple:with-pushed-styles (renderer)
-                 (render-sized renderer (cdr shape) (alloy:bounds renderable)))))))
+                 (render-inside renderer (cdr shape) renderable))))))
 
-(defmethod render-sized :before ((renderer renderer) (shape shape) size)
+(defmethod render-inside :before ((renderer renderer) (shape shape) element)
   (activate-style (style shape) renderer))
 
 (defmethod merge-style-into ((target style) (source style))

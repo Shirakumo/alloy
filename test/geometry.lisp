@@ -36,11 +36,7 @@
   (let ((extent (alloy:extent)))
     (alloy:destructure-extent (:x x) extent
       (setf x 1)
-      (is = 0.0f0 (alloy:extent-x extent))))
-  (let ((extent (alloy:extent)))
-    (alloy:with-extent (:x x) extent
-      (setf x 1.0f0)
-      (is = 1.0f0 (alloy:extent-x extent)))))
+      (is = 0.0f0 (alloy:extent-x extent)))))
 
 (define-test contain-points
   :parent geometry

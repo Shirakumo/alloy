@@ -187,8 +187,7 @@
    #:extent-w
    #:extent-h
    #:extent=
-   #:destructure-extent
-   #:with-extent)
+   #:destructure-extent)
   ;; layout.lisp
   (:export
    #:layout-tree

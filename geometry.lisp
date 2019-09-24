@@ -6,12 +6,12 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(declare (ftype (function (T) unit) x y w h))
+(declaim (ftype (function (T) unit) x y w h))
 (defgeneric x (geometry))
 (defgeneric y (geometry))
 (defgeneric w (geometry))
 (defgeneric h (geometry))
-(defgeneric contained-p (parent point extent))
+(defgeneric contained-p (point extent))
 
 (defstruct (point (:constructor %point (x y)))
   (x NIL :type unit)
@@ -27,8 +27,8 @@
 (defun point (&optional (x 0) (y 0))
   (%point (unit x) (unit y)))
 
-(defmethod x ((point point)) (point-x point))
-(defmethod y ((point point)) (point-y point))
+(defmethod x ((point point)) (px (point-x point)))
+(defmethod y ((point point)) (px (point-y point)))
 
 (defun point= (a b)
   (and (unit= (point-x a) (point-x b))
@@ -50,8 +50,8 @@
       (%size (unit w) (unit h))
       (%size (unit w) (unit w))))
 
-(defmethod w ((size size)) (size-w size))
-(defmethod h ((size size)) (size-h size))
+(defmethod w ((size size)) (px (size-w size)))
+(defmethod h ((size size)) (px (size-h size)))
 
 (defun size= (a b)
   (and (unit= (size-w a) (size-w b))
@@ -113,18 +113,18 @@
        (unit= (extent-w a) (extent-w b))
        (unit= (extent-h a) (extent-h b))))
 
-(defmethod x ((extent extent)) (extent-x extent))
-(defmethod y ((extent extent)) (extent-y extent))
-(defmethod w ((extent extent)) (extent-w extent))
-(defmethod h ((extent extent)) (extent-h extent))
+(defmethod x ((extent extent)) (px (extent-x extent)))
+(defmethod y ((extent extent)) (px (extent-y extent)))
+(defmethod w ((extent extent)) (px (extent-w extent)))
+(defmethod h ((extent extent)) (px (extent-h extent)))
 
-(defmethod contained-p (parent (point point) (extent extent))
-  (and (unit<= parent 0 (- (point-x point) (extent-x extent)) (extent-w extent))
-       (unit<= parent 0 (- (point-y point) (extent-y extent)) (extent-h extent))))
+(defmethod contained-p ((point point) (extent extent))
+  (and (unit<= 0 (- (point-x point) (extent-x extent)) (extent-w extent))
+       (unit<= 0 (- (point-y point) (extent-y extent)) (extent-h extent))))
 
-(defmethod contained-p (parent (inner extent) (outer extent))
-  (and (unit<= parent 0 (- (extent-x inner) (extent-x outer)) (- (extent-w outer) (extent-w inner)))
-       (unit<= parent 0 (- (extent-y inner) (extent-y outer)) (- (extent-h outer) (extent-h inner)))))
+(defmethod contained-p ((inner extent) (outer extent))
+  (and (unit<= 0 (- (extent-x inner) (extent-x outer)) (- (extent-w outer) (extent-w inner)))
+       (unit<= 0 (- (extent-y inner) (extent-y outer)) (- (extent-h outer) (extent-h inner)))))
 
 (defmacro destructure-extent ((&rest args &key x y w h) extent &body body)
   (declare (ignore x y w h))
@@ -133,16 +133,5 @@
             ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
                     for var = (getf args name)
                     when var
-                    collect `(,var (,func ,extentg))))
+                    collect `(,var (px (,func ,extentg)))))
        ,@body)))
-
-(defmacro with-extent ((&rest args &key x y w h) extent &body body)
-  (declare (ignore x y w h))
-  (let ((extentg (gensym "EXTENT")))
-    `(let ((,extentg ,extent))
-       (symbol-macrolet
-           ,(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
-                  for var = (getf args name)
-                  when var
-                  collect `(,var (,func ,extentg)))
-         ,@body))))

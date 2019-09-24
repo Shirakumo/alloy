@@ -11,14 +11,21 @@
 
 (defmethod notice-bounds :after ((element layout-element) (layout fixed-layout))
   ;; Calculate max bound
-  (with-extent (:x lx :y ly :w lw :h lh) (extent layout)
-    (with-extent (:x ex :y ey :w ew :h eh) (extent element)
-      (let ((l (min lx ex))
-            (b (min ly ey))
-            (r (max (+ lx lw) (+ ex ew)))
-            (u (max (+ ly lh) (+ ey eh))))
-        (setf lx l ly b
-              lw (- r l) lh (- u b)))))
+  (let ((extent (extent layout)))
+    (destructure-extent (:x lx :y ly :w lw :h lh) extent
+      (destructure-extent (:x ex :y ey :w ew :h eh) (extent element)
+        (let ((l (min lx ex))
+              (b (min ly ey))
+              (r (max (+ lx lw) (+ ex ew)))
+              (u (max (+ ly lh) (+ ey eh))))
+          (setf lx l
+                ly b
+                lw (- r l)
+                lh (- u b))))
+      (setf (extent-x extent) lx)
+      (setf (extent-y extent) ly)
+      (setf (extent-w extent) lw)
+      (setf (extent-h extent) lh)))
   (notice-bounds layout (layout-parent layout)))
 
 (defmethod suggest-bounds (extent (layout fixed-layout)))

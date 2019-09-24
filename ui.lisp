@@ -42,9 +42,13 @@
 (defmethod activate ((ui ui))
   (mark-for-render (root (layout-tree ui))))
 
+(defmethod bounds ((ui ui))
+  (bounds (root (layout-tree ui))))
+
 (defmethod suggest-bounds (extent (ui ui))
-  (let ((wr (/ (extent-w extent) (size-w target)))
-        (hr (/ (extent-h extent) (size-h target))))
+  (let* ((target (target-resolution ui))
+         (wr (/ (extent-w extent) (size-w target)))
+         (hr (/ (extent-h extent) (size-h target))))
     (setf (resolution-scale ui) (min wr hr)))
   (suggest-bounds extent (layout-tree ui)))
 
