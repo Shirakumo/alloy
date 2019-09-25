@@ -1,1 +1,4 @@
-## DON'T LOOK, AAAAAAAAAAAAAAAAAAAAa
+## About Alloy
+Alloy is a user interface toolkit. It is defined through a set of protocols that allow for a clear interface, as well as a standardised way to integrate Alloy into a target backend.
+
+The project is currently still in its design phase and large parts of it may change. Please wait warmly.
