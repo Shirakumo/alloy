@@ -62,7 +62,7 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins (alloy:un -1)))
+   :extent (alloy:margins (alloy:un -3)))
   ((:switch filled-box)
    :extent (alloy:extent 0 0 (alloy:pw 0.3) (alloy:ph))))
 
