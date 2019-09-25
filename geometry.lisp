@@ -89,7 +89,7 @@
             ,@(loop for (name func) in '((:l margins-l) (:u margins-u) (:r margins-r) (:b margins-b))
                     for var = (getf args name)
                     when var
-                    collect `(,var (,func ,marginsg))))
+                    collect `(,var (px (,func ,marginsg)))))
        ,@body)))
 
 (defstruct (extent (:include point)
