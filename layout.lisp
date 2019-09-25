@@ -72,6 +72,10 @@
   (when (contained-p (location event) (bounds element))
     (call-next-method)))
 
+(defmethod render :around (renderer (element layout-element))
+  (with-unit-parent element
+    (call-next-method)))
+
 (defclass layout (layout-element container renderable)
   ())
 

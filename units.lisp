@@ -6,6 +6,8 @@
 
 (in-package #:org.shirakumo.alloy)
 
+;; FIXME: should probably have default coercion be UNs, whereas PXs need to be requested explicitly.
+
 ;;; Early
 (declaim (ftype (function (T) unit) x y w h))
 
@@ -86,10 +88,10 @@
                    (:copier NIL)
                    (:predicate NIL)))
 
-       (defun ,name (,name)
+       (defun ,name (&optional (,name 1f0))
          (,make-fun (float ,name 0f0)))
 
-       (define-compiler-macro ,name (,name &environment ,env)
+       (define-compiler-macro ,name (&optional (,name 1f0) &environment ,env)
          (if (constantp ,name ,env)
              `(,',make-fun (load-time-value (float ,,name 0f0)))
              `(,',make-fun (float ,,name 0f0))))
@@ -112,7 +114,7 @@
   (* ph (h *unit-parent*)))
 
 (define-unit un (un)
-  (* un (resolution-scale (renderer)) (base-scale (renderer *unit-parent*))))
+  (* un (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*))))
 
 (define-unit cm (cm)
   (* cm (dots-per-cm (renderer *unit-parent*))))

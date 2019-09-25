@@ -130,6 +130,7 @@ void main(){
 
 (defmethod simple:clip :before ((renderer renderer) extent)
   ;; Render to the stencil buffer only
+  ;; FIXME: how do we properly undo clips?
   (gl:stencil-mask #xFF)
   (gl:clear :stencil-buffer)
   (gl:stencil-op :replace :replace :replace)
@@ -246,10 +247,10 @@ void main(){
   (let ((shader (resource 'basic-shader renderer)))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
-      (let ((w (/ (alloy:extent-w extent) 2))
-            (h (/ (alloy:extent-h extent) 2)))
-        (simple:translate renderer (alloy:point (+ (alloy:extent-x extent) w)
-                                                (+ (alloy:extent-y extent) h)))
+      (let ((w (/ (alloy:w extent) 2))
+            (h (/ (alloy:h extent) 2)))
+        (simple:translate renderer (alloy:point (+ (alloy:x extent) w)
+                                                (+ (alloy:y extent) h)))
         (simple:scale renderer (alloy:size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
@@ -263,10 +264,10 @@ void main(){
     ;; Build point vertex data array
     (loop for point in points
           for i from 0 by 2
-          do (setf (aref data (+ 0 i)) (alloy:point-x point))
-             (setf (aref data (+ 1 i)) (alloy:point-y point)))
-    (setf (aref data (- (length data) 1)) (alloy:point-x (first points)))
-    (setf (aref data (- (length data) 2)) (alloy:point-y (first points)))
+          do (setf (aref data (+ 0 i)) (alloy:x point))
+             (setf (aref data (+ 1 i)) (alloy:y point)))
+    (setf (aref data (- (length data) 1)) (alloy:x (first points)))
+    (setf (aref data (- (length data) 2)) (alloy:y (first points)))
     (update-vertex-buffer (resource 'rect-vbo renderer) data)
     ;; Draw it
     (bind shader)
@@ -282,7 +283,7 @@ void main(){
     (bind image)
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer point)
-      (simple:scale renderer (alloy:size (alloy:size-w size) (alloy:size-h size)))
+      (simple:scale renderer size)
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
