@@ -91,7 +91,7 @@
   (make-style :fill-color (simple:color 0 0 0)
               :line-width 1.0
               :font (simple:request-font renderer :default)
-              :font-size 12.0
+              :font-size (alloy:un 12.0)
               :composite-mode :source-over
               :z-index 0
               :offset (alloy:point 0 0)

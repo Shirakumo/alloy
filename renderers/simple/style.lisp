@@ -55,6 +55,9 @@
 (defmethod (setf font-size) ((size float) (style style))
   (setf (slot-value style 'font-size) size))
 
+(defmethod (setf font-size) ((size alloy::%unit) (style style))
+  (setf (slot-value style 'font-size) size))
+
 (defclass styled-renderer (renderer)
   ((style :accessor style)))
 
