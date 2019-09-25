@@ -61,11 +61,10 @@
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
     `(defmethod compute-shape-style ((alloy:renderer ,renderer) (shape symbol) (alloy:renderable ,renderable))
-       (flet ((alloy:focus (&optional (thing alloy:renderable))
-                (alloy:focus thing))
-              (alloy:bounds (&optional (thing alloy:renderable))
-                (alloy:bounds thing)))
-         (declare (ignorable #'alloy:focus #'alloy:bounds))
+       (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
+                         (alloy:bounds (alloy:bounds alloy:renderable))
+                         (alloy:value (alloy:value alloy:renderable)))
+         (declare (ignorable alloy:focus alloy:bounds alloy:value))
          (case shape
            ,@(loop for (name . initargs) in shapes
                    collect `(,name (merge-style-into (call-next-method)

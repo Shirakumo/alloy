@@ -23,16 +23,20 @@
   (call-next-method)
   (setf (text shape) (alloy:value renderable)))
 
+(defmethod update-shape ((renderer default-look-and-feel) (renderable alloy:progress) (shape text))
+  (call-next-method)
+  (setf (text shape) (format NIL "~,1f%" (/ (alloy:value renderable) (alloy:maximum renderable) 1/100))))
+
 (define-style (default-look-and-feel renderable)
   (:background
    :fill-color (simple:color 0.15 0.15 0.15))
   (:border
-   :fill-color (case (alloy:focus)
+   :fill-color (case alloy:focus
                  ((:weak :strong) (simple:color 0.9 0.9 0.9))
                  (T (simple:color 0 0 0 0)))
    :z-index -1)
   (:label
-   :fill-color (case (alloy:focus)
+   :fill-color (case alloy:focus
                  ((:weak :strong) (simple:color 0 0 0))
                  (T (simple:color 1 1 1)))))
 
@@ -53,7 +57,7 @@
 
 (define-style (default-look-and-feel alloy:button)
   (:background
-   :fill-color (case (alloy:focus)
+   :fill-color (case alloy:focus
                  (:strong (simple:color 0.9 0.9 0.9))
                  (:weak (simple:color 0.7 0.7 0.7))
                  (T (simple:color 0.25 0.2 0.8)))))
@@ -68,10 +72,10 @@
 
 (define-style (default-look-and-feel alloy:switch)
   (:switch
-   :offset (alloy:point (if (alloy:value alloy:renderable)
+   :offset (alloy:point (if alloy:value
                             (alloy:pw 0.7)
                             0))
-   :fill-color (case (alloy:focus)
+   :fill-color (case alloy:focus
                  (:strong (simple:color 1 1 1))
                  (T (simple:color 0.25 0.2 0.8)))))
 
@@ -81,19 +85,19 @@
   ((:border outlined-box)
    :extent (alloy:margins (alloy:un -3)))
   ((:label text)
-   :text (alloy:value alloy:renderable)
+   :text alloy:value
    :extent (alloy:margins (alloy:un 1)))
   ((:cursor filled-box)
    :extent (alloy:extent 0 (alloy:ph 0.15) 1 (alloy:ph 0.7))))
 
 (define-style (default-look-and-feel alloy:input-line)
   (:background
-   :fill-color (case (alloy:focus)
+   :fill-color (case alloy:focus
                  (:strong (simple:color 0.9 0.9 0.9))
                  (:weak (simple:color 0.7 0.7 0.7))
                  (T (simple:color 0.15 0.15 0.15))))
   (:cursor
-   :fill-color (case (alloy:focus)
+   :fill-color (case alloy:focus
                  (:strong (simple:color 0 0 0))
                  (T (simple:color 0 0 0 0)))))
 
@@ -107,9 +111,27 @@
 
 (define-style (default-look-and-feel alloy:slider)
   (:handle
-   :offset (alloy:point (alloy:vw (/ (- (alloy:value alloy:renderable) (alloy:minimum alloy:renderable))
+   :offset (alloy:point (alloy:vw (/ (- alloy:value (alloy:minimum alloy:renderable))
                                      (- (alloy:maximum alloy:renderable) (alloy:minimum alloy:renderable))))
                         0)
-   :fill-color (case (alloy:focus)
+   :fill-color (case alloy:focus
                  (:strong (simple:color 1 1 1))
                  (T (simple:color 0.25 0.2 0.8)))))
+
+(define-realisation (default-look-and-feel alloy:progress)
+  ((:background filled-box)
+   :extent (alloy:margins))
+  ((:bar filled-box)
+   :extent (alloy:margins (alloy:un 3)))
+  ((:label text)
+   :text (format NIL "~,1f%" (/ (alloy:value alloy:renderable) (alloy:maximum alloy:renderable) 1/100))
+   :extent (alloy:margins (alloy:un 1))
+   :halign :middle))
+
+(define-style (default-look-and-feel alloy:progress)
+  (:bar
+   :fill-color (simple:color 0.25 0.2 0.8)
+   :scale (let ((p (/ alloy:value (alloy:maximum alloy:renderable))))
+             (alloy:size p 1)))
+  (:label
+   :fill-color (simple:color 1 1 1)))

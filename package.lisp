@@ -40,7 +40,8 @@
    #:label
    #:icon
    #:value-component
-   #:direct-value-component)
+   #:direct-value-component
+   #:progress)
   ;; components/button.lisp
   (:export
    #:button
