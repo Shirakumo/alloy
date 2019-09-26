@@ -135,3 +135,17 @@
              (alloy:size p 1)))
   (:label
    :fill-color (simple:color 1 1 1)))
+
+(define-realisation (default-look-and-feel alloy:radio)
+  ((:background filled-circle)
+   :extent (alloy:extent 0 0 (alloy:ph 1) (alloy:ph 1)))
+  ((:inner filled-circle)
+   :extent (alloy:extent (alloy:ph 0.1) (alloy:ph 0.1) (alloy:ph 0.8) (alloy:ph 0.8)))
+  ((:border outlined-circle)
+   :extent (alloy:extent (alloy:ph -0.1) (alloy:ph -0.1) (alloy:ph 1.2) (alloy:ph 1.2))))
+
+(define-style (default-look-and-feel alloy:radio)
+  (:inner
+   :fill-color (if (alloy:active-p alloy:renderable)
+                   (simple:color 0.25 0.2 0.8)
+                   (simple:color 0 0 0 0))))

@@ -46,6 +46,10 @@
   (:export
    #:button
    #:pressed)
+  ;; components/radio.lisp
+  (:export
+   #:radio
+   #:active-p)
   ;; components/switch.lisp
   (:export
    #:switch)
