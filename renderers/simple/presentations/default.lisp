@@ -34,7 +34,7 @@
    :fill-color (case alloy:focus
                  ((:weak :strong) (simple:color 0.9 0.9 0.9))
                  (T (simple:color 0 0 0 0)))
-   :z-index -1)
+   :z-index 1)
   (:label
    :fill-color (case alloy:focus
                  ((:weak :strong) (simple:color 0 0 0))

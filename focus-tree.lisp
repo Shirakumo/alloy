@@ -197,6 +197,10 @@
 (defclass focus-list (focus-chain)
   ())
 
+;; FIXME: visually represent which focus chain we're going through by associating it with a layout.
+;;        This is a problem because we don't know the focus for a layout. Maybe we should make those
+;;        another combined subclass? Would be annoying, though.
+
 (defclass focus-grid (focus-chain)
   ((width :initarg :width :initform (arg! :width) :accessor width)))
 

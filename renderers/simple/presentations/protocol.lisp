@@ -50,11 +50,15 @@
 (defmacro define-realisation ((renderer renderable) &body shapes)
   `(defmethod realize-renderable ((alloy:renderer ,renderer) (alloy:renderable ,renderable))
      (clear-shapes alloy:renderable)
-     ,@(loop for shape in shapes
-             collect (destructuring-bind ((name type &key when) &body initargs) shape
-                       `(when ,(or when T)
-                          (setf (find-shape ',name alloy:renderable)
-                                (make-instance ',type ,@initargs)))))
+     (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
+                       (alloy:bounds (alloy:bounds alloy:renderable))
+                       (alloy:value (alloy:value alloy:renderable)))
+       (declare (ignorable alloy:focus alloy:bounds alloy:value))
+       ,@(loop for shape in shapes
+               collect (destructuring-bind ((name type &key when) &body initargs) shape
+                         `(when ,(or when T)
+                            (setf (find-shape ',name alloy:renderable)
+                                  (make-instance ',type ,@initargs))))))
      alloy:renderable))
 
 (defmacro define-style ((renderer renderable) &body shapes)

@@ -19,6 +19,9 @@
 (defmethod expand-place-data (atom)
   atom)
 
+(defmacro place-data (place)
+  (expand-place-data place))
+
 (defclass value-data (data)
   ((value :initarg :value :accessor value)))
 

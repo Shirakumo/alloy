@@ -53,7 +53,7 @@
     (make-geometry 'circ-fill-vbo 'circ-fill-vao
                    (coerce
                     (list* 0f0 0f0
-                           (loop for i from 0 below *circ-polycount*
+                           (loop for i from 0 to *circ-polycount*
                                  for tt = (* i (/ *circ-polycount*) 2 PI)
                                  collect (float (cos tt) 0f0)
                                  collect (float (sin tt) 0f0)))
