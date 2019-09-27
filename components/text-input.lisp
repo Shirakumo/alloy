@@ -6,10 +6,75 @@
 
 (in-package #:org.shirakumo.alloy)
 
+(defclass cursor ()
+  ((pos :initform 0 :reader pos :writer set-pos)
+   (anchor :initform NIL :reader anchor :writer set-anchor)
+   (component :initarg :component :initform (arg! :component) :reader component)))
+
+(defmethod (setf pos) ((position integer) (cursor cursor))
+  (set-pos (max 0 (min position (length (value (component cursor))))) cursor))
+
+(defmethod (setf anchor) ((position integer) (cursor cursor))
+  (set-achor (max 0 (min position (length (value (component cursor))))) cursor))
+
+(defmethod (setf anchor) ((null null) (cursor cursor))
+  (set-achor null cursor))
+
+(defmethod move-to ((_ (eql :start)) (cursor cursor))
+  (set-pos 0 cursor))
+
+(defmethod move-to ((_ (eql :end)) (cursor cursor))
+  (set-pos (length (value (component cursor))) cursor))
+
+(defmethod move-to ((_ (eql :prev-char)) (cursor cursor))
+  (set-pos (max 0 (1- (pos cursor))) cursor))
+
+(defmethod move-to ((_ (eql :next-char)) (cursor cursor))
+  (set-pos (min (length (value (component cursor))) (1+ (pos cursor))) cursor))
+
+(defmethod move-to ((_ (eql :prev-line)) (cursor cursor))
+  (let ((pos (pos cursor)))
+    (move-to :line-start cursor)
+    (when (< 0 (pos cursor))
+      (let ((line-end (pos cursor))
+            (col (- (pos cursor) pos)))
+        (set-pos (1- (pos cursor)) cursor)
+        (move-to :line-start cursor)
+        (set-pos (min (1- line-end) (+ (pos cursor) col)) cursor)))))
+
+(defmethod move-to ((_ (eql :next-line)) (cursor cursor))
+  (let ((pos (pos cursor)))
+    (move-to :line-start cursor)
+    (let ((col (- (pos cursor) pos)))
+      (move-to :line-end cursor)
+      (when (< (pos cursor) (length string))
+        (let ((start (1+ (pos cursor))))
+          (move-to :line-end cursor)
+          (set-pos (min (+ start col) (pos cursor)) cursor))))))
+
+(defmethod move-to ((_ (eql :line-start)) (cursor cursor))
+  (let ((string (value (component cursor))))
+    (set-pos (loop for i downfrom (pos cursor) above 0
+                   do (when (char= #\Linefeed (char string (1- i)))
+                        (return i))
+                   finally (return 0))
+             cursor)))
+
+(defmethod move-to ((_ (eql :line-end)) (cursor cursor))
+  (let ((string (value (component cursor))))
+    (set-pos (loop for i from (pos cursor) below (length string)
+                   do (when (char= #\Linefeed (char string i))
+                        (return i))
+                   finally (return (length string)))
+             cursor)))
+
+(defmethod move-to ((position integer) (cursor cursor))
+  (set-pos (max 0 (min position (length (value (component cursor))))) cursor))
+
 (defclass text-input-component (value-component)
   ((insert-mode :initform :add :initarg :insert-mode :accessor insert-mode)
    ;; TODO: Maybe make cursors multiple?
-   (cursor :initform 0 :accessor cursor)))
+   (cursor :initform (make-instance 'cursor) :reader cursor)))
 
 (defmethod (setf cursor) :after (value (component text-input-component))
   (mark-for-render component))
@@ -21,7 +86,7 @@
 
 (defmethod insert-text (text (component text-input-component))
   (let ((old (value component))
-        (cursor (cursor component)))
+        (cursor (pos (cursor component))))
     ;; Now either add by shifting or replace (and extend).
     (unless (adjustable-array-p old)
       (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
@@ -35,37 +100,34 @@
        (maybe-enlarge old (max (length old) (+ cursor (length text))))
        (replace old text :start1 cursor)))
     (setf (value component) old)
-    (setf (cursor component) (+ cursor (length text)))))
+    (move-to (+ cursor (length text)) (cursor component))))
 
 (defmethod handle ((event text-event) (component text-input-component) ctx)
   (insert-text (text event) component))
 
 (defmethod handle ((event key-up) (component text-input-component) ctx)
   ;; TODO: selection
-  ;; TODO: key repeats
   ;; TODO: copy
   (case (key event)
     (:escape
      (exit component))
     (:backspace
-     (when (< 0 (cursor component))
-       (decf (cursor component))
-       (array-utils:vector-pop-position (value component) (cursor component))
+     (when (< 0 (pos (cursor component)))
+       (move-to :prev-char (cursor component))
+       (array-utils:vector-pop-position (value component) (pos (cursor component)))
        (refresh component)))
     (:delete
-     (when (< (cursor component) (length (value component)))
-       (array-utils:vector-pop-position (value component) (cursor component))
+     (when (< (pos (cursor component)) (length (value component)))
+       (array-utils:vector-pop-position (value component) (pos (cursor component)))
        (refresh component)))
     (:left
-     (when (< 0 (cursor component))
-       (decf (cursor component))))
+     (move-to :prev-char (cursor component)))
     (:right
-     (when (< (cursor component) (length (value component)))
-       (incf (cursor component))))
+     (move-to :next-char (cursor component)))
     (:home
-     (setf (cursor component) 0))
+     (move-to :start (cursor component)))
     (:end
-     (setf (cursor component) (length (value component))))
+     (move-to :end (cursor component)))
     (:insert
      (setf (insert-mode component)
            (ecase (insert-mode component)
