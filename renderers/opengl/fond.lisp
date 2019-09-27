@@ -158,7 +158,7 @@ void main(){
     (gl:active-texture :texture0)
     (gl:bind-texture :texture-2d (cl-fond:texture atlas))
     (simple:with-pushed-transforms (renderer)
-      (let ((s (* 2 (/ (alloy:px size) (cl-fond:size atlas)))))
+      (let ((s (* 2 (/ (alloy:to-px size) (cl-fond:size atlas)))))
         (simple:translate renderer (text-point point atlas string align direction vertical-align s))
         (simple:scale renderer (alloy:size s s)))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))

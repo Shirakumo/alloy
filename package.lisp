@@ -192,6 +192,7 @@
    #:extent-w
    #:extent-h
    #:extent=
+   #:absolute-extent
    #:destructure-extent)
   ;; layout.lisp
   (:export
@@ -257,17 +258,22 @@
   (:export
    #:with-unit-parent
    #:unit
-   #:px
-   #:unit=
-   #:unit/=
-   #:unit<
-   #:unit>
-   #:unit<=
-   #:unit>=
+   #:to-px
    #:define-unit
+   #:px
    #:vw
    #:vh
    #:pw
    #:ph
    #:un
-   #:cm))
+   #:cm
+   #:u+
+   #:u*
+   #:u-
+   #:u/
+   #:u=
+   #:u/=
+   #:u<
+   #:u>
+   #:u<=
+   #:u>=))

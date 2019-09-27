@@ -54,9 +54,9 @@
   ;;        we'll need to have a way to "grab" all pointer events temporarily.
   (case (state slider)
     (:dragging
-     (let ((range (/ (- (point-x (location event))
-                        (extent-x (bounds slider)))
-                     (extent-w (bounds slider)))))
+     (let ((range (/ (- (to-px (point-x (location event)))
+                        (to-px (extent-x (bounds slider))))
+                     (to-px (extent-w (bounds slider))))))
        (setf (value slider) (* range (- (maximum slider) (minimum slider))))))
     (T
      (call-next-method))))

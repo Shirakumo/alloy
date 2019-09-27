@@ -138,8 +138,8 @@
   (simple:translate renderer (pivot style))
   (simple:rotate renderer (rotation style))
   (simple:scale renderer (scale style))
-  (simple:translate renderer (alloy:point (- (alloy:point-x (pivot style)))
-                                          (- (alloy:point-y (pivot style))))))
+  (simple:translate renderer (alloy:point (alloy:u- (alloy:point-x (pivot style)))
+                                          (alloy:u- (alloy:point-y (pivot style))))))
 
 (defmethod compute-shape-style ((renderer renderer) shape (renderable renderable))
   (make-default-style renderer))

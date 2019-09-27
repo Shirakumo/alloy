@@ -49,10 +49,10 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins (alloy:un -3)))
+   :extent (alloy:margins -3))
   ((:label text)
    :text (alloy:data alloy:renderable)
-   :extent (alloy:margins (alloy:un 1))
+   :extent (alloy:margins 1)
    :halign :middle))
 
 (define-style (default-look-and-feel alloy:button)
@@ -66,7 +66,7 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins (alloy:un -3)))
+   :extent (alloy:margins -3))
   ((:switch filled-box)
    :extent (alloy:extent 0 0 (alloy:pw 0.3) (alloy:ph))))
 
@@ -83,10 +83,10 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins (alloy:un -3)))
+   :extent (alloy:margins -3))
   ((:label text)
    :text alloy:value
-   :extent (alloy:margins (alloy:un 1)))
+   :extent (alloy:margins 1))
   ((:cursor filled-box)
    :extent (alloy:extent 0 (alloy:ph 0.15) 1 (alloy:ph 0.7))))
 
@@ -105,9 +105,9 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
-   :extent (alloy:margins (alloy:un -3)))
+   :extent (alloy:margins -3))
   ((:handle filled-box)
-   :extent (alloy:extent 0 0 (alloy:un 10) (alloy:ph))))
+   :extent (alloy:extent 0 0 10 (alloy:ph))))
 
 (define-style (default-look-and-feel alloy:slider)
   (:handle
@@ -122,10 +122,10 @@
   ((:background filled-box)
    :extent (alloy:margins))
   ((:bar filled-box)
-   :extent (alloy:margins (alloy:un 3)))
+   :extent (alloy:margins 3))
   ((:label text)
    :text (format NIL "~,1f%" (/ (alloy:value alloy:renderable) (alloy:maximum alloy:renderable) 1/100))
-   :extent (alloy:margins (alloy:un 1))
+   :extent (alloy:margins 1)
    :halign :middle))
 
 (define-style (default-look-and-feel alloy:progress)

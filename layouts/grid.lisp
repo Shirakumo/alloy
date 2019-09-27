@@ -26,6 +26,7 @@
 
 (defun coerce-grid-size (v)
   (etypecase v
+    (real (unit v))
     (unit v)
     ((eql T) T)))
 
@@ -89,7 +90,7 @@
   (let ((count 0))
     (loop for size across sizes
           do (etypecase size
-               (unit (decf total (px size)))
+               (unit (decf total (to-px size)))
                ((eql T) (incf count))))
     (if (< 0 count)
         (/ total count)
@@ -97,40 +98,40 @@
 
 (defmethod (setf bounds) :after (extent (layout grid-layout))
   (with-unit-parent layout
-    (destructure-margins (:l ml :u mu :r mr :b mb) (cell-margins layout)
+    (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
       (let ((th (spanning-size (row-sizes layout) (extent-h extent)))
             (tw (spanning-size (col-sizes layout) (extent-w extent))))
         (loop with elements = (elements layout)
-              for y = (+ (extent-y extent) mb) then (+ y h)
+              for y = (+ (to-px (extent-y extent)) mb) then (+ y h)
               for hish across (row-sizes layout)
-              for h = (if (eql T hish) th (px hish))
+              for h = (if (eql T hish) th (to-px hish))
               for i from 0
-              do (loop for x = (+ (extent-x extent) ml) then (+ x w)
+              do (loop for x = (+ (to-px (extent-x extent)) ml) then (+ x w)
                        for wish across (col-sizes layout)
-                       for w = (if (eql T wish) tw (px wish))
+                       for w = (if (eql T wish) tw (to-px wish))
                        for j from 0
                        for element = (aref elements i j)
                        do (when element
                             (let ((ideal (suggest-bounds (extent x y (- w ml mr) (- h mb mu))
                                                          element))
                                   (bounds (bounds element)))
-                              (setf (extent-x bounds) x)
-                              (setf (extent-y bounds) y)
+                              (setf (extent-x bounds) (px x))
+                              (setf (extent-y bounds) (px y))
                               (cond ((stretch layout)
-                                     (setf (extent-w bounds) (- w ml mr))
-                                     (setf (extent-h bounds) (- h mb mu)))
+                                     (setf (extent-w bounds) (px (- w ml mr)))
+                                     (setf (extent-h bounds) (px (- h mb mu))))
                                     (T
                                      (setf (extent-w bounds) (extent-w ideal))
                                      (setf (extent-h bounds) (extent-h ideal))))))))))))
 
 (defmethod suggest-bounds (extent (layout grid-layout))
   (with-unit-parent layout
-    (destructure-margins (:l ml :u mu :r mr :b mb) (cell-margins layout)
+    (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
       (extent (extent-x extent)
               (extent-y extent)
               (loop for col across (col-sizes layout)
                     if (eql T col) sum (+ ml mr)
-                    else sum (px col))
+                    else sum (to-px col))
               (loop for row across (row-sizes layout)
                     if (eql T row) sum (+ mu mb)
-                    else sum (px row))))))
+                    else sum (to-px row))))))

@@ -47,8 +47,8 @@
 
 (defmethod suggest-bounds (extent (ui ui))
   (let* ((target (target-resolution ui))
-         (wr (/ (extent-w extent) (size-w target)))
-         (hr (/ (extent-h extent) (size-h target))))
+         (wr (/ (to-px (extent-w extent)) (to-px (size-w target))))
+         (hr (/ (to-px (extent-h extent)) (to-px (size-h target)))))
     (setf (resolution-scale ui) (min wr hr)))
   (suggest-bounds extent (layout-tree ui)))
 
