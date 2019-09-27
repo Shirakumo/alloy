@@ -49,6 +49,11 @@
 (defun to-px (thing)
   (%to-px thing))
 
+(defun to-un (thing)
+  (/ (to-px thing)
+     (resolution-scale (renderer *unit-parent*))
+     (base-scale (renderer *unit-parent*))))
+
 (define-compiler-macro to-px (thing &environment env)
   (if (constantp thing env)
       `(load-time-value (%to-px ,thing))

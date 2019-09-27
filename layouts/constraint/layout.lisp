@@ -28,16 +28,16 @@
 
 (defun suggest (layout element extent)
   (with-vars (x y w h layout) element
-    (cass:suggest x (alloy:extent-x extent))
-    (cass:suggest y (alloy:extent-x extent))
-    (cass:suggest w (alloy:extent-w extent))
-    (cass:suggest h (alloy:extent-h extent))
+    (cass:suggest x (alloy:to-un (alloy:extent-x extent)))
+    (cass:suggest y (alloy:to-un (alloy:extent-x extent)))
+    (cass:suggest w (alloy:to-un (alloy:extent-w extent)))
+    (cass:suggest h (alloy:to-un (alloy:extent-h extent)))
     (cass:update-variables (solver layout))))
 
 (defun update (layout element)
   (with-vars (x y w h layout) element
-    (print (list element x y w h))
-    (setf (alloy:bounds element) (alloy:extent (cass:value x) (cass:value y) (cass:value w) (cass:value h)))))
+    (setf (alloy:bounds element) (alloy:extent (alloy:un (cass:value x)) (alloy:un (cass:value y))
+                                               (alloy:un (cass:value w)) (alloy:un (cass:value h))))))
 
 (defmethod alloy:enter ((element alloy:layout-element) (layout layout) &key constraints)
   (call-next-method)
@@ -69,7 +69,8 @@
 (defmethod alloy:suggest-bounds (extent (layout layout))
   (suggest layout layout extent)
   (with-vars (x y w h layout) layout
-    (alloy:extent (cass:value x) (cass:value y) (cass:value w) (cass:value h))))
+    (alloy:extent (alloy:un (cass:value x)) (alloy:un (cass:value y))
+                  (alloy:un (cass:value w)) (alloy:un (cass:value h)))))
 
 (defun apply-constraints (constraints element layout)
   ;; FIXME: how to remove constraints?
