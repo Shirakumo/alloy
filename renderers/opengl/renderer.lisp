@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
-(defvar *circ-polycount* 100)
+(defparameter *circ-polycount* 36)
 
 ;; FIXME: With a UBO we could avoid having to re-set uniforms at ever draw
 ;;        and instead change them when the style is set.
@@ -255,8 +255,8 @@ void main(){
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
     (ecase (simple:fill-mode renderer)
-      (:fill (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan *circ-polycount*))
-      (:lines (draw-vertex-array (resource 'circ-line-vao renderer) :line-loop *circ-polycount*)))))
+      (:fill (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2)))
+      (:lines (draw-vertex-array (resource 'circ-line-vao renderer) :line-loop (+ *circ-polycount* 2))))))
 
 (defmethod simple:polygon ((renderer renderer) points)
   (let ((shader (resource 'basic-shader renderer))
