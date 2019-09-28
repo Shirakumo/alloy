@@ -111,7 +111,7 @@
   (do-elements (element layout)
     (maybe-render renderer element)))
 
-(defmethod handle ((event event) (layout layout) ui)
+(defmethod handle ((event pointer-event) (layout layout) ui)
   (do-elements (element layout)
     (when (handle event element ui)
       (return))))
@@ -134,7 +134,8 @@
   (maybe-render renderer (root tree)))
 
 (defmethod handle ((event pointer-event) (tree layout-tree) ui)
-  (handle event (root tree) ui))
+  (unless (handle event (root tree) ui)
+    (decline)))
 
 (defmethod suggest-bounds (extent (tree layout-tree))
   (let ((root (root tree)))

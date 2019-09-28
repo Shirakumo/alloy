@@ -15,7 +15,7 @@
 (defclass ui (renderer)
   ((layout-tree :initarg :layout-tree :reader layout-tree)
    (focus-tree :initarg :focus-tree :reader focus-tree)
-   ;; 38 corresponds to Windows' default 96DPI
+   ;; 38dpcm corresponds to Windows' default 96dpi
    (dots-per-cm :initform 38 :reader dots-per-cm)
    (target-resolution :initarg :target-resolution :initform (size 1920 1080) :accessor target-resolution)
    (resolution-scale :initform 1.0 :accessor resolution-scale)
@@ -31,7 +31,8 @@
   (handle event (focus-tree ui) ui))
 
 (defmethod handle ((event pointer-event) (all (eql T)) (ui ui))
-  (handle event (layout-tree ui) ui))
+  (unless (handle event (focus-tree ui) ui)
+    (handle event (layout-tree ui) ui)))
 
 (defmethod render ((ui ui) (thing (eql T)))
   (render ui (layout-tree ui)))

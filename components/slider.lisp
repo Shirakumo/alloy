@@ -50,8 +50,6 @@
      (call-next-method))))
 
 (defmethod handle ((event pointer-move) (slider slider) ctx)
-  ;; FIXME: when moving the cursor outside the slider while dragging, the slider loses the pointer events.
-  ;;        we'll need to have a way to "grab" all pointer events temporarily.
   (case (state slider)
     (:dragging
      (let ((range (/ (- (to-px (point-x (location event)))

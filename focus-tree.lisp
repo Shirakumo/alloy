@@ -70,7 +70,7 @@
     (setf (focus (focus-parent element)) :strong)
     (focus-parent element)))
 
-(defmethod handle ((event event) (element focus-element) ui)
+(defmethod handle ((event direct-event) (element focus-element) ui)
   (unless (eq element (focus-parent element))
     (handle event (focus-parent element) ui)))
 
@@ -248,7 +248,8 @@
     (setf (focus element) :strong)))
 
 (defmethod handle ((event event) (tree focus-tree) ui)
-  (handle event (focused tree) ui))
+  (unless (handle event (focused tree) ui)
+    (decline)))
 
 ;;; NOTE: Initialisation of the tree must happen roughly as follows:
 ;;;         (let ((tree (make-instance 'focus-tree))
