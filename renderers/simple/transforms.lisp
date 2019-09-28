@@ -64,20 +64,25 @@
 (defmethod clip ((transform transform) (extent alloy:extent))
   (let ((target (clip-mask transform)))
     (if target
-        (setf (clip-mask transform) (alloy:absolute-extent extent))
-        (setf (clip-mask transform) (alloy:copy-extent extent)))))
+        (setf (clip-mask transform) (alloy:px-extent extent))
+        (setf (clip-mask transform) extent))))
 
 (defmethod clip ((transform transform) (none null))
   (setf (clip-mask transform) NIL))
 
 (defmethod translate ((transform transform) (point alloy:point))
-  (add-matrix transform (matrix 1 0 (alloy:to-px (alloy:point-x point))
-                                0 1 (alloy:to-px (alloy:point-y point))
+  (add-matrix transform (matrix 1 0 (alloy:pxx point)
+                                0 1 (alloy:pxy point)
+                                0 0 1)))
+
+(defmethod translate ((transform transform) (extent alloy:extent))
+  (add-matrix transform (matrix 1 0 (alloy:pxx extent)
+                                0 1 (alloy:pxy extent)
                                 0 0 1)))
 
 (defmethod scale ((transform transform) (size alloy:size))
-  (add-matrix transform (matrix (alloy:to-px (alloy:size-w size)) 0 0
-                                0 (alloy:to-px (alloy:size-h size)) 0
+  (add-matrix transform (matrix (alloy:pxw size) 0 0
+                                0 (alloy:pxh size) 0
                                 0 0 1)))
 
 (defmethod rotate ((transform transform) (phi float))

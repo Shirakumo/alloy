@@ -163,36 +163,46 @@
    #:y
    #:w
    #:h
+   #:l
+   #:u
+   #:r
+   #:b
    #:contained-p
+   #:pxx
+   #:pxy
+   #:pxw
+   #:pxh
+   #:pxl
+   #:pxu
+   #:pxr
+   #:pxb
    #:point
+   #:px-point
    #:point-p
-   #:copy-point
    #:point-x
    #:point-y
    #:point=
    #:size
+   #:px-size
    #:size-p
-   #:copy-size
    #:size-w
    #:size-h
    #:size=
    #:margins
    #:margins-p
-   #:copy-margins
    #:margins-l
    #:margins-u
    #:margins-r
    #:margins-b
    #:margins=
    #:extent
-   #:copy-extent
+   #:px-extent
    #:extent-p
    #:extent-x
    #:extent-y
    #:extent-w
    #:extent-h
    #:extent=
-   #:absolute-extent
    #:destructure-extent)
   ;; layout.lisp
   (:export

@@ -39,14 +39,14 @@
   (with-unit-parent layout
     (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
       (destructure-extent (:x x :y oy :w w :h h :to-px T) extent
-        (let ((mh (to-px (size-h (min-size layout))))
-              (mw (if (stretch layout) (- w l r) (to-px (size-w (min-size layout)))))
+        (let ((mh (pxh (min-size layout)))
+              (mw (if (stretch layout) (- w l r) (pxw (min-size layout))))
               (y (ecase (align layout)
                    (:start (+ oy b))
                    (:end (- (+ oy h) u))))
               (x (+ l x)))
-          (do-elements (element layout :start 0 :result (extent x oy w (- y oy)))
-            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (extent x b mw mh) element)
+          (do-elements (element layout :start 0 :result (px-extent x oy w (- y oy)))
+            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x b mw mh) element)
               (setf w (max w (+ ew l r)))
               (ecase (align layout)
                 (:start (incf y (+ eh u b)))
@@ -56,21 +56,21 @@
   (with-unit-parent layout
     (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
       (destructure-extent (:x x :y oy :w w :h h :to-px T) extent
-        (let ((mh (to-px (size-h (min-size layout))))
-              (mw (if (stretch layout) (- w l r) (to-px (size-w (min-size layout)))))
+        (let ((mh (pxh (min-size layout)))
+              (mw (if (stretch layout) (- w l r) (pxw (min-size layout))))
               (y (ecase (align layout)
                    (:start (+ oy b))
                    (:end (- (+ oy h) u))))
               (x (+ l x)))
-          (do-elements (element layout :start index :result (extent x oy w (- y oy)))
-            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (extent x y mw mh) element)
+          (do-elements (element layout :start index :result (px-extent x oy w (- y oy)))
+            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x y mw mh) element)
               (setf (bounds element)
-                    (extent x
-                            (ecase (align layout)
-                              (:start (prog1 y (incf y (+ eh u b))))
-                              (:end (decf y (+ eh u b))))
-                            (if (stretch layout) (- w l r) (min (- w l r) ew))
-                            eh)))))))))
+                    (px-extent x
+                               (ecase (align layout)
+                                 (:start (prog1 y (incf y (+ eh u b))))
+                                 (:end (decf y (+ eh u b))))
+                               (if (stretch layout) (- w l r) (min (- w l r) ew))
+                               eh)))))))))
 
 (defclass horizontal-linear-layout (linear-layout)
   ())
@@ -79,14 +79,14 @@
   (with-unit-parent layout
     (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
       (destructure-extent (:x ox :y y :w w :h h :to-px T) extent
-        (let ((mw (to-px (size-w (min-size layout))))
-              (mh (if (stretch layout) (- h u b) (to-px (size-h (min-size layout)))))
+        (let ((mw (pxw (min-size layout)))
+              (mh (if (stretch layout) (- h u b) (pxh (min-size layout))))
               (x (ecase (align layout)
                    (:start (+ ox l))
                    (:end (- (+ ox w) r))))
               (y (+ y b)))
-          (do-elements (element layout :start 0 :result (extent ox y (- x ox) h))
-            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (extent x b mw mh) element)
+          (do-elements (element layout :start 0 :result (px-extent ox y (- x ox) h))
+            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x b mw mh) element)
               (setf h (max h (+ eh u b)))
               (ecase (align layout)
                 (:start (incf x (+ ew l r)))
@@ -96,18 +96,18 @@
   (with-unit-parent layout
     (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
       (destructure-extent (:x ox :y y :w w :h h :to-px T) extent
-        (let ((mw (to-px (size-w (min-size layout))))
-              (mh (if (stretch layout) (- h u b) (to-px (size-h (min-size layout)))))
+        (let ((mw (pxw (min-size layout)))
+              (mh (if (stretch layout) (- h u b) (pxh (min-size layout))))
               (x (ecase (align layout)
                    (:start (+ ox l))
                    (:end (- (+ ox w) r))))
               (y (+ y b)))
-          (do-elements (element layout :start index :result (extent ox y (- x ox) h))
-            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (extent x y mw mh) element)
+          (do-elements (element layout :start index :result (px-extent ox y (- x ox) h))
+            (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x y mw mh) element)
               (setf (bounds element)
-                    (extent (ecase (align layout)
-                              (:start (prog1 x (incf x (+ ew l r))))
-                              (:end (decf x (+ ew l r))))
-                            y
-                            ew
-                            (if (stretch layout) (- h u b) (min (- h u b) eh)))))))))))
+                    (px-extent (ecase (align layout)
+                                 (:start (prog1 x (incf x (+ ew l r))))
+                                 (:end (decf x (+ ew l r))))
+                               y
+                               ew
+                               (if (stretch layout) (- h u b) (min (- h u b) eh)))))))))))

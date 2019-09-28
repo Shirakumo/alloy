@@ -33,7 +33,7 @@
 (defun unit (unit-ish)
   (etypecase unit-ish
     (unit unit-ish)
-    (real (un unit-ish))))
+    (real (%un (float unit-ish 0f0)))))
 
 (define-compiler-macro unit (unit-ish &environment env)
   (let* ((unit (gensym "UNIT"))
@@ -54,15 +54,15 @@
 (defun to-px (thing)
   (%to-px thing))
 
-(defun to-un (thing)
-  (/ (to-px thing)
-     (resolution-scale (renderer *unit-parent*))
-     (base-scale (renderer *unit-parent*))))
-
 (define-compiler-macro to-px (thing &environment env)
   (if (constantp thing env)
       `(load-time-value (%to-px ,thing))
       `(%to-px ,thing)))
+
+(defun to-un (thing)
+  (/ (%to-px thing)
+     (resolution-scale (renderer *unit-parent*))
+     (base-scale (renderer *unit-parent*))))
 
 (defmacro define-unit (name (value) &body conversion)
   (destructuring-bind (to-px from-px) conversion
@@ -96,25 +96,28 @@
                  0.0f0
                  ,to-px)))))))
 
+;;; Early
+(declaim (ftype (function (T) single-float) pxx pxy pxw pxh pxl pxu pxr pxb))
+
 (define-unit px (px)
   px
   px)
 
 (define-unit vw (vw)
-  (* vw (to-px (w (root (layout-tree *unit-parent*)))))
-  (/ px (to-px (w (root (layout-tree *unit-parent*))))))
+  (* vw (pxw (root (layout-tree *unit-parent*))))
+  (/ px (pxw (root (layout-tree *unit-parent*)))))
 
 (define-unit vh (vh)
-  (* vh (to-px (h (root (layout-tree *unit-parent*)))))
-  (/ px (to-px (h (root (layout-tree *unit-parent*))))))
+  (* vh (pxh (root (layout-tree *unit-parent*))))
+  (/ px (pxh (root (layout-tree *unit-parent*)))))
 
 (define-unit pw (pw)
-  (* pw (to-px (w *unit-parent*)))
-  (/ px (to-px (w *unit-parent*))))
+  (* pw (pxw *unit-parent*))
+  (/ px (pxw *unit-parent*)))
 
 (define-unit ph (ph)
-  (* ph (to-px (h *unit-parent*)))
-  (/ px (to-px (h *unit-parent*))))
+  (* ph (pxh *unit-parent*))
+  (/ px (pxh *unit-parent*)))
 
 (define-unit un (un)
   (* un (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*)))

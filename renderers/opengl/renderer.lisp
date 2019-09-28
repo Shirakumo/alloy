@@ -247,10 +247,10 @@ void main(){
   (let ((shader (resource 'basic-shader renderer)))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
-      (let ((w (/ (alloy:w extent) 2))
-            (h (/ (alloy:h extent) 2)))
-        (simple:translate renderer (alloy:point (+ (alloy:x extent) w)
-                                                (+ (alloy:y extent) h)))
+      (let ((w (/ (alloy:pxw extent) 2))
+            (h (/ (alloy:pxh extent) 2)))
+        (simple:translate renderer (alloy:point (+ (alloy:pxx extent) w)
+                                                (+ (alloy:pxy extent) h)))
         (simple:scale renderer (alloy:size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
@@ -264,10 +264,10 @@ void main(){
     ;; Build point vertex data array
     (loop for point in points
           for i from 0 by 2
-          do (setf (aref data (+ 0 i)) (alloy:x point))
-             (setf (aref data (+ 1 i)) (alloy:y point)))
-    (setf (aref data (- (length data) 1)) (alloy:x (first points)))
-    (setf (aref data (- (length data) 2)) (alloy:y (first points)))
+          do (setf (aref data (+ 0 i)) (alloy:pxx point))
+             (setf (aref data (+ 1 i)) (alloy:pxy point)))
+    (setf (aref data (- (length data) 1)) (alloy:pxx (first points)))
+    (setf (aref data (- (length data) 2)) (alloy:pxy (first points)))
     (update-vertex-buffer (resource 'rect-vbo renderer) data)
     ;; Draw it
     (bind shader)

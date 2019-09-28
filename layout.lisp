@@ -16,7 +16,7 @@
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree)
    (layout-parent :initarg :layout-parent :initform (arg! :layout-parent) :reader layout-parent)
-   (bounds :initform (extent) :reader bounds)))
+   (bounds :initform (extent) :accessor bounds)))
 
 (defmethod initialize-instance :after ((element layout-element) &key)
   (etypecase (layout-parent element)
@@ -34,14 +34,6 @@
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a" (bounds element))))
-
-(defmethod (setf bounds) ((extent extent) (element layout-element))
-  (let ((current (bounds element)))
-    (setf (extent-x current) (extent-x extent))
-    (setf (extent-y current) (extent-y extent))
-    (setf (extent-w current) (extent-w extent))
-    (setf (extent-h current) (extent-h extent))
-    extent))
 
 (defmethod x ((element layout-element)) (extent-x (bounds element)))
 (defmethod y ((element layout-element)) (extent-y (bounds element)))

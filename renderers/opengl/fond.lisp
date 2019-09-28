@@ -131,21 +131,21 @@ void main(){
     (declare (ignore gap))
     (ecase direction
       (:right
-       (alloy:point
+       (alloy:px-point
         (ecase align
           (:start
            (alloy:x point))
           (:middle
-           (- (alloy:x point) (/ (* scale (- r l)) 2)))
+           (- (alloy:pxx point) (/ (* scale (- r l)) 2)))
           (:end
-           (- (alloy:x point) (* scale (- r l)))))
+           (- (alloy:pxx point) (* scale (- r l)))))
         (ecase vertical-align
           (:bottom
            (alloy:y point))
           (:middle
-           (- (alloy:y point) (/ (* scale (- u b)) 2)))
+           (- (alloy:pxy point) (/ (* scale (- u b)) 2)))
           (:top
-           (- (alloy:y point) (* scale (- u b))))))))))
+           (- (alloy:pxy point) (* scale (- u b))))))))))
 
 (defmethod simple:text ((renderer renderer) point string &key (font (simple:font renderer))
                                                               (size (simple:font-size renderer))
@@ -160,7 +160,7 @@ void main(){
     (simple:with-pushed-transforms (renderer)
       (let ((s (* 2 (/ (alloy:to-px size) (cl-fond:size atlas)))))
         (simple:translate renderer (text-point point atlas string align direction vertical-align s))
-        (simple:scale renderer (alloy:size s s)))
+        (simple:scale renderer (alloy:px-size s s)))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (opengl:uniform shader "color") (simple:fill-color renderer))
     (let ((count (cl-fond:update-text atlas string

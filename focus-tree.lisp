@@ -70,9 +70,11 @@
     (setf (focus (focus-parent element)) :strong)
     (focus-parent element)))
 
-(defmethod handle ((event direct-event) (element focus-element) ui)
+(defmethod handle ((event event) (element focus-element) ui)
   (unless (eq element (focus-parent element))
     (handle event (focus-parent element) ui)))
+
+(defmethod handle ((event pointer-event) (element focus-element) ui))
 
 (defmethod handle ((event activate) (element focus-element) ui)
   (activate element))

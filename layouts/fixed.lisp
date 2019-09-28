@@ -11,31 +11,22 @@
 
 (defmethod notice-bounds :after ((element layout-element) (layout fixed-layout))
   ;; Calculate max bound
-  (let ((extent (extent layout)))
+  (let ((extent (bounds layout)))
     (destructure-extent (:x lx :y ly :w lw :h lh :to-px T) extent
-      (destructure-extent (:x ex :y ey :w ew :h eh :to-px T) (extent element)
+      (destructure-extent (:x ex :y ey :w ew :h eh :to-px T) (bounds element)
         (let ((l (min lx ex))
               (b (min ly ey))
               (r (max (+ lx lw) (+ ex ew)))
               (u (max (+ ly lh) (+ ey eh))))
-          (setf lx l
-                ly b
-                lw (- r l)
-                lh (- u b))))
-      (setf (extent-x extent) (unit lx))
-      (setf (extent-y extent) (unit ly))
-      (setf (extent-w extent) (unit lw))
-      (setf (extent-h extent) (unit lh))))
+          (setf (bounds layout)
+                (px-extent l b (- r l) (- u b)))))))
   (notice-bounds layout (layout-parent layout)))
 
 (defmethod suggest-bounds (extent (layout fixed-layout)))
 
 (defmethod enter ((element layout-element) (layout fixed-layout) &key (x (arg! :x)) (y (arg! :y)) (w (arg! :w)) (h (arg! :h)))
   (call-next-method)
-  (setf (extent-x (extent element)) (unit x))
-  (setf (extent-x (extent element)) (unit y))
-  (setf (extent-x (extent element)) (unit w))
-  (setf (extent-x (extent element)) (unit h))
+  (setf (bounds element) (extent x y w h))
   ;; Ensure we set the layout extent to the element bounds or we would calculate
   ;; the max bound wrong.
   (when (= 1 (element-count layout))
@@ -46,9 +37,10 @@
     (setf (bounds layout) (extent))))
 
 (defmethod update ((element layout-element) (layout fixed-layout) &key x y w h)
-  (let ((e (extent element)))
-    (when x (setf (extent-x e) (unit x)))
-    (when y (setf (extent-y e) (unit y)))
-    (when w (setf (extent-w e) (unit w)))
-    (when h (setf (extent-h e) (unit h)))
+  (let ((e (bounds element)))
+    (setf (bounds element)
+          (extent (or x (extent-x e))
+                  (or y (extent-y e))
+                  (or w (extent-w e))
+                  (or h (extent-h e))))
     element))

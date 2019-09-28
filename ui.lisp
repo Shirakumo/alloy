@@ -17,7 +17,7 @@
    (focus-tree :initarg :focus-tree :reader focus-tree)
    ;; 38dpcm corresponds to Windows' default 96dpi
    (dots-per-cm :initform 38 :reader dots-per-cm)
-   (target-resolution :initarg :target-resolution :initform (size 1920 1080) :accessor target-resolution)
+   (target-resolution :initarg :target-resolution :initform (px-size 1920 1080) :accessor target-resolution)
    (resolution-scale :initform 1.0 :accessor resolution-scale)
    (base-scale :initarg :base-scale :initform 1.0 :accessor base-scale))
   (:default-initargs
@@ -48,8 +48,8 @@
 
 (defmethod suggest-bounds (extent (ui ui))
   (let* ((target (target-resolution ui))
-         (wr (/ (to-px (extent-w extent)) (to-px (size-w target))))
-         (hr (/ (to-px (extent-h extent)) (to-px (size-h target)))))
+         (wr (/ (pxw extent) (pxw target)))
+         (hr (/ (pxh extent) (pxh target))))
     (setf (resolution-scale ui) (min wr hr)))
   (suggest-bounds extent (layout-tree ui)))
 

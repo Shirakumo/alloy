@@ -52,9 +52,8 @@
 (defmethod handle ((event pointer-move) (slider slider) ctx)
   (case (state slider)
     (:dragging
-     (let ((range (/ (- (to-px (point-x (location event)))
-                        (to-px (extent-x (bounds slider))))
-                     (to-px (extent-w (bounds slider))))))
+     (let ((range (/ (- (pxx (location event)) (pxx (bounds slider)))
+                     (pxw (bounds slider)))))
        (setf (value slider) (* range (- (maximum slider) (minimum slider))))))
     (T
      (call-next-method))))
