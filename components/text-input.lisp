@@ -15,10 +15,10 @@
   (set-pos (max 0 (min position (length (value (component cursor))))) cursor))
 
 (defmethod (setf anchor) ((position integer) (cursor cursor))
-  (set-achor (max 0 (min position (length (value (component cursor))))) cursor))
+  (set-anchor (max 0 (min position (length (value (component cursor))))) cursor))
 
 (defmethod (setf anchor) ((null null) (cursor cursor))
-  (set-achor null cursor))
+  (set-anchor null cursor))
 
 (defmethod move-to ((_ (eql :start)) (cursor cursor))
   (set-pos 0 cursor))
@@ -47,7 +47,7 @@
     (move-to :line-start cursor)
     (let ((col (- (pos cursor) pos)))
       (move-to :line-end cursor)
-      (when (< (pos cursor) (length string))
+      (when (< (pos cursor) (length (value (component cursor))))
         (let ((start (1+ (pos cursor))))
           (move-to :line-end cursor)
           (set-pos (min (+ start col) (pos cursor)) cursor))))))
@@ -74,10 +74,10 @@
 (defclass text-input-component (value-component)
   ((insert-mode :initform :add :initarg :insert-mode :accessor insert-mode)
    ;; TODO: Maybe make cursors multiple?
-   (cursor :initform (make-instance 'cursor) :reader cursor)))
+   (cursor :reader cursor)))
 
-(defmethod (setf cursor) :after (value (component text-input-component))
-  (mark-for-render component))
+(defmethod initialize-instance :after ((component text-input-component) &key)
+  (setf (slot-value component 'cursor) (make-instance 'cursor :component component)))
 
 (defun maybe-enlarge (array size)
   (if (< (array-total-size array) size)
