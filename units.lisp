@@ -19,7 +19,9 @@
   (value NIL :type single-float :read-only T))
 
 (defmethod print-object ((unit unit) stream)
-  (prin1 (list (type-of unit) (unit-value unit)) stream))
+  (if *print-readably*
+      (prin1 (list (type-of unit) (unit-value unit)) stream)
+      (format stream "~a~(~a~)" (unit-value unit) (type-of unit))))
 
 (defmethod make-load-form ((unit unit) &optional env)
   (declare (ignore env))
