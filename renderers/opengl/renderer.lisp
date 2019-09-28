@@ -236,7 +236,7 @@ void main(){
     (bind shader)
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer extent)
-      (simple:scale renderer (alloy:size (alloy:extent-w extent) (alloy:extent-h extent)))
+      (simple:scale renderer extent)
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
     (ecase (simple:fill-mode renderer)
@@ -256,7 +256,7 @@ void main(){
     (setf (uniform shader "color") (simple:fill-color renderer))
     (ecase (simple:fill-mode renderer)
       (:fill (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2)))
-      (:lines (draw-vertex-array (resource 'circ-line-vao renderer) :line-loop (+ *circ-polycount* 2))))))
+      (:lines (draw-vertex-array (resource 'circ-line-vao renderer) :line-loop *circ-polycount*)))))
 
 (defmethod simple:polygon ((renderer renderer) points)
   (let ((shader (resource 'basic-shader renderer))

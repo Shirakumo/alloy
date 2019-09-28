@@ -132,7 +132,7 @@
   (:bar
    :fill-color (simple:color 0.25 0.2 0.8)
    :scale (let ((p (/ alloy:value (alloy:maximum alloy:renderable))))
-             (alloy:size p 1)))
+            (alloy:px-size p 1)))
   (:label
    :fill-color (simple:color 1 1 1)))
 

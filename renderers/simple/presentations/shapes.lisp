@@ -10,22 +10,20 @@
   (to-extent (extent shape) bounds))
 
 (defmethod to-extent ((extent alloy:extent) (element alloy:layout-element))
-  (alloy:with-unit-parent element
-    (alloy:px-extent (alloy:extent-x extent) (alloy:extent-y extent)
-                     (alloy:extent-h extent) (alloy:extent-w extent))))
+  (alloy:px-extent (alloy:extent-x extent) (alloy:extent-y extent)
+                   (alloy:extent-w extent) (alloy:extent-h extent)))
 
 (defmethod to-extent ((margins alloy:margins) (element alloy:layout-element))
-  (alloy:with-unit-parent element
-    (let ((bounds (alloy:bounds element)))
-      ;; We ignore the bounds' x/y since we already have translated to that in local frame.
-      (alloy:px-extent (alloy:pxl margins)
-                       (alloy:pxb margins)
-                       (- (alloy:pxw bounds)
-                          (alloy:pxl margins)
-                          (alloy:pxr margins))
-                       (- (alloy:pxh bounds)
-                          (alloy:pxb margins)
-                          (alloy:pxu margins))))))
+  (let ((bounds (alloy:bounds element)))
+    ;; We ignore the bounds' x/y since we already have translated to that in local frame.
+    (alloy:px-extent (alloy:pxl margins)
+                     (alloy:pxb margins)
+                     (- (alloy:pxw bounds)
+                        (alloy:pxl margins)
+                        (alloy:pxr margins))
+                     (- (alloy:pxh bounds)
+                        (alloy:pxb margins)
+                        (alloy:pxu margins)))))
 
 (defclass filled-shape (shape)
   ())

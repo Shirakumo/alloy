@@ -98,7 +98,7 @@
               :composite-mode :source-over
               :z-index 0
               :offset (alloy:point 0 0)
-              :scale (alloy:size 1 1)
+              :scale (alloy:px-size 1 1)
               :rotation 0.0
               :pivot (alloy:point 0 0)))
 

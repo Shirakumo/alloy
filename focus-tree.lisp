@@ -74,7 +74,8 @@
   (unless (eq element (focus-parent element))
     (handle event (focus-parent element) ui)))
 
-(defmethod handle ((event pointer-event) (element focus-element) ui))
+(defmethod handle ((event pointer-event) (element focus-element) ui)
+  (decline))
 
 (defmethod handle ((event activate) (element focus-element) ui)
   (activate element))
