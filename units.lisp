@@ -25,7 +25,10 @@
 
 (defmethod make-load-form ((unit unit) &optional env)
   (declare (ignore env))
-  `(,(type-of unit) ,(unit-value unit)))
+  ;; KLUDGE: To avoid infinite recursion, we guess the struct constructor.
+  (let ((constructor (intern (format NIL "%~a" (string (type-of unit)))
+                             (symbol-package (type-of unit)))))
+    `(,constructor ,(unit-value unit))))
 
 (defun unit (unit-ish)
   (etypecase unit-ish
