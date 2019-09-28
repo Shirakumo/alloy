@@ -60,10 +60,6 @@
 (defmethod handle ((event event) (element layout-element) ui)
   (decline))
 
-(defmethod handle :around ((event pointer-event) (element layout-element) ui)
-  (when (contained-p (location event) (bounds element))
-    (call-next-method)))
-
 (defmethod render :around (renderer (element layout-element))
   (with-unit-parent element
     (call-next-method)))
@@ -105,7 +101,8 @@
 
 (defmethod handle ((event pointer-event) (layout layout) ui)
   (do-elements (element layout)
-    (when (handle event element ui)
+    (when (and (contained-p (location event) (bounds element))
+               (handle event element ui))
       (return))))
 
 (defclass layout-tree ()

@@ -67,7 +67,9 @@
      (call-next-method))))
 
 (defmethod handle ((event pointer-down) (slider slider) ctx)
+  (call-next-method)
   (setf (state slider) :dragging))
 
-(defmethod exit :after ((slider slider))
-  (setf (state slider) NIL))
+(defmethod (setf focus) :after (focus (slider slider))
+  (unless (eql :strong focus)
+    (setf (state slider) NIL)))
