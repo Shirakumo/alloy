@@ -116,8 +116,8 @@
                             (let ((ideal (suggest-bounds (px-extent x y (- w ml mr) (- h mb mu)) element)))
                               (setf (bounds element)
                                     (px-extent x y
-                                               (if (stretch layout) (- w ml mr) (- h mb mu))
-                                               (if (stretch layout) (pxw ideal) (pxh ideal))))))))))))
+                                               (if (stretch layout) (- w ml mr) (extent-w ideal))
+                                               (if (stretch layout) (- h mb mu) (extent-h ideal))))))))))))
 
 (defmethod suggest-bounds (extent (layout grid-layout))
   (with-unit-parent layout
