@@ -62,50 +62,64 @@
       `(%to-px ,thing)))
 
 (defmacro define-unit (name (value) &body conversion)
-  (let ((make-fun (intern (format NIL "%~a" name)))
-        (env (gensym "ENV")))
-    `(progn
-       (defstruct (,name
-                   (:include unit)
-                   (:constructor ,make-fun (value))
-                   (:copier NIL)
-                   (:predicate NIL)))
+  (destructuring-bind (to-px from-px) conversion
+    (let* ((make-fun (intern (format NIL "%~a" name)))
+           (whole (gensym "WHOLE"))
+           (env (gensym "ENV"))
+           (constructor `(etypecase ,name
+                           (real (,make-fun (float ,name 0f0)))
+                           (,name ,name)
+                           (unit (,make-fun
+                                  (let ((px (%to-px ,name)))
+                                    ,from-px))))))
+      `(progn
+         (defstruct (,name
+                     (:include unit)
+                     (:constructor ,make-fun (value))
+                     (:copier NIL)
+                     (:predicate NIL)))
 
-       (defun ,name (&optional (,name 1f0))
-         (,make-fun (float ,name 0f0)))
+         (defun ,name (&optional (,name 1f0))
+           ,constructor)
 
-       (define-compiler-macro ,name (&optional (,name 1f0) &environment ,env)
-         (if (constantp ,name ,env)
-             `(,',make-fun (load-time-value (float ,,name 0f0)))
-             `(,',make-fun (float ,,name 0f0))))
-       
-       (defmethod %to-px ((,name ,name))
-         (declare (optimize speed))
-         (let ((,value (unit-value ,name)))
-           (if (= 0 ,value)
-               0.0f0
-               (progn ,@conversion)))))))
+         (define-compiler-macro ,name (&whole ,whole &optional (,name 1f0) &environment ,env)
+           (if (constantp ,name ,env)
+               (list 'load-time-value ,constructor)
+               ,whole))
+         
+         (defmethod %to-px ((,name ,name))
+           (let ((,value (unit-value ,name)))
+             (if (= 0 ,value)
+                 0.0f0
+                 ,to-px)))))))
 
 (define-unit px (px)
+  px
   px)
 
 (define-unit vw (vw)
-  (* vw (to-px (w (root (layout-tree *unit-parent*))))))
+  (* vw (to-px (w (root (layout-tree *unit-parent*)))))
+  (/ px (to-px (w (root (layout-tree *unit-parent*))))))
 
 (define-unit vh (vh)
-  (* vh (to-px (h (root (layout-tree *unit-parent*))))))
+  (* vh (to-px (h (root (layout-tree *unit-parent*)))))
+  (/ px (to-px (h (root (layout-tree *unit-parent*))))))
 
 (define-unit pw (pw)
-  (* pw (to-px (w *unit-parent*))))
+  (* pw (to-px (w *unit-parent*)))
+  (/ px (to-px (w *unit-parent*))))
 
 (define-unit ph (ph)
-  (* ph (to-px (h *unit-parent*))))
+  (* ph (to-px (h *unit-parent*)))
+  (/ px (to-px (h *unit-parent*))))
 
 (define-unit un (un)
-  (* un (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*))))
+  (* un (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*)))
+  (/ px (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*))))
 
 (define-unit cm (cm)
-  (* cm (dots-per-cm (renderer *unit-parent*))))
+  (* cm (dots-per-cm (renderer *unit-parent*)))
+  (/ px (dots-per-cm (renderer *unit-parent*))))
 
 ;;; FIXME: It would be nice if we could preserve unit types
 ;;;        if the argument units are of the same type. This
@@ -141,6 +155,8 @@
 (define-unit-op0 u* *)
 (define-unit-op1 u- -)
 (define-unit-op1 u/ /)
+(define-unit-op1 umax max)
+(define-unit-op1 umin min)
 (define-unit-comp u= =)
 (define-unit-comp u/= /=)
 (define-unit-comp u< <)
