@@ -107,11 +107,11 @@
   ((:border outlined-box)
    :extent (alloy:margins -3))
   ((:handle filled-box)
-   :extent (alloy:extent 0 0 10 (alloy:ph))))
+   :extent (alloy:extent -5 0 10 (alloy:ph))))
 
 (define-style (default-look-and-feel alloy:slider)
   (:handle
-   :offset (alloy:point (alloy:vw (/ (- alloy:value (alloy:minimum alloy:renderable))
+   :offset (alloy:point (alloy:pw (/ (- alloy:value (alloy:minimum alloy:renderable))
                                      (- (alloy:maximum alloy:renderable) (alloy:minimum alloy:renderable))))
                         0)
    :fill-color (case alloy:focus
