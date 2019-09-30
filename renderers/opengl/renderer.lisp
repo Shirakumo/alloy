@@ -8,8 +8,9 @@
 
 (defparameter *circ-polycount* 36)
 
-;; FIXME: With a UBO we could avoid having to re-set uniforms at ever draw
-;;        and instead change them when the style is set.
+;; TODO: With a UBO we could avoid having to re-set uniforms at ever draw
+;;       and instead change them when the style is set.
+;; FIXME: Proper lines
 
 (defclass renderer (simple:transformed-renderer
                     simple:styled-renderer)

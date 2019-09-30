@@ -43,8 +43,6 @@
   (call-next-method)
   (setf (slot-value component 'data) component))
 
-;; TODO: combobox
-
 (defclass progress (value-component)
   ((maximum :initarg :maximum :initform 100 :accessor maximum)))
 

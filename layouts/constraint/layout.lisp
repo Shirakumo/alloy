@@ -56,7 +56,10 @@
 (defmethod alloy:leave :after ((element alloy:layout-entry) (layout layout))
   (remhash (alloy:component element) (variables layout)))
 
-(defmethod alloy:update ((element alloy:layout-element) (layout layout) &key constraints)
+(defmethod alloy:update ((element alloy:layout-element) (layout layout) &key constraints clear)
+  (when clear
+    (dolist (constraint (gethash element (constraints layout)))
+      (cass:delete-constraint constraint)))
   (apply-constraints constraints element layout))
 
 (defmethod alloy:notice-bounds ((element alloy:layout-element) (layout layout)))
@@ -73,9 +76,6 @@
                   (cass:value w) (cass:value h))))
 
 (defun apply-constraints (constraints element layout)
-  ;; FIXME: how to remove constraints?
-  ;; (dolist (constraint (gethash element (constraints layout)))
-  ;;   (cass:delete-constraint constraint))
   (dolist (expression constraints layout)
     (dolist (expression (transform-expression expression))
       (push (cass:constrain-with (solver layout) (rewrite-expression expression element layout))

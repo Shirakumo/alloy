@@ -24,7 +24,7 @@
   (update-linear-layout layout 0 (bounds layout)))
 
 (defmethod notice-bounds ((element layout-element) (layout linear-layout))
-  ;; FIXME: optimise bounds update.
+  ;; TODO: optimise bounds update.
   (let ((updated (update-linear-layout layout 0 (bounds layout))))
     (unless (extent= (bounds layout) updated)
       (setf (bounds layout) updated))))

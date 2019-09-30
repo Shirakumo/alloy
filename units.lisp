@@ -127,9 +127,9 @@
   (* cm (dots-per-cm (renderer *unit-parent*)))
   (/ px (dots-per-cm (renderer *unit-parent*))))
 
-;;; FIXME: It would be nice if we could preserve unit types
-;;;        if the argument units are of the same type. This
-;;;        would avoid requiring coercion to PX via the parent.
+;;; TODO: It would be nice if we could preserve unit types
+;;;       if the argument units are of the same type. This
+;;;       would avoid requiring coercion to PX via the parent.
 (defmacro define-unit-op0 (name op)
   `(progn (defun ,name (&rest units)
             (px (apply #',op (loop for unit in units
