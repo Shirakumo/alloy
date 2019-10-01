@@ -100,9 +100,9 @@
     (maybe-render renderer element)))
 
 (defmethod handle ((event pointer-event) (layout layout) ui)
-  (do-elements (element layout)
-    (when (and (contained-p (location event) (bounds element))
-               (handle event element ui))
+  (do-elements (element layout :result (decline))
+    (when (contained-p (location event) (bounds element))
+      (handle event element ui)
       (return))))
 
 (defclass layout-tree ()
