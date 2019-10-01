@@ -35,7 +35,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "switch")
                              (:file "text-input")
                              (:file "slider")
-                             (:file "radio")))
+                             (:file "radio")
+                             (:file "combo")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)
