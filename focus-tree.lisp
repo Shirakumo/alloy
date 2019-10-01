@@ -26,7 +26,7 @@
 (defgeneric root (focus-tree))
 
 (defclass focus-element (element)
-  ((focus-tree :initform NIL :reader focus-tree)
+  ((focus-tree :initform NIL :accessor focus-tree)
    (focus-parent :initarg :focus-parent :initform (arg! :focus-parent) :reader focus-parent)
    (focus :initform NIL :accessor focus)))
 
@@ -35,7 +35,7 @@
   (etypecase (focus-parent element)
     (focus-tree
      (let ((focus-tree (focus-parent element)))
-       (setf (slot-value element 'focus-tree) focus-tree)
+       (setf (focus-tree element) focus-tree)
        (setf (slot-value element 'focus-parent) element)
        (setf (root focus-tree) element)))
     (focus-element
@@ -85,7 +85,7 @@
 
 (defmethod enter :before ((element focus-element) (parent focus-element) &key)
   (cond ((not (slot-boundp element 'focus-parent))
-         (setf (slot-value element 'focus-tree) (focus-tree parent))
+         (setf (focus-tree element) (focus-tree parent))
          (setf (slot-value element 'focus-parent) parent))
         ((not (eq parent (focus-parent element)))
          (error 'element-has-different-parent
@@ -98,8 +98,9 @@
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
   (slot-makunbound element 'focus-parent)
-  (slot-makunbound element 'focus-tree))
+  (setf (slot-value element 'focus-tree) NIL))
 
+;; FIXME: might want to disconnect this from the vector-container to generalise.
 (defclass focus-chain (focus-element vector-container)
   ((index :initform -1 :accessor index)
    (focused :initform NIL :accessor focused)))
@@ -115,6 +116,10 @@
       (setf (focused element) NIL))
     (adjust-array (elements element) (length elements))
     (replace (elements element) elements)))
+
+(defmethod (setf focus-tree) :after (tree (element focus-chain))
+  (do-elements (child element)
+    (setf (focus-tree child) tree)))
 
 (defmethod (setf focused) :before ((none null) (chain focus-chain))
   (setf (slot-value chain 'index) -1)
