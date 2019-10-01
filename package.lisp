@@ -46,6 +46,14 @@
   (:export
    #:button
    #:pressed)
+  ;; components/combo.lisp
+  (:export
+   #:combo-item
+   #:combo
+   #:combo-list
+   #:combo-item
+   #:value-set
+   #:combo-set)
   ;; components/radio.lisp
   (:export
    #:radio

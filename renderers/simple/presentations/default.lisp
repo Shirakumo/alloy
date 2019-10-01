@@ -27,6 +27,10 @@
   (call-next-method)
   (setf (text shape) (format NIL "~,1f%" (/ (alloy:value renderable) (alloy:maximum renderable) 1/100))))
 
+(defmethod update-shape ((renderer default-look-and-feel) (renderable alloy:combo) (shape text))
+  (call-next-method)
+  (setf (text shape) (princ-to-string (alloy:value renderable))))
+
 (define-style (default-look-and-feel renderable)
   (:background
    :fill-color (simple:color 0.15 0.15 0.15))
@@ -103,7 +107,7 @@
 
 (define-realisation (default-look-and-feel alloy:slider)
   ((:background filled-box)
-   :extent (alloy:margins))
+   :extent (alloy:extent 0 (alloy:ph 0.4) (alloy:pw) (alloy:ph 0.2)))
   ((:border outlined-box)
    :extent (alloy:margins -3))
   ((:handle filled-box)
@@ -149,3 +153,31 @@
    :fill-color (if (alloy:active-p alloy:renderable)
                    (simple:color 0.25 0.2 0.8)
                    (simple:color 0 0 0 0))))
+
+(define-realisation (default-look-and-feel alloy:combo)
+  ((:background filled-box)
+   :extent (alloy:margins))
+  ((:border outlined-box)
+   :extent (alloy:margins -3))
+  ((:label text)
+   :text (princ-to-string (alloy:value alloy:renderable))
+   :extent (alloy:margins 1)))
+
+(define-style (default-look-and-feel alloy:combo)
+  (:label
+   :fill-color (simple:color 1 1 1)))
+
+(define-realisation (default-look-and-feel alloy:combo-item)
+  ((:background filled-box)
+   :extent (alloy:margins))
+  ((:label text)
+   :text (alloy:data alloy:renderable)
+   :extent (alloy:margins 1)))
+
+(define-style (default-look-and-feel alloy:combo-item)
+  (:background
+   :fill-color (case (alloy:focus alloy:renderable)
+                 ((:weak :strong) (simple:color 0.25 0.2 0.8))
+                 ((NIL) (simple:color 0.15 0.15 0.15))))
+  (:label
+   :fill-color (simple:color 1 1 1)))

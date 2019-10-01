@@ -13,11 +13,12 @@
   (mark-for-render button))
 
 (defmethod handle ((event pointer-down) (button button) ctx)
-  (setf (pressed button) T))
+  (setf (pressed button) T)
+  (activate button))
 
 (defmethod handle ((event pointer-up) (button button) ctx)
   (setf (pressed button) NIL)
-  (setf (focus button) :weak))
+  (exit button))
 
 (defmethod handle ((event button-down) (button button) ctx)
   (case (button event)

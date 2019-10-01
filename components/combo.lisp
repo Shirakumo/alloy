@@ -6,25 +6,81 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass combo (value-component)
-  ((state :initform NIL :accessor state)))
+(defclass combo-item (button)
+  ())
 
+(defmethod data ((component combo-item))
+  (princ-to-string (call-next-method)))
+
+(defclass combo (value-component focus-list)
+  ((state :initform NIL :accessor state)
+   (combo-list :initform (make-instance 'vertical-linear-layout :layout-parent NIL :align :end) :reader combo-list)))
+
+(defgeneric combo-item (item combo))
 (defgeneric value-set (data))
 (define-observable (setf value-set) (set observable))
 
 (defmethod initialize-instance :after ((combo combo) &key)
   (update-combo-items combo (value-set combo))
   (on (setf value-set) (set (data combo))
-      (update-combo-items combo set)))
+    (update-combo-items combo set)))
 
-(defmethod activate :after ((radio radio))
-  (setf (state radio) :selecting))
+(defmethod activate :after ((combo combo))
+  (setf (state combo) :selecting))
 
-(defmethod exit :after ((radio radio))
-  (setf (state radio) NIL))
+(defmethod handle :around ((event pointer-event) (combo combo) ctx)
+  (case (state combo)
+    (:selecting
+     (unless (handle event (combo-list combo) ctx)
+       (when (typep event 'pointer-up)
+         (exit combo)))
+     T)
+    (T
+     (call-next-method))))
 
-(defmethod update-combo-items ((combo combo) set)
-  )
+(defmethod (setf focus) :after (focus (combo combo))
+  (when (null focus)
+    (setf (state combo) NIL)))
+
+(defmethod (setf value) :after (value (combo combo))
+  (exit combo))
+
+(defmethod combo-item (item (combo combo))
+  (make-instance 'combo-item :data item :renderer (renderer combo)))
+
+(defmethod update-combo-items ((combo combo) items)
+  (let ((list (combo-list combo)))
+    ;; TODO: It may be possible to optimise this to only insert and remove
+    ;;       items as necessary, but ensuring the order is as specified in
+    ;;       the items list seems difficult to do without sacrificing efficiency.
+    (clear list)
+    (clear combo)
+    (flet ((add (el)
+             (let ((item (combo-item el combo)))
+               (enter item list)
+               (enter item combo)
+               (on activate (item)
+                 (setf (value combo) (slot-value item 'data))))))
+      (etypecase items
+        (list (loop for item in items do (add item)))
+        (vector (loop for item across items do (add item)))))))
+
+(defmethod register :after ((combo combo) (renderer renderer))
+  (register (combo-list combo) renderer))
+
+(defmethod render :after ((renderer renderer) (combo combo))
+  (case (state combo)
+    (:selecting
+     (render renderer (combo-list combo)))))
+
+(defmethod (setf bounds) :after (bounds (combo combo))
+  (let ((ideal (suggest-bounds bounds (combo-list combo))))
+    (setf (min-size (combo-list combo)) (size 0 (pxh bounds)))
+    (setf (bounds (combo-list combo))
+          (px-extent (pxx bounds)
+                     (+ (- (pxy bounds) (pxh ideal)) (pxh bounds))
+                     (pxw ideal)
+                     (pxh ideal)))))
 
 (defclass combo-set (combo)
   ((value-set :initform (arg! :value-set) :initarg :value-set :accessor value-set)))
