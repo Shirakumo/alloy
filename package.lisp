@@ -80,6 +80,7 @@
    #:element-count
    #:call-with-elements
    #:do-elements
+   #:clear
    #:vector-container)
   ;; data.lisp
   (:export

@@ -19,6 +19,7 @@
 (defgeneric elements (container))
 (defgeneric element-index (element container))
 (defgeneric call-with-elements (function container &key start end))
+(defgeneric clear (container))
 
 (defmacro do-elements ((element container &key start end result) &body body)
   (let ((thunk (gensym "THUNK")))
@@ -43,6 +44,10 @@
 
 (defmethod element-count ((container container))
   (length (elements container)))
+
+(defmethod clear ((container container))
+  (do-elements (element container)
+    (leave element container)))
 
 (defclass vector-container (container)
   ((elements :initform (make-array 0 :adjustable T :fill-pointer T) :reader elements)))
