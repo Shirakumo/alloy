@@ -29,7 +29,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                 :components ((:file "fixed")
                              (:file "linear")
                              (:file "grid")
-                             (:file "border")))
+                             (:file "border")
+                             (:file "clip-view")))
                (:module "components"
                 :components ((:file "base")
                              (:file "button")
@@ -37,7 +38,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "text-input")
                              (:file "slider")
                              (:file "radio")
-                             (:file "combo")))
+                             (:file "combo")
+                             (:file "scroll")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)

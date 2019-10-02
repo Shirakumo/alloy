@@ -72,6 +72,11 @@
    #:insert-text
    #:input-line
    #:input-box)
+  ;; components/scroll.lisp
+  (:export
+   #:scrollbar
+   #:x-scrollbar
+   #:y-scrollbar)
   ;; components/slider.lisp
   (:export
    #:slider
@@ -231,6 +236,11 @@
   ;; layouts/border.lisp
   (:export
    #:border-layout)
+  ;; layouts/clip-view.lisp
+  (:export
+   #:clip-view
+   #:offset
+   #:stretch)
   ;; layouts/fixed.lisp
   (:export
    #:fixed-layout)

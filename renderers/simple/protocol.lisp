@@ -95,3 +95,8 @@
 
 (defmacro with-pushed-styles ((renderer) &body body)
   `(call-with-pushed-styles (lambda () ,@body) ,renderer))
+
+(defmethod alloy:render :around ((renderer renderer) (renderable alloy:clip-view))
+  (with-pushed-transforms (renderer)
+    (clip renderer (alloy:bounds renderable))
+    (call-next-method)))
