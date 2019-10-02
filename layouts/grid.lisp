@@ -6,10 +6,6 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(define-alloy-condition grid-cell-already-occupied (layout-condition error)
-    "Cannot enter~%  ~a~%at ~a,~a into~%  ~a~%as it is already occupied by~%  ~a"
-  element row col layout (aref (elements (layout c)) (row c) (col c)))
-
 (defclass grid-layout (layout)
   ((stretch :initarg :stretch :initform T :accessor stretch)
    (cell-margins :initarg :cell-margins :initform (margins) :accessor cell-margins)
@@ -50,8 +46,8 @@
 
 (defmethod enter :before ((element layout-element) (layout grid-layout) &key (row (arg! :row)) (col (arg! :col)))
   (when (aref (elements layout) row col)
-    (error 'grid-cell-already-occupied
-           :elemetn element :row row :col col :layout layout)))
+    (error 'place-already-occupied
+           :element element :place (cons row col) :layout layout :existing (aref (elements layout) row col))))
 
 (defmethod enter ((element layout-element) (layout grid-layout) &key row col)
   (setf (aref (elements layout) row col) element)

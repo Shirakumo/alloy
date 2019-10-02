@@ -34,7 +34,10 @@
    #:layout
    #:renderer-condition
    #:renderer
-   #:renderable-already-registered)
+   #:renderable-already-registered
+   #:place-already-occupied
+   #:place
+   #:existing)
   ;; components/base.lisp
   (:export
    #:label
@@ -233,7 +236,6 @@
    #:row-sizes
    #:col-sizes
    #:stretch
-   #:grid-cell-already-occupied
    #:row
    #:col)
   ;; layouts/linear.lisp

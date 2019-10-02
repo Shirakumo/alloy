@@ -52,6 +52,10 @@
 (define-alloy-condition layout-condition ()
     NIL layout)
 
+(define-alloy-condition place-already-occupied (layout-condition error)
+    "Cannot enter~%  ~a~%at ~a into~%  ~a~%as it is already occupied by~%  ~a"
+  element place layout existing)
+
 (define-alloy-condition renderer-condition ()
     NIL renderer)
 
