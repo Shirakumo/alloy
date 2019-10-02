@@ -79,7 +79,8 @@
    #:step
    #:state
    #:minimum
-   #:maximum)
+   #:maximum
+   #:ranged-slider)
   ;; container.lisp
   (:export
    #:element

@@ -7,21 +7,21 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass slider (value-component)
-  ((range :initarg :range :initform '(0 . 100) :accessor range)
-   (step :initarg :step :initform 1 :accessor step)
+  ((step :initarg :step :initform 1 :accessor step)
    (state :initform NIL :accessor state)))
+
+(defgeneric range (data))
+(define-observable (setf range) (range observable))
+
+(defmethod initialize-instance :after ((slider slider) &key)
+  (on (setf range) (range (data slider))
+    (setf (value slider) (value slider))))
 
 (defmethod minimum ((slider slider))
   (car (range slider)))
 
 (defmethod maximum ((slider slider))
   (cdr (range slider)))
-
-(defmethod (setf range) :before (value (slider slider))
-  (assert (< (car value) (cdr value))))
-
-(defmethod (setf range) :after (value (slider slider))
-  (setf (value slider) (value slider)))
 
 (defmethod (setf value) :around (value (slider slider))
   (destructuring-bind (min . max) (range slider)
@@ -73,3 +73,9 @@
 (defmethod (setf focus) :after (focus (slider slider))
   (unless (eql :strong focus)
     (setf (state slider) NIL)))
+
+(defclass ranged-slider (slider)
+  ((range :initarg :range :initform '(0 . 100) :accessor range)))
+
+(defmethod (setf range) :before (value (slider ranged-slider))
+  (assert (< (car value) (cdr value))))
