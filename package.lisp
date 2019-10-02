@@ -228,6 +228,9 @@
    #:layout-element
    #:layout
    #:layout-tree)
+  ;; layouts/border.lisp
+  (:export
+   #:border-layout)
   ;; layouts/fixed.lisp
   (:export
    #:fixed-layout)

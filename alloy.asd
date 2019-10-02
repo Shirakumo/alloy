@@ -28,7 +28,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:module "layouts"
                 :components ((:file "fixed")
                              (:file "linear")
-                             (:file "grid")))
+                             (:file "grid")
+                             (:file "border")))
                (:module "components"
                 :components ((:file "base")
                              (:file "button")
