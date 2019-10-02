@@ -107,17 +107,21 @@
 
 (define-realisation (default-look-and-feel alloy:slider)
   ((:background filled-box)
-   :extent (alloy:extent 0 (alloy:ph 0.4) (alloy:pw) (alloy:ph 0.2)))
+   :extent (ecase (alloy:orientation alloy:renderable)
+             (:horizontal (alloy:extent 0 (alloy:ph 0.4) (alloy:pw) (alloy:ph 0.2)))
+             (:vertical (alloy:extent (alloy:pw 0.4) 0 (alloy:pw 0.2) (alloy:ph)))))
   ((:border outlined-box)
    :extent (alloy:margins -3))
   ((:handle filled-box)
-   :extent (alloy:extent -5 0 10 (alloy:ph))))
+   :extent (ecase (alloy:orientation alloy:renderable)
+             (:horizontal (alloy:extent -5 0 10 (alloy:ph)))
+             (:vertical (alloy:extent 0 -5 (alloy:pw) 10)))))
 
 (define-style (default-look-and-feel alloy:slider)
   (:handle
-   :offset (alloy:point (alloy:pw (/ (- alloy:value (alloy:minimum alloy:renderable))
-                                     (- (alloy:maximum alloy:renderable) (alloy:minimum alloy:renderable))))
-                        0)
+   :offset (ecase (alloy:orientation alloy:renderable)
+             (:horizontal (alloy:point (alloy:pw (alloy:slider-unit alloy:renderable)) 0))
+             (:vertical (alloy:point 0 (alloy:ph (alloy:slider-unit alloy:renderable)))))
    :fill-color (case alloy:focus
                  (:strong (simple:color 1 1 1))
                  (T (simple:color 0.25 0.2 0.8)))))
@@ -181,3 +185,11 @@
                  ((NIL) (simple:color 0.15 0.15 0.15))))
   (:label
    :fill-color (simple:color 1 1 1)))
+
+(define-realisation (default-look-and-feel alloy:scrollbar)
+  ((:background filled-box)
+   :extent (alloy:margins))
+  ((:handle filled-box)
+   :extent (ecase (alloy:orientation alloy:renderable)
+             (:horizontal (alloy:extent -10 0 20 (alloy:ph)))
+             (:vertical (alloy:extent 0 -10 (alloy:pw) 20)))))

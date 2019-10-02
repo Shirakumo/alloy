@@ -8,7 +8,8 @@
 
 (defclass slider (value-component)
   ((step :initarg :step :initform 1 :accessor step)
-   (state :initform NIL :accessor state)))
+   (state :initform NIL :accessor state)
+   (orientation :initarg :orientation :initform :horizontal :accessor orientation)))
 
 (defgeneric range (data))
 (define-observable (setf range) (range observable))
@@ -22,6 +23,12 @@
 
 (defmethod maximum ((slider slider))
   (cdr (range slider)))
+
+(defmethod slider-unit ((slider slider))
+  (destructuring-bind (min . max) (range slider)
+    (if (= min max)
+        0
+        (/ (- (value slider) min) (- max min)))))
 
 (defmethod (setf value) :around (value (slider slider))
   (destructuring-bind (min . max) (range slider)
@@ -52,9 +59,12 @@
 (defmethod handle ((event pointer-move) (slider slider) ctx)
   (case (state slider)
     (:dragging
-     (let ((range (/ (- (pxx (location event)) (pxx (bounds slider)))
-                     (pxw (bounds slider)))))
-       (setf (value slider) (* range (- (maximum slider) (minimum slider))))))
+     (let ((range (ecase (orientation slider)
+                    (:horizontal (/ (- (pxx (location event)) (pxx (bounds slider)))
+                                    (pxw (bounds slider))))
+                    (:vertical (/ (- (pxy (location event)) (pxy (bounds slider)))
+                                  (pxh (bounds slider)))))))
+       (setf (value slider) (+ (minimum slider) (* range (- (maximum slider) (minimum slider)))))))
     (T
      (call-next-method))))
 

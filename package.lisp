@@ -83,8 +83,10 @@
    #:range
    #:step
    #:state
+   #:orientation
    #:minimum
    #:maximum
+   #:slider-unit
    #:ranged-slider)
   ;; container.lisp
   (:export
