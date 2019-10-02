@@ -62,11 +62,7 @@
   (setf (transform-matrix transform) (mat* (transform-matrix transform) new)))
 
 (defmethod clip ((transform transform) (extent alloy:extent))
-  (let ((target (clip-mask transform)))
-    (if target
-        (setf (clip-mask transform) (alloy:px-extent (alloy:x extent) (alloy:y extent)
-                                                     (alloy:w extent) (alloy:h extent)))
-        (setf (clip-mask transform) extent))))
+  (setf (clip-mask transform) extent))
 
 (defmethod clip ((transform transform) (none null))
   (setf (clip-mask transform) NIL))
