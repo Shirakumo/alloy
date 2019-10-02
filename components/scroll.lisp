@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass scrollbar (slider)
-  ())
+  ((step :initform 20)))
 
 (defmethod initialize-instance :after ((scrollbar scrollbar) &key)
   (on (setf bounds) (bounds (data scrollbar))
