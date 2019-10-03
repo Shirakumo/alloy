@@ -8,8 +8,9 @@
 
 ;; Required GL state before ALLOY:RENDER call:
 ;;   (gl:enable :blend :depth-test :stencil-test :line-smooth)
-;;   (gl:stencil-func :always 1 #xFF)
 ;;   (gl:clear-stencil #x00)
+;;   (gl:stencil-func :always 1 #xFF)
+;;   (gl:stencil-mask #xFF)
 ;;   (gl:clear-depth 1.0)
 ;;   (gl:depth-func :lequal)
 ;;   (gl:depth-mask T)

@@ -129,13 +129,13 @@ void main(){
 
 (defmethod alloy:register (renderable (renderer renderer)))
 
+(defvar *clip-depth* 0)
+
 (defmethod simple:clip :before ((renderer renderer) extent)
-  ;; Render to the stencil buffer only
-  ;; FIXME: how do we properly undo clips?
-  (gl:stencil-mask #xFF)
-  (gl:clear :stencil-buffer)
-  (gl:stencil-op :replace :replace :replace)
+  (incf *clip-depth* 1)
+  (gl:stencil-op :keep :incr :incr)
   (gl:stencil-func :always 1 #xFF)
+  (gl:stencil-mask #xFF)
   (gl:color-mask NIL NIL NIL NIL)
   (gl:depth-mask NIL)
   (let ((mode (simple:fill-mode renderer)))
@@ -143,25 +143,15 @@ void main(){
     (unwind-protect
          (simple:rectangle renderer extent)
       (setf (simple:fill-mode renderer) mode)
-      (gl:stencil-func :equal 1 #xFF)
+      (gl:stencil-func :gequal *clip-depth* #xFF)
       (gl:stencil-mask #x00)
       (gl:color-mask T T T T)
       (gl:depth-mask T))))
 
-(defmethod simple:call-with-pushed-transforms (function (renderer renderer))
-  (let* ((current (simple:transform renderer))
-         (new (make-instance (class-of current) :parent current)))
-    (setf (simple:transform renderer) new)
-    (unwind-protect
-         (funcall function)
-      (setf (simple:transform renderer) current)
-      (cond ((simple:clip-mask current)
-             (unless (and (simple:clip-mask new)
-                          (alloy:extent= (simple:clip-mask new)
-                                         (simple:clip-mask current)))
-               (simple:clip renderer (simple:clip-mask current))))
-            (T
-             (gl:stencil-func :always 1 #xFF))))))
+(defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
+  (let ((*clip-depth* *clip-depth*))
+    (call-next-method))
+  (gl:stencil-func :gequal *clip-depth* #xFF))
 
 (defmethod simple:call-with-pushed-styles :after (function (renderer renderer))
   (setf (simple:composite-mode renderer) (simple:composite-mode renderer)))
