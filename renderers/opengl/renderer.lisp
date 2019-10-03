@@ -135,7 +135,6 @@ void main(){
   (incf *clip-depth* 1)
   (gl:stencil-op :keep :incr :incr)
   (gl:stencil-func :always 1 #xFF)
-  (gl:stencil-mask #xFF)
   (gl:color-mask NIL NIL NIL NIL)
   (gl:depth-mask NIL)
   (let ((mode (simple:fill-mode renderer)))
@@ -143,8 +142,8 @@ void main(){
     (unwind-protect
          (simple:rectangle renderer extent)
       (setf (simple:fill-mode renderer) mode)
+      (gl:stencil-op :keep :keep :keep)
       (gl:stencil-func :gequal *clip-depth* #xFF)
-      (gl:stencil-mask #x00)
       (gl:color-mask T T T T)
       (gl:depth-mask T))))
 
