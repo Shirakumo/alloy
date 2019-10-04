@@ -234,6 +234,7 @@
    #:layout-parent
    #:notice-bounds
    #:suggest-bounds
+   #:ensure-visible
    #:layout-element
    #:layout
    #:layout-tree)

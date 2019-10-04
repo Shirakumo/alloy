@@ -12,6 +12,7 @@
 (defgeneric (setf bounds) (extent layout-element))
 (defgeneric notice-bounds (changed parent))
 (defgeneric suggest-bounds (extent layout-element))
+(defgeneric ensure-visible (extent parent))
 
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree)
@@ -43,9 +44,14 @@
 (defmethod handle ((event event) (element layout-element) ui)
   (decline))
 
-(defmethod render :around (renderer (element layout-element))
-  (with-unit-parent element
-    (call-next-method)))
+(defmethod render :around ((renderer renderer) (element layout-element))
+  (when (extent-visible-p (bounds element) renderer)
+    (with-unit-parent element
+      (call-next-method))))
+
+(defmethod ensure-visible ((extent extent) (element layout-element))
+  (unless (eq element (layout-parent element))
+    (ensure-visible extent element)))
 
 (defclass layout (layout-element container renderable)
   ())

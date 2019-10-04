@@ -58,3 +58,7 @@
   (when (inner layout)
     (with-constrained-visibility ((bounds layout) renderer)
       (render renderer (inner layout)))))
+
+(defmethod ensure-visible ((extent extent) (layout clip-view))
+  ;; FIXME: Implement this
+  (call-next-method))
