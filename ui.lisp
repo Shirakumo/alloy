@@ -54,6 +54,7 @@
          (wr (/ (pxw extent) (pxw target)))
          (hr (/ (pxh extent) (pxh target))))
     (setf (resolution-scale ui) (min wr hr)))
+  (setf (visible-bounds ui) extent)
   (suggest-bounds extent (layout-tree ui)))
 
 (defmethod register ((source ui) (target ui))

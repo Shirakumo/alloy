@@ -223,6 +223,8 @@
    #:extent-w
    #:extent-h
    #:extent=
+   #:overlapping-p
+   #:extent-intersection
    #:destructure-extent)
   ;; layout.lisp
   (:export
@@ -282,6 +284,9 @@
    #:mark-for-render
    #:render
    #:maybe-render
+   #:call-with-constrained-visibility
+   #:with-constrained-visibility
+   #:extent-visible-p
    #:renderer
    #:renderable)
   ;; ui.lisp

@@ -166,6 +166,25 @@
   (and (u<= 0 (u- (extent-x inner) (extent-x outer)) (u- (extent-w outer) (extent-w inner)))
        (u<= 0 (u- (extent-y inner) (extent-y outer)) (u- (extent-h outer) (extent-h inner)))))
 
+(defun overlapping-p (a b)
+  (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
+    (destructure-extent (:x x2 :y y2 :w w2 :h h2 :to-px T) b
+      (and (<= (* 2 (abs (- x1 x2))) (+ w1 w2))
+           (<= (* 2 (abs (- y1 y2))) (+ h1 h2))))))
+
+(defun extent-intersection (a b)
+  (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
+    (destructure-extent (:x x2 :y y2 :w w2 :h h2 :to-px T) b
+      (let* ((r1 (+ x1 w1)) (u1 (+ y1 h1))
+             (r2 (+ x2 w2)) (u2 (+ y2 h2))
+             (x (max x1 x2))
+             (y (max y1 y2))
+             (w (- (min r1 r2) x))
+             (h (- (min u1 u2) y)))
+        (if (and (< 0 w) (< 0 h))
+            (px-extent x y w h)
+            (px-extent 0 0 0 0))))))
+
 (defmacro destructure-extent ((&rest args &key x y w h to-px) extent &body body)
   (declare (ignore x y w h))
   (let ((extentg (gensym "EXTENT")))

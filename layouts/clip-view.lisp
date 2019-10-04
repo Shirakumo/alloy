@@ -56,4 +56,5 @@
 
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)
-    (render renderer (inner layout))))
+    (with-constrained-visibility ((bounds layout) renderer)
+      (render renderer (inner layout)))))
