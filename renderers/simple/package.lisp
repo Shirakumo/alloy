@@ -24,7 +24,7 @@
    #:composite-mode
    #:font
    #:font-size
-   #:line
+   #:line-strip
    #:rectangle
    #:ellipse
    #:polygon

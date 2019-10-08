@@ -64,13 +64,6 @@
 (defclass filled-polygon (polygon filled-shape) ())
 (defclass outlined-polygon (polygon outlined-shape) ())
 
-(defclass line (shape)
-  ((point-a :initarg :point-a :initform (arg! :point-a) :accessor point-a)
-   (point-b :initarg :point-b :initform (arg! :point-b) :accessor point-b)))
-
-(defmethod render-inside ((renderer renderer) (line line) renderable)
-  (simple:line renderer (point-a line) (point-b line)))
-
 (defclass text (shape)
   ((text :initarg :text :initform (arg! :text) :accessor text)
    (extent :initarg :extent :initform (alloy:margins) :accessor extent)

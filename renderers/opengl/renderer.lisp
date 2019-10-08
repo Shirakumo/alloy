@@ -25,6 +25,26 @@
 (defmethod (setf resource) (value name (renderer renderer))
   (setf (gethash name (resources renderer)) value))
 
+(defun make-line-array (points)
+  (let ((array (make-array (* 6 4 (1- (length points))) :element-type 'single-float))
+        (i -1))
+    (flet ((vertex (p nx ny)
+             (setf (aref array (incf i)) (alloy:pxx p))
+             (setf (aref array (incf i)) (alloy:pxy p))
+             (setf (aref array (incf i)) nx)
+             (setf (aref array (incf i)) ny)))
+      (loop for (a b) on points
+            while b
+            do (let* ((ux (- (- (alloy:pxy b) (alloy:pxy a))))
+                      (uy (- (alloy:pxx b) (alloy:pxx a))))
+                 (vertex a (- ux) (- uy))
+                 (vertex b (- ux) (- uy))
+                 (vertex a (+ ux) (+ uy))
+                 (vertex b (- ux) (- uy))
+                 (vertex b (+ ux) (+ uy))
+                 (vertex a (+ ux) (+ uy))))
+      array)))
+
 (defmethod alloy:allocate :before ((renderer renderer))
   ;; Allocate the necessary geometry.
   (flet ((arr (&rest data)
@@ -32,24 +52,21 @@
          (make-geometry (vbo vao content &rest buffer-args)
            (setf (resource vbo renderer) (apply #'make-vertex-buffer renderer content buffer-args))
            (setf (resource vao renderer) (make-vertex-array renderer `((,(resource vbo renderer) :size 2 :offset 0 :stride 8))))))
-    ;; :lines
-    (setf (resource 'line-vao renderer)
-          (make-vertex-array renderer ()))
     ;; :triangles
     (make-geometry 'rect-fill-vbo 'rect-fill-vao
                    (arr 0f0 0f0  1f0 1f0  0f0 1f0
                         0f0 0f0  1f0 0f0  1f0 1f0))
-    ;; :line-loop
+    ;; :triangles
     (make-geometry 'rect-line-vbo 'rect-line-vao
-                   (arr 0f0 0f0  0f0 1f0  1f0 1f0  1f0 0f0))
-    ;; :line-loop
+                   (make-line-array (list (alloy:px-point 0f0 0f0)
+                                          (alloy:px-point 0f0 1f0)
+                                          (alloy:px-point 1f0 1f0)
+                                          (alloy:px-point 1f0 0f0))))
+    ;; :triangles
     (make-geometry 'circ-line-vbo 'circ-line-vao
-                   (coerce
-                    (loop for i from 0 below *circ-polycount*
-                          for tt = (* i (/ *circ-polycount*) 2 PI)
-                          collect (float (cos tt) 0f0)
-                          collect (float (sin tt) 0f0))
-                    '(vector single-float)))
+                   (make-line-array (loop for i from 0 to *circ-polycount*
+                                          for tt = (* i (/ *circ-polycount*) 2 PI)
+                                          collect (alloy:px-point (float (cos tt) 0f0) (float (sin tt) 0f0)))))
     ;; :triangle-fan
     (make-geometry 'circ-fill-vbo 'circ-fill-vao
                    (coerce
@@ -60,7 +77,7 @@
                                  collect (float (sin tt) 0f0)))
                     '(vector single-float)))
     ;; :trangle-fan
-    (make-geometry 'poly-vbo 'poly-vao (arr)
+    (make-geometry 'stream-vbo 'stream-vao (arr)
                    :data-usage :stream-draw))
 
   ;; Allocate the necessary shaders.
@@ -68,19 +85,26 @@
            (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag))))
     (make-shader 'line-shader
                  "#version 330 core
-uniform vec2 line[2];
+layout(location = 0) in vec2 position;
+layout(location = 1) in vec2 normal;
+
+out vec2 line_normal;
+uniform float line_width = 3.0;
 uniform mat3 transform;
 
 void main(){
-  vec2 pos = line[gl_VertexID];
-  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  vec3 delta = vec3(normal * line_width, 0);
+  vec3 pos = transform * vec3(position, 0);
+  gl_Position = vec4(pos + delta, 1);
 }"
                  "#version 330 core
+in vec2 line_normal;
+uniform float feather = 0.2;
 uniform vec4 color;
 out vec4 out_color;
 
 void main(){
-  out_color = color;
+   out_color = color * (1-length(line_normal))*16;
 }")
     (make-shader 'basic-shader
                  "#version 330 core
@@ -155,9 +179,6 @@ void main(){
 (defmethod simple:call-with-pushed-styles :after (function (renderer renderer))
   (setf (simple:composite-mode renderer) (simple:composite-mode renderer)))
 
-(defmethod (setf simple:line-width) :before (width (renderer renderer))
-  (gl:line-width width))
-
 (defmethod (setf simple:composite-mode) :before (mode (renderer renderer))
   (ecase mode
     (:source-over
@@ -212,29 +233,35 @@ void main(){
      (gl:blend-func :one :one)
      (gl:blend-equation :func-reverse-subtract))))
 
-(defmethod simple:line ((renderer renderer) point-a point-b)
-  (let ((shader (resource 'line-shader renderer)))
+(defmethod simple:line-strip ((renderer renderer) points)
+  (let ((shader (resource 'line-shader renderer))
+        (data (make-line-array points)))
+    (update-vertex-buffer (resource 'stream-vbo renderer) data)
     (bind shader)
-    (setf (uniform shader "line[0]") point-a)
-    (setf (uniform shader "line[1]") point-b)
     (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
     (setf (uniform shader "color") (simple:fill-color renderer))
-    (draw-vertex-array (resource 'line-vao renderer) :lines 2)))
+    (setf (uniform shader "line_width") (simple:line-width renderer))
+    (draw-vertex-array (resource 'stream-vao renderer) :triangles (/ (length data) 4))))
 
 (defmethod simple:rectangle ((renderer renderer) extent)
-  (let ((shader (resource 'basic-shader renderer)))
+  (let ((shader (ecase (simple:fill-mode renderer)
+                  (:fill (resource 'basic-shader renderer))
+                  (:lines (resource 'line-shader renderer)))))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer extent)
       (simple:scale renderer extent)
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
+    (setf (uniform shader "line_width") (simple:line-width renderer))
     (ecase (simple:fill-mode renderer)
       (:fill (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6))
-      (:lines (draw-vertex-array (resource 'rect-line-vao renderer) :line-loop 4)))))
+      (:lines (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 16)))))
 
 (defmethod simple:ellipse ((renderer renderer) extent)
-  (let ((shader (resource 'basic-shader renderer)))
+  (let ((shader (ecase (simple:fill-mode renderer)
+                  (:fill (resource 'basic-shader renderer))
+                  (:lines (resource 'line-shader renderer)))))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
       (let ((w (/ (alloy:pxw extent) 2))
@@ -244,28 +271,38 @@ void main(){
         (simple:scale renderer (alloy:size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
+    (setf (uniform shader "line_width") (simple:line-width renderer))
     (ecase (simple:fill-mode renderer)
       (:fill (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2)))
-      (:lines (draw-vertex-array (resource 'circ-line-vao renderer) :line-loop *circ-polycount*)))))
+      (:lines (draw-vertex-array (resource 'circ-line-vao renderer) :triangles (* *circ-polycount* 6))))))
 
 (defmethod simple:polygon ((renderer renderer) points)
-  (let ((shader (resource 'basic-shader renderer))
-        (data (make-array (* 2 (1+ (length points))) :element-type 'single-float)))
-    ;; Build point vertex data array
-    (loop for point in points
-          for i from 0 by 2
-          do (setf (aref data (+ 0 i)) (alloy:pxx point))
-             (setf (aref data (+ 1 i)) (alloy:pxy point)))
-    (setf (aref data (- (length data) 1)) (alloy:pxx (first points)))
-    (setf (aref data (- (length data) 2)) (alloy:pxy (first points)))
-    (update-vertex-buffer (resource 'rect-vbo renderer) data)
-    ;; Draw it
-    (bind shader)
-    (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
-    (setf (uniform shader "color") (simple:fill-color renderer))
-    (ecase (simple:fill-mode renderer)
-      (:fill (draw-vertex-array (resource 'poly-vao renderer) :triangle-fan (1+ (length points))))
-      (:lines (draw-vertex-array (resource 'poly-vao renderer) :line-strip (1+ (length points)))))))
+  (ecase (simple:fill-mode renderer)
+    (:lines
+     (let ((shader (resource 'line-shader renderer))
+           (data (make-line-array (append points (list (first points))))))
+       (update-vertex-buffer (resource 'stream-vbo renderer) data)
+       (bind shader)
+       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
+       (setf (uniform shader "color") (simple:fill-color renderer))
+       (setf (uniform shader "line_width") (simple:line-width renderer))
+       (draw-vertex-array (resource 'stream-vao renderer) :triangles (* 6 (length points)))))
+    (:fill
+     (let ((shader (resource 'basic-shader renderer))
+           (data (make-array (* 2 (1+ (length points))) :element-type 'single-float)))
+       ;; Build point vertex data array
+       (loop for point in points
+             for i from 0 by 2
+             do (setf (aref data (+ 0 i)) (alloy:pxx point))
+                (setf (aref data (+ 1 i)) (alloy:pxy point)))
+       (setf (aref data (- (length data) 1)) (alloy:pxx (first points)))
+       (setf (aref data (- (length data) 2)) (alloy:pxy (first points)))
+       (update-vertex-buffer (resource 'stream-vbo renderer) data)
+       ;; Draw it
+       (bind shader)
+       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
+       (setf (uniform shader "color") (simple:fill-color renderer))
+       (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (1+ (length points)))))))
 
 (defmethod simple:image ((renderer renderer) point image &key (size (simple:size image)))
   (let ((shader (resource 'image-shader renderer)))

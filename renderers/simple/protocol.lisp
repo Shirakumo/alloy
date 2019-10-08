@@ -31,7 +31,7 @@
 ;;; TODO: bezier curves?
 ;;; TODO: paths
 
-(defgeneric line (renderer point-a point-b))
+(defgeneric line-strip (renderer points))
 (defgeneric rectangle (renderer extent))
 (defgeneric ellipse (renderer extent))
 (defgeneric polygon (renderer points))
