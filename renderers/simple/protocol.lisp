@@ -96,7 +96,7 @@
 (defmacro with-pushed-styles ((renderer) &body body)
   `(call-with-pushed-styles (lambda () ,@body) ,renderer))
 
-(defmethod alloy:call-with-constrained-visibility (function (extent extent) (renderer renderer))
+(defmethod alloy:call-with-constrained-visibility (function (extent alloy:extent) (renderer renderer))
   (with-pushed-transforms (renderer)
     (clip renderer extent)
     (call-next-method)))

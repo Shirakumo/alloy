@@ -166,12 +166,6 @@
   (and (u<= 0 (u- (extent-x inner) (extent-x outer)) (u- (extent-w outer) (extent-w inner)))
        (u<= 0 (u- (extent-y inner) (extent-y outer)) (u- (extent-h outer) (extent-h inner)))))
 
-(defun overlapping-p (a b)
-  (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
-    (destructure-extent (:x x2 :y y2 :w w2 :h h2 :to-px T) b
-      (and (<= (* 2 (abs (- x1 x2))) (+ w1 w2))
-           (<= (* 2 (abs (- y1 y2))) (+ h1 h2))))))
-
 (defun extent-intersection (a b)
   (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
     (destructure-extent (:x x2 :y y2 :w w2 :h h2 :to-px T) b
@@ -194,3 +188,9 @@
                     when var
                     collect `(,var (,(if to-px 'to-px 'identity) (,func ,extentg)))))
        ,@body)))
+
+(defun overlapping-p (a b)
+  (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
+    (destructure-extent (:x x2 :y y2 :w w2 :h h2 :to-px T) b
+      (and (< x1 (+ x2 w2)) (< x2 (+ x1 w1))
+           (< y1 (+ y2 h2)) (< y2 (+ y1 h1))))))
