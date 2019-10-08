@@ -49,25 +49,29 @@
   ;; Allocate the necessary geometry.
   (flet ((arr (&rest data)
            (make-array (length data) :element-type 'single-float :initial-contents data))
-         (make-geometry (vbo vao content &rest buffer-args)
-           (setf (resource vbo renderer) (apply #'make-vertex-buffer renderer content buffer-args))
-           (setf (resource vao renderer) (make-vertex-array renderer `((,(resource vbo renderer) :size 2 :offset 0 :stride 8))))))
-    ;; :triangles
-    (make-geometry 'rect-fill-vbo 'rect-fill-vao
-                   (arr 0f0 0f0  1f0 1f0  0f0 1f0
-                        0f0 0f0  1f0 0f0  1f0 1f0))
-    ;; :triangles
+         (make-geometry (vbo vao content &key (data-usage :static-draw) (bindings `((:size 2 :offset 0 :stride 8))))
+           (setf (resource vbo renderer) (make-vertex-buffer renderer content :data-usage data-usage))
+           (setf (resource vao renderer) (make-vertex-array renderer (loop for binding in bindings
+                                                                           collect (list* (resource vbo renderer) binding))))))
+    ;; lines
     (make-geometry 'rect-line-vbo 'rect-line-vao
                    (make-line-array (list (alloy:px-point 0f0 0f0)
                                           (alloy:px-point 0f0 1f0)
                                           (alloy:px-point 1f0 1f0)
-                                          (alloy:px-point 1f0 0f0))))
-    ;; :triangles
+                                          (alloy:px-point 1f0 0f0)))
+                   :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
     (make-geometry 'circ-line-vbo 'circ-line-vao
                    (make-line-array (loop for i from 0 to *circ-polycount*
                                           for tt = (* i (/ *circ-polycount*) 2 PI)
-                                          collect (alloy:px-point (float (cos tt) 0f0) (float (sin tt) 0f0)))))
-    ;; :triangle-fan
+                                          collect (alloy:px-point (float (cos tt) 0f0) (float (sin tt) 0f0))))
+                   :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
+    (make-geometry 'line-vbo 'line-vao (arr)
+                   :data-usage :stream-draw
+                   :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
+    ;; :triangles
+    (make-geometry 'rect-fill-vbo 'rect-fill-vao
+                   (arr 0f0 0f0  1f0 1f0  0f0 1f0
+                        0f0 0f0  1f0 0f0  1f0 1f0))
     (make-geometry 'circ-fill-vbo 'circ-fill-vao
                    (coerce
                     (list* 0f0 0f0
@@ -76,7 +80,6 @@
                                  collect (float (cos tt) 0f0)
                                  collect (float (sin tt) 0f0)))
                     '(vector single-float)))
-    ;; :trangle-fan
     (make-geometry 'stream-vbo 'stream-vao (arr)
                    :data-usage :stream-draw))
 
@@ -236,12 +239,12 @@ void main(){
 (defmethod simple:line-strip ((renderer renderer) points)
   (let ((shader (resource 'line-shader renderer))
         (data (make-line-array points)))
-    (update-vertex-buffer (resource 'stream-vbo renderer) data)
+    (update-vertex-buffer (resource 'line-vbo renderer) data)
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
     (setf (uniform shader "color") (simple:fill-color renderer))
     (setf (uniform shader "line_width") (simple:line-width renderer))
-    (draw-vertex-array (resource 'stream-vao renderer) :triangles (/ (length data) 4))))
+    (draw-vertex-array (resource 'line-vao renderer) :triangles (/ (length data) 4))))
 
 (defmethod simple:rectangle ((renderer renderer) extent)
   (let ((shader (ecase (simple:fill-mode renderer)
@@ -281,12 +284,12 @@ void main(){
     (:lines
      (let ((shader (resource 'line-shader renderer))
            (data (make-line-array (append points (list (first points))))))
-       (update-vertex-buffer (resource 'stream-vbo renderer) data)
+       (update-vertex-buffer (resource 'line-vbo renderer) data)
        (bind shader)
        (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
        (setf (uniform shader "color") (simple:fill-color renderer))
        (setf (uniform shader "line_width") (simple:line-width renderer))
-       (draw-vertex-array (resource 'stream-vao renderer) :triangles (* 6 (length points)))))
+       (draw-vertex-array (resource 'line-vao renderer) :triangles (* 6 (length points)))))
     (:fill
      (let ((shader (resource 'basic-shader renderer))
            (data (make-array (* 2 (1+ (length points))) :element-type 'single-float)))
