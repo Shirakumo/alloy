@@ -10,7 +10,6 @@
 
 ;; TODO: With a UBO we could avoid having to re-set uniforms at ever draw
 ;;       and instead change them when the style is set.
-;; FIXME: Proper lines
 
 (defclass renderer (simple:transformed-renderer
                     simple:styled-renderer)
@@ -36,7 +35,10 @@
       (loop for (a b) on points
             while b
             do (let* ((ux (- (- (alloy:pxy b) (alloy:pxy a))))
-                      (uy (- (alloy:pxx b) (alloy:pxx a))))
+                      (uy (- (alloy:pxx b) (alloy:pxx a)))
+                      (len (sqrt (+ (* ux ux) (* uy uy)))))
+                 (setf ux (/ ux len))
+                 (setf uy (/ uy len))
                  (vertex a (- ux) (- uy))
                  (vertex b (- ux) (- uy))
                  (vertex a (+ ux) (+ uy))
@@ -58,7 +60,8 @@
                    (make-line-array (list (alloy:px-point 0f0 0f0)
                                           (alloy:px-point 0f0 1f0)
                                           (alloy:px-point 1f0 1f0)
-                                          (alloy:px-point 1f0 0f0)))
+                                          (alloy:px-point 1f0 0f0)
+                                          (alloy:px-point 0f0 0f0)))
                    :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
     (make-geometry 'circ-line-vbo 'circ-line-vao
                    (make-line-array (loop for i from 0 to *circ-polycount*
@@ -94,20 +97,24 @@ layout(location = 1) in vec2 normal;
 out vec2 line_normal;
 uniform float line_width = 3.0;
 uniform mat3 transform;
+uniform vec2 view_size;
 
 void main(){
   vec3 delta = vec3(normal * line_width, 0);
-  vec3 pos = transform * vec3(position, 0);
+  delta.xy /= view_size;
+  vec3 pos = transform*vec3(position, 1);
   gl_Position = vec4(pos + delta, 1);
+  line_normal = normal;
 }"
                  "#version 330 core
 in vec2 line_normal;
-uniform float feather = 0.2;
+uniform float feather = 0.66;
 uniform vec4 color;
 out vec4 out_color;
 
 void main(){
-   out_color = color * (1-length(line_normal))*16;
+   float strength = 1-length(line_normal);
+   out_color = color * clamp(strength*feather+feather, 0, 1);
 }")
     (make-shader 'basic-shader
                  "#version 330 core
@@ -243,7 +250,8 @@ void main(){
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
     (setf (uniform shader "color") (simple:fill-color renderer))
-    (setf (uniform shader "line_width") (simple:line-width renderer))
+    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width renderer)))
+    (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'line-vao renderer) :triangles (/ (length data) 4))))
 
 (defmethod simple:rectangle ((renderer renderer) extent)
@@ -256,10 +264,11 @@ void main(){
       (simple:scale renderer extent)
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
-    (setf (uniform shader "line_width") (simple:line-width renderer))
+    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width renderer)))
+    (setf (uniform shader "view_size") (view-size renderer))
     (ecase (simple:fill-mode renderer)
       (:fill (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6))
-      (:lines (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 16)))))
+      (:lines (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 24)))))
 
 (defmethod simple:ellipse ((renderer renderer) extent)
   (let ((shader (ecase (simple:fill-mode renderer)
@@ -274,7 +283,8 @@ void main(){
         (simple:scale renderer (alloy:size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:fill-color renderer))
-    (setf (uniform shader "line_width") (simple:line-width renderer))
+    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width renderer)))
+    (setf (uniform shader "view_size") (view-size renderer))
     (ecase (simple:fill-mode renderer)
       (:fill (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2)))
       (:lines (draw-vertex-array (resource 'circ-line-vao renderer) :triangles (* *circ-polycount* 6))))))
@@ -288,7 +298,8 @@ void main(){
        (bind shader)
        (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
        (setf (uniform shader "color") (simple:fill-color renderer))
-       (setf (uniform shader "line_width") (simple:line-width renderer))
+       (setf (uniform shader "line_width") (alloy:to-px (simple:line-width renderer)))
+       (setf (uniform shader "view_size") (view-size renderer))
        (draw-vertex-array (resource 'line-vao renderer) :triangles (* 6 (length points)))))
     (:fill
      (let ((shader (resource 'basic-shader renderer))

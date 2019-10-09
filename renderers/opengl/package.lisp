@@ -11,6 +11,7 @@
    (#:simple #:org.shirakumo.alloy.renderers.simple))
   ;; protocol.lisp
   (:export
+   #:view-size
    #:bind
    #:gl-name
    #:make-shader

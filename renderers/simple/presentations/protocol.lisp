@@ -92,7 +92,7 @@
 
 (defun make-default-style (renderer)
   (make-style :fill-color (simple:color 0 0 0)
-              :line-width 1.0
+              :line-width (alloy:un 1.0)
               :font (simple:request-font renderer :default)
               :font-size (alloy:un 12.0)
               :composite-mode :source-over

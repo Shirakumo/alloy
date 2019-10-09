@@ -43,6 +43,9 @@
 (defmethod (setf line-width) ((width float) (style style))
   (setf (slot-value style 'line-width) width))
 
+(defmethod (setf line-width) ((size alloy:unit) (style style))
+  (setf (slot-value style 'line-width) size))
+
 (defmethod (setf fill-mode) ((mode symbol) (style style))
   (setf (slot-value style 'fill-mode) mode))
 
@@ -68,11 +71,11 @@
 
 (defmethod make-default-style ((renderer styled-renderer))
   (make-instance 'style :fill-color (color 0 0 0)
-                        :line-width 1.0f0
+                        :line-width (alloy:un 1)
                         :fill-mode :lines
                         :composite-mode :source-over
                         :font (request-font renderer :default)
-                        :font-size 12.0f0))
+                        :font-size (alloy:un 12)))
 
 (defmethod call-with-pushed-styles (function (renderer styled-renderer))
   (let ((current (style renderer)))

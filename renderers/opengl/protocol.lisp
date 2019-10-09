@@ -27,6 +27,8 @@
 ;; simple:request-font
 ;; simple:request-image
 
+(defgeneric view-size (renderer))
+
 (defgeneric bind (resource))
 (defgeneric gl-name (resource))
 
