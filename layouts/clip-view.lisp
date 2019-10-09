@@ -60,5 +60,15 @@
       (render renderer (inner layout)))))
 
 (defmethod ensure-visible ((extent extent) (layout clip-view))
-  ;; FIXME: Implement this
+  (let* ((bounds (bounds layout))
+         (hwe (/ (pxw extent) 2)) (hhe (/ (pxh extent) 2))
+         (hwb (/ (pxw bounds) 2)) (hhb (/ (pxh bounds) 2))
+         (cxe (+ (pxx extent) hwe)) (cye (+ (pxy extent) hhe))
+         (cxb (+ (pxx bounds) hwb)) (cyb (+ (pxy bounds) hhb))
+         (dx (- cxe cxb)) (dy (- cye cyb))
+         (dw (- hwe hwb)) (dh (- hhe hhb))
+         (shiftx (- (* dw (signum dx)) dx))
+         (shifty (- (* dh (signum dy)) dy)))
+    (setf (offset layout) (px-point (+ (pxx (offset layout)) shiftx)
+                                    (+ (pxy (offset layout)) shifty))))
   (call-next-method))
