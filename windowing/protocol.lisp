@@ -9,6 +9,8 @@
 (defclass icon ()
   ())
 
+(defgeneric make-icon (renderer size pixel-data))
+
 (defclass cursor ()
   ())
 
@@ -18,42 +20,29 @@
 (defclass monitor ()
   ())
 
-(defgeneric resolution (monitor))
-(defgeneric (setf resolution) (size monitor))
+;; alloy:bounds
+;; (setf alloy:bounds)
 
-(defclass frame ()
+(defclass screen (alloy:ui)
   ())
 
-(defgeneric cursor (frame))
-(defgeneric (setf cursor) (cursor frame))
+(defgeneric list-monitors (screen))
 (defgeneric size (frame))
 
-(defclass screen (frame)
+(defclass window (alloy:layout-element alloy:focus-element)
   ())
 
-(defgeneric screen (ui))
-(defgeneric list-monitors (screen))
-
-(defclass window (frame)
-  ())
-
-(defclass popup (window)
-  ())
-
-(defclass utility (window)
-  ())
+(defclass popup (window) ())
+(defclass utility (window) ())
 
 (defgeneric make-window (screen &key title icon bounds min-size max-size
-                                     visible-p minimized-p maximized-p decorated-p always-on-top-p))
+                                     visible-p minimized-p maximized-p decorated-p always-on-top-p
+                         &allow-other-keys))
 (defgeneric close (window))
 (defgeneric notify (window))
+(defgeneric cursor (window))
 (defgeneric move-to-front (window))
 (defgeneric move-to-back (window))
-(defgeneric location (window/cursor))
-(defgeneric (setf location) (window/cursor))
-(defgeneric (setf size) (size window))
-(defgeneric bounds (window))
-(defgeneric (setf bounds) (extent window))
 (defgeneric max-size (window))
 (defgeneric (setf max-size) (size window))
 (defgeneric min-size (window))
@@ -64,8 +53,6 @@
 (defgeneric (setf minimized-p) (window))
 (defgeneric maximized-p (window))
 (defgeneric (setf maximized-p) (window))
-(defgeneric focused-p (window))
-(defgeneric (setf focused-p) (focus window))
 (defgeneric decorated-p (window))
 (defgeneric (setf decorated-p) (window))
 (defgeneric title (window))

@@ -47,9 +47,6 @@
   (bounds (root (layout-tree ui))))
 
 (defmethod suggest-bounds (extent (ui ui))
-  ;; TODO: decouple resolution setting from root layout
-  ;;       since the resolution could be applicable to
-  ;;       the screen, rather than the current ui window
   (let* ((target (target-resolution ui))
          (wr (/ (pxw extent) (pxw target)))
          (hr (/ (pxh extent) (pxh target))))
@@ -59,5 +56,3 @@
 
 (defmethod register ((source ui) (target ui))
   (register (layout-tree source) target))
-
-;; TODO: Window sub-protocol
