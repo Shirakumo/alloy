@@ -27,7 +27,7 @@
   ())
 
 (defgeneric list-monitors (screen))
-(defgeneric size (frame))
+(defgeneric size (screen))
 
 (defclass window (alloy:layout-element alloy:focus-element)
   ())
