@@ -15,6 +15,7 @@
   :components ((:file "package")
                (:file "protocol")
                (:file "renderer")
+               (:file "unmanaged")
                (:file "documentation"))
   :depends-on (:documentation-utils
                :alloy-simple
