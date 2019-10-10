@@ -40,6 +40,9 @@
 (defclass direct-event (event)
   ())
 
+(defclass copy-event (direct-event)
+  ())
+
 (defclass paste-event (direct-event)
   ((content :initarg :content :initform (arg! :content) :reader content)))
 
@@ -48,7 +51,8 @@
 
 (defclass key-event (direct-event)
   ((key :initarg :key :initform (arg! :key) :reader key)
-   (code :initarg :code :initform (arg! :code) :reader code)))
+   (code :initarg :code :initform (arg! :code) :reader code)
+   (modifiers :initarg :modifiers :initform () :reader modifiers)))
 
 (defclass key-down (key-event)
   ())

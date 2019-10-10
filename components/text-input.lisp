@@ -87,7 +87,6 @@
 (defmethod insert-text (text (component text-input-component))
   (let ((old (value component))
         (cursor (pos (cursor component))))
-    ;; Now either add by shifting or replace (and extend).
     (unless (adjustable-array-p old)
       (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
     (ecase (insert-mode component)
@@ -102,39 +101,77 @@
     (setf (value component) old)
     (move-to (+ cursor (length text)) (cursor component))))
 
+(defmethod delete-text (start end (component text-input-component))
+  (let ((old (value component))
+        (cursor (cursor component)))
+    (unless (adjustable-array-p old)
+      (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
+    (let* ((start (max 0 (min start (length old))))
+           (end (max start (min end (length old)))))
+      (loop for i from start below end
+            for j from end below (length old)
+            do (setf (aref old i) (aref old j)))
+      (setf (fill-pointer old) (- (length old) (- end start)))
+      (when (<= start (pos cursor) end) (set-pos start cursor))
+      (when (<= start (anchor cursor) end) (set-anchor NIL cursor))
+      (setf (value component) old))))
+
 (defmethod handle ((event text-event) (component text-input-component) ctx)
   (insert-text (text event) component))
 
 (defmethod handle ((event key-up) (component text-input-component) ctx)
-  ;; TODO: selection
-  ;; TODO: copy
-  (case (key event)
-    (:escape
-     (exit component))
-    (:backspace
-     (when (< 0 (pos (cursor component)))
-       (move-to :prev-char (cursor component))
-       (array-utils:vector-pop-position (value component) (pos (cursor component)))
-       (refresh component)))
-    (:delete
-     (when (< (pos (cursor component)) (length (value component)))
-       (array-utils:vector-pop-position (value component) (pos (cursor component)))
-       (refresh component)))
-    (:left
-     (move-to :prev-char (cursor component)))
-    (:right
-     (move-to :next-char (cursor component)))
-    (:home
-     (move-to :start (cursor component)))
-    (:end
-     (move-to :end (cursor component)))
-    (:insert
-     (setf (insert-mode component)
-           (ecase (insert-mode component)
-             (:replace :add)
-             (:add :replace))))
-    (T
-     (call-next-method))))
+  (let ((cursor (cursor component)))
+    (flet ((move (target)
+             (cond ((find :shift (modifiers event))
+                    (unless (anchor cursor) (set-anchor (pos cursor) cursor)))
+                   (T
+                    (set-anchor NIL cursor)))
+             (move-to target cursor)))
+      (case (key event)
+        (:backspace
+         (cond ((anchor cursor)
+                (delete-text (min (anchor cursor) (pos cursor))
+                             (max (anchor cursor) (pos cursor))
+                             component))
+               ((< 0 (pos cursor))
+                (delete-text (1- (pos cursor)) (pos cursor) component))))
+        (:delete
+         (cond ((anchor cursor)
+                (delete-text (min (anchor cursor) (pos cursor))
+                             (max (anchor cursor) (pos cursor))
+                             component))
+               ((< (pos cursor) (length (value component)))
+                (delete-text (pos cursor) (1+ (pos cursor)) component))))
+        (:left
+         (move :prev-char))
+        (:right
+         (move :next-char))
+        (:up
+         (move :prev-line))
+        (:down
+         (move :next-line))
+        (:home
+         (move :start))
+        (:end
+         (move :end))
+        (:insert
+         (setf (insert-mode component)
+               (ecase (insert-mode component)
+                 (:replace :add)
+                 (:add :replace))))
+        (:escape
+         (exit component))
+        (T
+         (call-next-method))))))
+
+(defmethod handle ((event copy-event) (component text-input-component) (ui ui))
+  (let* ((cursor (cursor component))
+         (pos (pos cursor))
+         (anchor (anchor cursor)))
+    (setf (clipboard ui)
+          (if anchor
+              (subseq (text component) (min pos anchor) (max pos anchor))
+              (text component)))))
 
 (defmethod handle ((event paste-event) (component text-input-component) ctx)
   (let ((content (content event)))
@@ -143,6 +180,13 @@
        (insert-text content component))
       (T
        (call-next-method)))))
+
+(defmethod handle ((event delete-event) (component text-input-component) ctx)
+  (let* ((cursor (cursor component))
+         (pos (pos cursor))
+         (anchor (anchor cursor)))
+    (when anchor
+      (subseq (text component) (min pos anchor) (max pos anchor)))))
 
 (defclass input-line (text-input-component)
   ())
