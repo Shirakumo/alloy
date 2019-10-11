@@ -44,7 +44,7 @@
 
 (defmethod (setf window:icon) ((icon icon) (cursor cursor))
   (cffi:with-foreign-object (image '(:struct %glfw::image))
-    (cffi:with-foreign-array (data (simple:data icon) '(:uchar))
+    (cffi:with-foreign-array (data (simple:data icon) (list :array :uchar (length (simple:data icon))))
       (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::width) (floor (alloy:pxw (simple:size icon))))
       (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::height) (floor (alloy:pxh (simple:size icon))))
       (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::pixels) data)
@@ -115,6 +115,7 @@
                                                     (decorated-p T) (state :normal)
                                                     monitor min-size max-size always-on-top-p
                                                     &allow-other-keys)
+  (print :1 *standard-output*) (finish-output)
   (let* ((window (make-instance 'window :parent screen
                                         :focus-parent (alloy:root (alloy:focus-tree screen))
                                         :layout-parent (alloy:root (alloy:layout-tree screen))
@@ -124,16 +125,22 @@
                                         :state state
                                         :decorated-p decorated-p))
          (pointer (pointer window)))
+    (print :0 *standard-output*) (finish-output)
     (when (typep bounds 'alloy:extent)
-      (%glfw:set-window-position (alloy:pxx bounds) (alloy:pxy bounds) pointer))
+      (%glfw:set-window-position (round (alloy:pxx bounds)) (round (alloy:pxy bounds)) pointer))
+    (print :a *standard-output*) (finish-output)
     (%glfw:set-window-size-limits
      pointer
-     (if min-size (alloy:pxw min-size) %glfw:+dont-care+) (if min-size (alloy:pxh min-size) %glfw:+dont-care+)
-     (if max-size (alloy:pxw max-size) %glfw:+dont-care+) (if max-size (alloy:pxh max-size) %glfw:+dont-care+))
+     (if min-size (round (alloy:pxw min-size)) %glfw:+dont-care+) (if min-size (round (alloy:pxh min-size)) %glfw:+dont-care+)
+     (if max-size (round (alloy:pxw max-size)) %glfw:+dont-care+) (if max-size (round (alloy:pxh max-size)) %glfw:+dont-care+))
+    (print :b *standard-output*) (finish-output)
     (setf (window:icon window) icon)
+    (print :c *standard-output*) (finish-output)
     (setf (window:always-on-top-p window) always-on-top-p)
-    (when state
+    (print :d *standard-output*) (finish-output)
+    (unless (eql state :normal)
       (setf (window:state window) state))
+    (print :e *standard-output*) (finish-output)
     (%glfw:set-window-position-callback pointer (cffi:callback window-position-callback))
     (%glfw:set-window-size-callback pointer (cffi:callback window-size-callback))
     (%glfw:set-window-close-callback pointer (cffi:callback window-close-callback))
@@ -207,19 +214,22 @@
 (defmethod (setf window:title) :before (title (window window))
   (%glfw:set-window-title title (pointer window)))
 
-(defmethod (setf window:icon) :before (icon (window window))
+(defmethod (setf window:icon) :before ((icon icon) (window window))
   (cffi:with-foreign-object (image '(:struct %glfw::image))
-    (cffi:with-foreign-array (data (simple:data icon) '(:uchar))
+    (cffi:with-foreign-array (data (simple:data icon) (list :array :uchar (length (simple:data icon))))
       (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::width) (floor (alloy:pxw (simple:size icon))))
       (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::height) (floor (alloy:pxh (simple:size icon))))
       (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::pixels) data)
       (%glfw::set-window-icon (pointer window) 1 image))))
 
+(defmethod (setf window:icon) :before ((null null) (window window))
+  (%glfw::set-window-icon (pointer window) 0 (cffi:null-pointer)))
+
 (defmethod window:always-on-top-p ((window window))
-  (%glfw:get-window-attribute (pointer window) :floating))
+  (%glfw:get-window-attribute (pointer window) #x00020007))
 
 (defmethod (setf window:always-on-top-p) (top (window window))
-  (%glfw::set-window-attrib (pointer window) :floating top)
+  (%glfw::set-window-attrib (pointer window) #x00020007 top)
   top)
 
 (defmethod window:fullscreen ((window window) monitor)
