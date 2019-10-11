@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy.windowing)
 
-(defvar *default-window-bounds* (alloy:size 100 100))
+(defvar *default-window-bounds* (alloy:px-size 100 100))
 (defvar *default-window-title* "Alloy")
 (defvar *default-window-icon* NIL)
 

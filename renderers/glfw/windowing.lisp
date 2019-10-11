@@ -62,8 +62,8 @@
   (destructuring-bind (&key width height &allow-other-keys) (glfw:get-video-mode (pointer monitor))
     (alloy:px-size width height)))
 
-(defclass screen (window:screen)
-  ((windows :initform () :accessor window:list-windows)))
+(defclass screen (window:screen renderer)
+  ())
 
 (defmethod window:list-monitors ((screen screen))
   (let ((primary (glfw:get-primary-monitor)))
@@ -72,20 +72,36 @@
                  unless (cffi:pointer-eq primary pointer)
                  collect (make-instance 'monitor :pointer pointer)))))
 
+(defmethod window:close ((screen screen))
+  (%glfw:set-window-should-close (pointer screen) T))
+
 (defmethod window:size ((screen screen))
   )
 
-(defun call-with-ui (function)
-  (cl-glfw3:initialize)
-  (unwind-protect
-       (let ((screen (make-instance 'screen :state :hidden)))
-         (funcall function screen)
-         (loop until (cl-glfw3:window-should-close-p (pointer screen))
-               do (cl-glfw3:wait-events)
-                  (alloy:maybe-render screen T)))
-    (%glfw:terminate)))
+(defun call-with-screen (function)
+  (let (screen)
+    (glfw:initialize)
+    (unwind-protect
+         (progn
+           (setf screen (make-instance 'screen :state :hidden
+                                               :size (alloy:px-size 1 1)))
+           (funcall function screen)
+           (loop until (glfw:window-should-close-p (pointer screen))
+                 do (glfw:wait-events)
+                    (alloy:do-elements (window (alloy:root (alloy:layout-tree screen)))
+                      (when (%glfw:window-should-close-p (pointer window))
+                        (alloy:deallocate window)))
+                    (alloy:maybe-render screen T)))
+      (when screen (alloy:deallocate screen))
+      (%glfw:terminate))))
 
-(defclass window (window:window renderer)
+(defmacro with-screen (args &body init-body)
+  (let ((init (gensym "INIT")))
+    `(flet ((,init ,args
+              ,@init-body))
+       (call-with-screen #',init))))
+
+(defclass window (window:window alloy:ui renderer)
   ((cursor :reader window:cursor)
    (title :initarg :title :accessor window:title)
    (icon :initarg :icon :accessor window:icon)
@@ -93,28 +109,27 @@
    (min-size :initarg :min-size :accessor window:min-size)
    (max-size :initarg :max-size :accessor window:max-size)))
 
-(defmethod make-window ((screen screen) &key (title window:*default-window-title*)
-                                             (icon window:*default-window-icon*)
-                                             (bounds window:*default-window-bounds*)
-                                             monitor min-size max-size state decorated-p always-on-top-p
-                                             &allow-other-keys)
+(defmethod window:make-window ((screen screen) &key (title window:*default-window-title*)
+                                                    (icon window:*default-window-icon*)
+                                                    (bounds window:*default-window-bounds*)
+                                                    (decorated-p T) (state :normal)
+                                                    monitor min-size max-size always-on-top-p
+                                                    &allow-other-keys)
   (let* ((window (make-instance 'window :parent screen
                                         :focus-parent (alloy:root (alloy:focus-tree screen))
                                         :layout-parent (alloy:root (alloy:layout-tree screen))
                                         :title title
                                         :size bounds
                                         :monitor monitor
-                                        :visible-p (not (eq state :hidden))
+                                        :state state
                                         :decorated-p decorated-p))
          (pointer (pointer window)))
-    (push window (window:list-windows screen))
-    (setf (slot-value window 'alloy:renderer) window)
     (when (typep bounds 'alloy:extent)
       (%glfw:set-window-position (alloy:pxx bounds) (alloy:pxy bounds) pointer))
     (%glfw:set-window-size-limits
      pointer
-     (if min-size (alloy:pxw min-size) :dont-care) (if min-size (alloy:pxh min-size) :dont-care)
-     (if max-size (alloy:pxw max-size) :dont-care) (if max-size (alloy:pxh max-size) :dont-care))
+     (if min-size (alloy:pxw min-size) %glfw:+dont-care+) (if min-size (alloy:pxh min-size) %glfw:+dont-care+)
+     (if max-size (alloy:pxw max-size) %glfw:+dont-care+) (if max-size (alloy:pxh max-size) %glfw:+dont-care+))
     (setf (window:icon window) icon)
     (setf (window:always-on-top-p window) always-on-top-p)
     (when state
@@ -136,17 +151,30 @@
     window))
 
 (defmethod window:close ((window window))
-  (setf (window:list-windows (parent window))
-        (remove window (window:list-windows (parent window))))
-  (alloy:deallocate window))
+  (%glfw:set-window-should-close (pointer window) T))
+
+(defmethod alloy:deallocate :before ((window window))
+  (alloy:leave window (alloy:root (alloy:layout-tree (parent window)))))
+
+(defmethod alloy:render :before ((window window) (thing (eql T)))
+  (%glfw:make-context-current (pointer window)))
+
+(defmethod alloy:render ((screen screen) (window window))
+  (alloy:render window T))
+
+(defmethod alloy:maybe-render :before ((window window) (thing (eql T)))
+  (%glfw:make-context-current (pointer window)))
+
+(defmethod alloy:maybe-render ((screen screen) (window window))
+  (alloy:maybe-render window T))
 
 (defmethod (setf alloy:bounds) :before (bounds (window window))
   (destructuring-bind (x y) (%glfw:get-window-position (pointer window))
     (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
       (unless (and (= x (alloy:pxx bounds)) (= y (alloy:pxy bounds)))
-        (%glfw:set-window-position (pointer window) (alloy:pxx bounds) (alloy:pxy bounds)))
+        (%glfw:set-window-position (pointer window) (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
       (unless (and (= w (alloy:pxw bounds)) (= h (alloy:pxh bounds)))
-        (%glfw:set-window-size (pointer window) (alloy:pxw bounds) (alloy:pxh bounds))))))
+        (%glfw:set-window-size (pointer window) (round (alloy:pxw bounds)) (round (alloy:pxh bounds)))))))
 
 (defmethod window:notify ((window window))
   (%glfw::request-window-attention (pointer window)))
@@ -160,15 +188,15 @@
   (let ((min-size (window:min-size window)))
     (%glfw:set-window-size-limits
      (pointer window)
-     (if min-size (alloy:pxw min-size) :dont-care) (if min-size (alloy:pxh min-size) :dont-care)
-     (if max-size (alloy:pxw max-size) :dont-care) (if max-size (alloy:pxh max-size) :dont-care))))
+     (if min-size (alloy:pxw min-size) %glfw:+dont-care+) (if min-size (alloy:pxh min-size) %glfw:+dont-care+)
+     (if max-size (alloy:pxw max-size) %glfw:+dont-care+) (if max-size (alloy:pxh max-size) %glfw:+dont-care+))))
 
 (defmethod (setf window:min-size) :before (min-size (window window))
   (let ((max-size (window:max-size window)))
     (%glfw:set-window-size-limits
      (pointer window)
-     (if min-size (alloy:pxw min-size) :dont-care) (if min-size (alloy:pxh min-size) :dont-care)
-     (if max-size (alloy:pxw max-size) :dont-care) (if max-size (alloy:pxh max-size) :dont-care))))
+     (if min-size (alloy:pxw min-size) %glfw:+dont-care+) (if min-size (alloy:pxh min-size) %glfw:+dont-care+)
+     (if max-size (alloy:pxw max-size) %glfw:+dont-care+) (if max-size (alloy:pxh max-size) %glfw:+dont-care+))))
 
 (defmethod window:decorated-p ((window window))
   (%glfw:get-window-attribute :decorated (pointer window)))
@@ -187,8 +215,12 @@
       (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::pixels) data)
       (%glfw::set-window-icon (pointer window) 1 image))))
 
-(defmethod window:always-on-top-p ((window window)) NIL)
-(defmethod (setf window:always-on-top-p) (top (window window)) NIL)
+(defmethod window:always-on-top-p ((window window))
+  (%glfw:get-window-attribute (pointer window) :floating))
+
+(defmethod (setf window:always-on-top-p) (top (window window))
+  (%glfw::set-window-attrib (pointer window) :floating top)
+  top)
 
 (defmethod window:fullscreen ((window window) monitor)
   (destructuring-bind (&key width height refresh-rate &allow-other-keys) (glfw:get-video-mode (pointer monitor))
@@ -236,8 +268,10 @@
          (flet ((handle (ev)
                   (alloy:handle ev window window)))
            (declare (ignore #'handle))
-           (when ,window
-             ,@body))))))
+           (cond (,window
+                  ,@body)
+                 (T
+                  (format *error-output* "~& Callback ~a on unknown window." ',name))))))))
 
 (define-callback key-callback (window (key %glfw::key) (code :int) (action %glfw::key-action) (mods %glfw::mod-keys))
   (case action

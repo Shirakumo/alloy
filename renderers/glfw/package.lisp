@@ -13,4 +13,8 @@
    (#:window #:org.shirakumo.alloy.windowing))
   (:export
    #:renderer
-   #:ui))
+   #:cursor
+   #:monitor
+   #:screen
+   #:with-screen
+   #:window))

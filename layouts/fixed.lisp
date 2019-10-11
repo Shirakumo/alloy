@@ -6,10 +6,10 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass fixed-layout (layout)
+(defclass fixed-layout (layout vector-container)
   ())
 
-(defmethod notice-bounds :after ((element layout-element) (layout fixed-layout))
+(defmethod notice-bounds ((element layout-element) (layout fixed-layout))
   ;; Calculate max bound
   (let ((extent (bounds layout)))
     (destructure-extent (:x lx :y ly :w lw :h lh :to-px T) extent
@@ -19,24 +19,22 @@
               (r (max (+ lx lw) (+ ex ew)))
               (u (max (+ ly lh) (+ ey eh))))
           (setf (bounds layout)
-                (px-extent l b (- r l) (- u b)))))))
-  (notice-bounds layout (layout-parent layout)))
+                (px-extent l b (- r l) (- u b))))))))
 
 (defmethod suggest-bounds (extent (layout fixed-layout)))
 
-(defmethod enter ((element layout-element) (layout fixed-layout) &key (x (arg! :x)) (y (arg! :y)) (w (arg! :w)) (h (arg! :h)))
-  (call-next-method)
-  (setf (bounds element) (extent x y w h))
+(defmethod enter :after ((element layout-element) (layout fixed-layout) &key x y w h)
+  (update element layout :x x :y y :w w :h h)
   ;; Ensure we set the layout extent to the element bounds or we would calculate
   ;; the max bound wrong.
   (when (= 1 (element-count layout))
-    (setf (bounds layout) (copy-extent (extent element)))))
+    (setf (bounds layout) (bounds element))))
 
 (defmethod leave :after ((element layout-element) (layout fixed-layout))
   (when (= 0 (element-count layout))
     (setf (bounds layout) (extent))))
 
-(defmethod update ((element layout-element) (layout fixed-layout) &key x y w h)
+(defmethod update :after ((element layout-element) (layout fixed-layout) &key x y w h)
   (let ((e (bounds element)))
     (setf (bounds element)
           (extent (or x (extent-x e))

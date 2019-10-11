@@ -66,25 +66,26 @@
   ((parent :initarg :parent :accessor parent)
    (pointer :accessor pointer)))
 
-(defmethod make-instance ((renderer renderer) &key title size monitor visible-p decorated-p)
-  (let ((window (cl-glfw3:create-window
-                 :width (alloy:pxw size)
-                 :height (alloy:pxh size)
-                 :title title
-                 :monitor (if monitor
-                              (pointer monitor)
-                              (cffi:null-pointer))
-                 :visible visible-p
-                 :decorated decorated-p
-                 :opengl-forward-compat T
-                 :opengl-profile :core
-                 :context-version-major 3
-                 :context-version-minor 3
-                 :shared (if (slot-boundp renderer 'parent)
-                             (pointer (parent renderer))
-                             (cffi:null-pointer)))))
-    (setf (gethash (cffi:pointer-address window) *window-map*) renderer)
-    (setf (pointer renderer) window)))
+(defmethod initialize-instance :after ((renderer renderer) &key title size monitor (state :hidden) decorated-p)
+  (let ((glfw:*window* NIL))
+    (glfw:create-window
+     :width (round (alloy:pxw size))
+     :height (round (alloy:pxh size))
+     :title (or title "")
+     :monitor (if monitor
+                  (pointer monitor)
+                  (cffi:null-pointer))
+     :visible (if (eq state :hidden) NIL T)
+     :decorated decorated-p
+     :opengl-forward-compat T
+     :opengl-profile :opengl-core-profile
+     :context-version-major 3
+     :context-version-minor 3
+     :shared (if (slot-boundp renderer 'parent)
+                 (pointer (parent renderer))
+                 (cffi:null-pointer)))
+    (setf (gethash (cffi:pointer-address glfw:*window*) *window-map*) renderer)
+    (setf (pointer renderer) glfw:*window*)))
 
 (defmethod alloy:allocate ((renderer renderer)))
 

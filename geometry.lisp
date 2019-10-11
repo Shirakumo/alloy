@@ -166,6 +166,16 @@
   (and (u<= 0 (u- (extent-x inner) (extent-x outer)) (u- (extent-w outer) (extent-w inner)))
        (u<= 0 (u- (extent-y inner) (extent-y outer)) (u- (extent-h outer) (extent-h inner)))))
 
+(defmacro destructure-extent ((&rest args &key x y w h to-px) extent &body body)
+  (declare (ignore x y w h))
+  (let ((extentg (gensym "EXTENT")))
+    `(let* ((,extentg ,extent)
+            ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
+                    for var = (getf args name)
+                    when var
+                    collect `(,var (,(if to-px 'to-px 'identity) (,func ,extentg)))))
+       ,@body)))
+
 (defun extent-intersection (a b)
   (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
     (destructure-extent (:x x2 :y y2 :w w2 :h h2 :to-px T) b
@@ -178,16 +188,6 @@
         (if (and (< 0 w) (< 0 h))
             (px-extent x y w h)
             (px-extent 0 0 0 0))))))
-
-(defmacro destructure-extent ((&rest args &key x y w h to-px) extent &body body)
-  (declare (ignore x y w h))
-  (let ((extentg (gensym "EXTENT")))
-    `(let* ((,extentg ,extent)
-            ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
-                    for var = (getf args name)
-                    when var
-                    collect `(,var (,(if to-px 'to-px 'identity) (,func ,extentg)))))
-       ,@body)))
 
 (defun overlapping-p (a b)
   (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
