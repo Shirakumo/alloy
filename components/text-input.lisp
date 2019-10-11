@@ -181,13 +181,6 @@
       (T
        (call-next-method)))))
 
-(defmethod handle ((event delete-event) (component text-input-component) ctx)
-  (let* ((cursor (cursor component))
-         (pos (pos cursor))
-         (anchor (anchor cursor)))
-    (when anchor
-      (subseq (text component) (min pos anchor) (max pos anchor)))))
-
 (defclass input-line (text-input-component)
   ())
 

@@ -35,7 +35,7 @@
 (defgeneric make-shader (renderer &key vertex-shader fragment-shader))
 (defgeneric (setf uniform) (value shader uniform))
 
-(defgeneric make-vertex-buffer (renderer contents &key data-usage buffer-type))
+(defgeneric make-vertex-buffer (renderer contents &key data-usage))
 (defgeneric update-vertex-buffer (buffer contents))
 
 (defgeneric make-vertex-array (renderer bindings))

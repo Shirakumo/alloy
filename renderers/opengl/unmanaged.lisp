@@ -8,6 +8,7 @@
 
 (defmethod view-size ((renderer renderer))
   (destructuring-bind (x y w h) (gl:get-integer :viewport 4)
+    (declare (ignore x y))
     (alloy:px-size w h)))
 
 (defstruct (gl-resource (:copier NIL) (:predicate NIL))
@@ -39,7 +40,7 @@
              (gl:compile-shader name)
              (unless (gl:get-shader name :compile-status)
                (error "Failed to compile: ~%~a~%Shader source:~%~a"
-                      shader (gl:get-shader-info-log name) source))))
+                      (gl:get-shader-info-log name) source))))
       (make vert vertex-shader)
       (make frag fragment-shader)
       (gl:attach-shader prog vert)
@@ -48,8 +49,8 @@
       (gl:detach-shader prog vert)
       (gl:detach-shader prog frag)
       (unless (gl:get-program prog :link-status)
-        (error "Failed to link ~a: ~%~a"
-               program (gl:get-program-info-log prog)))
+        (error "Failed to link: ~%~a"
+               (gl:get-program-info-log prog)))
       (make-program prog))))
 
 (defmethod (setf uniform) (value (program program) uniform)
@@ -66,7 +67,7 @@
      (gl:uniformf uniform (alloy:pxw value) (alloy:pxh value))))
   value)
 
-(defmethod make-vertex-buffer ((renderer renderer) contents &key data-usage buffer-type)
+(defmethod make-vertex-buffer ((renderer renderer) contents &key data-usage)
   (let ((name (gl:gen-buffer)))
     (gl:bind-buffer :array-buffer name)
     (gl:buffer-data :array-buffer data-usage contents)
@@ -82,10 +83,10 @@
 (defmethod make-vertex-array ((renderer renderer) bindings)
   (let ((name (gl:gen-vertex-array)))
     (gl:bind-vertex-array name)
-    (loop for binding in (bindings array)
+    (loop for binding in bindings
           for i from 0
           do (destructuring-bind (buffer &key (size 3) (stride 0) (offset 0)) binding
-               (gl:bind-buffer buffer-type name)
+               (gl:bind-buffer :array-buffer (gl-resource-name buffer))
                (gl:vertex-attrib-pointer i size :float NIL stride offset)
                (gl:enable-vertex-attrib-array i)))
     (gl:bind-vertex-array 0)
@@ -97,7 +98,7 @@
   (gl:bind-vertex-array 0)
   array)
 
-(defgeneric simple:request-image ((renderer renderer) (image simple:image))
+(defmethod simple:request-image ((renderer renderer) (image simple:image))
   (let ((name (gl:gen-texture))
         (w (floor (alloy:pxw (simple:size image))))
         (h (floor (alloy:pxh (simple:size image)))))
