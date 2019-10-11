@@ -14,8 +14,7 @@
   (:crosshair #x00036003)
   (:pointer #x00036004)
   (:h-resize #x00036005)
-  (:v-resize #x00036006)
-  (T #x00036001))
+  (:v-resize #x00036006))
 
 (cffi:defcstruct %glfw::image
   (%glfw::width :int)
@@ -63,7 +62,7 @@
   ((parent :initarg :parent :accessor parent)
    (pointer :accessor pointer)))
 
-(defmethod make-instance ((renderer renderer) &key parent title size monitor visible-p decorated-p)
+(defmethod make-instance ((renderer renderer) &key title size monitor visible-p decorated-p)
   (let ((window (cl-glfw3:create-window
                  :width (alloy:pxw size)
                  :height (alloy:pxh size)
@@ -76,7 +75,7 @@
                  :opengl-forward-compat T
                  :opengl-profile :core
                  :context-version-major 3
-                 :context-versoin-minor 3
+                 :context-version-minor 3
                  :shared (if (slot-boundp renderer 'parent)
                              (pointer (parent renderer))
                              (cffi:null-pointer)))))

@@ -30,7 +30,10 @@
   (slot-makunbound cursor 'pointer))
 
 (defmethod (setf window:icon) ((type keyword) (cursor cursor))
-  (let ((pointer (%glfw::create-standard-cursor image 0 0)))
+  (let ((type (case type
+                ((:default :text :crosshair :pointer :h-resize :v-resize) type)
+                (T :default)))
+        (pointer (%glfw::create-standard-cursor image 0 0)))
     (%glfw::set-cursor (pointer (window cursor)) pointer)
     (when (slot-boundp cursor 'pointer)
       (%glfw::destroy-cursor (pointer cursor)))
