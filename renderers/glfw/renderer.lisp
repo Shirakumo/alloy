@@ -55,6 +55,10 @@
   (attrib %glfw::window-hint)
   (value :boolean))
 
+(cffi:defcfun (%glfw::set-window-maximize-callback "glfwSetWindowMaximizeCallback") :pointer
+  (window :pointer)
+  (fun :pointer))
+
 (defclass icon (window:icon simple:image)
   ())
 

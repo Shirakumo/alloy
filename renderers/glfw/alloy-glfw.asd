@@ -14,6 +14,7 @@
   :serial T
   :components ((:file "package")
                (:file "renderer")
+               (:file "windowing")
                (:file "documentation"))
   :depends-on (:documentation-utils
                :alloy-simple

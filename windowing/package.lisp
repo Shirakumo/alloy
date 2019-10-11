@@ -8,6 +8,7 @@
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy))
+  (:shadow #:close)
   (:export
    #:*default-window-bounds*
    #:*default-window-title*
@@ -15,9 +16,9 @@
    #:icon
    #:make-icon
    #:cursor
-   #:locked-p
    #:monitor
    #:screen
+   #:list-windows
    #:list-monitors
    #:size
    #:window

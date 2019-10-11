@@ -18,9 +18,6 @@
 (defclass cursor ()
   ())
 
-(defgeneric locked-p (cursor))
-(defgeneric (setf locked-p) (locked cursor))
-
 (defclass monitor ()
   ())
 
@@ -32,6 +29,7 @@
   (make-instance 'alloy:fixed-layout :layout-parent (alloy:layout-tree screen)))
 
 (defgeneric list-monitors (screen))
+(defgeneric list-windows (screen))
 (defgeneric size (monitor/screen))
 
 (defclass window (alloy:layout-element alloy:focus-element)
@@ -44,7 +42,7 @@
 (defgeneric notify (window))
 (defgeneric cursor (window))
 (defgeneric move-to-front (window))
-(defgeneric move-to-back (window))$
+(defgeneric move-to-back (window))
 ;; alloy:bounds
 ;; (setf alloy:bounds)
 (defgeneric max-size (window))
@@ -59,8 +57,8 @@
 (defgeneric (setf icon) (icon window/cursor))
 (defgeneric always-on-top-p (window))
 (defgeneric (setf always-on-top-p) (top window))
-(defgeneric state (window))
-(defgeneric (setf state) (state window))
+(defgeneric state (window/cursor))
+(defgeneric (setf state) (state window/cursor))
 (defgeneric fullscreen (window monitor))
 
 (defclass window-event (alloy:event)
