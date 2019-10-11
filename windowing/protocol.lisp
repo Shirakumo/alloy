@@ -6,6 +6,10 @@
 
 (in-package #:org.shirakumo.alloy.windowing)
 
+(defvar *default-window-bounds* (alloy:size 100 100))
+(defvar *default-window-title* "Alloy")
+(defvar *default-window-icon* NIL)
+
 (defclass icon ()
   ())
 
@@ -15,51 +19,61 @@
   ())
 
 (defgeneric locked-p (cursor))
-(defgeneric (setf locked-p) (cursor))
+(defgeneric (setf locked-p) (locked cursor))
 
 (defclass monitor ()
   ())
 
-;; alloy:bounds
-;; (setf alloy:bounds)
-
 (defclass screen (alloy:ui)
   ())
 
+(defmethod initialize-instance :after ((screen screen) &key)
+  (make-instance 'alloy:focus-list :focus-parent (alloy:focus-tree screen))
+  (make-instance 'alloy:fixed-layout :layout-parent (alloy:layout-tree screen)))
+
 (defgeneric list-monitors (screen))
-(defgeneric size (screen))
+(defgeneric size (monitor/screen))
 
 (defclass window (alloy:layout-element alloy:focus-element)
   ())
 
-(defclass popup (window) ())
-(defclass utility (window) ())
-
 (defgeneric make-window (screen &key title icon bounds min-size max-size
-                                     visible-p minimized-p maximized-p decorated-p always-on-top-p
+                                     state decorated-p always-on-top-p
                          &allow-other-keys))
 (defgeneric close (window))
 (defgeneric notify (window))
 (defgeneric cursor (window))
 (defgeneric move-to-front (window))
-(defgeneric move-to-back (window))
+(defgeneric move-to-back (window))$
+;; alloy:bounds
+;; (setf alloy:bounds)
 (defgeneric max-size (window))
 (defgeneric (setf max-size) (size window))
 (defgeneric min-size (window))
 (defgeneric (setf min-size) (size window))
-(defgeneric visible-p (window/cursor))
-(defgeneric (setf visible-p) (visible window/cursor))
-(defgeneric minimized-p (window))
-(defgeneric (setf minimized-p) (window))
-(defgeneric maximized-p (window))
-(defgeneric (setf maximized-p) (window))
 (defgeneric decorated-p (window))
-(defgeneric (setf decorated-p) (window))
+(defgeneric (setf decorated-p) (decorated window))
 (defgeneric title (window))
 (defgeneric (setf title) (title window))
 (defgeneric icon (window/cursor))
 (defgeneric (setf icon) (icon window/cursor))
-(defgeneric always-on-top-p (top window))
+(defgeneric always-on-top-p (window))
 (defgeneric (setf always-on-top-p) (top window))
+(defgeneric state (window))
+(defgeneric (setf state) (state window))
 (defgeneric fullscreen (window monitor))
-(defgeneric restore (window))
+
+(defclass window-event (alloy:event)
+  ())
+
+(defclass pointer-enter (alloy:pointer-event window-event)
+  ())
+
+(defclass pointer-leave (alloy:pointer-event window-event)
+  ())
+
+(defclass close (window-event alloy:direct-event)
+  ())
+
+(defclass state (window-event)
+  ((new-state :initarg :new-state :initform (alloy:arg! :new-state) :reader new-state)))
