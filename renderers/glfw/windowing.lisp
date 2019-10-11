@@ -25,9 +25,30 @@
   (%glfw:set-input-mode :cursor (if visible :normal :hidden) (pointer (window cursor)))
   visible)
 
+(defmethod (setf window:icon) ((none null) (cursor cursor))
+  (%glfw::set-cursor (pointer (window cursor)) (cffi:null-pointer))
+  (slot-makunbound cursor 'pointer))
+
+(defmethod (setf window:icon) ((type keyword) (cursor cursor))
+  (let ((pointer (%glfw::create-standard-cursor image 0 0)))
+    (%glfw::set-cursor (pointer (window cursor)) pointer)
+    (when (slot-boundp cursor 'pointer)
+      (%glfw::destroy-cursor (pointer cursor)))
+    (setf (pointer cursor) pointer)
+    (set-icon type cursor)))
+
 (defmethod (setf window:icon) ((icon icon) (cursor cursor))
-  ;; FIXME: implement
-  (set-icon icon cursor))
+  (cffi:with-foreign-object (image '(:struct %glfw::image))
+    (cffi:with-foreign-array (data (simple:data icon) '(:uchar))
+      (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::width) (alloy:pxw (simple:size icon)))
+      (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::height) (alloy:pxh (simple:size icon)))
+      (setf (cffi:foreign-slot-value image '(:struct %glfw::image) '%glfw::data) data)
+      (let ((pointer (%glfw::create-cursor image 0 0)))
+        (%glfw::set-cursor (pointer (window cursor)) pointer)
+        (when (slot-boundp cursor 'pointer)
+          (%glfw::destroy-cursor (pointer cursor)))
+        (setf (pointer cursor) pointer)
+        (set-icon icon cursor)))))
 
 (defclass monitor ()
   ((pointer :initarg :pointer :initform (alloy:arg! :pointer) :reader pointer)))

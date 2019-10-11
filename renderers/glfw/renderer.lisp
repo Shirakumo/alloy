@@ -8,6 +8,15 @@
 
 (defvar *window-map* (make-hash-table :test 'eq))
 
+(cffi:defcenum %glfw::cursor-shape
+  (:default #x00036001)
+  (:text #x00036002)
+  (:crosshair #x00036003)
+  (:pointer #x00036004)
+  (:h-resize #x00036005)
+  (:v-resize #x00036006)
+  (T #x00036001))
+
 (cffi:defcstruct %glfw::image
   (%glfw::width :int)
   (%glfw::height :int)
@@ -18,10 +27,13 @@
   (count :int)
   (images :pointer))
 
-(cffi:defcfun (%glfw::set-cursor-icon "glfwCreateCursor") :void
+(cffi:defcfun (%glfw::create-cursor "glfwCreateCursor") :void
   (image :pointer)
   (xhot :int)
   (yhot :int))
+
+(cffi:defcfun (%glfw::create-standard-cursor "glfwCreateStandardCursor") :void
+  (shape %glfw::cursor-shape))
 
 (cffi:defcfun (%glfw::destroy-cursor "glfwDestroyCursor") :void
   (cursor :pointer))
