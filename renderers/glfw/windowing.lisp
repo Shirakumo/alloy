@@ -81,10 +81,11 @@
 (defun call-with-screen (function)
   (let (screen)
     (glfw:initialize)
+    (%glfw:set-error-callback (cffi:callback glfw-error-callback))
     (unwind-protect
          (progn
-           (setf screen (make-instance 'screen :state :hidden
-                                               :size (alloy:px-size 1 1)))
+           (setf screen (make-instance 'screen))
+           (alloy:allocate screen)
            (funcall function screen)
            (loop until (glfw:window-should-close-p (pointer screen))
                  do (glfw:wait-events)
@@ -113,34 +114,25 @@
                                                     (icon window:*default-window-icon*)
                                                     (bounds window:*default-window-bounds*)
                                                     (decorated-p T) (state :normal)
-                                                    monitor min-size max-size always-on-top-p
+                                                    min-size max-size always-on-top-p
                                                     &allow-other-keys)
-  (print :1 *standard-output*) (finish-output)
   (let* ((window (make-instance 'window :parent screen
                                         :focus-parent (alloy:root (alloy:focus-tree screen))
                                         :layout-parent (alloy:root (alloy:layout-tree screen))
                                         :title title
                                         :size bounds
-                                        :monitor monitor
-                                        :state state
                                         :decorated-p decorated-p))
          (pointer (pointer window)))
-    (print :0 *standard-output*) (finish-output)
     (when (typep bounds 'alloy:extent)
-      (%glfw:set-window-position (round (alloy:pxx bounds)) (round (alloy:pxy bounds)) pointer))
-    (print :a *standard-output*) (finish-output)
+      (%glfw:set-window-position pointer (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
     (%glfw:set-window-size-limits
      pointer
      (if min-size (round (alloy:pxw min-size)) %glfw:+dont-care+) (if min-size (round (alloy:pxh min-size)) %glfw:+dont-care+)
      (if max-size (round (alloy:pxw max-size)) %glfw:+dont-care+) (if max-size (round (alloy:pxh max-size)) %glfw:+dont-care+))
-    (print :b *standard-output*) (finish-output)
     (setf (window:icon window) icon)
-    (print :c *standard-output*) (finish-output)
     (setf (window:always-on-top-p window) always-on-top-p)
-    (print :d *standard-output*) (finish-output)
-    (unless (eql state :normal)
+    (unless (eql state :hidden)
       (setf (window:state window) state))
-    (print :e *standard-output*) (finish-output)
     (%glfw:set-window-position-callback pointer (cffi:callback window-position-callback))
     (%glfw:set-window-size-callback pointer (cffi:callback window-size-callback))
     (%glfw:set-window-close-callback pointer (cffi:callback window-close-callback))
@@ -282,6 +274,10 @@
                   ,@body)
                  (T
                   (format *error-output* "~& Callback ~a on unknown window." ',name))))))))
+
+(cffi:defcallback glfw-error-callback :void ((code :int) (message :string))
+  (format *error-output* "~&[GLFW] Error [~d]: ~a~%" code message)
+  (finish-output *error-output*))
 
 (define-callback key-callback (window (key %glfw::key) (code :int) (action %glfw::key-action) (mods %glfw::mod-keys))
   (case action

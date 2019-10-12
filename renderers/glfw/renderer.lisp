@@ -66,16 +66,13 @@
   ((parent :initarg :parent :accessor parent)
    (pointer :accessor pointer)))
 
-(defmethod initialize-instance :after ((renderer renderer) &key title size monitor (state :hidden) decorated-p)
+(defmethod initialize-instance :after ((renderer renderer) &key title (size (alloy:px-size 1 1)) visible-p decorated-p)
   (let ((glfw:*window* NIL))
     (glfw:create-window
      :width (round (alloy:pxw size))
      :height (round (alloy:pxh size))
      :title (or title "")
-     :monitor (if monitor
-                  (pointer monitor)
-                  (cffi:null-pointer))
-     :visible (if (eq state :hidden) NIL T)
+     :visible visible-p
      :decorated decorated-p
      :opengl-forward-compat T
      :opengl-profile :opengl-core-profile
