@@ -62,7 +62,9 @@
   (destructuring-bind (&key width height &allow-other-keys) (glfw:get-video-mode (pointer monitor))
     (alloy:px-size width height)))
 
-(defclass screen (window:screen renderer)
+(defclass screen (window:screen renderer
+                  org.shirakumo.alloy.renderers.opengl.fond:renderer
+                  org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ())
 
 (defmethod window:list-monitors ((screen screen))
@@ -161,25 +163,19 @@
 (defmethod alloy:deallocate :before ((window window))
   (alloy:leave window (alloy:layout-parent window)))
 
-(defmethod alloy:render ((screen screen) (window window))
-  (alloy:render window T))
-
-(defmethod alloy:maybe-render ((screen screen) (window window))
-  (alloy:maybe-render window T))
-
-(defmethod alloy:render ((window window) (thing (eql T)))
+(defmethod alloy:render :before ((screen screen) (window window))
   (%glfw:make-context-current (cffi:null-pointer))
   (%glfw:make-context-current (pointer window))
-  (gl:clear :color-buffer :depth-buffer :stencil-buffer)
-  (when (window:layout-element window)
-    (alloy:render window (window:layout-element window)))
+  (gl:clear :color-buffer :depth-buffer :stencil-buffer))
+
+(defmethod alloy:render :after ((screen screen) (window window))
   (%glfw:swap-buffers (pointer window)))
 
-(defmethod alloy:maybe-render ((window window) (thing (eql T)))
+(defmethod alloy:maybe-render :before ((screen screen) (window window))
   (%glfw:make-context-current (cffi:null-pointer))
-  (%glfw:make-context-current (pointer window))
-  (when (window:layout-element window)
-    (alloy:maybe-render window (window:layout-element window)))
+  (%glfw:make-context-current (pointer window)))
+
+(defmethod alloy:maybe-render :after ((screen screen) (window window))
   (%glfw:swap-buffers (pointer window)))
 
 (defmethod alloy:suggest-bounds (bounds (window window))
@@ -286,7 +282,8 @@
        (cffi:defcallback ,name :void ((,window :pointer) ,@args)
          (let ((,window (gethash (cffi:pointer-address ,window) *window-map*)))
            (cond (,window
-                  (,name ,window ,@(mapcar #'car args)))
+                  (with-simple-restart (abort "Abort the callback.")
+                    (,name ,window ,@(mapcar #'car args))))
                  (T
                   (format *error-output* "~&[GLFW] Callback ~a on unknown window." ',name)))))
        (defun ,name (,window ,@(mapcar #'car args))
@@ -349,7 +346,7 @@
                                  NIL)))
 
 (define-callback window-refresh-callback (window)
-  (alloy:render window T))
+  (alloy:mark-for-render window))
 
 (define-callback window-close-callback (window)
   (handle (make-instance 'window:close)))

@@ -117,7 +117,7 @@ void main(){
                       :weight (simple:weight font)
                       :stretch (simple:stretch font)
                       :spacing (simple:spacing font)
-                      :slant (simple:style font))))
+                      :slant (simple:slant font))))
            (make-instance 'font :family (font-discovery:file font)
                                 :weight (font-discovery:weight font)
                                 :stretch (font-discovery:stretch font)

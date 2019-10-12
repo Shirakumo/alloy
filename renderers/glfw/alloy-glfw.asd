@@ -19,7 +19,9 @@
                (:file "documentation"))
   :depends-on (:documentation-utils
                :alloy-simple
+               :alloy-simple-presentations
                :alloy-opengl
+               :alloy-opengl-fond
                :alloy-windowing
                :cl-opengl
                :cl-glfw3)

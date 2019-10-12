@@ -27,6 +27,8 @@
       (setf (focus component) :weak)
       (call-next-method)))
 
+(defmethod maybe-render ((renderer renderer) (component component)))
+
 (defmethod (setf focus) :after (value (component component))
   (mark-for-render component))
 

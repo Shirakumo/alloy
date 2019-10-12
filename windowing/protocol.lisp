@@ -90,21 +90,25 @@
     (alloy:maybe-render renderer (layout-element window))))
 
 (defmethod alloy:enter ((element alloy:layout-element) (window window) &key)
-  (when (layout-element window)
+  (when (and (layout-element window) (not (eq element (layout-element window))))
     (cerror "Replace the element" 'alloy:place-already-occupied
             :existing (layout-element window) :place T :element element :layout window)
     (alloy:leave (layout-element window) window))
-  (setf (layout-element window) element))
+  (setf (layout-element window) element)
+  (when (typep element 'alloy:focus-element)
+    (call-next-method)))
 
 (defmethod alloy:enter ((element alloy:focus-element) (window window) &key)
-  (when (focus-element window)
+  (when (and (layout-element window) (not (eq element (layout-element window))))
     (cerror "Replace the element" 'alloy:place-already-occupied
             :existing (focus-element window) :place T :element element :focus window)
     (alloy:leave (focus-element window) window))
   (setf (focus-element window) element))
 
 (defmethod alloy:leave ((element alloy:layout-element) (window window))
-  (setf (layout-element window) NIL))
+  (setf (layout-element window) NIL)
+  (when (typep element 'alloy:focus-element)
+    (call-next-method)))
 
 (defmethod alloy:leave ((element alloy:focus-element) (window window))
   (setf (focus-element window) NIL))
@@ -113,3 +117,13 @@
   (alloy:mark-for-render window)
   (when (layout-element window)
     (setf (alloy:bounds (layout-element window)) (alloy:extent 0 0 (alloy:w extent) (alloy:h extent)))))
+
+(defmethod alloy:notice-focus (focused (window window))
+  )
+
+(defmethod alloy:notice-bounds (changed (window window))
+  ;; FIXME:
+  )
+
+(defmethod alloy:extent-visible-p ((extent alloy:extent) (screen screen))
+  T)
