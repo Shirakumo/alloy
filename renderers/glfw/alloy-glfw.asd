@@ -13,6 +13,7 @@
   :homepage "https://github.com/Shirakumo/alloy"
   :serial T
   :components ((:file "package")
+               (:file "fixup")
                (:file "renderer")
                (:file "windowing")
                (:file "documentation"))

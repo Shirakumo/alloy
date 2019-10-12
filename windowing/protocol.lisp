@@ -32,8 +32,9 @@
 (defgeneric list-windows (screen))
 (defgeneric size (monitor/screen))
 
-(defclass window (alloy:layout-element alloy:focus-element)
-  ())
+(defclass window (alloy:layout-element alloy:focus-element alloy:renderable)
+  ((layout-element :initform NIL :accessor layout-element)
+   (focus-element :initform NIL :accessor focus-element)))
 
 (defgeneric make-window (screen &key title icon bounds min-size max-size
                                      state decorated-p always-on-top-p
@@ -75,3 +76,40 @@
 
 (defclass state (window-event)
   ((new-state :initarg :new-state :initform (alloy:arg! :new-state) :reader new-state)))
+
+(defmethod alloy:handle ((event alloy:pointer-event) (window window) ctx)
+  (when (layout-element window)
+    (alloy:handle event (layout-element window) ctx)))
+
+(defmethod alloy:render ((renderer alloy:renderer) (window window))
+  (when (layout-element window)
+    (alloy:render renderer (layout-element window))))
+
+(defmethod alloy:maybe-render ((renderer alloy:renderer) (window window))
+  (when (layout-element window)
+    (alloy:maybe-render renderer (layout-element window))))
+
+(defmethod alloy:enter ((element alloy:layout-element) (window window) &key)
+  (when (layout-element window)
+    (cerror "Replace the element" 'alloy:place-already-occupied
+            :existing (layout-element window) :place T :element element :layout window)
+    (alloy:leave (layout-element window) window))
+  (setf (layout-element window) element))
+
+(defmethod alloy:enter ((element alloy:focus-element) (window window) &key)
+  (when (focus-element window)
+    (cerror "Replace the element" 'alloy:place-already-occupied
+            :existing (focus-element window) :place T :element element :focus window)
+    (alloy:leave (focus-element window) window))
+  (setf (focus-element window) element))
+
+(defmethod alloy:leave ((element alloy:layout-element) (window window))
+  (setf (layout-element window) NIL))
+
+(defmethod alloy:leave ((element alloy:focus-element) (window window))
+  (setf (focus-element window) NIL))
+
+(defmethod (setf alloy:bounds) :after (extent (window window))
+  (alloy:mark-for-render window)
+  (when (layout-element window)
+    (setf (alloy:bounds (layout-element window)) (alloy:extent 0 0 (alloy:w extent) (alloy:h extent)))))

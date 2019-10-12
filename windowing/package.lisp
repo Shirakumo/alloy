@@ -22,6 +22,8 @@
    #:list-monitors
    #:size
    #:window
+   #:layout-element
+   #:focus-element
    #:make-window
    #:close
    #:notify

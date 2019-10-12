@@ -88,10 +88,12 @@
            (alloy:allocate screen)
            (funcall function screen)
            (loop until (glfw:window-should-close-p (pointer screen))
-                 do (glfw:wait-events)
+                 do (%glfw::wait-events-timeout 0.1d0)
                     (alloy:do-elements (window (alloy:root (alloy:layout-tree screen)))
                       (when (%glfw:window-should-close-p (pointer window))
                         (alloy:deallocate window)))
+                    (when (= 0 (alloy:element-count (alloy:root (alloy:layout-tree screen))))
+                      (window:close screen))
                     (alloy:maybe-render screen T)))
       (when screen (alloy:deallocate screen))
       (%glfw:terminate))))
@@ -116,7 +118,7 @@
                                                     (decorated-p T) (state :normal)
                                                     min-size max-size always-on-top-p
                                                     &allow-other-keys)
-  (let* ((window (make-instance 'window :parent screen
+  (let* ((window (make-instance 'window :parent screen :renderer screen
                                         :focus-parent (alloy:root (alloy:focus-tree screen))
                                         :layout-parent (alloy:root (alloy:layout-tree screen))
                                         :title title
@@ -148,28 +150,39 @@
     (%glfw:set-scroll-callback pointer (cffi:callback scroll-callback))
     (%glfw:set-key-callback pointer (cffi:callback key-callback))
     (%glfw:set-char-callback pointer (cffi:callback char-callback))
+    (alloy:render screen window)
     window))
 
 (defmethod window:close ((window window))
   (%glfw:set-window-should-close (pointer window) T))
 
-(defmethod alloy:deallocate :before ((window window))
-  (alloy:leave window (alloy:root (alloy:layout-tree (parent window)))))
+(defmethod alloy:register ((window window) (screen screen)))
 
-(defmethod alloy:render :before ((window window) (thing (eql T)))
-  (%glfw:make-context-current (cffi:null-pointer))
-  (%glfw:make-context-current (pointer window)))
+(defmethod alloy:deallocate :before ((window window))
+  (alloy:leave window (alloy:layout-parent window)))
 
 (defmethod alloy:render ((screen screen) (window window))
   (alloy:render window T))
 
-(defmethod alloy:maybe-render :before ((window window) (thing (eql T)))
-  (%glfw:make-context-current (pointer window)))
-
 (defmethod alloy:maybe-render ((screen screen) (window window))
   (alloy:maybe-render window T))
 
-(defmethod (setf alloy:bounds) :before (bounds (window window))
+(defmethod alloy:render ((window window) (thing (eql T)))
+  (%glfw:make-context-current (cffi:null-pointer))
+  (%glfw:make-context-current (pointer window))
+  (gl:clear :color-buffer :depth-buffer :stencil-buffer)
+  (when (window:layout-element window)
+    (alloy:render window (window:layout-element window)))
+  (%glfw:swap-buffers (pointer window)))
+
+(defmethod alloy:maybe-render ((window window) (thing (eql T)))
+  (%glfw:make-context-current (cffi:null-pointer))
+  (%glfw:make-context-current (pointer window))
+  (when (window:layout-element window)
+    (alloy:maybe-render window (window:layout-element window)))
+  (%glfw:swap-buffers (pointer window)))
+
+(defmethod alloy:suggest-bounds (bounds (window window))
   (destructuring-bind (x y) (%glfw:get-window-position (pointer window))
     (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
       (unless (and (= x (alloy:pxx bounds)) (= y (alloy:pxy bounds)))
@@ -269,15 +282,18 @@
 
 (defmacro define-callback (name args &body body)
   (destructuring-bind (window &rest args) args
-    `(cffi:defcallback ,name :void ((,window :pointer) ,@args)
-       (let ((,window (gethash (cffi:pointer-address ,window) *window-map*)))
+    `(progn
+       (cffi:defcallback ,name :void ((,window :pointer) ,@args)
+         (let ((,window (gethash (cffi:pointer-address ,window) *window-map*)))
+           (cond (,window
+                  (,name ,window ,@(mapcar #'car args)))
+                 (T
+                  (format *error-output* "~&[GLFW] Callback ~a on unknown window." ',name)))))
+       (defun ,name (,window ,@(mapcar #'car args))
          (flet ((handle (ev)
                   (alloy:handle ev window window)))
            (declare (ignore #'handle))
-           (cond (,window
-                  ,@body)
-                 (T
-                  (format *error-output* "~&[GLFW] Callback ~a on unknown window." ',name))))))))
+           ,@body)))))
 
 (cffi:defcallback glfw-error-callback :void ((code :int) (message :string))
   (format *error-output* "~&[GLFW] Error [~d]: ~a~%" code message)
@@ -313,9 +329,13 @@
 (define-callback mouse-button-callback (window (button %glfw::mouse) (action %glfw::key-action) (mods %glfw::mod-keys))
   (case action
     (:press
-     (handle (make-instance 'alloy:pointer-down :kind button)))
+     (handle (make-instance 'alloy:pointer-down
+                            :location (cursor-location window)
+                            :kind button)))
     (:release
-     (handle (make-instance 'alloy:pointer-up :kind button)))))
+     (handle (make-instance 'alloy:pointer-up 
+                            :location (cursor-location window)
+                            :kind button)))))
 
 (define-callback window-maximize-callback (window (maximize :boolean))
   (handle (make-instance 'window:state :new-state (if maximize :maximized (window:state window)))))
@@ -336,8 +356,8 @@
 
 (define-callback window-size-callback (window (w :int) (h :int))
   (let ((bounds (alloy:bounds window)))
-    (alloy:suggest-bounds (alloy:px-extent (alloy:pxx bounds) (alloy:pxy bounds) w h) window)))
+    (setf (alloy:bounds window) (alloy:px-extent (alloy:pxx bounds) (alloy:pxy bounds) w h))))
 
 (define-callback window-position-callback (window (x :int) (y :int))
   (let ((bounds (alloy:bounds window)))
-    (alloy:suggest-bounds (alloy:px-extent x y (alloy:pxw bounds) (alloy:pxh bounds)) window)))
+    (setf (alloy:bounds window) (alloy:px-extent x y (alloy:pxw bounds) (alloy:pxh bounds)))))
