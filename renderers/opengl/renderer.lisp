@@ -48,6 +48,7 @@
       array)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
+  ;; FIXME: Implement sharing between renderers.
   ;; Allocate the necessary geometry.
   (flet ((arr (&rest data)
            (make-array (length data) :element-type 'single-float :initial-contents data))
