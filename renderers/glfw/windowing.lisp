@@ -156,6 +156,7 @@
   (alloy:leave window (alloy:root (alloy:layout-tree (parent window)))))
 
 (defmethod alloy:render :before ((window window) (thing (eql T)))
+  (%glfw:make-context-current (cffi:null-pointer))
   (%glfw:make-context-current (pointer window)))
 
 (defmethod alloy:render ((screen screen) (window window))
@@ -173,7 +174,7 @@
       (unless (and (= x (alloy:pxx bounds)) (= y (alloy:pxy bounds)))
         (%glfw:set-window-position (pointer window) (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
       (unless (and (= w (alloy:pxw bounds)) (= h (alloy:pxh bounds)))
-        (%glfw:set-window-size (pointer window) (round (alloy:pxw bounds)) (round (alloy:pxh bounds)))))))
+        (%glfw:set-window-size (pointer window) (max 1 (round (alloy:pxw bounds))) (max 1 (round (alloy:pxh bounds))))))))
 
 (defmethod window:notify ((window window))
   (%glfw::request-window-attention (pointer window)))
@@ -183,19 +184,19 @@
 
 (defmethod window:move-to-back ((window window)))
 
+(defun set-window-size-limits (window min-size max-size)
+  (%glfw:set-window-size-limits
+   (pointer window)
+   (if min-size (max 1 (round (alloy:pxw min-size))) %glfw:+dont-care+)
+   (if min-size (max 1 (round (alloy:pxh min-size))) %glfw:+dont-care+)
+   (if max-size (max 1 (round (alloy:pxw max-size))) %glfw:+dont-care+)
+   (if max-size (max 1 (round (alloy:pxh max-size))) %glfw:+dont-care+)))
+
 (defmethod (setf window:max-size) :before (max-size (window window))
-  (let ((min-size (window:min-size window)))
-    (%glfw:set-window-size-limits
-     (pointer window)
-     (if min-size (alloy:pxw min-size) %glfw:+dont-care+) (if min-size (alloy:pxh min-size) %glfw:+dont-care+)
-     (if max-size (alloy:pxw max-size) %glfw:+dont-care+) (if max-size (alloy:pxh max-size) %glfw:+dont-care+))))
+  (set-window-size-limits window (window:min-size window) max-size))
 
 (defmethod (setf window:min-size) :before (min-size (window window))
-  (let ((max-size (window:max-size window)))
-    (%glfw:set-window-size-limits
-     (pointer window)
-     (if min-size (alloy:pxw min-size) %glfw:+dont-care+) (if min-size (alloy:pxh min-size) %glfw:+dont-care+)
-     (if max-size (alloy:pxw max-size) %glfw:+dont-care+) (if max-size (alloy:pxh max-size) %glfw:+dont-care+))))
+  (set-window-size-limits window min-size (window:max-size window)))
 
 (defmethod window:decorated-p ((window window))
   (%glfw:get-window-attribute :decorated (pointer window)))
@@ -273,7 +274,7 @@
            (cond (,window
                   ,@body)
                  (T
-                  (format *error-output* "~& Callback ~a on unknown window." ',name))))))))
+                  (format *error-output* "~&[GLFW] Callback ~a on unknown window." ',name))))))))
 
 (cffi:defcallback glfw-error-callback :void ((code :int) (message :string))
   (format *error-output* "~&[GLFW] Error [~d]: ~a~%" code message)

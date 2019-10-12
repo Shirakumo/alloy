@@ -68,6 +68,7 @@
 
 (defmethod initialize-instance :after ((renderer renderer) &key title (size (alloy:px-size 1 1)) visible-p decorated-p)
   (let ((glfw:*window* NIL))
+    (%glfw:make-context-current (cffi:null-pointer))
     (glfw:create-window
      :width (round (alloy:pxw size))
      :height (round (alloy:pxh size))
