@@ -166,14 +166,18 @@
 (defmethod alloy:render :before ((screen screen) (window window))
   (%glfw:make-context-current (cffi:null-pointer))
   (%glfw:make-context-current (pointer window))
-  (gl:clear :color-buffer :depth-buffer :stencil-buffer))
+  (gl:clear :color-buffer :depth-buffer :stencil-buffer)
+  (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
+    (gl:viewport 0 0 w h)))
 
 (defmethod alloy:render :after ((screen screen) (window window))
   (%glfw:swap-buffers (pointer window)))
 
 (defmethod alloy:maybe-render :before ((screen screen) (window window))
   (%glfw:make-context-current (cffi:null-pointer))
-  (%glfw:make-context-current (pointer window)))
+  (%glfw:make-context-current (pointer window))
+  (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
+    (gl:viewport 0 0 w h)))
 
 (defmethod alloy:maybe-render :after ((screen screen) (window window))
   (%glfw:swap-buffers (pointer window)))
