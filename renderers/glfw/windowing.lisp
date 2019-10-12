@@ -102,7 +102,7 @@
               ,@init-body))
        (call-with-screen #',init))))
 
-(defclass window (window:window alloy:ui renderer)
+(defclass window (window:window renderer)
   ((cursor :reader window:cursor)
    (title :initarg :title :accessor window:title)
    (icon :initarg :icon :accessor window:icon)
@@ -132,6 +132,7 @@
     (setf (window:icon window) icon)
     (setf (window:always-on-top-p window) always-on-top-p)
     (unless (eql state :hidden)
+      (%glfw:show-window pointer)
       (setf (window:state window) state))
     (%glfw:set-window-position-callback pointer (cffi:callback window-position-callback))
     (%glfw:set-window-size-callback pointer (cffi:callback window-size-callback))
@@ -231,9 +232,9 @@
                               0 0 width height refresh-rate)))
 
 (defmethod window:state ((window window))
-  (cond ((%glfw:get-window-attribute :iconified (pointer window)) :minimized)
-        ((%glfw:get-window-attribute :maximized (pointer window)) :maximized)
-        ((not (%glfw:get-window-attribute :visible (pointer window))) :hidden)
+  (cond ((%glfw:get-window-attribute (pointer window) :iconified) :minimized)
+        ((%glfw:get-window-attribute (pointer window) :maximized) :maximized)
+        ((not (%glfw:get-window-attribute (pointer window) :visible)) :hidden)
         ((not (cffi:null-pointer-p (%glfw:get-window-monitor (pointer window)))) :fullscreen)
         (T :normal)))
 
@@ -252,6 +253,8 @@
        (setf (window:state window) :normal))
      (%glfw:hide-window (pointer window)))
     (:normal
+     (unless (%glfw:get-window-attribute (pointer window) :visible)
+       (%glfw:show-window (pointer window)))
      (if (cffi:null-pointer-p (%glfw:get-window-monitor (pointer window)))
          (%glfw:restore-window (pointer window))
          (%glfw:set-window-monitor (pointer window) (cffi:null-pointer)
@@ -267,7 +270,7 @@
 (defmacro define-callback (name args &body body)
   (destructuring-bind (window &rest args) args
     `(cffi:defcallback ,name :void ((,window :pointer) ,@args)
-       (let ((,window (gethash ,window *window-map*)))
+       (let ((,window (gethash (cffi:pointer-address ,window) *window-map*)))
          (flet ((handle (ev)
                   (alloy:handle ev window window)))
            (declare (ignore #'handle))
