@@ -27,6 +27,7 @@
    (scale :initarg :scale :initform NIL :accessor scale)
    (rotation :initarg :rotation :initform NIL :accessor rotation)
    (pivot :initarg :pivot :initform NIL :accessor pivot)))
+;; FIXME: Allow hiding elements.
 
 (defun make-style (&rest args)
   (apply #'make-instance 'style args))

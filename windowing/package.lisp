@@ -30,6 +30,7 @@
    #:cursor
    #:move-to-front
    #:move-to-back
+   #:background-color
    #:max-size
    #:min-size
    #:decorated-p

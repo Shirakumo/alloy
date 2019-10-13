@@ -38,6 +38,7 @@
 
 (defgeneric make-window (screen &key title icon bounds min-size max-size
                                      state decorated-p always-on-top-p
+                                     background-color
                          &allow-other-keys))
 (defgeneric close (window))
 (defgeneric notify (window))
@@ -46,6 +47,9 @@
 (defgeneric move-to-back (window))
 ;; alloy:bounds
 ;; (setf alloy:bounds)
+;; FIXME: Alloy has no colour struct, but Simple does. What to do?
+(defgeneric background-color (window))
+(defgeneric (setf background-color) (color window))
 (defgeneric max-size (window))
 (defgeneric (setf max-size) (size window))
 (defgeneric min-size (window))
