@@ -296,7 +296,11 @@
    #:cursor
    #:ui
    #:layout-tree
-   #:focus-tree)
+   #:focus-tree
+   #:dots-per-cm
+   #:target-resolution
+   #:resolution-scale
+   #:base-scale)
   ;; units.lisp
   (:export
    #:with-unit-parent
