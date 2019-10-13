@@ -99,7 +99,7 @@
     (call-next-method)))
 
 (defmethod alloy:enter ((element alloy:focus-element) (window window) &key)
-  (when (and (layout-element window) (not (eq element (layout-element window))))
+  (when (and (focus-element window) (not (eq element (focus-element window))))
     (cerror "Replace the element" 'alloy:place-already-occupied
             :existing (focus-element window) :place T :element element :focus window)
     (alloy:leave (focus-element window) window))

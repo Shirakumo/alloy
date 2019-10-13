@@ -109,22 +109,24 @@ void main(){
   (simple:request-font renderer (make-instance 'font :family fontspec)))
 
 (defmethod simple:request-font ((renderer renderer) (font simple:font))
-  (cond ((equal "" (simple:family font))
-         (ensure-font (simple:request-font renderer :default) renderer))
-        ((stringp (simple:family font))
-         (let ((font (font-discovery:find-font
-                      :family (simple:family font)
-                      :weight (simple:weight font)
-                      :stretch (simple:stretch font)
-                      :spacing (simple:spacing font)
-                      :slant (simple:slant font))))
-           (make-instance 'font :family (font-discovery:file font)
-                                :weight (font-discovery:weight font)
-                                :stretch (font-discovery:stretch font)
-                                :spacing (font-discovery:spacing font)
-                                :slant (font-discovery:slant font))))
-        (T
-         (ensure-font font renderer))))
+  (ensure-font
+   (cond ((equal "" (simple:family font))
+          (simple:request-font renderer :default))
+         ((stringp (simple:family font))
+          (let ((font (font-discovery:find-font
+                       :family (simple:family font)
+                       :weight (simple:weight font)
+                       :stretch (simple:stretch font)
+                       :spacing (simple:spacing font)
+                       :slant (simple:slant font))))
+            (make-instance 'font :family (font-discovery:file font)
+                                 :weight (font-discovery:weight font)
+                                 :stretch (font-discovery:stretch font)
+                                 :spacing (font-discovery:spacing font)
+                                 :slant (font-discovery:slant font))))
+         (T
+          font))
+   renderer))
 
 (defun text-point (point atlas text align direction vertical-align scale)
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent atlas text)
@@ -152,6 +154,7 @@ void main(){
                                                               (align :start)
                                                               (direction :right)
                                                               (vertical-align :bottom))
+  (alloy:allocate font)
   (let ((atlas (atlas font))
         (shader (opengl:resource 'text-shader renderer)))
     (opengl:bind shader)

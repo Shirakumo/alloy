@@ -63,7 +63,6 @@
     (alloy:px-size width height)))
 
 (defclass screen (window:screen renderer
-                  org.shirakumo.alloy.renderers.opengl.fond:renderer
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ())
 
@@ -96,7 +95,7 @@
                         (alloy:deallocate window)))
                     (when (= 0 (alloy:element-count (alloy:root (alloy:layout-tree screen))))
                       (window:close screen))
-                    (alloy:maybe-render screen T)))
+                    (alloy:render screen T)))
       (when screen (alloy:deallocate screen))
       (%glfw:terminate))))
 
@@ -107,7 +106,6 @@
        (call-with-screen #',init))))
 
 (defclass window (window:window renderer
-                  org.shirakumo.alloy.renderers.opengl.fond:renderer
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ((cursor :reader window:cursor)
    (title :initarg :title :accessor window:title)
@@ -192,6 +190,20 @@
         (%glfw:set-window-position (pointer window) (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
       (unless (and (= w (alloy:pxw bounds)) (= h (alloy:pxh bounds)))
         (%glfw:set-window-size (pointer window) (max 1 (round (alloy:pxw bounds))) (max 1 (round (alloy:pxh bounds))))))))
+
+(defmethod (setf alloy:bounds) :after (extent (window window))
+  (let ((target (simple:transform-matrix (simple:transform window))))
+    (setf (aref target 0) (/ 2f0 (max 1f0 (alloy:pxw extent))))
+    (setf (aref target 1) 0f0)
+    (setf (aref target 2) -1f0)
+    
+    (setf (aref target 3) 0f0)
+    (setf (aref target 4) (/ 2f0 (max 1f0 (alloy:pxh extent))))
+    (setf (aref target 5) -1f0)
+
+    (setf (aref target 6) 0f0)
+    (setf (aref target 7) 0f0)
+    (setf (aref target 8) -1f0)))
 
 (defmethod alloy:dots-per-cm ((window window))
   (alloy:dots-per-cm (parent window)))
@@ -336,7 +348,7 @@
       (handle (make-instance 'window:pointer-leave :location (cursor-location window)))))
 
 (define-callback cursor-position-callback (window (x :double) (y :double))
-  (let ((location (alloy:px-point x y)))
+  (let ((location (alloy:px-point x (- (second (%glfw:get-window-size (pointer window))) y))))
     (handle (make-instance 'alloy:pointer-move
                            :old-location (cursor-location window)
                            :location location))

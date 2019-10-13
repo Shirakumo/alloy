@@ -11,7 +11,8 @@
 (defclass icon (window:icon simple:image)
   ())
 
-(defclass renderer (alloy:renderer)
+(defclass renderer (alloy:renderer
+                    org.shirakumo.alloy.renderers.opengl.fond:renderer)
   ((parent :initarg :parent :accessor parent)
    (pointer :accessor pointer)))
 
@@ -31,6 +32,15 @@
      :shared (if (slot-boundp renderer 'parent)
                  (pointer (parent renderer))
                  (cffi:null-pointer)))
+    (gl:clear-color 0 0 0 0)
+    (gl:enable :blend :depth-test :stencil-test)
+    (gl:clear-stencil #x00)
+    (gl:stencil-func :always 1 #xFF)
+    (gl:stencil-mask #xFF)
+    (gl:clear-depth 1.0)
+    (gl:depth-func :lequal)
+    (gl:depth-mask T)
+    (gl:blend-func :src-alpha :one-minus-src-alpha)
     (setf (gethash (cffi:pointer-address glfw:*window*) *window-map*) renderer)
     (setf (pointer renderer) glfw:*window*)))
 

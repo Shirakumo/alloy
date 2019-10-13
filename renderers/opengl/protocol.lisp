@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
 ;; Required GL state before ALLOY:RENDER call:
-;;   (gl:enable :blend :depth-test :stencil-test :line-smooth)
+;;   (gl:enable :blend :depth-test :stencil-test)
 ;;   (gl:clear-stencil #x00)
 ;;   (gl:stencil-func :always 1 #xFF)
 ;;   (gl:stencil-mask #xFF)
