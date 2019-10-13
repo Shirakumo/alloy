@@ -106,7 +106,9 @@
               ,@init-body))
        (call-with-screen #',init))))
 
-(defclass window (window:window renderer)
+(defclass window (window:window renderer
+                  org.shirakumo.alloy.renderers.opengl.fond:renderer
+                  org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ((cursor :reader window:cursor)
    (title :initarg :title :accessor window:title)
    (icon :initarg :icon :accessor window:icon)
@@ -152,6 +154,7 @@
     (%glfw:set-scroll-callback pointer (cffi:callback scroll-callback))
     (%glfw:set-key-callback pointer (cffi:callback key-callback))
     (%glfw:set-char-callback pointer (cffi:callback char-callback))
+    (alloy:allocate window)
     (alloy:render screen window)
     window))
 
@@ -163,23 +166,23 @@
 (defmethod alloy:deallocate :before ((window window))
   (alloy:leave window (alloy:layout-parent window)))
 
-(defmethod alloy:render :before ((screen screen) (window window))
+(defmethod alloy:render ((screen screen) (window window))
   (%glfw:make-context-current (cffi:null-pointer))
   (%glfw:make-context-current (pointer window))
   (gl:clear :color-buffer :depth-buffer :stencil-buffer)
   (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
-    (gl:viewport 0 0 w h)))
-
-(defmethod alloy:render :after ((screen screen) (window window))
+    (gl:viewport 0 0 w h))
+  (when (window:layout-element window)
+    (alloy:render window (window:layout-element window)))
   (%glfw:swap-buffers (pointer window)))
 
-(defmethod alloy:maybe-render :before ((screen screen) (window window))
+(defmethod alloy:maybe-render ((screen screen) (window window))
   (%glfw:make-context-current (cffi:null-pointer))
   (%glfw:make-context-current (pointer window))
   (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
-    (gl:viewport 0 0 w h)))
-
-(defmethod alloy:maybe-render :after ((screen screen) (window window))
+    (gl:viewport 0 0 w h))
+  (when (window:layout-element window)
+    (alloy:maybe-render window (window:layout-element window)))
   (%glfw:swap-buffers (pointer window)))
 
 (defmethod alloy:suggest-bounds (bounds (window window))
@@ -189,6 +192,18 @@
         (%glfw:set-window-position (pointer window) (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
       (unless (and (= w (alloy:pxw bounds)) (= h (alloy:pxh bounds)))
         (%glfw:set-window-size (pointer window) (max 1 (round (alloy:pxw bounds))) (max 1 (round (alloy:pxh bounds))))))))
+
+(defmethod alloy:dots-per-cm ((window window))
+  (alloy:dots-per-cm (parent window)))
+
+(defmethod alloy:target-resolution ((window window))
+  (alloy:target-resolution (parent window)))
+
+(defmethod alloy:resolution-scale ((window window))
+  (alloy:resolution-scale (parent window)))
+
+(defmethod alloy:base-scale ((window window))
+  (alloy:base-scale (parent window)))
 
 (defmethod window:notify ((window window))
   (%glfw::request-window-attention (pointer window)))
