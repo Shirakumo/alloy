@@ -34,6 +34,13 @@
   (unless (handle event (focus-tree ui) ui)
     (handle event (layout-tree ui) ui)))
 
+(defmethod handle ((event direct-event) (ui ui) ctx)
+  (handle event (focus-tree ui) ctx))
+
+(defmethod handle ((event pointer-event) (ui ui) ctx)
+  (unless (handle event (focus-tree ui) ctx)
+    (handle event (layout-tree ui) ctx)))
+
 (defmethod render ((ui ui) (thing (eql T)))
   (render ui (layout-tree ui)))
 

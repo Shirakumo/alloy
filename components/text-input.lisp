@@ -112,8 +112,10 @@
             for j from end below (length old)
             do (setf (aref old i) (aref old j)))
       (setf (fill-pointer old) (- (length old) (- end start)))
-      (when (<= start (pos cursor) end) (set-pos start cursor))
-      (when (<= start (anchor cursor) end) (set-anchor NIL cursor))
+      (when (<= start (pos cursor) end)
+        (set-pos start cursor))
+      (when (and (anchor cursor) (<= start (anchor cursor) end))
+        (set-anchor NIL cursor))
       (setf (value component) old))))
 
 (defmethod handle ((event text-event) (component text-input-component) ctx)

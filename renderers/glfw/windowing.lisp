@@ -319,7 +319,9 @@
                   (format *error-output* "~&[GLFW] Callback ~a on unknown window." ',name)))))
        (defun ,name (,window ,@(mapcar #'car args))
          (flet ((handle (ev)
-                  (alloy:handle ev window window)))
+                  (if (typep ev 'alloy:pointer-event)
+                      (alloy:handle ev window window)
+                      (alloy:handle ev (parent window) window))))
            (declare (ignore #'handle))
            ,@body)))))
 
