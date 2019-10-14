@@ -104,6 +104,8 @@
   px)
 
 (define-unit vw (vw)
+  ;; FIXME: This currently does not work well with how windowing is done.
+  ;;        More of a problem in the windowing system though.
   (* vw (pxw (root (layout-tree *unit-parent*))))
   (/ px (pxw (root (layout-tree *unit-parent*)))))
 
@@ -120,6 +122,7 @@
   (/ px (pxh *unit-parent*)))
 
 (define-unit un (un)
+  ;; FIXME: should use a UI access here instead of the renderer access.
   (* un (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*)))
   (/ px (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*))))
 

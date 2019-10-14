@@ -155,8 +155,7 @@
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
 
 (defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
-  (loop with renderer = (alloy:renderer renderable)
-        for (name . shape) across (shapes renderable)
+  (loop for (name . shape) across (shapes renderable)
         do (setf (style shape) (compute-shape-style renderer name renderable))))
 
 (defmethod override-style ((renderable renderable) (shape symbol) style)
@@ -166,6 +165,7 @@
   (setf (style-override shape) style))
 
 (defmethod override-style :after ((renderable renderable) (shape shape) (style style))
+  ;; FIXME: Should keep overrides separate and use when updating shapes.
   (setf (style shape) (compute-shape-style (alloy:renderer renderable) shape renderable)))
 
 (defmethod clear-shapes ((renderable renderable))
@@ -199,4 +199,6 @@
         do (update-shape renderer renderable name)))
 
 (defmethod alloy:mark-for-render :after ((renderable renderable))
+  ;; FIXME: Maybe there's a better way to do this, such as
+  ;;        marking and then updating on next full render.
   (update-shape (alloy:renderer renderable) renderable T))
