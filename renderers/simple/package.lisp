@@ -7,7 +7,9 @@
 (defpackage #:org.shirakumo.alloy.renderers.simple
   (:use #:cl)
   (:local-nicknames
-   (#:alloy #:org.shirakumo.alloy))
+   (#:alloy #:org.shirakumo.alloy)
+   (#:colored #:org.shirakumo.alloy.colored)
+   (#:colors #:org.shirakumo.alloy.colored.colors))
   (:import-from #:org.shirakumo.alloy #:arg!)
   ;; protocol.lisp
   (:export

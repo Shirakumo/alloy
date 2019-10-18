@@ -16,7 +16,9 @@
                (:file "protocol")
                (:file "style")
                (:file "transforms")
+               (:file "defaults")
                (:file "documentation"))
   :depends-on (:documentation-utils
+               :colored
                :alloy)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))
