@@ -14,7 +14,6 @@
   :serial T
   :components ((:file "package")
                (:file "protocol")
-               (:file "style")
                (:file "transforms")
                (:file "defaults")
                (:file "documentation"))
