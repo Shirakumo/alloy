@@ -14,7 +14,6 @@
   :serial T
   :components ((:file "package")
                (:file "protocol")
-               (:file "shapes")
                (:file "default")
                (:file "documentation"))
   :depends-on (:documentation-utils

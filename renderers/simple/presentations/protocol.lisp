@@ -9,41 +9,25 @@
 (defclass renderer (simple:renderer)
   ())
 
-(defclass shape ()
-  ((style :initform (make-style) :accessor style)
-   (style-override :initarg :style-override :initform (make-style) :accessor style-override)))
-
-(defgeneric render-inside (renderer shape element))
-
-(defclass style (simple:style)
-  ((simple:fill-color :initform NIL)
-   (simple:font :initform NIL)
-   (simple:font-size :initform NIL)
-   (simple:line-width :initform NIL)
-   (simple:fill-mode :initform NIL)
-   (simple:composite-mode :initform NIL)
-   (z-index :initarg :z-index :initform NIL :accessor z-index)
-   (offset :initarg :offset :initform NIL :accessor offset)
-   (scale :initarg :scale :initform NIL :accessor scale)
-   (rotation :initarg :rotation :initform NIL :accessor rotation)
-   (pivot :initarg :pivot :initform NIL :accessor pivot)))
-;; FIXME: Allow hiding elements.
-
-(defun make-style (&rest args)
-  (apply #'make-instance 'style args))
-
-(defgeneric merge-style-into (target source))
-(defgeneric activate-style (style renderer))
+(stealth-mixin:define-stealth-mixin shape () simple:shape
+  ((name :initarg :name :initform NIL :reader name)
+   (composite-mode :initarg :composite-mode :initform :source-over :accessor composite-mode)
+   (z-index :initarg :z-index :initform 0 :accessor z-index)
+   (offset :initarg :offset :initform (alloy:px-point 0 0) :accessor offset)
+   (scale :initarg :scale :initform (alloy:px-size 1 1) :accessor scale)
+   (rotation :initarg :rotation :initform 0f0 :accessor rotation)
+   (pivot :initarg :pivot :initform (alloy:px-point 0 0) :accessor pivot)
+   (hidden-p :initarg :hidden-p :initform NIL :accessor hidden-p)))
 
 (stealth-mixin:define-stealth-mixin renderable () alloy:renderable
   ;; Reminder for future me: this has to be a vector for insertion order to stay correct.
-  ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)))
+  ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)
+   (update-overrides :initform () :accessor update-overrides)))
 
 (defgeneric override-shapes (renderable shapes))
-(defgeneric override-style (renderable shape style))
 (defgeneric realize-renderable (renderer renderable))
-(defgeneric compute-shape-style (renderer shape renderable))
-(defgeneric update-shape (renderer renderable shape))
+(defgeneric update-shape (renderer renderable shape)
+  (:method-combination progn :most-specific-last))
 (defgeneric clear-shapes (renderable))
 (defgeneric find-shape (id renderable &optional errorp))
 (defgeneric (setf find-shape) (shape id renderable))
@@ -56,52 +40,30 @@
                        (alloy:value (alloy:value alloy:renderable)))
        (declare (ignorable alloy:focus alloy:bounds alloy:value))
        ,@(loop for shape in shapes
-               collect (destructuring-bind ((name type &key when) &body initargs) shape
-                         `(when ,(or when T)
-                            (setf (find-shape ',name alloy:renderable)
-                                  (make-instance ',type ,@initargs))))))
+               collect (destructuring-bind ((name type) &body initargs) shape
+                         `(setf (find-shape ',name alloy:renderable)
+                                (make-instance ',type :name ',name ,@initargs)))))
      alloy:renderable))
 
 (defmacro define-style ((renderer renderable) &body shapes)
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
-    `(defmethod compute-shape-style ((alloy:renderer ,renderer) (shape symbol) (alloy:renderable ,renderable))
+    `(defmethod update-shape progn ((alloy:renderer ,renderer) (alloy:renderable ,renderable) (shape shape))
        (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                          (alloy:bounds (alloy:bounds alloy:renderable))
                          (alloy:value (alloy:value alloy:renderable)))
          (declare (ignorable alloy:focus alloy:bounds alloy:value))
-         (case shape
+         (case (name shape)
            ,@(loop for (name . initargs) in shapes
-                   collect `(,name (merge-style-into (call-next-method)
-                                                     (make-style ,@initargs ,@default))))
-           (T (call-next-method)))))))
+                   collect `(,name (reinitialize-instance simple:shape ,@initargs))))))))
 
 (defmethod initialize-instance :around ((renderable renderable) &key style shapes)
   ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
   (call-next-method)
   (when (and (not (slot-boundp renderable 'alloy:renderer)) (or style shapes))
     (arg! :renderer))
-  (when shapes
-    (override-shapes renderable shapes))
-  (when style
-    (loop for (shape . style) in style
-          do (override-style renderable shape
-                             (etypecase style
-                               (style style)
-                               (cons (apply #'make-style style)))))
-    (update-shape (alloy:renderer renderable) renderable T)))
-
-(defun make-default-style (renderer)
-  (make-style :fill-color (simple:color 0 0 0)
-              :line-width (alloy:un 1.0)
-              :font (simple:request-font renderer :default)
-              :font-size (alloy:un 12.0)
-              :composite-mode :source-over
-              :z-index 0
-              :offset (alloy:point 0 0)
-              :scale (alloy:px-size 1 1)
-              :rotation 0.0
-              :pivot (alloy:point 0 0)))
+  ;; FIXME: this
+  )
 
 (defmethod alloy:register :around ((renderable renderable) (renderer renderer))
   ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
@@ -112,61 +74,20 @@
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds renderable))
     (loop for shape across (shapes renderable)
+          unless (hidden-p shape)
           do (simple:with-pushed-transforms (renderer)
-               (simple:with-pushed-styles (renderer)
-                 (render-inside renderer (cdr shape) renderable))))))
-
-(defmethod render-inside :before ((renderer renderer) (shape shape) element)
-  (activate-style (style shape) renderer))
-
-(defmethod merge-style-into ((target style) (source style))
-  (loop for slot in '(simple:fill-color simple:font simple:font-size
-                      simple:line-width simple:composite-mode
-                      z-index offset scale rotation pivot)
-        for src = (slot-value source slot)
-        do (when src (setf (slot-value target slot) src)))
-  target)
-
-(defmethod activate-style ((style style) (renderer renderer))
-  (setf (simple:fill-color renderer) (simple:fill-color style))
-  (setf (simple:line-width renderer) (simple:line-width style))
-  (setf (simple:font renderer) (simple:font style))
-  (setf (simple:font-size renderer) (simple:font-size style))
-  (setf (simple:composite-mode renderer) (simple:composite-mode style))
-  (setf (simple:z-index renderer) (z-index style))
-  ;; TODO: Not sure this is quite right.
-  (simple:translate renderer (offset style))
-  (simple:translate renderer (pivot style))
-  (simple:rotate renderer (rotation style))
-  (simple:scale renderer (scale style))
-  (simple:translate renderer (alloy:point (alloy:u- (alloy:point-x (pivot style)))
-                                          (alloy:u- (alloy:point-y (pivot style))))))
-
-(defmethod compute-shape-style ((renderer renderer) shape (renderable renderable))
-  (make-default-style renderer))
-
-(defmethod compute-shape-style :around ((renderer renderer) (shape shape) (renderable renderable))
-  (merge-style-into (call-next-method)
-                    (style-override shape)))
-
-(defmethod compute-shape-style ((renderer renderer) (shape shape) (renderable renderable))
-  (compute-shape-style renderer (car (find shape (shapes renderable) :key #'cdr)) renderable))
+               (setf (simple:composite-mode renderer) (simple:composite-mode style))
+               (setf (simple:z-index renderer) (z-index style))
+               ;; TODO: Not sure this is quite right.
+               (simple:translate renderer (offset style))
+               (simple:translate renderer (pivot style))
+               (simple:rotate renderer (rotation style))
+               (simple:scale renderer (scale style))
+               (simple:translate renderer (alloy:px-point (- (alloy:pxx (pivot style)))
+                                                          (- (alloy:pxy (pivot style)))))
+               (alloy:render renderer (cdr shape))))))
 
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
-
-(defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
-  (loop for (name . shape) across (shapes renderable)
-        do (setf (style shape) (compute-shape-style renderer name renderable))))
-
-(defmethod override-style ((renderable renderable) (shape symbol) style)
-  (override-style renderable (find-shape shape renderable T) style))
-
-(defmethod override-style ((renderable renderable) (shape shape) (style style))
-  (setf (style-override shape) style))
-
-(defmethod override-style :after ((renderable renderable) (shape shape) (style style))
-  ;; FIXME: Should keep overrides separate and use when updating shapes.
-  (setf (style shape) (compute-shape-style (alloy:renderer renderable) shape renderable)))
 
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))
@@ -188,15 +109,15 @@
     (when pos
       (setf (shapes renderable) (array-utils:vector-pop-position (shapes renderable) pos)))))
 
-(defmethod update-shape ((renderer renderer) (renderable renderable) (shape shape))
-  (setf (style shape) (compute-shape-style renderer shape renderable)))
+(defmethod update-shape :around ((renderer renderer) (renderable renderable) (shape shape))
+  (call-next-method)
+  (let ((initargs (cdr (assoc shape (update-overrides renderable)))))
+    (when initargs
+      (apply #'reinitialize-instance shape initargs))))
 
-(defmethod update-shape ((renderer renderer) (renderable renderable) (name symbol))
-  (update-shape renderer renderable (find-shape name renderable T)))
-
-(defmethod update-shape ((renderer renderer) (renderable renderable) (all (eql T)))
+(defmethod update-shape progn ((renderer renderer) (renderable renderable) (all (eql T)))
   (loop for (name . shape) across (shapes renderable)
-        do (update-shape renderer renderable name)))
+        do (update-shape renderer renderable shape)))
 
 (defmethod alloy:mark-for-render :after ((renderable renderable))
   ;; FIXME: Maybe there's a better way to do this, such as
