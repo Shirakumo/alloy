@@ -61,8 +61,8 @@
 
 (defun to-un (thing)
   (/ (%to-px thing)
-     (resolution-scale (renderer *unit-parent*))
-     (base-scale (renderer *unit-parent*))))
+     (resolution-scale (ui *unit-parent*))
+     (base-scale (ui *unit-parent*))))
 
 (defmacro define-unit (name (value) &body conversion)
   (destructuring-bind (to-px from-px) conversion
@@ -123,12 +123,12 @@
 
 (define-unit un (un)
   ;; FIXME: should use a UI access here instead of the renderer access.
-  (* un (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*)))
-  (/ px (resolution-scale (renderer *unit-parent*)) (base-scale (renderer *unit-parent*))))
+  (* un (resolution-scale (ui *unit-parent*)) (base-scale (ui *unit-parent*)))
+  (/ px (resolution-scale (ui *unit-parent*)) (base-scale (ui *unit-parent*))))
 
 (define-unit cm (cm)
-  (* cm (dots-per-cm (renderer *unit-parent*)))
-  (/ px (dots-per-cm (renderer *unit-parent*))))
+  (* cm (dots-per-cm (ui *unit-parent*)))
+  (/ px (dots-per-cm (ui *unit-parent*))))
 
 ;;; TODO: It would be nice if we could preserve unit types
 ;;;       if the argument units are of the same type. This

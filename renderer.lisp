@@ -42,20 +42,10 @@
   (setf (slot-value renderer 'allocated-p) NIL))
 
 (defclass renderable ()
-  ((render-needed-p :initform T :reader render-needed-p)
-   (renderer :reader renderer)))
+  ((render-needed-p :initform T :reader render-needed-p)))
 
 (defmethod initialize-instance :after ((renderable renderable) &key renderer)
   (when renderer (register renderable renderer)))
-
-(defmethod register :before ((renderable renderable) (renderer renderer))
-  (when (and (slot-boundp renderable 'renderer)
-             (not (eql (renderer renderable) renderer)))
-    (error 'renderable-already-registered
-           :renderable renderable :renderer renderer)))
-
-(defmethod register :after ((renderable renderable) (renderer renderer))
-  (setf (slot-value renderable 'renderer) renderer))
 
 (defmethod mark-for-render ((renderable renderable))
   (setf (slot-value renderable 'render-needed-p) T))

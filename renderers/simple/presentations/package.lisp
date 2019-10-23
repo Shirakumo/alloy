@@ -34,4 +34,4 @@
    #:clear-shapes
    #:find-shape
    #:define-realization
-   #:define-style))
+   #:define-update))

@@ -293,7 +293,6 @@
   ;; ui.lisp
   (:export
    #:clipboard
-   #:cursor
    #:ui
    #:layout-tree
    #:focus-tree

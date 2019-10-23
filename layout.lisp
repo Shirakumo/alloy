@@ -59,11 +59,6 @@
 (defmethod enter :after ((element layout-element) (layout layout) &key)
   (notice-bounds element layout))
 
-(defmethod enter :after ((renderable renderable) (layout layout) &key)
-  (when (and (slot-boundp layout 'renderer)
-             (not (slot-boundp renderable 'renderer)))
-    (register renderable (renderer layout))))
-
 (defmethod enter :before ((element layout-element) (parent layout) &key)
   (cond ((not (slot-boundp element 'layout-parent))
          (setf (slot-value element 'layout-tree) (layout-tree parent))

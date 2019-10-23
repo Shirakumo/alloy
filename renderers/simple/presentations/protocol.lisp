@@ -24,7 +24,6 @@
   ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)
    (update-overrides :initform () :accessor update-overrides)))
 
-(defgeneric override-shapes (renderable shapes))
 (defgeneric realize-renderable (renderer renderable))
 (defgeneric update-shape (renderer renderable shape)
   (:method-combination progn :most-specific-last))
@@ -45,7 +44,7 @@
                                 (make-instance ',type :name ',name ,@initargs)))))
      alloy:renderable))
 
-(defmacro define-style ((renderer renderable) &body shapes)
+(defmacro define-update ((renderer renderable) &body shapes)
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
     `(defmethod update-shape progn ((alloy:renderer ,renderer) (alloy:renderable ,renderable) (shape shape))
@@ -57,18 +56,16 @@
            ,@(loop for (name . initargs) in shapes
                    collect `(,name (reinitialize-instance shape ,@initargs))))))))
 
-(defmethod initialize-instance :around ((renderable renderable) &key style shapes)
-  ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
-  (call-next-method)
-  (when (and (not (slot-boundp renderable 'alloy:renderer)) (or style shapes))
-    (arg! :renderer))
-  ;; FIXME: this
-  )
+(defmethod initialize-instance :after ((renderable renderable) &key style shapes)
+  (dolist (shape shapes)
+    (setf (find-shape (name shape) renderable) shape))
+  (setf (update-overrides renderable) style))
 
 (defmethod alloy:register :around ((renderable renderable) (renderer renderer))
   ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
   (call-next-method)
-  (realize-renderable renderer renderable))
+  (when (= 0 (length (shapes renderable)))
+    (realize-renderable renderer renderable)))
 
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
   (simple:with-pushed-transforms (renderer)
@@ -112,14 +109,16 @@
 (defmethod update-shape :around ((renderer renderer) (renderable renderable) (shape shape))
   (call-next-method)
   (let ((initargs (cdr (assoc shape (update-overrides renderable)))))
-    (when initargs
+    (when initargs ;; FIXME: What if the initargs should be dynamic?
       (apply #'reinitialize-instance shape initargs))))
 
 (defmethod update-shape progn ((renderer renderer) (renderable renderable) (all (eql T)))
   (loop for (name . shape) across (shapes renderable)
         do (update-shape renderer renderable shape)))
 
-(defmethod alloy:mark-for-render :after ((renderable renderable))
-  ;; FIXME: Maybe there's a better way to do this, such as
-  ;;        marking and then updating on next full render.
-  (update-shape (alloy:renderer renderable) renderable T))
+;;; Defer updating the shapes until we have a dirty render.
+;;; Might cause hiccups during render if there's many updates, but we save
+;;; on tons of batch updates that would never be shown.
+(defmethod alloy:render :before ((renderer renderer) (renderable renderable))
+  (when (alloy:render-needed-p renderable)
+    (update-shape renderer renderable T)))

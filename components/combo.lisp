@@ -46,7 +46,7 @@
   (exit combo))
 
 (defmethod combo-item (item (combo combo))
-  (make-instance 'combo-item :data item :renderer (renderer combo)))
+  (make-instance 'combo-item :data item))
 
 (defmethod update-combo-items ((combo combo) items)
   (let ((list (combo-list combo)))

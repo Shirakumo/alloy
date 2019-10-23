@@ -9,10 +9,8 @@
 ;;; Provided by the backend
 (defgeneric clipboard (ui))
 (defgeneric (setf clipboard) (content ui))
-(defgeneric cursor (ui))
-(defgeneric (setf cursor) (cursor ui))
 
-(defclass ui (renderer)
+(defclass ui ()
   ((layout-tree :initarg :layout-tree :reader layout-tree)
    (focus-tree :initarg :focus-tree :reader focus-tree)
    ;; 38dpcm corresponds to Windows' default 96dpi

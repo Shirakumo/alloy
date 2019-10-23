@@ -120,7 +120,7 @@
                                                     (decorated-p T) (state :normal)
                                                     min-size max-size always-on-top-p
                                                     &allow-other-keys)
-  (let* ((window (make-instance 'window :parent screen :renderer screen
+  (let* ((window (make-instance 'window :parent screen
                                         :focus-parent (alloy:root (alloy:focus-tree screen))
                                         :layout-parent (alloy:root (alloy:layout-tree screen))
                                         :title title

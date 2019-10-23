@@ -56,9 +56,6 @@
     "Cannot enter~%  ~a~%at ~a into~%  ~a~%as it is already occupied by~%  ~a"
   element place layout existing)
 
-(define-alloy-condition renderer-condition ()
-    NIL renderer)
-
-(define-alloy-condition renderable-already-registered (error renderer-condition)
-    "The renderable~%  ~s~%cannot be registered with~%  ~s~%as it is already registered with~%  ~s"
-  renderable renderer (renderer (renderable c)))
+(define-alloy-condition element-has-different-ui (error)
+    "The element~%  ~s~%cannot be used with~%  ~s~%as it is set-up with~%  ~s"
+  element ui (ui (element c)))

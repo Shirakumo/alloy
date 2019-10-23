@@ -11,7 +11,7 @@
 (defclass default-look-and-feel (renderer)
   ())
 
-(define-style (default-look-and-feel renderable)
+(define-update (default-look-and-feel alloy:renderable)
   (:background
    :pattern (colored:color 0.15 0.15 0.15))
   (:border
@@ -28,7 +28,7 @@
    :text (alloy:data alloy:renderable)
    :extent (alloy:margins)))
 
-(define-style (default-look-and-feel alloy:label)
+(define-update (default-look-and-feel alloy:label)
   (:label
    :text (alloy:data alloy:renderable)))
 
@@ -42,7 +42,7 @@
    :extent (alloy:margins 1)
    :halign :middle))
 
-(define-style (default-look-and-feel alloy:button)
+(define-update (default-look-and-feel alloy:button)
   (:background
    :pattern (case alloy:focus
                  (:strong (colored:color 0.9 0.9 0.9))
@@ -59,7 +59,7 @@
   ((:switch filled-box)
    :extent (alloy:extent 0 0 (alloy:pw 0.3) (alloy:ph))))
 
-(define-style (default-look-and-feel alloy:switch)
+(define-update (default-look-and-feel alloy:switch)
   (:switch
    :offset (alloy:point (if alloy:value
                             (alloy:pw 0.7)
@@ -79,7 +79,7 @@
   ((:cursor filled-box)
    :extent (alloy:extent 0 (alloy:ph 0.15) 1 (alloy:ph 0.7))))
 
-(define-style (default-look-and-feel alloy:input-line)
+(define-update (default-look-and-feel alloy:input-line)
   (:background
    :pattern (case alloy:focus
                  (:strong (colored:color 0.9 0.9 0.9))
@@ -103,7 +103,7 @@
              (:horizontal (alloy:extent -5 0 10 (alloy:ph)))
              (:vertical (alloy:extent 0 -5 (alloy:pw) 10)))))
 
-(define-style (default-look-and-feel alloy:slider)
+(define-update (default-look-and-feel alloy:slider)
   (:handle
    :offset (ecase (alloy:orientation alloy:renderable)
              (:horizontal (alloy:point (alloy:pw (alloy:slider-unit alloy:renderable)) 0))
@@ -121,7 +121,7 @@
    :extent (alloy:margins 1)
    :halign :middle))
 
-(define-style (default-look-and-feel alloy:progress)
+(define-update (default-look-and-feel alloy:progress)
   (:bar
    :pattern (colored:color 0.25 0.2 0.8)
    :scale (let ((p (/ alloy:value (alloy:maximum alloy:renderable))))
@@ -138,7 +138,7 @@
   ((:border outlined-circle)
    :extent (alloy:extent (alloy:ph -0.1) (alloy:ph -0.1) (alloy:ph 1.2) (alloy:ph 1.2))))
 
-(define-style (default-look-and-feel alloy:radio)
+(define-update (default-look-and-feel alloy:radio)
   (:inner
    :hidden-p (not (alloy:active-p alloy:renderable))
    :pattern (colored:color 0.25 0.2 0.8)))
@@ -152,7 +152,7 @@
    :text (princ-to-string (alloy:value alloy:renderable))
    :extent (alloy:margins 1)))
 
-(define-style (default-look-and-feel alloy:combo)
+(define-update (default-look-and-feel alloy:combo)
   (:label
    :pattern colors:white
    :text (princ-to-string (alloy:value alloy:renderable))))
@@ -164,7 +164,7 @@
    :text (alloy:data alloy:renderable)
    :extent (alloy:margins 1)))
 
-(define-style (default-look-and-feel alloy:combo-item)
+(define-update (default-look-and-feel alloy:combo-item)
   (:background
    :pattern (case (alloy:focus alloy:renderable)
                  ((:weak :strong) (colored:color 0.25 0.2 0.8))
