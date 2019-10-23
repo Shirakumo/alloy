@@ -149,11 +149,13 @@ void main(){
           (:top
            (- (alloy:pxy point) (* scale (- u b))))))))))
 
+;; FIXME: this
 (defmethod simple:text ((renderer renderer) point string &key (font (simple:font renderer))
                                                               (size (simple:font-size renderer))
-                                                              (align :start)
-                                                              (direction :right)
-                                                              (vertical-align :bottom))
+                                                              pattern
+                                                              bounds
+                                                              (align '(:bottom :start))
+                                                              (direction :right))
   (alloy:allocate font)
   (let ((atlas (atlas font))
         (shader (opengl:resource 'text-shader renderer)))
@@ -170,3 +172,6 @@ void main(){
                                       (opengl:gl-name (opengl:resource 'text-vbo renderer))
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
+
+(defmethod simple:cursor ((text text) position &key pattern))
+(defmethod simple:selection ((text text) start end &key pattern))
