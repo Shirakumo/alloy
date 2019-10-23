@@ -4,7 +4,7 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:org.shirakumo.alloy.renderers.simple.presentations)
+(in-package #:org.shirakumo.alloy.renderers.simple)
 
 (defclass font ()
   ((family :initarg :family :initform (arg! :family) :reader family)
@@ -62,8 +62,8 @@
 
 (defmethod ellipse ((renderer renderer) (bounds alloy:extent) &key pattern line-width)
   (if line-width
-      (make-instance 'outlined-ellipse :bounds bounds :line-width line-width)
-      (make-instance 'filled-ellipse :bounds bounds)))
+      (make-instance 'outlined-ellipse :bounds bounds :pattern pattern :line-width line-width)
+      (make-instance 'filled-ellipse :bounds bounds :pattern pattern)))
 
 (defclass polygon (filled-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
@@ -74,18 +74,18 @@
 (defclass line-strip (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod line-strip ((renderer renderer) (points vector) &key line-width)
-  (make-instance 'line-strip :points points :line-width line-width))
+(defmethod line-strip ((renderer renderer) (points vector) &key line-width pattern)
+  (make-instance 'line-strip :points points :line-width line-width :pattern pattern))
 
 (defclass curve (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod curve ((renderer renderer) (points vector) &key line-width)
-  (make-instance 'curve :points points :line-width line-width))
+(defmethod curve ((renderer renderer) (points vector) &key line-width pattern)
+  (make-instance 'curve :points points :line-width line-width :pattern pattern))
 
 ;; FIXME: changing styles and size, multiple styles and size per text
 (defclass text (shape)
-  ((text :initarg :text :initform (arg! :text) :accessor text)
+  ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
    (size :initarg :size :initform (arg! :size) :accessor size)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
@@ -99,7 +99,7 @@
                                                                               (align '(:middle :left))
                                                                               (direction :right))
   (destructuring-bind (valign halign) align
-    (make-instance 'text :text text :font font :size size
+    (make-instance 'text :text string :font font :size size
                          :bounds bounds :direction direction
                          :valign valign :halign halign)))
 

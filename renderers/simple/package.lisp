@@ -11,6 +11,52 @@
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:import-from #:org.shirakumo.alloy #:arg!)
+  ;; defaults.lisp
+  (:export
+   #:font
+   #:family
+   #:slant
+   #:spacing
+   #:weight
+   #:stretch
+   #:image
+   #:size
+   #:data
+   #:gradient
+   #:start
+   #:stop
+   #:stops
+   #:linear-gradient
+   #:radial-gradient
+   #:angle-gradient
+   #:diamond-gradient
+   #:shape
+   #:patterned-shape
+   #:pattern
+   #:filled-shape
+   #:outlined-shape
+   #:line-width
+   #:rectangle
+   #:bounds
+   #:filled-rectangle
+   #:outlined-rectangle
+   #:ellipse
+   #:filled-ellipse
+   #:outlined-ellipse
+   #:polygon
+   #:points
+   #:line-strip
+   #:curve
+   #:text
+   #:font
+   #:size
+   #:bounds
+   #:valign
+   #:halign
+   #:direction
+   #:icon
+   #:image
+   #:resolve-alignment)
   ;; protocol.lisp
   (:export
    #:call-with-pushed-transforms
@@ -19,41 +65,22 @@
    #:scale
    #:rotate
    #:z-index
-   #:call-with-pushed-styles
-   #:fill-color
-   #:line-width
-   #:fill-mode
+   #:clear
    #:composite-mode
-   #:font
-   #:font-size
    #:line-strip
+   #:curve
    #:rectangle
    #:ellipse
    #:polygon
+   #:icon
    #:text
-   #:image
-   #:size
-   #:data
-   #:clear
+   #:cursor
+   #:selection
    #:request-font
    #:request-image
-   #:color
-   #:color-p
-   #:copy-color
-   #:r
-   #:g
-   #:b
-   #:a
-   #:font
-   #:family
-   #:slant
-   #:spacing
-   #:weight
-   #:stretch
-   #:image
+   #:request-gradient
    #:renderer
-   #:with-pushed-transforms
-   #:with-pushed-styles)
+   #:with-pushed-transforms)
   ;; transforms.lisp
   (:export
    #:matrix
@@ -64,9 +91,4 @@
    #:transform-matrix
    #:add-matrix
    #:transformed-renderer
-   #:make-default-transform)
-  ;; style.lisp
-  (:export
-   #:style
-   #:styled-renderer
-   #:make-default-style))
+   #:make-default-transform))

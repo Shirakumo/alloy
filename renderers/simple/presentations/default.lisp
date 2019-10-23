@@ -13,18 +13,17 @@
 
 (define-style (default-look-and-feel renderable)
   (:background
-   :pattern (simple:color 0.15 0.15 0.15))
+   :pattern (colored:color 0.15 0.15 0.15))
   (:border
-   :pattern (case alloy:focus
-              ((:weak :strong) (simple:color 0.9 0.9 0.9))
-              (T (simple:color 0 0 0 0)))
+   :pattern (colored:color 0.9 0.9 0.9)
+   :hidden-p (null alloy:focus)
    :z-index 1)
   (:label
    :pattern (case alloy:focus
-              ((:weak :strong) (simple:color 0 0 0))
-              (T (simple:color 1 1 1)))))
+              ((:weak :strong) colors:black)
+              (T colors:white))))
 
-(define-realisation (default-look-and-feel alloy:label)
+(define-realization (default-look-and-feel alloy:label)
   ((:label text)
    :text (alloy:data alloy:renderable)
    :extent (alloy:margins)))
@@ -33,7 +32,7 @@
   (:label
    :text (alloy:data alloy:renderable)))
 
-(define-realisation (default-look-and-feel alloy:button)
+(define-realization (default-look-and-feel alloy:button)
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
@@ -46,13 +45,13 @@
 (define-style (default-look-and-feel alloy:button)
   (:background
    :pattern (case alloy:focus
-                 (:strong (simple:color 0.9 0.9 0.9))
-                 (:weak (simple:color 0.7 0.7 0.7))
-                 (T (simple:color 0.25 0.2 0.8))))
+                 (:strong (colored:color 0.9 0.9 0.9))
+                 (:weak (colored:color 0.7 0.7 0.7))
+                 (T (colored:color 0.25 0.2 0.8))))
   (:label
    :text (alloy:data alloy:renderable)))
 
-(define-realisation (default-look-and-feel alloy:switch)
+(define-realization (default-look-and-feel alloy:switch)
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
@@ -66,10 +65,10 @@
                             (alloy:pw 0.7)
                             0))
    :pattern (case alloy:focus
-                 (:strong (simple:color 1 1 1))
-                 (T (simple:color 0.25 0.2 0.8)))))
+                 (:strong colors:white)
+                 (T (colored:color 0.25 0.2 0.8)))))
 
-(define-realisation (default-look-and-feel alloy:input-line)
+(define-realization (default-look-and-feel alloy:input-line)
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
@@ -83,17 +82,16 @@
 (define-style (default-look-and-feel alloy:input-line)
   (:background
    :pattern (case alloy:focus
-                 (:strong (simple:color 0.9 0.9 0.9))
-                 (:weak (simple:color 0.7 0.7 0.7))
-                 (T (simple:color 0.15 0.15 0.15))))
+                 (:strong (colored:color 0.9 0.9 0.9))
+                 (:weak (colored:color 0.7 0.7 0.7))
+                 (T (colored:color 0.15 0.15 0.15))))
   (:cursor
-   :pattern (case alloy:focus
-                 (:strong (simple:color 0 0 0))
-                 (T (simple:color 0 0 0 0))))
+   :hidden-p (null alloy:focus)
+   :pattern colors:black)
   (:label
-   :text (alloy:data renderable)))
+   :text (alloy:data alloy:renderable)))
 
-(define-realisation (default-look-and-feel alloy:slider)
+(define-realization (default-look-and-feel alloy:slider)
   ((:background filled-box)
    :extent (ecase (alloy:orientation alloy:renderable)
              (:horizontal (alloy:extent 0 (alloy:ph 0.4) (alloy:pw) (alloy:ph 0.2)))
@@ -111,10 +109,10 @@
              (:horizontal (alloy:point (alloy:pw (alloy:slider-unit alloy:renderable)) 0))
              (:vertical (alloy:point 0 (alloy:ph (alloy:slider-unit alloy:renderable)))))
    :pattern (case alloy:focus
-                 (:strong (simple:color 1 1 1))
-                 (T (simple:color 0.25 0.2 0.8)))))
+                 (:strong colors:white)
+                 (T (colored:color 0.25 0.2 0.8)))))
 
-(define-realisation (default-look-and-feel alloy:progress)
+(define-realization (default-look-and-feel alloy:progress)
   ((:background filled-box)
    :extent (alloy:margins))
   ((:bar filled-box)
@@ -125,14 +123,14 @@
 
 (define-style (default-look-and-feel alloy:progress)
   (:bar
-   :pattern (simple:color 0.25 0.2 0.8)
+   :pattern (colored:color 0.25 0.2 0.8)
    :scale (let ((p (/ alloy:value (alloy:maximum alloy:renderable))))
             (alloy:px-size p 1)))
   (:label
-   :text (format NIL "~,1f%" (/ (alloy:value renderable) (alloy:maximum renderable) 1/100))
-   :pattern (simple:color 1 1 1)))
+   :text (format NIL "~,1f%" (/ (alloy:value alloy:renderable) (alloy:maximum alloy:renderable) 1/100))
+   :pattern colors:white))
 
-(define-realisation (default-look-and-feel alloy:radio)
+(define-realization (default-look-and-feel alloy:radio)
   ((:background filled-circle)
    :extent (alloy:extent 0 0 (alloy:ph 1) (alloy:ph 1)))
   ((:inner filled-circle)
@@ -142,11 +140,10 @@
 
 (define-style (default-look-and-feel alloy:radio)
   (:inner
-   :pattern (if (alloy:active-p alloy:renderable)
-                   (simple:color 0.25 0.2 0.8)
-                   (simple:color 0 0 0 0))))
+   :hidden-p (not (alloy:active-p alloy:renderable))
+   :pattern (colored:color 0.25 0.2 0.8)))
 
-(define-realisation (default-look-and-feel alloy:combo)
+(define-realization (default-look-and-feel alloy:combo)
   ((:background filled-box)
    :extent (alloy:margins))
   ((:border outlined-box)
@@ -157,10 +154,10 @@
 
 (define-style (default-look-and-feel alloy:combo)
   (:label
-   :pattern (simple:color 1 1 1)
+   :pattern colors:white
    :text (princ-to-string (alloy:value alloy:renderable))))
 
-(define-realisation (default-look-and-feel alloy:combo-item)
+(define-realization (default-look-and-feel alloy:combo-item)
   ((:background filled-box)
    :extent (alloy:margins))
   ((:label text)
@@ -170,12 +167,12 @@
 (define-style (default-look-and-feel alloy:combo-item)
   (:background
    :pattern (case (alloy:focus alloy:renderable)
-                 ((:weak :strong) (simple:color 0.25 0.2 0.8))
-                 ((NIL) (simple:color 0.15 0.15 0.15))))
+                 ((:weak :strong) (colored:color 0.25 0.2 0.8))
+                 ((NIL) (colored:color 0.15 0.15 0.15))))
   (:label
-   :pattern (simple:color 1 1 1)))
+   :pattern colors:white))
 
-(define-realisation (default-look-and-feel alloy:scrollbar)
+(define-realization (default-look-and-feel alloy:scrollbar)
   ((:background filled-box)
    :extent (alloy:margins))
   ((:handle filled-box)

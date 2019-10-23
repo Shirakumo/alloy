@@ -30,13 +30,10 @@
 
 (defgeneric request-font (renderer family &key slant spacing weight stretch &allow-other-keys))
 (defgeneric request-image (renderer data &key size &allow-other-keys))
-(defgeneric request-gradient (renderer type start stop stops &allow-other-keys))
+(defgeneric request-gradient (renderer type start stop stops &key &allow-other-keys))
 
 (defclass renderer (alloy:renderer)
   ((composite-mode :initform :source-over :accessor composite-mode)))
-
-(defmethod alloy:component-class-for-object ((image image))
-  (find-class 'alloy:icon))
 
 (defmacro with-pushed-transforms ((renderer) &body body)
   `(call-with-pushed-transforms (lambda () ,@body) ,renderer))

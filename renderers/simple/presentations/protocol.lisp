@@ -32,7 +32,7 @@
 (defgeneric find-shape (id renderable &optional errorp))
 (defgeneric (setf find-shape) (shape id renderable))
 
-(defmacro define-realisation ((renderer renderable) &body shapes)
+(defmacro define-realization ((renderer renderable) &body shapes)
   `(defmethod realize-renderable ((alloy:renderer ,renderer) (alloy:renderable ,renderable))
      (clear-shapes alloy:renderable)
      (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
@@ -55,7 +55,7 @@
          (declare (ignorable alloy:focus alloy:bounds alloy:value))
          (case (name shape)
            ,@(loop for (name . initargs) in shapes
-                   collect `(,name (reinitialize-instance simple:shape ,@initargs))))))))
+                   collect `(,name (reinitialize-instance shape ,@initargs))))))))
 
 (defmethod initialize-instance :around ((renderable renderable) &key style shapes)
   ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
@@ -73,19 +73,19 @@
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds renderable))
-    (loop for shape across (shapes renderable)
+    (loop for (name shape) across (shapes renderable)
           unless (hidden-p shape)
           do (simple:with-pushed-transforms (renderer)
-               (setf (simple:composite-mode renderer) (simple:composite-mode style))
-               (setf (simple:z-index renderer) (z-index style))
+               (setf (simple:composite-mode renderer) (composite-mode shape))
+               (setf (simple:z-index renderer) (z-index shape))
                ;; TODO: Not sure this is quite right.
-               (simple:translate renderer (offset style))
-               (simple:translate renderer (pivot style))
-               (simple:rotate renderer (rotation style))
-               (simple:scale renderer (scale style))
-               (simple:translate renderer (alloy:px-point (- (alloy:pxx (pivot style)))
-                                                          (- (alloy:pxy (pivot style)))))
-               (alloy:render renderer (cdr shape))))))
+               (simple:translate renderer (offset shape))
+               (simple:translate renderer (pivot shape))
+               (simple:rotate renderer (rotation shape))
+               (simple:scale renderer (scale shape))
+               (simple:translate renderer (alloy:px-point (- (alloy:pxx (pivot shape)))
+                                                          (- (alloy:pxy (pivot shape)))))
+               (alloy:render renderer shape)))))
 
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
 
