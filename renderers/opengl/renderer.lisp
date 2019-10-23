@@ -247,6 +247,12 @@ void main(){
      (gl:blend-func :one :one)
      (gl:blend-equation :func-reverse-subtract))))
 
+(defclass line-strip (simple:line-strip)
+  ((data :accessor data)))
+
+(defmethod shared-initialize :after ((shape line-strip) slots &key points)
+  (setf (data shape) (make-line-array points)))
+
 (defmethod alloy:render ((renderer renderer) (shape line-strip))
   (let ((shader (resource 'line-shader renderer))
         (data (data shape)))
@@ -316,11 +322,21 @@ void main(){
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'circ-line-vao renderer) :triangles (* *circ-polycount* 6))))
 
+(defclass polygon (simple:polygon)
+  ((data :reader data)))
+
+(defmethod shared-initialize :after ((shape polygon) slots &key points)
+  (let ((data (make-array (* 3 (length points)))))
+    ;; FIXME: The points are make absolute too early
+    (loop for point in points
+          do (setf (aref data (incf i)) (alloy:pxx point))
+             (setf (aref data (incf i)) (alloy:pxy point)))
+    (setf (data shape) data)))
+
 (defmethod alloy:render ((renderer renderer) (shape polygon))
   (let ((shader (resource 'basic-shader renderer))
         (data (data shape)))
     (update-vertex-buffer (resource 'stream-vbo renderer) data)
-    ;; Draw it
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
     (setf (uniform shader "color") (simple:pattern shape))

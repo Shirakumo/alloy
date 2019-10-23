@@ -87,19 +87,20 @@
 (defclass text (shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
+   (color :initarg :color :initform colors:black :accessor color)
    (size :initarg :size :initform (arg! :size) :accessor size)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)
    (direction :initarg :direction :initform :right :accessor direction)))
 
-(defmethod text ((renderer renderer) (point alloy:point) (string string) &key (font (request-font renderer :default))
-                                                                              (size (alloy:un 10))
-                                                                              (bounds (alloy:margins))
-                                                                              (align '(:middle :left))
-                                                                              (direction :right))
+(defmethod text ((renderer renderer) (bounds alloy:extent) (string string) &key (font (request-font renderer :default))
+                                                                                (size (alloy:un 10))
+                                                                                (color colors:black)
+                                                                                (align '(:middle :left))
+                                                                                (direction :right))
   (destructuring-bind (valign halign) align
-    (make-instance 'text :text string :font font :size size
+    (make-instance 'text :text string :font font :size size :color color
                          :bounds bounds :direction direction
                          :valign valign :halign halign)))
 

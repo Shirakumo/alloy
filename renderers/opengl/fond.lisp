@@ -128,47 +128,28 @@ void main(){
           font))
    renderer))
 
-(defun text-point (point atlas text align direction vertical-align scale)
-  (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent atlas text)
+(defun text-point (text)
+  (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font shape)) (alloy:text text))
     (declare (ignore gap))
     (ecase direction
       (:right
-       (alloy:px-point
-        (ecase align
-          (:start
-           (alloy:x point))
-          (:middle
-           (- (alloy:pxx point) (/ (* scale (- r l)) 2)))
-          (:end
-           (- (alloy:pxx point) (* scale (- r l)))))
-        (ecase vertical-align
-          (:bottom
-           (alloy:y point))
-          (:middle
-           (- (alloy:pxy point) (/ (* scale (- u b)) 2)))
-          (:top
-           (- (alloy:pxy point) (* scale (- u b))))))))))
+       (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
+                                 (simple:px-size (* scale (- r l)) (* scale (- u b))))))))
 
-;; FIXME: this
-(defmethod simple:text ((renderer renderer) point string &key (font (simple:font renderer))
-                                                              (size (simple:font-size renderer))
-                                                              pattern
-                                                              bounds
-                                                              (align '(:bottom :start))
-                                                              (direction :right))
-  (alloy:allocate font)
-  (let ((atlas (atlas font))
+(defmethod alloy:render ((renderer renderer) (shape simple:text))
+  (let ((atlas (atlas (simple:font shape)))
         (shader (opengl:resource 'text-shader renderer)))
     (opengl:bind shader)
     (gl:active-texture :texture0)
     (gl:bind-texture :texture-2d (cl-fond:texture atlas))
     (simple:with-pushed-transforms (renderer)
       (let ((s (* 2 (/ (alloy:to-px size) (cl-fond:size atlas)))))
-        (simple:translate renderer (text-point point atlas string align direction vertical-align s))
+        (simple:translate renderer (text-point text))
         (simple:scale renderer (alloy:px-size s s)))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
-    (setf (opengl:uniform shader "color") (simple:fill-color renderer))
-    (let ((count (cl-fond:update-text atlas string
+    (setf (opengl:uniform shader "color") (simple:color shape))
+    ;; Could cache this by allocating a vbo/ebo per text. Don't have a deallocation API though, so...
+    (let ((count (cl-fond:update-text atlas (alloy:text shape)
                                       (opengl:gl-name (opengl:resource 'text-vbo renderer))
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
