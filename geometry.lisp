@@ -194,3 +194,15 @@
     (destructure-extent (:x x2 :y y2 :w w2 :h h2 :to-px T) b
       (and (< x1 (+ x2 w2)) (< x2 (+ x1 w1))
            (< y1 (+ y2 h2)) (< y2 (+ y1 h1))))))
+
+(defun ensure-extent (extent-ish)
+  (etypecase extent-ish
+    (extent
+     extent-ish)
+    (margins
+     (px-extent
+      (pxl extent-ish) (pxb extent-ish)
+      (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish))
+      (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish))))
+    (size
+     (extent 0 0 (w extent-ish) (h extent-ish)))))

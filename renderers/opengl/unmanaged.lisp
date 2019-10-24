@@ -27,7 +27,7 @@
 (defmethod bind ((program program))
   (gl:use-program (gl-resource-name program)))
 
-(defstruct (texture (:constructor make-texture (name)) (:include gl-resource) (:copier NIL) (:predicate NIL)))
+(defstruct (texture (:constructor make-tex (name)) (:include gl-resource) (:copier NIL) (:predicate NIL)))
 
 (defmethod bind ((texture texture))
   (gl:bind-texture :texture-2d (gl-resource-name texture)))
@@ -62,8 +62,8 @@
          (%gl:uniform-matrix-3fv location 1 T data)))
       (single-float
        (%gl:uniform-1f location value))
-      (simple:color
-       (%gl:uniform-4f location (simple:r value) (simple:g value) (simple:b value) (simple:a value)))
+      (colored:color
+       (%gl:uniform-4f location (colored:r value) (colored:g value) (colored:b value) (colored:a value)))
       (alloy:point
        (%gl:uniform-2f location (alloy:pxx value) (alloy:pxy value)))
       (alloy:size
@@ -111,16 +111,14 @@
   (gl:bind-vertex-array 0)
   array)
 
-(defmethod simple:request-image ((renderer renderer) (image simple:image))
-  (let ((name (gl:gen-texture))
-        (w (floor (alloy:pxw (simple:size image))))
-        (h (floor (alloy:pxh (simple:size image)))))
+(defmethod make-texture ((renderer renderer) width height data)
+  (let ((name (gl:gen-texture)))
     (gl:bind-texture :texture-2d name)
-    (%gl:tex-storage-2d :texture-2d 0 :rgba w h)
-    (gl:tex-sub-image-2d :texture-2d 0 0 0 w h :rgba :unsigned-byte (simple:data image))
+    (%gl:tex-storage-2d :texture-2d 0 :rgba width height)
+    (gl:tex-sub-image-2d :texture-2d 0 0 0 width height :rgba :unsigned-byte data)
     (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-border)
     (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-border)
     (gl:tex-parameter :texture-2d :texture-min-filter :linear)
     (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
     (gl:bind-texture :texture-2d 0)
-    (make-texture name)))
+    (make-tex name)))

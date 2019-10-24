@@ -8,7 +8,8 @@
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
-   (#:simple #:org.shirakumo.alloy.renderers.simple))
+   (#:simple #:org.shirakumo.alloy.renderers.simple)
+   (#:colored #:org.shirakumo.alloy.colored))
   ;; protocol.lisp
   (:export
    #:view-size

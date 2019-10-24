@@ -165,21 +165,22 @@ void main(){
 
 (defvar *clip-depth* 0)
 
-(defmethod simple:clip :before ((renderer renderer) extent)
+(defmethod simple:clip ((renderer renderer) (shape simple:filled-rectangle))
+  (simple:clip renderer (simple:bounds shape)))
+
+(defmethod simple:clip :before ((renderer renderer) (extent alloy:extent))
   (incf *clip-depth* 1)
   (gl:stencil-op :keep :incr :incr)
   (gl:stencil-func :always 1 #xFF)
   (gl:color-mask NIL NIL NIL NIL)
   (gl:depth-mask NIL)
-  (let ((mode (simple:fill-mode renderer)))
-    (setf (simple:fill-mode renderer) :fill)
-    (unwind-protect
-         (simple:rectangle renderer extent)
-      (setf (simple:fill-mode renderer) mode)
-      (gl:stencil-op :keep :keep :keep)
-      (gl:stencil-func :gequal *clip-depth* #xFF)
-      (gl:color-mask T T T T)
-      (gl:depth-mask T))))
+  (unwind-protect
+       ;; FIXME: avoid allocation of rectangle
+       (alloy:render renderer (simple:rectangle renderer extent))
+    (gl:stencil-op :keep :keep :keep)
+    (gl:stencil-func :gequal *clip-depth* #xFF)
+    (gl:color-mask T T T T)
+    (gl:depth-mask T)))
 
 (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
   (let ((*clip-depth* *clip-depth*))
@@ -264,6 +265,12 @@ void main(){
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'line-vao renderer) :triangles (/ (length data) 4))))
 
+(defclass curve (simple:curve)
+  ((data :accessor data)))
+
+(defmethod shared-initialize :after ((shape curve) slots &key points)
+  ())
+
 ;; FIXME: curves
 (defmethod alloy:render ((renderer renderer) (shape curve))
   )
@@ -293,7 +300,8 @@ void main(){
     (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 24)))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:filled-ellipse))
-  (let ((shader (resource 'basic-shader renderer)))
+  (let ((shader (resource 'basic-shader renderer))
+        (extent (alloy:ensure-extent (simple:bounds shape))))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
       (let ((w (/ (alloy:pxw extent) 2))
@@ -308,7 +316,8 @@ void main(){
     (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2))))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:outlined-ellipse))
-  (let ((shader (resource 'line-shader renderer)))
+  (let ((shader (resource 'line-shader renderer))
+        (extent (alloy:ensure-extent (simple:bounds shape))))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
       (let ((w (/ (alloy:pxw extent) 2))
@@ -328,7 +337,8 @@ void main(){
 (defmethod shared-initialize :after ((shape polygon) slots &key points)
   (let ((data (make-array (* 3 (length points)))))
     ;; FIXME: The points are make absolute too early
-    (loop for point in points
+    (loop with i = -1
+          for point in points
           do (setf (aref data (incf i)) (alloy:pxx point))
              (setf (aref data (incf i)) (alloy:pxy point)))
     (setf (data shape) data)))
@@ -353,19 +363,8 @@ void main(){
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
-(defmethod simple:request-image :around ((renderer renderer) imagespec)
-  (or (resource imagespec renderer NIL)
-      (let ((image (call-next-method)))
-        (when (alloy:allocated-p renderer)
-          (alloy:allocate image))
-        (setf (resource imagespec renderer) image))))
-
-(defmethod simple:request-font :around ((renderer renderer) fontspec)
-  (or (resource fontspec renderer NIL)
-      (let ((font (call-next-method)))
-        (when (alloy:allocated-p renderer)
-          (alloy:allocate font))
-        (setf (resource fontspec renderer) font))))
+(defmethod simple:request-image ((renderer renderer) data &key size)
+  (make-texture renderer (alloy:pxw size) (alloy:pxh size) data))
 
 ;; FIXME: gradients
-(defmethod simple:request-gradient :around ((renderer renderer) a))
+(defmethod simple:request-gradient ((renderer renderer) type start stop stops &key))

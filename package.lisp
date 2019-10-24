@@ -224,6 +224,7 @@
    #:extent-h
    #:extent=
    #:overlapping-p
+   #:ensure-extent
    #:extent-intersection
    #:destructure-extent)
   ;; layout.lisp

@@ -13,15 +13,15 @@
    (weight :initarg :weight :initform :regular :reader weight)
    (stretch :initarg :stretch :initform :normal :reader stretch)))
 
-(defmethod request-font ((renderer renderer) (family string) &key slant spacing weight stretch)
-  (make-instance 'font :family family :slant slant :spacing spacing :weight weight :stretch stretch))
+(defmethod request-font ((renderer renderer) (family string) &rest initargs)
+  (apply #'make-instance 'font :family family initargs))
 
 (defclass image ()
   ((size :initarg :size :reader size)
    (data :initarg :data :reader data)))
 
-(defmethod request-image ((renderer renderer) (data vector) &key size)
-  (make-instance 'image :data data :size size))
+(defmethod request-image ((renderer renderer) (data vector) &rest initargs)
+  (apply #'make-instance 'image :data data initargs))
 
 (defclass gradient ()
   ((start :initarg :start :initform (arg! :start) :reader start)
@@ -33,8 +33,8 @@
 (defclass angle-gradient (gradient) ())
 (defclass diamond-gradient (gradient) ())
 
-(defmethod request-gradient ((renderer renderer) type start stop stops &key)
-  (make-instance type :start start :stop stop :stops stops))
+(defmethod request-gradient ((renderer renderer) type start stop stops &rest initargs)
+  (apply #'make-instance type :start start :stop stop :stops stops initargs))
 
 (defclass shape () ())
 (defclass patterned-shape (shape)
@@ -49,10 +49,8 @@
 (defclass filled-rectangle (rectangle filled-shape) ())
 (defclass outlined-rectangle (rectangle outlined-shape) ())
 
-(defmethod rectangle ((renderer renderer) (bounds alloy:extent) &key pattern line-width)
-  (if line-width
-      (make-instance 'outlined-rectangle :bounds bounds :pattern pattern :line-width line-width)
-      (make-instance 'filled-rectangle :bounds bounds :pattern pattern)))
+(defmethod rectangle ((renderer renderer) (bounds alloy:extent) &rest initargs &key line-width)
+  (apply #'make-instance (if line-width 'outlined-rectangle 'filled-rectangle) :bounds bounds initargs))
 
 (defclass ellipse (shape)
   ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)))
@@ -60,28 +58,26 @@
 (defclass filled-ellipse (ellipse filled-shape) ())
 (defclass outlined-ellipse (ellipse outlined-shape) ())
 
-(defmethod ellipse ((renderer renderer) (bounds alloy:extent) &key pattern line-width)
-  (if line-width
-      (make-instance 'outlined-ellipse :bounds bounds :pattern pattern :line-width line-width)
-      (make-instance 'filled-ellipse :bounds bounds :pattern pattern)))
+(defmethod ellipse ((renderer renderer) (bounds alloy:extent) &rest initargs &key line-width)
+  (apply #'make-instance (if line-width 'outlined-ellipse 'filled-ellipse) :bounds bounds initargs))
 
 (defclass polygon (filled-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod polygon ((renderer renderer) (points vector) &key pattern)
-  (make-instance 'outlined-polygon :points points :pattern pattern))
+(defmethod polygon ((renderer renderer) (points vector) &rest initargs)
+  (apply #'make-instance 'outlined-polygon :points points initargs))
 
 (defclass line-strip (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod line-strip ((renderer renderer) (points vector) &key line-width pattern)
-  (make-instance 'line-strip :points points :line-width line-width :pattern pattern))
+(defmethod line-strip ((renderer renderer) (points vector) &rest initargs)
+  (apply #'make-instance 'line-strip :points points initargs))
 
 (defclass curve (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod curve ((renderer renderer) (points vector) &key line-width pattern)
-  (make-instance 'curve :points points :line-width line-width :pattern pattern))
+(defmethod curve ((renderer renderer) (points vector) &rest initargs)
+  (apply #'make-instance 'curve :points points initargs))
 
 ;; FIXME: changing styles and size, multiple styles and size per text
 (defclass text (shape)
