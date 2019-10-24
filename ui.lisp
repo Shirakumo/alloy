@@ -22,6 +22,10 @@
    :layout-tree (make-instance 'layout-tree)
    :focus-tree (make-instance 'focus-tree)))
 
+(defmethod shared-initialize :after ((ui ui) slots &key)
+  (unless (slot-boundp (layout-tree ui) 'ui)
+    (setf (slot-value (layout-tree ui) 'ui) ui)))
+
 (defmethod focused ((ui ui))
   (focused (focus-tree ui)))
 

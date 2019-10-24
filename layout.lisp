@@ -107,7 +107,8 @@
       (return))))
 
 (defclass layout-tree ()
-  ((root :initform NIL :accessor root)))
+  ((root :initform NIL :accessor root)
+   (ui :initarg :ui :reader ui)))
 
 (defmethod (setf root) :before ((element layout-element) (tree layout-tree))
   (when (root tree)

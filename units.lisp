@@ -122,13 +122,12 @@
   (/ px (pxh *unit-parent*)))
 
 (define-unit un (un)
-  ;; FIXME: should use a UI access here instead of the renderer access.
-  (* un (resolution-scale (ui *unit-parent*)) (base-scale (ui *unit-parent*)))
-  (/ px (resolution-scale (ui *unit-parent*)) (base-scale (ui *unit-parent*))))
+  (* un (resolution-scale (ui (layout-tree *unit-parent*))) (base-scale (ui (layout-tree *unit-parent*))))
+  (/ px (resolution-scale (ui (layout-tree *unit-parent*))) (base-scale (ui (layout-tree *unit-parent*)))))
 
 (define-unit cm (cm)
-  (* cm (dots-per-cm (ui *unit-parent*)))
-  (/ px (dots-per-cm (ui *unit-parent*))))
+  (* cm (dots-per-cm (ui (layout-tree *unit-parent*))))
+  (/ px (dots-per-cm (ui (layout-tree *unit-parent*)))))
 
 ;;; TODO: It would be nice if we could preserve unit types
 ;;;       if the argument units are of the same type. This
