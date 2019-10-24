@@ -48,3 +48,5 @@
 
 (defmethod (setf value) :after (value (progress progress))
   (mark-for-render progress))
+
+;; TODO: plot

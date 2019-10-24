@@ -47,7 +47,6 @@
 (defgeneric move-to-back (window))
 ;; alloy:bounds
 ;; (setf alloy:bounds)
-;; FIXME: Alloy has no colour struct, but Simple does. What to do?
 (defgeneric background-color (window))
 (defgeneric (setf background-color) (color window))
 (defgeneric max-size (window))
