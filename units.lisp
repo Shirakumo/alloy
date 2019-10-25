@@ -104,8 +104,6 @@
   px)
 
 (define-unit vw (vw)
-  ;; FIXME: This currently does not work well with how windowing is done.
-  ;;        More of a problem in the windowing system though.
   (* vw (pxw (root (layout-tree *unit-parent*))))
   (/ px (pxw (root (layout-tree *unit-parent*)))))
 
