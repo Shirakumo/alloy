@@ -83,20 +83,20 @@
 (defclass text (shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
-   (color :initarg :color :initform colors:black :accessor color)
+   (pattern :initarg :pattern :initform colors:black :accessor pattern)
    (size :initarg :size :initform (arg! :size) :accessor size)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)
    (direction :initarg :direction :initform :right :accessor direction)))
 
-(defmethod text ((renderer renderer) (bounds alloy:extent) (string string) &key (font (request-font renderer :default))
+(defmethod text ((renderer renderer) bounds (string string) &key (font (request-font renderer :default))
                                                                                 (size (alloy:un 10))
-                                                                                (color colors:black)
+                                                                                (pattern colors:black)
                                                                                 (align '(:middle :left))
                                                                                 (direction :right))
   (destructuring-bind (valign halign) align
-    (make-instance 'text :text string :font font :size size :color color
+    (make-instance 'text :text string :font font :size size :pattern pattern
                          :bounds bounds :direction direction
                          :valign valign :halign halign)))
 
@@ -107,9 +107,8 @@
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :left :accessor halign)))
 
-(defmethod icon ((renderer renderer) (point alloy:point) (image image) &key (size (size image))
-                                                                            (bounds (alloy:margins))
-                                                                            (align '(:middle :left)))
+(defmethod icon ((renderer renderer) bounds (image image) &key (size (size image))
+                                                               (align '(:middle :left)))
   (destructuring-bind (valign halign) align
     (make-instance 'icon :image image :size size :bounds bounds
                          :valign valign :halign halign)))

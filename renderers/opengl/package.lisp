@@ -20,7 +20,8 @@
    #:make-vertex-buffer
    #:update-vertex-buffer
    #:make-vertex-array
-   #:draw-vertex-array)
+   #:draw-vertex-array
+   #:make-texture)
   ;; renderer.lisp
   (:export
    #:renderer

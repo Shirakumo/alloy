@@ -9,6 +9,15 @@
 (defclass renderer (simple:renderer)
   ())
 
+;;; KLUDGE: This is "poisoning" as it injects a class that might not be wanted if other
+;;;         systems than presentations are used to perform drawing operations. Ideally
+;;;         we'd instead create subclasses of all shapes with our extra stuff as a mixin.
+;;;         However, that's a bit troublesome with user-extensions, as those would not
+;;;         automatically be presentations-ready.
+;;;         
+;;;         The same problem exists for renderables, though there it is arguably worse,
+;;;         as then the user would always have to use the extra subclasses from presentations
+;;;         to construct all their UI, rather than the standard ones from core.
 (stealth-mixin:define-stealth-mixin shape () simple:shape
   ((name :initarg :name :initform NIL :reader name)
    (composite-mode :initarg :composite-mode :initform :source-over :accessor composite-mode)
@@ -39,6 +48,9 @@
                        (alloy:value (alloy:value alloy:renderable)))
        (declare (ignorable alloy:focus alloy:bounds alloy:value))
        ,@(loop for shape in shapes
+               ;; FIXME: How do we ensure the renderer actually in use gets to do its thing with
+               ;;        choosing the correct subclass and all? The shape constructors in simple
+               ;;        are not uniform in their arguments
                collect (destructuring-bind ((name type) &body initargs) shape
                          `(setf (find-shape ',name alloy:renderable)
                                 (make-instance ',type :name ',name ,@initargs)))))

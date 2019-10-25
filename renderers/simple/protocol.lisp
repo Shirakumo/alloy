@@ -23,8 +23,8 @@
 (defgeneric rectangle (renderer bounds &key pattern line-width &allow-other-keys))
 (defgeneric ellipse (renderer bounds &key pattern line-width &allow-other-keys))
 (defgeneric polygon (renderer points &key pattern &allow-other-keys))
-(defgeneric icon (renderer point image &key size bounds align &allow-other-keys))
-(defgeneric text (renderer point string &key pattern font size bounds align direction &allow-other-keys))
+(defgeneric icon (renderer bounds image &key size align &allow-other-keys))
+(defgeneric text (renderer bounds string &key pattern font size align direction &allow-other-keys))
 (defgeneric cursor (text position &key pattern &allow-other-keys))
 (defgeneric selection (text start end &key pattern &allow-other-keys))
 

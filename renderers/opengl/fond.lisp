@@ -102,39 +102,34 @@ void main(){
     (cl-fond:free (atlas font))
     (slot-makunbound font 'atlas)))
 
-(defmethod simple:request-font ((renderer renderer) (fontspec string))
-  (simple:request-font renderer (make-instance 'font :family fontspec)))
-
-(defmethod simple:request-font ((renderer renderer) (fontspec pathname))
-  (simple:request-font renderer (make-instance 'font :family fontspec)))
-
-(defmethod simple:request-font ((renderer renderer) (font simple:font))
+(defmethod simple:request-font ((renderer renderer) (family string) &key slant spacing weight stretch)
   (ensure-font
-   (cond ((equal "" (simple:family font))
+   (cond ((equal "" family)
           (simple:request-font renderer :default))
-         ((stringp (simple:family font))
+         (T
           (let ((font (font-discovery:find-font
-                       :family (simple:family font)
-                       :weight (simple:weight font)
-                       :stretch (simple:stretch font)
-                       :spacing (simple:spacing font)
-                       :slant (simple:slant font))))
+                       :family family
+                       :weight weight
+                       :stretch stretch
+                       :spacing spacing
+                       :slant slant)))
             (make-instance 'font :family (font-discovery:file font)
                                  :weight (font-discovery:weight font)
                                  :stretch (font-discovery:stretch font)
                                  :spacing (font-discovery:spacing font)
-                                 :slant (font-discovery:slant font))))
-         (T
-          font))
+                                 :slant (font-discovery:slant font)))))
    renderer))
 
-(defun text-point (text)
-  (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font shape)) (alloy:text text))
+(defmethod simple:request-font ((renderer renderer) (family pathname) &key)
+  (simple:request-font renderer (make-instance 'font :family family)))
+
+(defun text-point (text scale)
+  (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
     (declare (ignore gap))
-    (ecase direction
+    (ecase (simple:direction text)
       (:right
        (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
-                                 (simple:px-size (* scale (- r l)) (* scale (- u b))))))))
+                                 (alloy:px-size (* scale (- r l)) (* scale (- u b))))))))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:text))
   (let ((atlas (atlas (simple:font shape)))
@@ -143,16 +138,16 @@ void main(){
     (gl:active-texture :texture0)
     (gl:bind-texture :texture-2d (cl-fond:texture atlas))
     (simple:with-pushed-transforms (renderer)
-      (let ((s (* 2 (/ (alloy:to-px size) (cl-fond:size atlas)))))
-        (simple:translate renderer (text-point text))
+      (let ((s (* 2 (/ (alloy:to-px (simple:size shape)) (cl-fond:size atlas)))))
+        (simple:translate renderer (text-point shape s))
         (simple:scale renderer (alloy:px-size s s)))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
-    (setf (opengl:uniform shader "color") (simple:color shape))
+    (setf (opengl:uniform shader "color") (simple:pattern shape))
     ;; Could cache this by allocating a vbo/ebo per text. Don't have a deallocation API though, so...
     (let ((count (cl-fond:update-text atlas (alloy:text shape)
                                       (opengl:gl-name (opengl:resource 'text-vbo renderer))
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
 
-(defmethod simple:cursor ((text text) position &key pattern))
-(defmethod simple:selection ((text text) start end &key pattern))
+(defmethod simple:cursor ((text simple:text) position &key pattern))
+(defmethod simple:selection ((text simple:text) start end &key pattern))
