@@ -84,7 +84,10 @@
                                  collect (float (sin tt) 0f0)))
                     '(vector single-float)))
     (make-geometry 'stream-vbo 'stream-vao (arr)
-                   :data-usage :stream-draw))
+                   :data-usage :stream-draw)
+    (make-geometry 'gradient-vbo 'gradient-vao (arr)
+                   :data-usage :stream-draw
+                   :bindings '((:size 2 :offset 0 :stride 24) (:size 4 :offset 8 :stride 24))))
 
   ;; Allocate the necessary shaders.
   (flet ((make-shader (name vert frag)
@@ -115,6 +118,25 @@ out vec4 out_color;
 void main(){
    float strength = 1-length(line_normal);
    out_color = color * clamp(strength*feather+feather, 0, 1);
+}")
+    (make-shader 'gradient-shader
+                 "#version 330 core
+layout (location=0) in vec2 pos;
+layout (location=1) in vec4 vertex_color;
+
+out vec4 color;
+uniform mat3 transform;
+
+void main(){
+  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  color = vertex_color;
+}"
+                 "#version 330 core
+in vec4 color;
+out vec4 out_color;
+
+void main(){
+  out_color = color;
 }")
     (make-shader 'basic-shader
                  "#version 330 core
@@ -165,22 +187,22 @@ void main(){
 
 (defvar *clip-depth* 0)
 
-(defmethod simple:clip ((renderer renderer) (shape simple:filled-rectangle))
-  (simple:clip renderer (simple:bounds shape)))
-
-(defmethod simple:clip :before ((renderer renderer) (extent alloy:extent))
+(defmethod simple:clip ((renderer renderer) (shape simple:shape))
   (incf *clip-depth* 1)
   (gl:stencil-op :keep :incr :incr)
   (gl:stencil-func :always 1 #xFF)
   (gl:color-mask NIL NIL NIL NIL)
   (gl:depth-mask NIL)
   (unwind-protect
-       ;; FIXME: avoid allocation of rectangle
-       (alloy:render renderer (simple:rectangle renderer extent))
+       (alloy:render renderer shape)
     (gl:stencil-op :keep :keep :keep)
     (gl:stencil-func :gequal *clip-depth* #xFF)
     (gl:color-mask T T T T)
     (gl:depth-mask T)))
+
+(defmethod simple:clip :before ((renderer renderer) (extent alloy:extent))
+  ;; FIXME: avoid allocation of rectangle
+  (simple:clip renderer (simple:rectangle renderer extent)))
 
 (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
   (let ((*clip-depth* *clip-depth*))
@@ -336,7 +358,10 @@ void main(){
 
 (defmethod shared-initialize :after ((shape polygon) slots &key points)
   (let ((data (make-array (* 3 (length points)))))
-    ;; FIXME: The points are make absolute too early
+    ;; FIXME: The points are made absolute too early as now they won't update on resize.
+    ;;        Could also be fixed by resetting points when associated component changes,
+    ;;        but that would only work for presentations, not for shapes used outside of
+    ;;        that context.
     (loop with i = -1
           for point in points
           do (setf (aref data (incf i)) (alloy:pxx point))
@@ -350,7 +375,7 @@ void main(){
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
     (setf (uniform shader "color") (simple:pattern shape))
-    (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (/ (length data) 3))))
+    (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (/ (length data) 2))))
 
 (defmethod alloy:render ((renderer renderer) (icon simple:icon))
   (let ((shader (resource 'image-shader renderer)))
@@ -366,5 +391,3 @@ void main(){
 (defmethod simple:request-image ((renderer renderer) data &key size)
   (make-texture renderer (alloy:pxw size) (alloy:pxh size) data))
 
-;; FIXME: gradients
-(defmethod simple:request-gradient ((renderer renderer) type start stop stops &key))

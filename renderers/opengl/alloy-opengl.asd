@@ -15,6 +15,7 @@
   :components ((:file "package")
                (:file "protocol")
                (:file "renderer")
+               (:file "gradient")
                (:file "unmanaged")
                (:file "documentation"))
   :depends-on (:documentation-utils
