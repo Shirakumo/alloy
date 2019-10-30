@@ -188,17 +188,18 @@ void main(){
 (defvar *clip-depth* 0)
 
 (defmethod simple:clip ((renderer renderer) (shape simple:shape))
-  (incf *clip-depth* 1)
-  (gl:stencil-op :keep :incr :incr)
-  (gl:stencil-func :always 1 #xFF)
-  (gl:color-mask NIL NIL NIL NIL)
-  (gl:depth-mask NIL)
-  (unwind-protect
-       (alloy:render renderer shape)
-    (gl:stencil-op :keep :keep :keep)
-    (gl:stencil-func :gequal *clip-depth* #xFF)
-    (gl:color-mask T T T T)
-    (gl:depth-mask T)))
+  ;; (incf *clip-depth* 1)
+  ;; (gl:stencil-op :keep :incr :incr)
+  ;; (gl:stencil-func :always 1 #xFF)
+  ;; (gl:color-mask NIL NIL NIL NIL)
+  ;; (gl:depth-mask NIL)
+  ;; (unwind-protect
+  ;;      (alloy:render renderer shape)
+  ;;   (gl:stencil-op :keep :keep :keep)
+  ;;   (gl:stencil-func :gequal *clip-depth* #xFF)
+  ;;   (gl:color-mask T T T T)
+  ;;   (gl:depth-mask T))
+  )
 
 (defmethod simple:clip :before ((renderer renderer) (extent alloy:extent))
   ;; FIXME: avoid allocation of rectangle
@@ -305,7 +306,6 @@ void main(){
       (simple:scale renderer (simple:bounds shape))
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:pattern shape))
-    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
@@ -333,7 +333,6 @@ void main(){
         (simple:scale renderer (alloy:size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
     (setf (uniform shader "color") (simple:pattern shape))
-    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2))))
 

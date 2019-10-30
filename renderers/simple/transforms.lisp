@@ -77,10 +77,18 @@
                                 0 1 (alloy:pxy extent)
                                 0 0 1)))
 
+(defmethod translate ((transform transform) (margins alloy:margins))
+  (add-matrix transform (matrix 1 0 (alloy:pxl margins)
+                                0 1 (alloy:pxb margins)
+                                0 0 1)))
+
 (defmethod scale ((transform transform) (size alloy:size))
   (add-matrix transform (matrix (alloy:pxw size) 0 0
                                 0 (alloy:pxh size) 0
                                 0 0 1)))
+
+(defmethod scale ((transform transform) (margins alloy:margins))
+  (scale transform (alloy:ensure-extent margins)))
 
 (defmethod rotate ((transform transform) (phi float))
   (add-matrix transform (matrix (cos phi) (- (sin phi)) 0

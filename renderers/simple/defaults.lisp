@@ -49,7 +49,7 @@
 (defclass filled-rectangle (rectangle filled-shape) ())
 (defclass outlined-rectangle (rectangle outlined-shape) ())
 
-(defmethod rectangle ((renderer renderer) (bounds alloy:extent) &rest initargs &key line-width)
+(defmethod rectangle ((renderer renderer) bounds &rest initargs &key line-width)
   (apply #'make-instance (if line-width 'outlined-rectangle 'filled-rectangle) :bounds bounds initargs))
 
 (defclass ellipse (shape)
@@ -58,7 +58,7 @@
 (defclass filled-ellipse (ellipse filled-shape) ())
 (defclass outlined-ellipse (ellipse outlined-shape) ())
 
-(defmethod ellipse ((renderer renderer) (bounds alloy:extent) &rest initargs &key line-width)
+(defmethod ellipse ((renderer renderer) bounds &rest initargs &key line-width)
   (apply #'make-instance (if line-width 'outlined-ellipse 'filled-ellipse) :bounds bounds initargs))
 
 (defclass polygon (filled-shape)
@@ -84,21 +84,14 @@
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
    (pattern :initarg :pattern :initform colors:black :accessor pattern)
-   (size :initarg :size :initform (arg! :size) :accessor size)
+   (size :initarg :size :initform (alloy:un 10) :accessor size)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
-   (valign :initarg :valign :initform :middle :accessor valign)
+   (valign :initarg :valign :initform :bottom :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)
    (direction :initarg :direction :initform :right :accessor direction)))
 
-(defmethod text ((renderer renderer) bounds (string string) &key (font (request-font renderer :default))
-                                                                                (size (alloy:un 10))
-                                                                                (pattern colors:black)
-                                                                                (align '(:middle :left))
-                                                                                (direction :right))
-  (destructuring-bind (valign halign) align
-    (make-instance 'text :text string :font font :size size :pattern pattern
-                         :bounds bounds :direction direction
-                         :valign valign :halign halign)))
+(defmethod text ((renderer renderer) bounds (string string) &rest initargs)
+  (apply #'make-instance 'text :text string :bounds bounds :font (or (getf initargs :font) (request-font renderer :default)) initargs))
 
 (defclass icon (shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)
@@ -107,21 +100,19 @@
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :left :accessor halign)))
 
-(defmethod icon ((renderer renderer) bounds (image image) &key (size (size image))
-                                                               (align '(:middle :left)))
-  (destructuring-bind (valign halign) align
-    (make-instance 'icon :image image :size size :bounds bounds
-                         :valign valign :halign halign)))
+(defmethod icon ((renderer renderer) bounds (image image) &rest initargs)
+  (apply #'make-instance 'icon :image image :size (or (getf initargs :size) (size image)) initargs))
 
 (defun resolve-alignment (extent halign valign size)
-  (alloy:px-point
-   (+ (alloy:pxx extent)
-      (ecase halign
-        (:start 0)
-        (:middle (/ (- (alloy:pxw extent) (alloy:pxw size)) 2))
-        (:end (- (alloy:pxw extent) (alloy:pxw size)))))
-   (+ (alloy:pxy extent)
-      (ecase valign
-        (:bottom 0)
-        (:middle (/ (- (alloy:pxh extent) (alloy:pxh size)) 2))
-        (:top (- (alloy:pxh extent) (alloy:pxh size)))))))
+  (let ((extent (alloy:ensure-extent extent)))
+    (alloy:px-point
+     (+ (alloy:pxx extent)
+        (ecase halign
+          (:start 0)
+          (:middle (/ (- (alloy:pxw extent) (alloy:pxw size)) 2))
+          (:end (- (alloy:pxw extent) (alloy:pxw size)))))
+     (+ (alloy:pxy extent)
+        (ecase valign
+          (:bottom 0)
+          (:middle (/ (- (alloy:pxh extent) (alloy:pxh size)) 2))
+          (:top (- (alloy:pxh extent) (alloy:pxh size))))))))

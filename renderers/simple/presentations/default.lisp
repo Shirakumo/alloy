@@ -24,23 +24,26 @@
               (T colors:white))))
 
 (define-realization (default-look-and-feel alloy:label)
-  ((:label text)
-   :text (alloy:data alloy:renderable)
-   :extent (alloy:margins)))
+  ((:label simple:text)
+   (alloy:margins)
+   (alloy:data alloy:renderable)
+   :pattern (colored:color 1 1 1)))
 
 (define-update (default-look-and-feel alloy:label)
   (:label
    :text (alloy:data alloy:renderable)))
 
 (define-realization (default-look-and-feel alloy:button)
-  ((:background simple:filled-rectangle)
-   :extent (alloy:margins))
-  ((:border simple:outlined-rectangle)
-   :extent (alloy:margins -3))
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:border simple:rectangle)
+   (alloy:margins -3)
+   :line-width (alloy:un 1))
   ((:label simple:text)
-   :text (alloy:data alloy:renderable)
-   :extent (alloy:margins 1)
-   :halign :middle))
+   (alloy:margins 1)
+   (alloy:data alloy:renderable)
+   :halign :middle
+   :valign :middle))
 
 (define-update (default-look-and-feel alloy:button)
   (:background
@@ -52,12 +55,13 @@
    :text (alloy:data alloy:renderable)))
 
 (define-realization (default-look-and-feel alloy:switch)
-  ((:background simple:filled-rectangle)
-   :extent (alloy:margins))
-  ((:border simple:outlined-rectangle)
-   :extent (alloy:margins -3))
-  ((:switch simple:filled-rectangle)
-   :extent (alloy:extent 0 0 (alloy:pw 0.3) (alloy:ph))))
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:border simple:rectangle)
+   (alloy:margins -3)
+   :line-width (alloy:un 1))
+  ((:switch simple:rectangle)
+   (alloy:extent 0 0 (alloy:pw 0.3) (alloy:ph))))
 
 (define-update (default-look-and-feel alloy:switch)
   (:switch
@@ -69,39 +73,42 @@
                  (T (colored:color 0.25 0.2 0.8)))))
 
 (define-realization (default-look-and-feel alloy:input-line)
-  ((:background simple:filled-rectangle)
-   :extent (alloy:margins))
-  ((:border simple:outlined-rectangle)
-   :extent (alloy:margins -3))
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:border simple:rectangle)
+   (alloy:margins -3)
+   :line-width (alloy:un 1))
   ((:label simple:text)
-   :text alloy:value
-   :extent (alloy:margins 1))
-  ((:cursor simple:filled-rectangle)
-   :extent (alloy:extent 0 (alloy:ph 0.15) 1 (alloy:ph 0.7))))
+   (alloy:margins 1)
+   alloy:value
+   :valign :middle)
+  ((:cursor simple:rectangle)
+   (alloy:extent 0 (alloy:ph 0.15) 1 (alloy:ph 0.7))))
 
 (define-update (default-look-and-feel alloy:input-line)
   (:background
    :pattern (case alloy:focus
-                 (:strong (colored:color 0.9 0.9 0.9))
-                 (:weak (colored:color 0.7 0.7 0.7))
-                 (T (colored:color 0.15 0.15 0.15))))
+              (:strong (colored:color 0.9 0.9 0.9))
+              (:weak (colored:color 0.7 0.7 0.7))
+              (T (colored:color 0.15 0.15 0.15))))
   (:cursor
    :hidden-p (null alloy:focus)
    :pattern colors:black)
   (:label
-   :text (alloy:data alloy:renderable)))
+   :text alloy:value))
 
 (define-realization (default-look-and-feel alloy:slider)
-  ((:background simple:filled-rectangle)
-   :extent (ecase (alloy:orientation alloy:renderable)
-             (:horizontal (alloy:extent 0 (alloy:ph 0.4) (alloy:pw) (alloy:ph 0.2)))
-             (:vertical (alloy:extent (alloy:pw 0.4) 0 (alloy:pw 0.2) (alloy:ph)))))
-  ((:border simple:outlined-rectangle)
-   :extent (alloy:margins -3))
-  ((:handle simple:filled-rectangle)
-   :extent (ecase (alloy:orientation alloy:renderable)
-             (:horizontal (alloy:extent -5 0 10 (alloy:ph)))
-             (:vertical (alloy:extent 0 -5 (alloy:pw) 10)))))
+  ((:background simple:rectangle)
+   (ecase (alloy:orientation alloy:renderable)
+     (:horizontal (alloy:extent 0 (alloy:ph 0.4) (alloy:pw) (alloy:ph 0.2)))
+     (:vertical (alloy:extent (alloy:pw 0.4) 0 (alloy:pw 0.2) (alloy:ph)))))
+  ((:border simple:rectangle)
+   (alloy:margins -3)
+   :line-width (alloy:un 1))
+  ((:handle simple:rectangle)
+   (ecase (alloy:orientation alloy:renderable)
+     (:horizontal (alloy:extent -5 0 10 (alloy:ph)))
+     (:vertical (alloy:extent 0 -5 (alloy:pw) 10)))))
 
 (define-update (default-look-and-feel alloy:slider)
   (:handle
@@ -113,13 +120,15 @@
                  (T (colored:color 0.25 0.2 0.8)))))
 
 (define-realization (default-look-and-feel alloy:progress)
-  ((:background simple:filled-rectangle)
-   :extent (alloy:margins))
-  ((:bar simple:filled-rectangle)
-   :extent (alloy:margins 3))
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:bar simple:rectangle)
+   (alloy:margins 3))
   ((:label simple:text)
-   :extent (alloy:margins 1)
-   :halign :middle))
+   (alloy:margins 1)
+   ""
+   :halign :middle
+   :valign :middle))
 
 (define-update (default-look-and-feel alloy:progress)
   (:bar
@@ -131,12 +140,13 @@
    :pattern colors:white))
 
 (define-realization (default-look-and-feel alloy:radio)
-  ((:background simple:filled-circle)
-   :extent (alloy:extent 0 0 (alloy:ph 1) (alloy:ph 1)))
-  ((:inner simple:filled-circle)
-   :extent (alloy:extent (alloy:ph 0.1) (alloy:ph 0.1) (alloy:ph 0.8) (alloy:ph 0.8)))
-  ((:border simple:outlined-circle)
-   :extent (alloy:extent (alloy:ph -0.1) (alloy:ph -0.1) (alloy:ph 1.2) (alloy:ph 1.2))))
+  ((:background simple:ellipse)
+   (alloy:extent 0 0 (alloy:ph 1) (alloy:ph 1)))
+  ((:inner simple:ellipse)
+   (alloy:extent (alloy:ph 0.1) (alloy:ph 0.1) (alloy:ph 0.8) (alloy:ph 0.8)))
+  ((:border simple:ellipse)
+   (alloy:extent (alloy:ph -0.1) (alloy:ph -0.1) (alloy:ph 1.2) (alloy:ph 1.2))
+   :line-width (alloy:un 1)))
 
 (define-update (default-look-and-feel alloy:radio)
   (:inner
@@ -144,13 +154,14 @@
    :pattern (colored:color 0.25 0.2 0.8)))
 
 (define-realization (default-look-and-feel alloy:combo)
-  ((:background simple:filled-rectangle)
-   :extent (alloy:margins))
-  ((:border simple:outlined-rectangle)
-   :extent (alloy:margins -3))
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:border simple:rectangle)
+   (alloy:margins -3)
+   :line-width (alloy:un 1))
   ((:label simple:text)
-   :text (princ-to-string (alloy:value alloy:renderable))
-   :extent (alloy:margins 1)))
+   (alloy:margins 1)
+   (princ-to-string (alloy:value alloy:renderable))))
 
 (define-update (default-look-and-feel alloy:combo)
   (:label
@@ -158,11 +169,11 @@
    :text (princ-to-string (alloy:value alloy:renderable))))
 
 (define-realization (default-look-and-feel alloy:combo-item)
-  ((:background simple:filled-rectangle)
-   :extent (alloy:margins))
+  ((:background simple:rectangle)
+   (alloy:margins))
   ((:label simple:text)
-   :text (alloy:data alloy:renderable)
-   :extent (alloy:margins 1)))
+   (alloy:margins 1)
+   (alloy:data alloy:renderable)))
 
 (define-update (default-look-and-feel alloy:combo-item)
   (:background
@@ -173,9 +184,9 @@
    :pattern colors:white))
 
 (define-realization (default-look-and-feel alloy:scrollbar)
-  ((:background simple:filled-rectangle)
-   :extent (alloy:margins))
-  ((:handle simple:filled-rectangle)
-   :extent (ecase (alloy:orientation alloy:renderable)
-             (:horizontal (alloy:extent -10 0 20 (alloy:ph)))
-             (:vertical (alloy:extent 0 -10 (alloy:pw) 20)))))
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:handle simple:rectangle)
+   (ecase (alloy:orientation alloy:renderable)
+     (:horizontal (alloy:extent -10 0 20 (alloy:ph)))
+     (:vertical (alloy:extent 0 -10 (alloy:pw) 20)))))

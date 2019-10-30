@@ -36,7 +36,7 @@
          (unwind-protect
               (simple:clip renderer shape)
            (setf (simple:pattern shape) pattern))
-         (simple:render renderer pattern))))))
+         (alloy:render renderer pattern))))))
 
 (defgeneric compute-gradient-data (gradient))
 

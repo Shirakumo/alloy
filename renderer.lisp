@@ -44,9 +44,6 @@
 (defclass renderable ()
   ((render-needed-p :initform T :reader render-needed-p)))
 
-(defmethod initialize-instance :after ((renderable renderable) &key renderer)
-  (when renderer (register renderable renderer)))
-
 (defmethod mark-for-render ((renderable renderable))
   (setf (slot-value renderable 'render-needed-p) T))
 

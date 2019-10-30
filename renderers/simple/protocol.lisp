@@ -24,11 +24,11 @@
 (defgeneric ellipse (renderer bounds &key pattern line-width &allow-other-keys))
 (defgeneric polygon (renderer points &key pattern &allow-other-keys))
 (defgeneric icon (renderer bounds image &key size align &allow-other-keys))
-(defgeneric text (renderer bounds string &key pattern font size align direction &allow-other-keys))
+(defgeneric text (renderer bounds string &key pattern font size halign valign direction &allow-other-keys))
 (defgeneric cursor (text position &key pattern &allow-other-keys))
 (defgeneric selection (text start end &key pattern &allow-other-keys))
 
-(defgeneric request-font (renderer family &key slant spacing weight stretch &allow-other-keys))
+(defgeneric request-font (renderer family &key slant spacing weight halign valign stretch &allow-other-keys))
 (defgeneric request-image (renderer data &key size &allow-other-keys))
 (defgeneric request-gradient (renderer type start stop stops &key &allow-other-keys))
 

@@ -123,6 +123,9 @@ void main(){
 (defmethod simple:request-font ((renderer renderer) (family pathname) &key)
   (simple:request-font renderer (make-instance 'font :family family)))
 
+(defmethod simple:request-font ((renderer renderer) (default (eql :default)) &key)
+  (simple:request-font renderer "Arial"))
+
 (defun text-point (text scale)
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
     (declare (ignore gap))
@@ -132,6 +135,7 @@ void main(){
                                  (alloy:px-size (* scale (- r l)) (* scale (- u b))))))))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:text))
+  (alloy:allocate (simple:font shape))
   (let ((atlas (atlas (simple:font shape)))
         (shader (opengl:resource 'text-shader renderer)))
     (opengl:bind shader)

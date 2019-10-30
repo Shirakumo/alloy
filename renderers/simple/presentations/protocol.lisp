@@ -53,7 +53,7 @@
                ;;        are not uniform in their arguments
                collect (destructuring-bind ((name type) &body initargs) shape
                          `(setf (find-shape ',name alloy:renderable)
-                                (make-instance ',type :name ',name ,@initargs)))))
+                                (,type alloy:renderer ,@initargs :name ',name)))))
      alloy:renderable))
 
 (defmacro define-update ((renderer renderable) &body shapes)
@@ -82,7 +82,7 @@
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds renderable))
-    (loop for (name shape) across (shapes renderable)
+    (loop for (name . shape) across (shapes renderable)
           unless (hidden-p shape)
           do (simple:with-pushed-transforms (renderer)
                (setf (simple:composite-mode renderer) (composite-mode shape))
