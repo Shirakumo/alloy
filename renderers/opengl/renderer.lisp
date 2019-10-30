@@ -274,8 +274,9 @@ void main(){
 (defclass line-strip (simple:line-strip)
   ((data :accessor data)))
 
-(defmethod shared-initialize :after ((shape line-strip) slots &key points)
-  (setf (data shape) (make-line-array points)))
+(defmethod shared-initialize :after ((shape line-strip) slots &key (points NIL points-p))
+  (when points-p
+    (setf (data shape) (make-line-array points))))
 
 (defmethod alloy:render ((renderer renderer) (shape line-strip))
   (let ((shader (resource 'line-shader renderer))
@@ -355,17 +356,17 @@ void main(){
 (defclass polygon (simple:polygon)
   ((data :reader data)))
 
-(defmethod shared-initialize :after ((shape polygon) slots &key points)
-  (let ((data (make-array (* 3 (length points)))))
-    ;; FIXME: The points are made absolute too early as now they won't update on resize.
-    ;;        Could also be fixed by resetting points when associated component changes,
-    ;;        but that would only work for presentations, not for shapes used outside of
-    ;;        that context.
-    (loop with i = -1
-          for point in points
-          do (setf (aref data (incf i)) (alloy:pxx point))
-             (setf (aref data (incf i)) (alloy:pxy point)))
-    (setf (data shape) data)))
+;;; FIXME: this will not run if the user just changes size and does not reinitialise the shape.
+;;;        in turn the units will not match up any longer. WE might need to specify this in the
+;;;        simple protocol if there's no automated way to determine when to recompute
+(defmethod shared-initialize :after ((shape polygon) slots &key (points NIL points-p))
+  (when points-po
+    (let ((data (make-array (* 3 (length points)))))
+      (loop with i = -1
+            for point in points
+            do (setf (aref data (incf i)) (alloy:pxx point))
+               (setf (aref data (incf i)) (alloy:pxy point)))
+      (setf (data shape) data))))
 
 (defmethod alloy:render ((renderer renderer) (shape polygon))
   (let ((shader (resource 'basic-shader renderer))
