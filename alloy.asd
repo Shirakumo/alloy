@@ -39,7 +39,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "slider")
                              (:file "radio")
                              (:file "combo")
-                             (:file "scroll")))
+                             (:file "scroll")
+                             (:file "plot")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)

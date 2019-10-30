@@ -57,6 +57,12 @@
    #:combo-item
    #:value-set
    #:combo-set)
+  ;; components/plot.lisp
+  (:export
+   #:plot
+   #:x-range
+   #:y-range
+   #:plot-points)
   ;; components/radio.lisp
   (:export
    #:radio

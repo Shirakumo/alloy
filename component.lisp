@@ -32,6 +32,9 @@
 (defmethod (setf focus) :after (value (component component))
   (mark-for-render component))
 
+(defmethod (setf bounds) :after (value (component component))
+  (mark-for-render component))
+
 (make-observable '(setf focus) '(focus observable))
 (make-observable '(setf bounds) '(bounds observable))
 (make-observable 'handle '(event observable ctx))

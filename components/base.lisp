@@ -45,8 +45,3 @@
 
 (defclass progress (value-component)
   ((maximum :initarg :maximum :initform 100 :accessor maximum)))
-
-(defmethod (setf value) :after (value (progress progress))
-  (mark-for-render progress))
-
-;; TODO: plot

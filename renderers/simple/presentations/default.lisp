@@ -190,3 +190,17 @@
    (ecase (alloy:orientation alloy:renderable)
      (:horizontal (alloy:extent -10 0 20 (alloy:ph)))
      (:vertical (alloy:extent 0 -10 (alloy:pw) 20)))))
+
+(define-realization (default-look-and-feel alloy:plot)
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:border simple:rectangle)
+   (alloy:margins -3)
+   :line-width (alloy:un 1))
+  ((:curve simple:line-strip)
+   (alloy:plot-points alloy:renderable)
+   :pattern (colored:color 0.25 0.2 0.8)))
+
+(define-update (default-look-and-feel alloy:plot)
+  (:curve
+   :points (alloy:plot-points alloy:renderable)))

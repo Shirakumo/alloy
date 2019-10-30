@@ -26,14 +26,13 @@
 (defun make-line-array (points)
   (let ((array (make-array (* 6 4 (1- (length points))) :element-type 'single-float))
         (i -1))
-    (flet ((vertex (p nx ny)
-             (setf (aref array (incf i)) (alloy:pxx p))
-             (setf (aref array (incf i)) (alloy:pxy p))
-             (setf (aref array (incf i)) nx)
-             (setf (aref array (incf i)) ny)))
-      (loop for (a b) on points
-            while b
-            do (let* ((ux (- (- (alloy:pxy b) (alloy:pxy a))))
+    (labels ((vertex (p nx ny)
+               (setf (aref array (incf i)) (alloy:pxx p))
+               (setf (aref array (incf i)) (alloy:pxy p))
+               (setf (aref array (incf i)) nx)
+               (setf (aref array (incf i)) ny))
+             (line (a b)
+               (let* ((ux (- (- (alloy:pxy b) (alloy:pxy a))))
                       (uy (- (alloy:pxx b) (alloy:pxx a)))
                       (len (sqrt (+ (* ux ux) (* uy uy)))))
                  (setf ux (/ ux len))
@@ -43,7 +42,14 @@
                  (vertex a (+ ux) (+ uy))
                  (vertex b (- ux) (- uy))
                  (vertex b (+ ux) (+ uy))
-                 (vertex a (+ ux) (+ uy))))
+                 (vertex a (+ ux) (+ uy)))))
+      (etypecase points
+        (list
+         (loop for (a b) on points
+               while b do (line a b)))
+        (vector
+         (loop for i from 0 below (1- (length points))
+               do (line (aref points i) (aref points (1+ i))))))
       array)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
@@ -276,7 +282,10 @@ void main(){
 
 (defmethod shared-initialize :after ((shape line-strip) slots &key (points NIL points-p))
   (when points-p
-    (setf (data shape) (make-line-array points))))
+    (setf (data shape) (print (make-line-array points)))))
+
+(defmethod simple:line-strip ((renderer renderer) (points vector) &rest initargs)
+  (apply #'make-instance 'line-strip :points points initargs))
 
 (defmethod alloy:render ((renderer renderer) (shape line-strip))
   (let ((shader (resource 'line-shader renderer))
@@ -294,6 +303,9 @@ void main(){
 
 (defmethod shared-initialize :after ((shape curve) slots &key points)
   ())
+
+(defmethod simple:curve ((renderer renderer) (points vector) &rest initargs)
+  (apply #'make-instance 'curve :points points initargs))
 
 ;; FIXME: curves
 (defmethod alloy:render ((renderer renderer) (shape curve))
@@ -367,6 +379,9 @@ void main(){
             do (setf (aref data (incf i)) (alloy:pxx point))
                (setf (aref data (incf i)) (alloy:pxy point)))
       (setf (data shape) data))))
+
+(defmethod simple:polygon ((renderer renderer) (points vector) &rest initargs)
+  (apply #'make-instance 'polygon :points points initargs))
 
 (defmethod alloy:render ((renderer renderer) (shape polygon))
   (let ((shader (resource 'basic-shader renderer))
