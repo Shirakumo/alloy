@@ -86,3 +86,22 @@
 
 (defmethod (setf index) ((list list) (data aref-data))
   (setf (index data) (apply #'array-row-major-index (object data) list)))
+
+;;; TODO: This is kinda... not too great.
+(defclass computed-data (value-data)
+  ((closure :initarg :closure :accessor closure)))
+
+(defmethod initialize-instance :after ((data computed-data) &key observe)
+  (flet ((update (value object)
+           (setf (value data) (apply (closure data)
+                                     (loop for (function object) in observe
+                                           collect (funcall function object))))))
+    (loop for (function object) in observe
+          do (observe function object #'update))))
+
+(defmethod expand-compound-place-data ((place (eql 'lambda)) args)
+  (destructuring-bind (args observed &rest body) args
+    `(make-instance 'computed-data
+                    :closure (,place ,args ,@body)
+                    :observe (list ,@(loop for (function object) in observed
+                                           collect `(list ',function ,object))))))

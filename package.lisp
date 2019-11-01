@@ -123,7 +123,9 @@
    #:slot
    #:aref-data
    #:object
-   #:index)
+   #:index
+   #:computed-data
+   #:closure)
   ;; events.lisp
   (:export
    #:handle
