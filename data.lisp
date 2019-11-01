@@ -92,16 +92,18 @@
   ((closure :initarg :closure :accessor closure)))
 
 (defmethod initialize-instance :after ((data computed-data) &key observe)
-  (flet ((update (value object)
+  (flet ((update (&rest _)
+           (declare (ignore _))
            (setf (value data) (apply (closure data)
                                      (loop for (function object) in observe
                                            collect (funcall function object))))))
     (loop for (function object) in observe
-          do (observe function object #'update))))
+          do (observe function object #'update))
+    (update)))
 
 (defmethod expand-compound-place-data ((place (eql 'lambda)) args)
-  (destructuring-bind (args observed &rest body) args
+  (destructuring-bind (args &rest body) args
     `(make-instance 'computed-data
-                    :closure (,place ,args ,@body)
-                    :observe (list ,@(loop for (function object) in observed
+                    :closure (,place ,(mapcar #'first args) ,@body)
+                    :observe (list ,@(loop for (function object) in (mapcar #'second args)
                                            collect `(list ',function ,object))))))
