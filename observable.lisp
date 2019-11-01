@@ -107,3 +107,19 @@
 (defmethod notify-observers (function (observable observable) &rest args)
   (loop for observer in (gethash function (observers observable))
         do (apply (observer-function observer) args)))
+
+(defclass observable-object (observable)
+  ())
+
+(macrolet ((def ()
+             (flet ((s (name)
+                      (find-symbol name
+                                   #+sbcl "SB-MOP"
+                                   #+(or abcl allegro) "MOP"
+                                   #+(or clisp ecl clasp lispworks scl) "CLOS"
+                                   #+cmucl "CLOS-MOP"
+                                   #+clozure "CCL"
+                                   #+mezzano "MEZZANO.CLOS")))
+               `(defmethod (setf ,(s "SLOT-VALUE-USING-CLASS")) :after (value class (object observable-object) slot)
+                  (notify-observers (,(s "SLOT-DEFINITION-NAME") slot) object value object)))))
+  (def))

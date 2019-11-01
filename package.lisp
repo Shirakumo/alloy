@@ -281,7 +281,8 @@
    #:notify-observers
    #:make-observable
    #:define-observable
-   #:on)
+   #:on
+   #:observable-object)
   ;; renderer.lisp
   (:export
    #:allocate
