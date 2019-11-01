@@ -120,7 +120,7 @@
 
 (defmethod update-shape :around ((renderer renderer) (renderable renderable) (shape shape))
   (call-next-method)
-  (let ((initargs (cdr (assoc shape (update-overrides renderable)))))
+  (let ((initargs (cdr (assoc (name shape) (update-overrides renderable)))))
     (when initargs ;; FIXME: What if the initargs should be dynamic?
       (apply #'reinitialize-instance shape initargs))))
 
