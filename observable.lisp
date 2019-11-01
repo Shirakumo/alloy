@@ -6,6 +6,7 @@
 
 (in-package #:org.shirakumo.alloy)
 
+;;; TODO: This is useful enough to be its own library, I think.
 (defstruct (observer (:constructor make-observer (name function))
                      (:predicate NIL)
                      (:copier NIL))
@@ -123,3 +124,27 @@
                `(defmethod (setf ,(s "SLOT-VALUE-USING-CLASS")) :after (value class (object observable-object) slot)
                   (notify-observers (,(s "SLOT-DEFINITION-NAME") slot) object value object)))))
   (def))
+
+(defclass observable-table (observable)
+  ((storage :reader storage)))
+
+(defmethod initialize-instance :after ((table observable-table) &rest initargs)
+  (setf (slot-value table 'storage) (apply #'make-hash-table initargs)))
+
+(defun make-observable-table (&rest hash-table-initargs)
+  (apply #'make-instance 'observable-table hash-table-initargs))
+
+(defun gettable (key table &optional default)
+  (gethash key (storage table) default))
+
+(defun (setf gettable) (value key table)
+  (prog1 (setf (gethash key (storage table)) value)
+    (notify-observers '(setf gettable) table value key table)))
+
+(defun remtable (key table)
+  (prog1 (remhash key (storage table))
+    (notify-observers 'remtable table key table)))
+
+(defun clrtable (table)
+  (prog1 (clrhash (storage table))
+    (notify-observers 'clrtable table table)))
