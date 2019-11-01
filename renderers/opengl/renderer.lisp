@@ -282,7 +282,7 @@ void main(){
 
 (defmethod shared-initialize :after ((shape line-strip) slots &key (points NIL points-p))
   (when points-p
-    (setf (data shape) (print (make-line-array points)))))
+    (setf (data shape) (make-line-array points))))
 
 (defmethod simple:line-strip ((renderer renderer) (points vector) &rest initargs)
   (apply #'make-instance 'line-strip :points points initargs))
