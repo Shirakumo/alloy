@@ -194,6 +194,7 @@ void main(){
 (defvar *clip-depth* 0)
 
 (defmethod simple:clip ((renderer renderer) (shape simple:shape))
+  ;; FIXME: THIS NEEDS TO BE FIXED
   ;; (incf *clip-depth* 1)
   ;; (gl:stencil-op :keep :incr :incr)
   ;; (gl:stencil-func :always 1 #xFF)
@@ -308,6 +309,9 @@ void main(){
   (apply #'make-instance 'curve :points points initargs))
 
 ;; FIXME: curves
+;;        We could just do this by computing the bezier on the CPU-side and
+;;        turning it into line segments, but it would be cool if we could use
+;;        the GPU's tesselation facilities to do it with instead.
 (defmethod alloy:render ((renderer renderer) (shape curve))
   )
 

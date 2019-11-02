@@ -79,7 +79,10 @@
 (defmethod curve ((renderer renderer) (points vector) &rest initargs)
   (apply #'make-instance 'curve :points points initargs))
 
-;; FIXME: changing styles and size, multiple styles and size per text
+;; TODO: changing styles and size, multiple styles and size per text
+;;       Might be too much for a simple interface though. Maybe could be
+;;       done by a layouter -- splitting text into contiguous segments.
+;;       would be difficult to manage with line wraps and bidi.
 (defclass text (shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
