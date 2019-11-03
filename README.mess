@@ -49,6 +49,23 @@ Often when needing to compute with units, the unit needs to be converted into so
 Units are immutable and are cached or constructed at compile time wherever possible. It is safe to dump them to FASLs, too. While two units of the same type and with the same value may be ``eq``, this is not guaranteed. To ensure unit size equality, use ``u=``.
 
 ## 1.2 Geometry
+While units give us the tool to denote measurements, the geometry protocol gives access to a set of tools to describe and operate on geometric data. All of the geometry in Alloy is based on a two dimensional Cartesian coordinate system. All of the measurements in the geometrical structures are expressed in terms of ``unit`` instances. Specifically, the following structures are available:
+
+- ``point``
+  A singular position in space, denoted by ``x`` and ``y``.
+- ``size``
+  The span of a construct in space, denoted by ``w`` and ``h``. 
+- ``extent``
+  A delimited extent in space, denoted by ``x``, ``y``, ``w`` and ``h``.
+- ``margins``
+  The offset from the borders of a surrounding extent, denoted by ``l``, ``u``, ``r``, and ``b``. Positive measurements decrease the extent, negative measurements increase the extent.
+  
+The default constructors of these structures take unit instances, or a real number that is interpreted as a ``un`` unit. There are alternate convenience constructors that create the structures from device pixel units. These constructors are simply prefixed by ``px-`` (``px-extent``, etc). In the other direction, convenience accessors for device pixels of all the coordinates are also available with a ``px`` prefix (``pxx``, etc).
+
+Just like units, geometrical constructs are immutable and may be constructed at compile time, or emitted into FASLs. To compare them, you should use the respective type's comparison function (``extent=``, etc).
+
+A couple of extra functions exist for convenience purposes, such as ``destructure-margins`` and ``destructure-extent`` to easily deal with all of the fields, ``contained-p`` to check for inclusion, ``overlapping-p`` to check for intersection, ``extent-intersection`` to compute the intersection, and ``ensure-extent`` to coerce any structure into an ``extent``.
+
 ## 1.3 Events
 ## 1.4 Renderer
 ## 1.5 Focus

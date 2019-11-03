@@ -205,4 +205,6 @@
       (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish))
       (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish))))
     (size
-     (extent 0 0 (w extent-ish) (h extent-ish)))))
+     (extent 0 0 (w extent-ish) (h extent-ish)))
+    (point
+     (extent (x extent-ish) (y extent-ish) 0 0))))
