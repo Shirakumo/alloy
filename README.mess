@@ -1,4 +1,61 @@
-## About Alloy
+[ image logo.svg ]
+
+# About Alloy
 Alloy is a user interface toolkit. It is defined through a set of protocols that allow for a clear interface, as well as a standardised way to integrate Alloy into a target backend.
 
-The project is currently still in its design phase and large parts of it may change. Please wait warmly.
+"The project is currently still in its design phase and large parts of it may change. Please wait warmly."(in bold, size 18pt)
+
+# 1. Alloy Protocols
+Alloy is structured as a family of protocols. This allows it to be very flexible, and allows you, the user, to put together the system in a way that fits your needs. The Alloy project (henceforth "the project"), consists of the following set of protocols:
+
+- Core
+  - "Component"(link #1.9 Component)
+  - "Data"(link #1.8 Data)
+  - "Events"(link #1.3 Events)
+  - "Focus"(link #1.5 Focus)
+  - "Geometry"(link #1.2 Geometry)
+  - "Layout"(link #1.6 Layout)
+  - "Observables"(link #1.7 Observables)
+  - "Renderer"(link #1.4 Renderer)
+  - "UI"(link #1.10 UI)
+  - "Units"(link #1.1 Units)
+- OpenGL
+- Simple
+  - Presentations
+  - Shapes
+  - Transforms
+- Windowing
+
+The documentation in this document will focus only on the Core protocol. The Core protocol defines the fundamentals of Alloy, while the other protocols focus on extensions built around it. Note that the project also contains implementations of these protocols, not just the protocol definitions themselves.
+
+The order of the protocols as follows is intended to give a clear understanding of each, only introducing further protocols if the ones they depend on have already been explained. If you need to jump to a specific section, please use the index above.
+
+## 1.1 Units
+Whenever we deal with real-world measurements we need to talk about units. In the case of a UI toolkit we are concerned with distances. Alloy offers a ``unit`` type that encapsulates a numeric value and allows us to reason about various measurements. In the base protocol there are two absolute units and five relative units. Absolute in this context means that the unit can be translated to device units (typically "pixels") no matter the context it is used in. Relative in turn means that the device unit size is dependent on the context in which the unit is used in. The available units are as follows:
+
+- ``px``
+  A direct representation of a number of device pixels. Note that this may still be subject to reinterpretation by the underlying rendering backend. However, as this is the base unit in Alloy, all other units will be subject to the same backend scaling factor in the end.
+- ``cm``
+  A representation of real-world centimetres. This should allow measuring things that correspond to an actual real-world extent. However, this translation depends on user-supplied data, see ``dots-per-cm``.
+- ``un``
+  The standard unit in Alloy. ``un``s are scaled relative to the user interface's target resolution and current, actual resolution. This allows the interface to scale up and down dynamically depending on the current resolution and preserve the layout. It is recommended that you use ``un``s wherever possible. For the scaling factors involved in computing pixels from a ``un``, see ``base-scale`` and ``resolution-scale``.
+- ``vw`` & ``vh``
+  A fraction of the total view width or height. The view is the total visible area in which the renderer can operate, which typically either corresponds to the virtual screen size, the monitor resolution, or a single window.
+- ``pw`` & ``ph``
+  A fraction of the parent width or height. The "parent" is a dynamically determined layout element with a logical extent. See "§1.6"(link #1.6 Layout).
+
+You can convert between units by simply passing the unit to the constructor of another, or compute directly with units by using one of the many math functions defined for units: ``u+`` ``u*`` ``u-`` ``u/`` ``umax`` ``umin`` ``u=`` ``u/=`` ``u<`` ``u>`` ``u<=`` ``u>=``.
+
+Often when needing to compute with units, the unit needs to be converted into some numerical value. To do so, use ``to-px``, which will return an absolute pixel representation of the unit. Beware however that this is subject to the current parent, and conversion without an active parent will signal an error. The unit parent should be bound dynamically with ``with-unit-parent``.
+
+Units are immutable and are cached or constructed at compile time wherever possible. It is safe to dump them to FASLs, too. While two units of the same type and with the same value may be ``eq``, this is not guaranteed. To ensure unit size equality, use ``u=``.
+
+## 1.2 Geometry
+## 1.3 Events
+## 1.4 Renderer
+## 1.5 Focus
+## 1.6 Layout
+## 1.7 Observables
+## 1.8 Data
+## 1.9 Component
+## 1.10 UI
