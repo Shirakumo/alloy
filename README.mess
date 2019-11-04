@@ -7,16 +7,17 @@ Alloy is a user interface toolkit. It is defined through a set of protocols that
 Alloy is structured as a family of protocols. This allows it to be very flexible, and allows you, the user, to put together the system in a way that fits your needs. The Alloy project (henceforth "the project"), consists of the following set of protocols:
 
 - Core
-  - "Component"(link #1.9 Component)
-  - "Data"(link #1.8 Data)
-  - "Events"(link #1.6 Events)
-  - "Focus"(link #1.4 Focus)
-  - "Geometry"(link #1.2 Geometry)
-  - "Layout"(link #1.5 Layout)
-  - "Observables"(link #1.7 Observables)
-  - "Renderer"(link #1.3 Renderer)
-  - "UI"(link #1.10 UI)
-  - "Units"(link #1.1 Units)
+  - "Component"(link #Component)
+  - "Data"(link #Data)
+  - "Elements and Containers"(link #Elements and Containers)
+  - "Events"(link #Events)
+  - "Focus"(link #Focus)
+  - "Geometry"(link #Geometry)
+  - "Layout"(link #Layout)
+  - "Observables"(link #Observables)
+  - "Renderer"(link #Renderer)
+  - "UI"(link #UI)
+  - "Units"(link #Units)
 - OpenGL
 - Simple
   - Presentations
@@ -28,7 +29,7 @@ The documentation in this document will focus only on the Core protocol. The Cor
 
 The order of the protocols as follows is intended to give a clear understanding of each, only introducing further protocols if the ones they depend on have already been explained. If you need to jump to a specific section, please use the index above.
 
-## 1.1 Units
+## Units
 Whenever we deal with real-world measurements we need to talk about units. In the case of a UI toolkit we are concerned with distances. Alloy offers a ``unit`` type that encapsulates a numeric value and allows us to reason about various measurements. In the base protocol there are two absolute units and five relative units. Absolute in this context means that the unit can be translated to device units (typically "pixels") no matter the context it is used in. Relative in turn means that the device unit size is dependent on the context in which the unit is used in. The available units are as follows:
 
 - ``px``
@@ -40,7 +41,7 @@ Whenever we deal with real-world measurements we need to talk about units. In th
 - ``vw`` & ``vh``
   A fraction of the total view width or height. The view is the total visible area in which the renderer can operate, which typically either corresponds to the virtual screen size, the monitor resolution, or a single window.
 - ``pw`` & ``ph``
-  A fraction of the parent width or height. The "parent" is a dynamically determined layout element with a logical extent. See "§1.6"(link #1.6 Layout).
+  A fraction of the parent width or height. The "parent" is a dynamically determined layout element with a logical extent. See "Layout"(link #Layout).
 
 You can convert between units by simply passing the unit to the constructor of another, or compute directly with units by using one of the many math functions defined for units: ``u+`` ``u*`` ``u-`` ``u/`` ``umax`` ``umin`` ``u=`` ``u/=`` ``u<`` ``u>`` ``u<=`` ``u>=``.
 
@@ -48,7 +49,7 @@ Often when needing to compute with units, the unit needs to be converted into so
 
 Units are immutable and are cached or constructed at compile time wherever possible. It is safe to dump them to FASLs, too. While two units of the same type and with the same value may be ``eq``, this is not guaranteed. To ensure unit size equality, use ``u=``.
 
-## 1.2 Geometry
+## Geometry
 While units give us the tool to denote measurements, the geometry protocol gives access to a set of tools to describe and operate on geometric data. All of the geometry in Alloy is based on a two dimensional Cartesian coordinate system. All of the measurements in the geometrical structures are expressed in terms of ``unit`` instances. Specifically, the following structures are available:
 
 - ``point``
@@ -66,8 +67,28 @@ Just like units, geometrical constructs are immutable and may be constructed at 
 
 A couple of extra functions exist for convenience purposes, such as ``destructure-margins`` and ``destructure-extent`` to easily deal with all of the fields, ``contained-p`` to check for inclusion, ``overlapping-p`` to check for intersection, ``extent-intersection`` to compute the intersection, and ``ensure-extent`` to coerce any structure into an ``extent``.
 
-## 1.3 Renderer
-Alloy is a graphical user interface, and so rendering of the interface plays an important role. In the Core protocol, rendering is extremely simplified, in order to allow the backend the greatest amount of flexibility and control. In fact, it is so simple that components (See "§1.9"(link #1.9 components)) could be just representations of widgets or controls in another UI toolkit.
+## Elements and Containers
+In order to abstract away a number of traversal operations, Alloy offers the basic ``element`` and ``container`` classes. A container contains a number of elements and acts similar to a sequence. Whenever a hierarchy is composed in Alloy, it is made up of elements and containers. The following operations are defined on containers:
+
+- ``enter``
+  Enters a new element into the container. Where and how the element is inserted is up to the container. A container may specify additional keyword arguments that influence the element's positioning or other metadata the container might have.
+- ``leave``
+  Removes the element from the container.
+- ``update``
+  Changes the metadata of the element and possibly its position within the container. A container may specify keyword arguments that let the user change the element's positioning or other metadata.
+- ``element-count``
+  Returns the number of elements currently contained in the container.
+- ``elements``
+  Returns a sequence of all the elements contained in the container. You may not modify this sequence.
+- ``element-index``
+  Returns the current index of the element within the container. This index may change if elements are entered, left, or updated within the container. Note that the index is not required to be numeric.
+- ``call-with-elements`` / ``do-elements``
+  Repeatedly calls the supplied function with successive elements. The start and end indices may influence the region of iterated elements. A container may ignore the start and end indices if they are not applicable.
+- ``clear``
+  Leaves all elements from the container. This requires ``leave`` to be called on every element in the container, though the order is unspecified.
+
+## Renderer
+Alloy is a graphical user interface, and so rendering of the interface plays an important role. In the Core protocol, rendering is extremely simplified, in order to allow the backend the greatest amount of flexibility and control. In fact, it is so simple that components (See "Components"(link #components)) could be just representations of widgets or controls in another UI toolkit.
 
 The renderer protocol is based around a set of generic functions and two classes:
 
@@ -78,39 +99,72 @@ The renderer protocol is based around a set of generic functions and two classes
 
 The protocol is split into two sections, the first dealing with resource allocation, and the second with the control of visualisations.
 
-### 1.3.1 Rendering Resource Management
+### Rendering Resource Management
 Before a ``renderable`` can be visualised with a ``renderer``, the ``register`` function must be called to inform the renderer of the renderable. The user must add methods to this function for both renderables and renderers, as appropriate. Specifically, any renderable that contains child elements that should be renderable, must also call ``register`` on its child elements when it itself is registered. The register function may be called at any point.
 
 Before any visualisation at all can be done, the ``allocate`` function must be called with the renderer. Calling this function multiple times should have no further effect. The renderer is encouraged to defer allocation of resources that pop up during ``register`` calls until this point, unless the renderer has already been allocated before. The user is encouraged to call ``allocate`` at a strategic point where it is permissible for loading pauses to occur. A renderer may signal an error of type ``allocation-failed`` if it is currently impossible for the renderer to perform rendering actions for whatever reason.
 
 When ``deallocate`` is called the renderer should free all resources it can. This returns the renderer to the state before ``allocate`` was called for the first time, but does not influence the elements known to the renderer via ``register``. A renderer may deallocate itself in case a critical failure occurs that prevents it from operating further.
 
-### 1.3.2 Renderer Visualisation Control
+### Renderer Visualisation Control
 Visualisation of elements is done via ``render``. When ``render`` is called, the renderer should perform whatever steps necessary to render the given renderable. The behaviour is undefined if ``allocate`` was not successfully called prior to this, or the renderer was not notified of the renderable via ``register``. The user is allowed to provide non-primary methods to further customise the rendering behaviour. The user is not allowed to provide primary methods unless the renderer protocol used specifically permits it.
 
 During rendering the renderer must only visualise things if the region to visualise is within the ``visible-bounds`` of the renderer. These bounds can be dynamically constrained via ``call-with-constrained-visibility``/``with-constrained-visibility``. Whether an extent is visible or not can be checked via ``extent-visible-p``. Specifically, if an extent is partially visible, the renderer must only render the part of the extent that is fully within the visible bounds.
 
 If the renderer supports partial updates, the user is encouraged to call into the rendering machinery via ``maybe-render`` instead. Unlike ``render``, ``maybe-render`` will silently traverse the hierarchy and only invoke ``render`` on an element if the element was previously marked with ``mark-for-render``. After ``render`` has been called on a renderable, ``render-needed-p`` will always be ``NIL``. The user should always call ``mark-for-render`` if any property of a renderable was changed that would change its visual representation.
 
-## 1.4 Focus
-## 1.5 Layout
-## 1.6 Events
+## Focus
+In alloy there is a notion of a "focus tree" -- a hierarchy of elements that designates how the focus flows between elements. Focus in this case refers to how important an element currently is. A ``focus-element`` in alloy can have three states; ``NIL`` for no focus at all, ``:strong`` for when it is fully focused, and ``:weak`` for when it should be considered for strong focus.
+
+Within a ``focus-tree`` there must always be exactly one element with strong focus, but there may be many elements with weak or no focus. Every element in a focus tree has exactly one parent element. For the element at the root of the focus tree, this is the element itself. Focus may flow inwards and outwards, meaning that a strongly focused element may pass the strong focus to a child element (``activate``), or it may pass the focus to its parent (``exit``).
+
+An element may also be strongly focused directly, referred to as "focus stealing". This will cause the previously strongly focused element to become weakly focused. 
+
+Within a ``focus-chain`` -- an element that can contain child elements -- only one of its direct children may have strong or weak focus. This is used when the focus-chain is activated, to determine which of the child elements to give strong focus to. Each child also has a direct successor and predecessor. There may be additional ties between child elements that offer more intuitive navigation, but this basic connection is always present.
+
+Note that there is no necessary visual correspondence to the way focus moves between elements. This is important as elements may have a certain visual grouping, but the ideal way focus travels between the elements may not be directly encoded in this grouping.
+
+An element may only be contained in one focus chain at a time. Attempting to ``enter`` an element into multiply focus chain before ``leave``ing it will signal an error.
+
+## Events
 Alloy is a retained mode toolkit where you construct an interface, which then reacts to changes in the environment. These changes are communicated via events. When an element ``handle``s an event, it can either decide to handle it and perform whatever action necessary to do so, or call ``decline`` in order to allow the event to propagate to an element that might want to handle it instead. The behaviour of this propagation is distinguished between the following two types of events:
 
 - ``direct-event``
-  Direct events are events without geometric information and are handled by being directed to the element that currently has strong focus, and then bubble upwards in the focus hierarchy if the handling is declined.
+  Direct events are events without geometric information and are handled by being directed to the element that currently has strong focus, and then bubble outwards in the focus hierarchy if the handling is declined.
 - ``pointer-event``
-  Pointer events are events that have a specific associated location. They are first directed to the element with strong focus similar to direct-events, but if declined will bubble downwards from the root element until the last element that geometrically contains the point is found.
-  
-"Upwards" in this context refers to going to the parent. "Downwards" in turn means going to the children.
+  Pointer events are events that have a specific associated location. They are first directed to the element with strong focus similar to direct-events, but if declined will bubble inwards from the root element until the last element that geometrically contains the point is found.
 
 Alloy contains a variety of event classes to describe general user interface changes. These events are loosely grouped into either being specific or descriptive. Specific means that the event describes a particular hardware action directly, such as a key press. Descriptive events on the other hand may be translated from a variety of hardware actions and are used to describe a particular action in the interface, such as focusing the next element.
 
 Descriptive events allow you to write the user interface interaction in a more action-oriented way, which allows the end-user to decide how to map physical buttons and gestures to the interactions they want. This is important for accessibility, internationalisation, and customisation.
 
-TODO: Translation mechanism, more descriptive events
+; TODO: Translation mechanism, more descriptive events
 
-## 1.7 Observables
-## 1.8 Data
-## 1.9 Component
-## 1.10 UI
+## Layout
+Layouting in alloy refers to the decisions made to determine where elements are positioned in space and how large they are. In other words, it's the mechanism to determine the ``extent`` of each element that should be rendered. Similar to focus trees, there are "layout trees" in Alloy -- hierarchies of elements that govern the layouting decisions.
+
+Every element in a layout tree has exactly one parent, with the element at the root having itself as its own parent. Every element also has a ``bounds`` that determines its axis aligned bounding box. When rendered, the visual representation of the element should not exceed this extent.
+
+Layout decisions are primarily made by ``layout`` instances, for which Alloy specifies a protocol to communicate an agreeable layouting between elements. The actual layout decisions are left up completely to the layout implementation.
+
+When an element's bounds change, it must call ``notice-bounds`` in order to notify its parent of the updated bounds. If an element decides that it needs more space, it should call ``notice-bounds`` to ensure a consistent layout. Typically this will result in a standard layout update being run, same as when the layout instance itself changes bounds.
+
+When a layout's bounds change it may recompute the bounds of its direct children. It must do so in the following steps for each of its child elements:
+
+1. Compute the new bounds for one element.
+2. Call ``suggest-bounds`` with the new bounds for the element. The element must then extend, contract, or otherwise change the suggested event and return a new extent that it finds more agreeable than the last.
+3. Adjust the layouting decisions to account for the element's preferred extent.
+4. Force the final computed extent on the element by calling ``(setf bounds)``.
+
+A layout may perform steps 2 and 3 multiple times before settling on a final extent, though it must guarantee to reach step 4 eventually. ``suggest-bounds`` is primarily used to handle the case of nested layouts or other kinds of elements that may need to shrink or expand to fit their contents. Whether the element's preferred extent is used at all or not however is still up to the layout.
+
+A layout //must// deal in ``px`` units. The extent supplied to ``suggest-bounds`` and ``(setf bounds)`` must only contain ``px`` units. An element is however allowed to use other units for the extent returned from ``suggest-bounds``.
+
+Some layouts may temporarily hide elements or regions from view. In order to force a region to be visible, the function ``ensure-visible`` can be used. This function will traverse upwards to ensure that every layout along the way makes the desired region visible as best possible.
+
+An element may only be contained in one layout at a time. Attempting to ``enter`` an element into multiply layouts before ``leave``ing it will signal an error.
+
+## Observables
+## Data
+## Component
+## UI

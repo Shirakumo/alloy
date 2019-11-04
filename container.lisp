@@ -45,6 +45,11 @@
 (defmethod element-count ((container container))
   (length (elements container)))
 
+(defmethod elements ((container container))
+  (let ((list ()))
+    (do-elements (element container :result (nreverse list))
+      (push element list))))
+
 (defmethod clear ((container container))
   (do-elements (element container)
     (leave element container)))
@@ -77,3 +82,7 @@
 
 (defmethod element-index ((element element) (container vector-container))
   (position element (elements container)))
+
+(defmethod clear ((container vector-container))
+  (loop for i downfrom (1- (length (elements container))) to 0
+        do (leave (aref (elements container) i) container)))
