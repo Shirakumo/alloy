@@ -1,9 +1,9 @@
 # About Alloy
 Alloy is a user interface toolkit. It is defined through a set of protocols that allow for a clear interface, as well as a standardised way to integrate Alloy into a target backend.
 
-"The project is currently still in its design phase and large parts of it may change. Please wait warmly."(in bold, size 18pt, red)
+"The project is currently still in its design phase and large parts of it may change. Please wait warmly."(bold, size 18pt, red)
 
-# 1. Alloy Protocols
+# Alloy Protocols
 Alloy is structured as a family of protocols. This allows it to be very flexible, and allows you, the user, to put together the system in a way that fits your needs. The Alloy project (henceforth "the project"), consists of the following set of protocols:
 
 - Core
@@ -158,7 +158,7 @@ When a layout's bounds change it may recompute the bounds of its direct children
 
 A layout may perform steps 2 and 3 multiple times before settling on a final extent, though it must guarantee to reach step 4 eventually. ``suggest-bounds`` is primarily used to handle the case of nested layouts or other kinds of elements that may need to shrink or expand to fit their contents. Whether the element's preferred extent is used at all or not however is still up to the layout.
 
-A layout //must// deal in ``px`` units. The extent supplied to ``suggest-bounds`` and ``(setf bounds)`` must only contain ``px`` units. An element is however allowed to use other units for the extent returned from ``suggest-bounds``.
+A layout //must// deal in ``px`` units. The extent supplied to ``suggest-bounds`` and ``(setf bounds)`` must only contain ``px`` units. An element is however allowed to use other units for the extent returned from ``suggest-bounds``. However, be aware that the absolute size of units depends on the currently bound unit parent (See "Units"(link #units)). The layout //must// set this parent to itself when resolving units.
 
 Some layouts may temporarily hide elements or regions from view. In order to force a region to be visible, the function ``ensure-visible`` can be used. This function will traverse upwards to ensure that every layout along the way makes the desired region visible as best possible.
 
