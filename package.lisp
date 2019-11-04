@@ -32,12 +32,11 @@
    #:root-already-established
    #:layout-condition
    #:layout
-   #:renderer-condition
-   #:renderer
-   #:renderable-already-registered
    #:place-already-occupied
    #:place
-   #:existing)
+   #:existing
+   #:allocation-failed
+   #:renderer)
   ;; components/base.lisp
   (:export
    #:label

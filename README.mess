@@ -9,12 +9,12 @@ Alloy is structured as a family of protocols. This allows it to be very flexible
 - Core
   - "Component"(link #1.9 Component)
   - "Data"(link #1.8 Data)
-  - "Events"(link #1.3 Events)
-  - "Focus"(link #1.5 Focus)
+  - "Events"(link #1.6 Events)
+  - "Focus"(link #1.4 Focus)
   - "Geometry"(link #1.2 Geometry)
-  - "Layout"(link #1.6 Layout)
+  - "Layout"(link #1.5 Layout)
   - "Observables"(link #1.7 Observables)
-  - "Renderer"(link #1.4 Renderer)
+  - "Renderer"(link #1.3 Renderer)
   - "UI"(link #1.10 UI)
   - "Units"(link #1.1 Units)
 - OpenGL
@@ -66,10 +66,50 @@ Just like units, geometrical constructs are immutable and may be constructed at 
 
 A couple of extra functions exist for convenience purposes, such as ``destructure-margins`` and ``destructure-extent`` to easily deal with all of the fields, ``contained-p`` to check for inclusion, ``overlapping-p`` to check for intersection, ``extent-intersection`` to compute the intersection, and ``ensure-extent`` to coerce any structure into an ``extent``.
 
-## 1.3 Events
-## 1.4 Renderer
-## 1.5 Focus
-## 1.6 Layout
+## 1.3 Renderer
+Alloy is a graphical user interface, and so rendering of the interface plays an important role. In the Core protocol, rendering is extremely simplified, in order to allow the backend the greatest amount of flexibility and control. In fact, it is so simple that components (See "§1.9"(link #1.9 components)) could be just representations of widgets or controls in another UI toolkit.
+
+The renderer protocol is based around a set of generic functions and two classes:
+
+- ``renderer``
+  Any rendering backend must provide a subclass of this that is responsible for visually presenting elements in some way.
+- ``renderable``
+  Any element that should be drawn must be a subclass of this. It is illegal to attempt to render objects that are not ``renderable``s unless backend explicitly allows it.
+
+The protocol is split into two sections, the first dealing with resource allocation, and the second with the control of visualisations.
+
+### 1.3.1 Rendering Resource Management
+Before a ``renderable`` can be visualised with a ``renderer``, the ``register`` function must be called to inform the renderer of the renderable. The user must add methods to this function for both renderables and renderers, as appropriate. Specifically, any renderable that contains child elements that should be renderable, must also call ``register`` on its child elements when it itself is registered. The register function may be called at any point.
+
+Before any visualisation at all can be done, the ``allocate`` function must be called with the renderer. Calling this function multiple times should have no further effect. The renderer is encouraged to defer allocation of resources that pop up during ``register`` calls until this point, unless the renderer has already been allocated before. The user is encouraged to call ``allocate`` at a strategic point where it is permissible for loading pauses to occur. A renderer may signal an error of type ``allocation-failed`` if it is currently impossible for the renderer to perform rendering actions for whatever reason.
+
+When ``deallocate`` is called the renderer should free all resources it can. This returns the renderer to the state before ``allocate`` was called for the first time, but does not influence the elements known to the renderer via ``register``. A renderer may deallocate itself in case a critical failure occurs that prevents it from operating further.
+
+### 1.3.2 Renderer Visualisation Control
+Visualisation of elements is done via ``render``. When ``render`` is called, the renderer should perform whatever steps necessary to render the given renderable. The behaviour is undefined if ``allocate`` was not successfully called prior to this, or the renderer was not notified of the renderable via ``register``. The user is allowed to provide non-primary methods to further customise the rendering behaviour. The user is not allowed to provide primary methods unless the renderer protocol used specifically permits it.
+
+During rendering the renderer must only visualise things if the region to visualise is within the ``visible-bounds`` of the renderer. These bounds can be dynamically constrained via ``call-with-constrained-visibility``/``with-constrained-visibility``. Whether an extent is visible or not can be checked via ``extent-visible-p``. Specifically, if an extent is partially visible, the renderer must only render the part of the extent that is fully within the visible bounds.
+
+If the renderer supports partial updates, the user is encouraged to call into the rendering machinery via ``maybe-render`` instead. Unlike ``render``, ``maybe-render`` will silently traverse the hierarchy and only invoke ``render`` on an element if the element was previously marked with ``mark-for-render``. After ``render`` has been called on a renderable, ``render-needed-p`` will always be ``NIL``. The user should always call ``mark-for-render`` if any property of a renderable was changed that would change its visual representation.
+
+## 1.4 Focus
+## 1.5 Layout
+## 1.6 Events
+Alloy is a retained mode toolkit where you construct an interface, which then reacts to changes in the environment. These changes are communicated via events. When an element ``handle``s an event, it can either decide to handle it and perform whatever action necessary to do so, or call ``decline`` in order to allow the event to propagate to an element that might want to handle it instead. The behaviour of this propagation is distinguished between the following two types of events:
+
+- ``direct-event``
+  Direct events are events without geometric information and are handled by being directed to the element that currently has strong focus, and then bubble upwards in the focus hierarchy if the handling is declined.
+- ``pointer-event``
+  Pointer events are events that have a specific associated location. They are first directed to the element with strong focus similar to direct-events, but if declined will bubble downwards from the root element until the last element that geometrically contains the point is found.
+  
+"Upwards" in this context refers to going to the parent. "Downwards" in turn means going to the children.
+
+Alloy contains a variety of event classes to describe general user interface changes. These events are loosely grouped into either being specific or descriptive. Specific means that the event describes a particular hardware action directly, such as a key press. Descriptive events on the other hand may be translated from a variety of hardware actions and are used to describe a particular action in the interface, such as focusing the next element.
+
+Descriptive events allow you to write the user interface interaction in a more action-oriented way, which allows the end-user to decide how to map physical buttons and gestures to the interactions they want. This is important for accessibility, internationalisation, and customisation.
+
+TODO: Translation mechanism, more descriptive events
+
 ## 1.7 Observables
 ## 1.8 Data
 ## 1.9 Component

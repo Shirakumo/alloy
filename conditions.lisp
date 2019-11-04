@@ -59,3 +59,7 @@
 (define-alloy-condition element-has-different-ui (error)
     "The element~%  ~s~%cannot be used with~%  ~s~%as it is set-up with~%  ~s"
   element ui (ui (element c)))
+
+(define-alloy-condition allocation-failed (error)
+    "The allocation of the renderer~%  ~s~%failed."
+  renderer)
