@@ -63,5 +63,5 @@
   (setf (visible-bounds ui) extent)
   (suggest-bounds extent (layout-tree ui)))
 
-(defmethod register ((source ui) (target ui))
-  (register (layout-tree source) target))
+(defmethod register ((ui ui) renderer)
+  (register (layout-tree ui) renderer))

@@ -164,7 +164,15 @@ Some layouts may temporarily hide elements or regions from view. In order to for
 
 An element may only be contained in one layout at a time. Attempting to ``enter`` an element into multiply layouts before ``leave``ing it will signal an error.
 
+## UI
+Since layout trees and focus trees are disjoint, there needs to be a way to tie them together, including any other global information necessary. For this, Alloy has the ``UI`` object, the main entry point once the interface has been constructed. It has a ``layout-tree`` and ``focus-tree``, as well as provides access to the global unit scaling factors, ``dots-per-cm``, ``target-resolution``, ``resolution-scale``, and ``base-scale``.
+
+Once you've constructed a UI instance, you should be able to add elements to its focus tree and layout tree, set the desired "native" resolution, and finally ``render`` it, ``handle`` events, or change the effective resolution with ``suggest-bounds``.
+
+If you would like to switch out the layout or focus hierarchies on the fly, you can set the ``root`` of either tree instance.
+
+; TODO: It might be better to have the slots be different and inherit from focus-tree/layout-tree to remove the indirection.
+
 ## Observables
 ## Data
 ## Component
-## UI
