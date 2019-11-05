@@ -20,12 +20,12 @@ Alloy is structured as a family of protocols. This allows it to be very flexible
   - "Renderer"(link #Renderer)
   - "UI"(link #UI)
   - "Units"(link #Units)
-- OpenGL
-- Simple
-  - Presentations
-  - Shapes
-  - Transforms
-- Windowing
+- "OpenGL"(link alloy-opengl/index.html#protocol)
+- "Simple"(link alloy-simple/index.html#protocol)
+  - "Presentations"(link alloy-simple-presentations/index.html#protocol)
+  - "Shapes"(link alloy-simple/index.html#shapes)
+  - "Transforms"(link alloy-simple/index.html#transforms)
+- "Windowing"(link alloy-windowing/index.html#protocol)
 
 The documentation in this document will focus only on the Core protocol. The Core protocol defines the fundamentals of Alloy, while the other protocols focus on extensions built around it. Note that the project also contains implementations of these protocols, not just the protocol definitions themselves.
 
@@ -259,10 +259,10 @@ Note that Core does //not// provide any standard implementations for renderers. 
 # Project Systems
 Aside from this Core, the project also includes several other systems that fill or extend parts of Alloy.
 
-- Constraint Layout
-- GLFW
-- OpenGL
-- SVG
-- Simple
-- Simple Presentations
-- Windowing
+- "Constraint Layout"(link alloy-constraint/index.html)
+- "GLFW"(link alloy-glfw/index.html)
+- "OpenGL"(link alloy-opengl/index.html)
+- "SVG"(link alloy-svg/index.html)
+- "Simple"(link alloy-simple/index.html)
+- "Simple Presentations"(link alloy-simple-presentations/index.html)
+- "Windowing"(link alloy-windowing/index.html)

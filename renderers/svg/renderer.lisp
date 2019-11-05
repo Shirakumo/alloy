@@ -11,11 +11,11 @@
 (defclass image (simple:image)
   ())
 
-(defmethod ->svg ((thing simple:color))
+(defmethod ->svg ((thing colored:color))
   (format NIL "rgb(~d, ~d, ~d)"
-          (floor (* 255 (simple:r thing)))
-          (floor (* 255 (simple:g thing)))
-          (floor (* 255 (simple:b thing)))))
+          (floor (* 255 (colored:r thing)))
+          (floor (* 255 (colored:g thing)))
+          (floor (* 255 (colored:b thing)))))
 
 (defmethod ->svg ((thing vector))
   (format NIL "matrix(~f, ~f, ~f, ~f, ~f, ~f)"

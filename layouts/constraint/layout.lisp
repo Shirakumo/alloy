@@ -45,7 +45,7 @@
         (make-variables element (solver layout)))
   (apply-constraints constraints element layout))
 
-(defmethod alloy:enter ((element alloy:layout-entry) (layout layout) &key)
+(defmethod alloy:enter ((element alloy:layout-element) (layout layout) &key)
   (call-next-method)
   (setf (gethash (alloy:component element) (variables layout))
         (gethash element (variables layout))))
@@ -53,7 +53,7 @@
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
   (remhash element (variables layout)))
 
-(defmethod alloy:leave :after ((element alloy:layout-entry) (layout layout))
+(defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
   (remhash (alloy:component element) (variables layout)))
 
 (defmethod alloy:update ((element alloy:layout-element) (layout layout) &key constraints clear)
