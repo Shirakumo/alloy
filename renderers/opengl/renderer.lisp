@@ -208,7 +208,7 @@ void main(){
   ;;   (gl:depth-mask T))
   )
 
-(defmethod simple:clip :before ((renderer renderer) (extent alloy:extent))
+(defmethod simple:clip ((renderer renderer) (extent alloy:extent))
   ;; FIXME: avoid allocation of rectangle
   (simple:clip renderer (simple:rectangle renderer extent)))
 
@@ -293,7 +293,7 @@ void main(){
         (data (data shape)))
     (update-vertex-buffer (resource 'line-vbo renderer) data)
     (bind shader)
-    (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
+    (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (setf (uniform shader "color") (simple:pattern shape))
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
@@ -321,7 +321,7 @@ void main(){
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer (simple:bounds shape))
       (simple:scale renderer (simple:bounds shape))
-      (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
+      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") (simple:pattern shape))
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
@@ -332,7 +332,7 @@ void main(){
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer (simple:bounds shape))
       (simple:scale renderer (simple:bounds shape))
-      (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
+      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") (simple:pattern shape))
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
@@ -348,7 +348,7 @@ void main(){
         (simple:translate renderer (alloy:point (+ (alloy:pxx extent) w)
                                                 (+ (alloy:pxy extent) h)))
         (simple:scale renderer (alloy:size w h)))
-      (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
+      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") (simple:pattern shape))
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2))))
@@ -363,7 +363,7 @@ void main(){
         (simple:translate renderer (alloy:point (+ (alloy:pxx extent) w)
                                                 (+ (alloy:pxy extent) h)))
         (simple:scale renderer (alloy:size w h)))
-      (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
+      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") (simple:pattern shape))
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
@@ -376,7 +376,7 @@ void main(){
 ;;;        in turn the units will not match up any longer. WE might need to specify this in the
 ;;;        simple protocol if there's no automated way to determine when to recompute
 (defmethod shared-initialize :after ((shape polygon) slots &key (points NIL points-p))
-  (when points-po
+  (when points-p
     (let ((data (make-array (* 3 (length points)))))
       (loop with i = -1
             for point in points
@@ -392,7 +392,7 @@ void main(){
         (data (data shape)))
     (update-vertex-buffer (resource 'stream-vbo renderer) data)
     (bind shader)
-    (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
+    (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (setf (uniform shader "color") (simple:pattern shape))
     (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (/ (length data) 2))))
 
@@ -404,7 +404,7 @@ void main(){
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer (simple:bounds icon))
       (simple:scale renderer (simple:size icon))
-      (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
+      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
 (defmethod simple:request-image ((renderer renderer) data &key size)

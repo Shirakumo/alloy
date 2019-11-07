@@ -145,7 +145,7 @@ void main(){
       (let ((s (* 2 (/ (alloy:to-px (simple:size shape)) (cl-fond:size atlas)))))
         (simple:translate renderer (text-point shape s))
         (simple:scale renderer (alloy:px-size s s)))
-      (setf (opengl:uniform shader "transform") (simple:transform-matrix (simple:transform renderer))))
+      (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (opengl:uniform shader "color") (simple:pattern shape))
     ;; Could cache this by allocating a vbo/ebo per text. Don't have a deallocation API though, so...
     (let ((count (cl-fond:update-text atlas (alloy:text shape)

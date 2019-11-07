@@ -25,7 +25,7 @@ The transforms protocol presents a way to perform local, affine coordinate trans
 - ``rotate``
   Rotate the coordinate system by the specified angle around the Z axis.
 - ``z-index`` (place)
-  Get or set the index on which the shapes should be drawn. Shapes that are drawn while a higher z-index is active should be drawn in front of shapes that are drawn with a lower z-index, regardless of the order in which they are drawn. For shapes on the same z-index, it is unspecified whether later shapes will overlap earlier ones or not.
+  Access the index on which the shapes should be drawn. Shapes that are drawn while a higher z-index is active should be drawn in front of shapes that are drawn with a lower z-index, regardless of the order in which they are drawn. For shapes on the same z-index, it is unspecified whether later shapes will overlap earlier ones or not.
 
 ## Shapes
 In order to render various constructs, Simple offers a bunch of ``shape`` objects, which must be created using a corresponding shape function. Once constructed, the shape can be drawn any number of times using ``alloy:render``. The transforms are only applied when the shape is rendered, not when it is constructed. This allows you to re-use the same shape and draw it in various configurations.
@@ -38,7 +38,7 @@ All shapes take some geometric primitives from Core as positioning arguments. Th
 
 
 ## Render Behaviour
-Aside from these, Simple also specifies the following two functions that influence the rendering behaviour:
+Simple also specifies the following two functions that influence the rendering behaviour:
 
 - ``clear``
   Cause the specified screen region to be cleared to whatever the renderer considers to be the "empty" colour.
@@ -61,4 +61,4 @@ Aside from these, Simple also specifies the following two functions that influen
 # Default Implementations
 Simple provides standard implementations for all of the shapes -- without the actual rendering thereof, of course -- as well as a standard implementation of the transforms protocol, using a 3x3 transforms matrix for the coordinate system representation.
 
-If using a transformation matrix is convenient for your backend, all you need to do is inherit from ``transformed-renderer``. From there on out you can access the current transform settings with ``transform``. This returns an object with a ``transform-matrix`` and ``clip-mask``. 
+If using a transformation matrix is convenient for your backend, all you need to do is inherit from ``transformed-renderer``. From there on out you can access the current transform matrix with ``transform-matrix``. You will still need to implement clipping, however.

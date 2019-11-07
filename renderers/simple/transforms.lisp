@@ -44,98 +44,49 @@
       (thunk)
       r)))
 
-(defclass transform ()
-  ((clip-mask :accessor clip-mask)
-   (transform-matrix :accessor transform-matrix)))
-
-(defmethod shared-initialize :after ((transform transform) slots &key (clip-mask NIL c-p) transform-matrix)
-  (when c-p (clip transform clip-mask))
-  (when transform-matrix (setf (transform-matrix transform) transform-matrix)))
-
-(defmethod initialize-instance :after ((transform transform) &key parent)
-  (macrolet ((init-slot (slot)
-               `(unless (slot-boundp transform ',slot)
-                  (setf (,slot transform) (,slot parent)))))
-    (init-slot clip-mask)
-    (init-slot transform-matrix)))
-
-(defmethod add-matrix ((transform transform) new)
-  (setf (transform-matrix transform) (mat* (transform-matrix transform) new)))
-
-(defmethod clip ((transform transform) (extent alloy:extent))
-  (setf (clip-mask transform) extent))
-
-(defmethod clip ((transform transform) (none null))
-  (setf (clip-mask transform) NIL))
-
-(defmethod translate ((transform transform) (point alloy:point))
-  (add-matrix transform (matrix 1 0 (alloy:pxx point)
-                                0 1 (alloy:pxy point)
-                                0 0 1)))
-
-(defmethod translate ((transform transform) (extent alloy:extent))
-  (add-matrix transform (matrix 1 0 (alloy:pxx extent)
-                                0 1 (alloy:pxy extent)
-                                0 0 1)))
-
-(defmethod translate ((transform transform) (margins alloy:margins))
-  (add-matrix transform (matrix 1 0 (alloy:pxl margins)
-                                0 1 (alloy:pxb margins)
-                                0 0 1)))
-
-(defmethod scale ((transform transform) (size alloy:size))
-  (add-matrix transform (matrix (alloy:pxw size) 0 0
-                                0 (alloy:pxh size) 0
-                                0 0 1)))
-
-(defmethod scale ((transform transform) (margins alloy:margins))
-  (scale transform (alloy:ensure-extent margins)))
-
-(defmethod rotate ((transform transform) (phi float))
-  (add-matrix transform (matrix (cos phi) (- (sin phi)) 0
-                                (sin phi) (cos phi) 0
-                                0 0 1)))
-
-(defmethod z-index ((transform transform))
-  (aref (transform-matrix transform) 8))
-
-(defmethod (setf z-index) (z-index (transform transform))
-  (setf (aref (transform-matrix transform) 8) (float z-index)))
-
 (defclass transformed-renderer (renderer)
-  ((transform :accessor transform)))
-
-(defmethod initialize-instance :after ((renderer transformed-renderer) &key)
-  (setf (transform renderer) (make-default-transform renderer)))
-
-(defgeneric make-default-transform (renderer))
-
-(defmethod make-default-transform ((renderer transformed-renderer))
-  (make-instance 'transform
-                 :clip-mask NIL
-                 :transform-matrix (matrix-identity)))
+  ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)))
 
 (defmethod call-with-pushed-transforms (function (renderer transformed-renderer))
-  (let ((current (transform renderer)))
-    (setf (transform renderer) (make-instance (class-of current) :parent current))
+  (let ((current (transform-matrix renderer)))
+    (setf (transform-matrix renderer) (copy-seq current))
     (unwind-protect
          (funcall function)
-      (setf (transform renderer) current))))
+      (setf (transform-matrix renderer) current))))
 
-(defmethod clip ((renderer transformed-renderer) region)
-  (clip (transform renderer) region))
+(defmethod add-matrix ((renderer transformed-renderer) new)
+  (setf (transform-matrix renderer) (mat* (transform-matrix renderer) new)))
 
-(defmethod translate ((renderer transformed-renderer) point)
-  (translate (transform renderer) point))
+(defmethod translate ((renderer transformed-renderer) (point alloy:point))
+  (add-matrix renderer (matrix 1 0 (alloy:pxx point)
+                               0 1 (alloy:pxy point)
+                               0 0 1)))
 
-(defmethod scale ((renderer transformed-renderer) size)
-  (scale (transform renderer) size))
+(defmethod translate ((renderer transformed-renderer) (extent alloy:extent))
+  (add-matrix renderer (matrix 1 0 (alloy:pxx extent)
+                               0 1 (alloy:pxy extent)
+                               0 0 1)))
 
-(defmethod rotate ((renderer transformed-renderer) phi)
-  (rotate (transform renderer) phi))
+(defmethod translate ((renderer transformed-renderer) (margins alloy:margins))
+  (add-matrix renderer (matrix 1 0 (alloy:pxl margins)
+                               0 1 (alloy:pxb margins)
+                               0 0 1)))
+
+(defmethod scale ((renderer transformed-renderer) (size alloy:size))
+  (add-matrix renderer (matrix (alloy:pxw size) 0 0
+                               0 (alloy:pxh size) 0
+                               0 0 1)))
+
+(defmethod scale ((renderer transformed-renderer) (margins alloy:margins))
+  (scale renderer (alloy:ensure-extent margins)))
+
+(defmethod rotate ((renderer transformed-renderer) (phi float))
+  (add-matrix renderer (matrix (cos phi) (- (sin phi)) 0
+                               (sin phi) (cos phi) 0
+                               0 0 1)))
 
 (defmethod z-index ((renderer transformed-renderer))
-  (z-index (transform renderer)))
+  (aref (transform-matrix renderer) 8))
 
 (defmethod (setf z-index) (z-index (renderer transformed-renderer))
-  (setf (z-index (transform renderer)) z-index))
+  (setf (aref (transform-matrix renderer) 8) (float z-index)))
