@@ -22,6 +22,7 @@
                `(float ,arg 0f0))))
     (let ((matrix (gensym "MATRIX")))
       `(let ((,matrix (make-array 9 :element-type 'single-float)))
+         (declare (optimize speed))
          ,@(loop for value in values
                  for i from 0
                  collect `(setf (aref ,matrix ,i) ,(fold value)))

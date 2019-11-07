@@ -1,0 +1,64 @@
+# About Alloy-Simple
+This project presents a simple, common rendering library on top of Alloy. The idea is to provide a protocol for rendering that isn't too difficult to provide for a backend, and extensive enough to display most interfaces. It does not implement a renderer in itself, only provides an intermediary protocol for the user to rely on.
+
+Implementing the simple protocol in your backend is the easiest way to get rendering of an Alloy interface going, as you can then already rely on the visualisation behaviour for the various components implemented in other projects, such as "Presentations"(link ../alloy-simple-presentations/index.html).
+
+# Protocol
+The Simple protocol is split into four sub protocols:
+
+- "Transforms"(link #transforms)
+- "Shapes"(link #shapes)
+- "Shared Resources"(link #shared resources)
+- "Render Behaviour"(link #render behaviour)
+
+## Transforms
+The transforms protocol presents a way to perform local, affine coordinate transformations during rendering. Specifically, the following functions are defined:
+
+- ``call-with-pushed-transforms`` / ``with-pushed-transforms``
+  Allows dynamically bounding transformations. Any transformation occurring within the body of this call will be when the control flow exits.
+- ``clip``
+  Clip the region to the extent, causing anything that should be rendered outside of this region to not be rendered. This can be used to implement the ``alloy:call-with-constrained-visibility`` function from Core. The extent specified is local to the current transforms.
+- ``translate``
+  Shift the coordinate system to place the origin at the specified point.
+- ``scale``
+  Scale the coordinate system to stretch the axes by the specified size.
+- ``rotate``
+  Rotate the coordinate system by the specified angle around the Z axis.
+- ``z-index`` (place)
+  Get or set the index on which the shapes should be drawn. Shapes that are drawn while a higher z-index is active should be drawn in front of shapes that are drawn with a lower z-index, regardless of the order in which they are drawn. For shapes on the same z-index, it is unspecified whether later shapes will overlap earlier ones or not.
+
+## Shapes
+In order to render various constructs, Simple offers a bunch of ``shape`` objects, which must be created using a corresponding shape function. Once constructed, the shape can be drawn any number of times using ``alloy:render``. The transforms are only applied when the shape is rendered, not when it is constructed. This allows you to re-use the same shape and draw it in various configurations.
+
+All shapes take some geometric primitives from Core as positioning arguments. These primitives may contain relative units. The backend may choose to turn these units into absolute ones at the time of construction of the shape. If the unit relation changes, the user //must// call ``reinitialize-instance`` on the affected shapes. When ``reinitialize-instance`` is called, the backend //must// update the internal coordinates of the shape based on the units that were initially used when the shape was constructed. The user may also pass any of the initial arguments used at shape construction as initargs to ``reinitialize-instance`` to update them without creating a new shape instance.
+
+
+
+## Shared Resources
+
+
+## Render Behaviour
+Aside from these, Simple also specifies the following two functions that influence the rendering behaviour:
+
+- ``clear``
+  Cause the specified screen region to be cleared to whatever the renderer considers to be the "empty" colour.
+- ``composite-mode``
+  Change how newly drawn shapes are blended onto previously drawn shapes, especially ones that lie below it. The following modes are specified, though a renderer may add others:
+  - ``:source-over``
+  - ``:destination-over``
+  - ``:source-in``
+  - ``:source-out``
+  - ``:destination-in``
+  - ``:destination-out``
+  - ``:destination-atop``
+  - ``:add``
+  - ``:multiply``
+  - ``:difference``
+  - ``:invert``
+
+; TODO: Add images that show the effects of the composite modes
+
+# Default Implementations
+Simple provides standard implementations for all of the shapes -- without the actual rendering thereof, of course -- as well as a standard implementation of the transforms protocol, using a 3x3 transforms matrix for the coordinate system representation.
+
+If using a transformation matrix is convenient for your backend, all you need to do is inherit from ``transformed-renderer``. From there on out you can access the current transform settings with ``transform``. This returns an object with a ``transform-matrix`` and ``clip-mask``. 
