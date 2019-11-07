@@ -17,7 +17,7 @@ The transforms protocol presents a way to perform local, affine coordinate trans
 - ``call-with-pushed-transforms`` / ``with-pushed-transforms``
   Allows dynamically bounding transformations. Any transformation occurring within the body of this call will be when the control flow exits.
 - ``clip``
-  Clip the region to the extent, causing anything that should be rendered outside of this region to not be rendered. This can be used to implement the ``alloy:call-with-constrained-visibility`` function from Core. The extent specified is local to the current transforms.
+  Clip the region to the extent, causing anything that should be rendered outside of this region to not be rendered. This can be used to implement the ``alloy:call-with-constrained-visibility`` function from Core. The extent specified is local to the current transforms. Clipping withinanother ``call-with-pushed-transforms`` extent will cause the actual clipping region to become the union of this and the clipping region of the outer extent. Clipping multiple times within the same transforms is implementation dependent.
 - ``translate``
   Shift the coordinate system to place the origin at the specified point.
 - ``scale``

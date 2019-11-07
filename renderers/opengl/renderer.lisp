@@ -24,7 +24,7 @@
   (setf (gethash name (resources renderer)) value))
 
 (defun make-line-array (points)
-  (let ((array (make-array (* 6 4 (1- (length points))) :element-type 'single-float))
+  (let ((array (make-array (max 0 (* 6 4 (1- (length points)))) :element-type 'single-float))
         (i -1))
     (labels ((vertex (p nx ny)
                (setf (aref array (incf i)) (alloy:pxx p))
@@ -299,21 +299,41 @@ void main(){
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'line-vao renderer) :triangles (/ (length data) 4))))
 
-(defclass curve (simple:curve)
-  ((data :accessor data)))
-
-(defmethod shared-initialize :after ((shape curve) slots &key points)
+(defclass curve (line-strip)
   ())
+
+(defmethod shared-initialize :around ((shape curve) slots &rest initargs &key points (segments 20))
+  ;; TODO: Do this GPU-side with tesselation
+  (let ((lines (make-array (* (1+ segments) (/ (1- (length points)) 3))))
+        (i 0))
+    (declare (type (signed-byte 32) i segments))
+    (labels ((bezier (tt x1 x2 x3 x4)
+               (declare (optimize speed))
+               (declare (type single-float tt x1 x2 x3 x4))
+               (+ (* x1 (expt (- 1 tt) 3))
+                  (* x2 3 tt (expt (- 1 tt) 2))
+                  (* x3 3 (expt tt 2) (- 1 tt))
+                  (* x4 (expt tt 3))))
+             (curve (a b c d)
+               (declare (optimize speed))
+               (loop for tt from 0f0 by (/ 1f0 segments)
+                     for x = (bezier tt (alloy:pxx a) (alloy:pxx b) (alloy:pxx c) (alloy:pxx d))
+                     for y = (bezier tt (alloy:pxy a) (alloy:pxy b) (alloy:pxy c) (alloy:pxy d))
+                     repeat (1+ segments)
+                     do (setf (aref lines i) (alloy:px-point x y))
+                        (incf i))))
+      (etypecase points
+        (list (loop for (a b c d) on points by #'cdddr
+                    do (curve a b c d)))
+        (vector (loop for j from 0 below (1- (length points)) by 3
+                      do (curve (aref points (+ j 0)) (aref points (+ j 1)) (aref points (+ j 2)) (aref points (+ j 3))))))
+      (apply #'call-next-method shape slots :points lines initargs))))
 
 (defmethod simple:curve ((renderer renderer) (points vector) &rest initargs)
   (apply #'make-instance 'curve :points points initargs))
 
-;; FIXME: curves
-;;        We could just do this by computing the bezier on the CPU-side and
-;;        turning it into line segments, but it would be cool if we could use
-;;        the GPU's tesselation facilities to do it with instead.
-(defmethod alloy:render ((renderer renderer) (shape curve))
-  )
+(defmethod simple:curve ((renderer renderer) (points cons) &rest initargs)
+  (apply #'make-instance 'curve :points points initargs))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:filled-rectangle))
   (let ((shader (resource 'basic-shader renderer)))

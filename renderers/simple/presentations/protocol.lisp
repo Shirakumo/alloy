@@ -48,9 +48,6 @@
                        (alloy:value (alloy:value alloy:renderable)))
        (declare (ignorable alloy:focus alloy:bounds alloy:value))
        ,@(loop for shape in shapes
-               ;; FIXME: How do we ensure the renderer actually in use gets to do its thing with
-               ;;        choosing the correct subclass and all? The shape constructors in simple
-               ;;        are not uniform in their arguments
                collect (destructuring-bind ((name type) &body initargs) shape
                          `(setf (find-shape ',name alloy:renderable)
                                 (,type alloy:renderer ,@initargs :name ',name)))))
