@@ -32,7 +32,8 @@
       (suggest-bounds extent (inner layout))
       extent))
 
-(defmethod notice-bounds ((element layout-element) (layout clip-view)))
+(defmethod notice-bounds ((element layout-element) (layout clip-view))
+  (setf (bounds layout) (bounds layout)))
 
 (defmethod (setf offset) :after (offset (layout clip-view))
   (setf (bounds layout) (bounds layout)))
