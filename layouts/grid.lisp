@@ -36,13 +36,15 @@
   (adjust-array (elements layout) (list (length (row-sizes layout))
                                         (length (col-sizes layout)))
                 :initial-element NIL)
-  (suggest-bounds (bounds layout) layout))
+  (when (slot-boundp layout 'layout-parent)
+    (suggest-bounds (bounds layout) layout)))
 
 (defmethod (setf col-sizes) :after (value (layout grid-layout))
   (adjust-array (elements layout) (list (length (row-sizes layout))
                                         (length (col-sizes layout)))
                 :initial-element NIL)
-  (suggest-bounds (bounds layout) layout))
+  (when (slot-boundp layout 'layout-parent)
+    (suggest-bounds (bounds layout) layout)))
 
 (defmethod enter :before ((element layout-element) (layout grid-layout) &key (row (arg! :row)) (col (arg! :col)))
   (when (aref (elements layout) row col)
