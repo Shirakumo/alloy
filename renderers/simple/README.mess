@@ -32,10 +32,55 @@ In order to render various constructs, Simple offers a bunch of ``shape`` object
 
 All shapes take some geometric primitives from Core as positioning arguments. These primitives may contain relative units. The backend may choose to turn these units into absolute ones at the time of construction of the shape. If the unit relation changes, the user //must// call ``reinitialize-instance`` on the affected shapes. When ``reinitialize-instance`` is called, the backend //must// update the internal coordinates of the shape based on the units that were initially used when the shape was constructed. The user may also pass any of the initial arguments used at shape construction as initargs to ``reinitialize-instance`` to update them without creating a new shape instance.
 
+The implementation may return an instance that is not a subclass of ``shape`` or the default provided classes for each shape for one of the shape functions. However, the above ``reinitialize-instance`` and ``alloy:render`` restrictions apply regardless. If an implementation chooses to do this, it must be aware, and potentially provide mitigation for, extension protocols that depend on the class hierarchy not working as expected with the custom instance.
 
+Where applicable, the line-width argument will cause the shape to be rendered as an outline, instead of a filled shape. In such a case it must be an ``alloy:unit`` designating the width of the lines.
+
+Where applicable, the pattern argument will change the pattern with which the shape is filled. The pattern may be a ``colored:color``, or an object as returned by ``request-gradient``. If the shape is drawn as an outline, the pattern is only applied to the lines, not to any area the lines might enclose.
+
+The user does not have to call ``alloy:register`` on an object returned by a shape function, the object must already be registered if necessary.
+
+The following shape functions are available, though the implementation may offer more:
+
+- ``line-strip``
+  Generates a sequence of connected line segments. The points argument must be a list or vector of ``alloy:point``s.
+- ``curve``
+  Generates a sequence of Bezier curves. The points argument must be a list or vector of ``alloy:point``s. Each curve segment consists of four points, the first and last of which are the endpoints, and the second and third being the respective control points. Each successive curve requires only three additional points, as the endpoint of the previous curve is used as the start point of the current.
+- ``rectangle``
+  Generates an axis-aligned rectangle from an alloy geometry object.
+- ``ellipse``
+  Generates an axis-aligned ellipse from an alloy geometry object.. The bounds specifies the outer bounding box of the ellipse, meaning the ellipse touches the centres of the rectangle spanned by the extent.
+- ``polygon``
+  Generates a closed polygon. The points argument must be a list or vector of ``alloy:point``s.
+- ``icon``
+  Generates an icon displaying the specified image. The image must be an object returned by ``request-image`` on the same renderer. The bounds argument specifies the maximal bounding box which the rendered image may not exceed, and which is used for alignment of the image. The halign and valign designate the horizontal and vertical alignment within the bounding box. May be either ``:left``, ``:middle``, ``:right``, ``:bottom``, ``:top``. The size argument specifies the size of the image as rendered within the bounds, and defaults to the pixel size of the image.
+- ``text``
+  Generates a text rendering of the given string and styling. The bounds argument specifies the maximal bounding box which the rendered text may not exceed, and which is used for alignment. The direction argument must be a keyword designating the text direction, and may be either ``:right`` for left-to-right, ``:left`` for right-to-left, ``:down`` for top-to-bottom right-to-left. The halign and valign arguments specify text is aligned within the bounding box and must be either ``:start``, ``:middle``, or ``:end`` for horizontal alignment, and ``:top``, ``:middle``, or ``:bottom`` for vertical alignment. The argument must be an ``alloy:unit`` designating the height of one text line, otherwise known as an ``em``. The font must be an object returned by ``request-font`` on the same renderer.
+- ``cursor``
+  Generates a text cursor for the given position within the text. The text argument must be an object returned by ``text`` on the same renderer. The primary feature of this is that the cursor shape will have the correct positioning within the text to be rendered, accounting for layouting and other factors.
+- ``selection``
+  Generates a text selection for the given region within the text. The text argument must be an object returned by ``text`` on the same renderer. The primary feature of this is that the selection shape will be correct, accounting for layouting and other factors.
+  
 
 ## Shared Resources
+Some parts of rendering might require heavy and slow resource allocation in the renderer. To alleviate this problem, the Simple protocol requires you to explicitly allocate certain resources as needed:
 
+- ``request-image``
+  This will load the specified image into the renderer and prepare it for rendering. Returned is an object that can be used for the ``icon`` shape. The data argument may be any data type as specified by the implementation. Any implementation //must// support octet vectors with RGBA pixel data. In that case, the user //must// supply the size argument as well, however. For requests that are sufficiently similar, the same object may be returned.
+- ``request-font``
+  This will load the requested font into the renderer and analyse it for text rendering. Returned is an object that can be used for the font argument of the ``text`` shape. The family argument may be a string denoting the font family to load, with the additional arguments constraining the font features more explicitly, or it may be the symbol ``:default`` for which the implementation must return a default font. The implementation may extend the allowed data types for the family as well. For requests that are sufficiently similar, the same object may be returned.
+- ``request-gradient``
+  This will generate a gradient suitable for use with any shape's pattern argument. The type argument may be one of the following:
+  - ``linear``
+  - ``radial``
+  - ``angle``
+  - ``diamond``
+  An implementation may provide additional gradient types.
+  The start and stop arguments must be points designating the bounds of the gradient. The gradient will fill all of the shape it is used with, but the start and stop bounds designate the area within which the gradient stops apply. Stops must be a list of cons, each of which has a ``(single-float 0 1)`` in its car and a ``colored:color`` in its cdr.
+
+The user does not have to call ``alloy:register`` on an object returned by a resource function, the object must already be registered if necessary. The implementation may choose to load the resource immediately, or defer the loading process. However, the resource must be loaded no later than when it is first effectively used during the rendering of a shape object.
+  
+; TODO: Show example images of the gradient types.
 
 ## Render Behaviour
 Simple also specifies the following two functions that influence the rendering behaviour:

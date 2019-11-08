@@ -108,6 +108,8 @@ Before any visualisation at all can be done, the ``allocate`` function must be c
 
 When ``deallocate`` is called the renderer should free all resources it can. This returns the renderer to the state before ``allocate`` was called for the first time, but does not influence the elements known to the renderer via ``register``. A renderer may deallocate itself in case a critical failure occurs that prevents it from operating further.
 
+; TODO: Deregistering / deallocating of resources
+
 ### Renderer Visualisation Control
 Visualisation of elements is done via ``render``. When ``render`` is called, the renderer should perform whatever steps necessary to render the given renderable. The behaviour is undefined if ``allocate`` was not successfully called prior to this, or the renderer was not notified of the renderable via ``register``. The user is allowed to provide non-primary methods to further customise the rendering behaviour. The user is not allowed to provide primary methods unless the renderer protocol used specifically permits it.
 

@@ -117,9 +117,9 @@
     (alloy:px-point
      (+ (alloy:pxx extent)
         (ecase halign
-          (:start 0)
+          ((:start :left) 0)
           (:middle (/ (- (alloy:pxw extent) (alloy:pxw size)) 2))
-          (:end (- (alloy:pxw extent) (alloy:pxw size)))))
+          ((:end :right) (- (alloy:pxw extent) (alloy:pxw size)))))
      (+ (alloy:pxy extent)
         (ecase valign
           (:bottom 0)
