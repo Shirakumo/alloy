@@ -15,19 +15,23 @@
 (defgeneric update-linear-layout (layout index extent))
 
 (defmethod (setf align) :after (value (layout linear-layout))
-  (update-linear-layout layout 0 (bounds layout)))
+  (update-linear-layout layout 0 (bounds layout))
+  (notice-bounds layout (layout-parent layout)))
 
 (defmethod (setf stretch) :after (value (layout linear-layout))
-  (update-linear-layout layout 0 (bounds layout)))
+  (update-linear-layout layout 0 (bounds layout))
+  (notice-bounds layout (layout-parent layout)))
 
 (defmethod (setf min-size) :after (value (layout linear-layout))
-  (update-linear-layout layout 0 (bounds layout)))
+  (update-linear-layout layout 0 (bounds layout))
+  (notice-bounds layout (layout-parent layout)))
 
 (defmethod notice-bounds ((element layout-element) (layout linear-layout))
   ;; TODO: optimise bounds update.
   (let ((updated (update-linear-layout layout 0 (bounds layout))))
     (unless (extent= (bounds layout) updated)
-      (setf (bounds layout) updated))))
+      (setf (bounds layout) updated)
+      (notice-bounds layout (layout-parent layout)))))
 
 (defmethod (setf bounds) :after (extent (layout linear-layout))
   (update-linear-layout layout 0 extent))
