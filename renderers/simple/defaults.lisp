@@ -23,6 +23,12 @@
 (defmethod request-image ((renderer renderer) (data vector) &rest initargs)
   (apply #'make-instance 'image :data data initargs))
 
+(defmethod alloy:enter ((image image) (layout alloy:layout) &rest args)
+  (apply #'alloy:enter (alloy:represent-with 'alloy:icon image) layout args))
+
+(defmethod alloy:component-class-for-object ((image image))
+  (find-class 'alloy:icon))
+
 (defclass gradient ()
   ((start :initarg :start :initform (arg! :start) :reader start)
    (stop :initarg :stop :initform (arg! :stop) :reader stop)

@@ -33,6 +33,11 @@
   (:label
    :text (alloy:data alloy:renderable)))
 
+(define-realization (default-look-and-feel alloy:icon)
+  ((:icon simple:icon)
+   (alloy:margins)
+   (alloy:data alloy:renderable)))
+
 (define-realization (default-look-and-feel alloy:button)
   ((:background simple:rectangle)
    (alloy:margins))
