@@ -77,6 +77,7 @@
     (realize-renderable renderer renderable)))
 
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
+  (when (next-method-p) (call-next-method))
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds renderable))
     (loop for (name . shape) across (shapes renderable)

@@ -26,7 +26,7 @@
   (let ((old (visible-bounds renderer)))
     (setf (visible-bounds renderer) (extent-intersection extent old))
     (unwind-protect
-         (call-next-method)
+         (funcall function)
       (setf (visible-bounds renderer) old))))
 
 (defmacro with-constrained-visibility ((extent renderer) &body body)

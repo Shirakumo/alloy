@@ -43,11 +43,11 @@
   (unless (handle event (focus-tree ui) ctx)
     (handle event (layout-tree ui) ctx)))
 
-(defmethod render ((ui ui) (thing (eql T)))
-  (render ui (layout-tree ui)))
+(defmethod render ((renderer renderer) (ui ui))
+  (render renderer (layout-tree ui)))
 
-(defmethod maybe-render ((ui ui) (thing (eql T)))
-  (maybe-render ui (layout-tree ui)))
+(defmethod maybe-render ((renderer renderer) (ui ui))
+  (maybe-render renderer (layout-tree ui)))
 
 (defmethod activate ((ui ui))
   (mark-for-render (root (layout-tree ui))))

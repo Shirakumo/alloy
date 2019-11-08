@@ -7,6 +7,7 @@
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
 (defparameter *circ-polycount* 36)
+(defvar *clip-depth*)
 
 ;; TODO: With a UBO we could avoid having to re-set uniforms at ever draw
 ;;       and instead change them when the style is set.
@@ -19,6 +20,11 @@
       (when errorp
         (error "The name~%  ~s~%is not allocated to any resource."
                name))))
+
+(defmethod alloy:render :around ((renderer renderer) (ui alloy:ui))
+  (let ((*clip-depth* 0))
+    (gl:stencil-func :lequal *clip-depth* #xFF)
+    (call-next-method)))
 
 (defmethod (setf resource) (value name (renderer renderer))
   (setf (gethash name (resources renderer)) value))
@@ -53,7 +59,7 @@
       array)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
-  ;; FIXME: Implement sharing between renderers.
+  ;; TODO: Implement sharing between renderers.
   ;; Allocate the necessary geometry.
   (flet ((arr (&rest data)
            (make-array (length data) :element-type 'single-float :initial-contents data))
@@ -191,22 +197,16 @@ void main(){
 
 (defmethod alloy:register (renderable (renderer renderer)))
 
-(defvar *clip-depth* 0)
-
 (defmethod simple:clip ((renderer renderer) (shape simple:shape))
-  ;; FIXME: THIS NEEDS TO BE FIXED
-  ;; (incf *clip-depth* 1)
-  ;; (gl:stencil-op :keep :incr :incr)
-  ;; (gl:stencil-func :always 1 #xFF)
-  ;; (gl:color-mask NIL NIL NIL NIL)
-  ;; (gl:depth-mask NIL)
-  ;; (unwind-protect
-  ;;      (alloy:render renderer shape)
-  ;;   (gl:stencil-op :keep :keep :keep)
-  ;;   (gl:stencil-func :gequal *clip-depth* #xFF)
-  ;;   (gl:color-mask T T T T)
-  ;;   (gl:depth-mask T))
-  )
+  (gl:stencil-op :keep :incr :incr)
+  (gl:color-mask NIL NIL NIL NIL)
+  (gl:depth-mask NIL)
+  (alloy:render renderer shape)
+  (incf *clip-depth* 1)
+  (gl:stencil-op :keep :keep :keep)
+  (gl:stencil-func :lequal *clip-depth* #xFF)
+  (gl:color-mask T T T T)
+  (gl:depth-mask T))
 
 (defmethod simple:clip ((renderer renderer) (extent alloy:extent))
   ;; FIXME: avoid allocation of rectangle
@@ -215,7 +215,7 @@ void main(){
 (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
   (let ((*clip-depth* *clip-depth*))
     (call-next-method))
-  (gl:stencil-func :gequal *clip-depth* #xFF))
+  (gl:stencil-func :lequal *clip-depth* #xFF))
 
 (defmethod simple:clear ((renderer renderer) extent)
   (let ((mode (simple:composite-mode renderer)))
@@ -392,9 +392,6 @@ void main(){
 (defclass polygon (simple:polygon)
   ((data :reader data)))
 
-;;; FIXME: this will not run if the user just changes size and does not reinitialise the shape.
-;;;        in turn the units will not match up any longer. WE might need to specify this in the
-;;;        simple protocol if there's no automated way to determine when to recompute
 (defmethod shared-initialize :after ((shape polygon) slots &key (points NIL points-p))
   (when points-p
     (let ((data (make-array (* 3 (length points)))))
