@@ -20,6 +20,9 @@
 (defmethod (setf anchor) ((null null) (cursor cursor))
   (set-anchor null cursor))
 
+(defmethod move-to :after (target cursor)
+  (refresh (data (component cursor))))
+
 (defmethod move-to ((_ (eql :start)) (cursor cursor))
   (set-pos 0 cursor))
 
@@ -107,10 +110,9 @@
       (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
     (let* ((start (max 0 (min start (length old))))
            (end (max start (min end (length old)))))
-      (loop for i from start below end
-            for j from end below (length old)
-            do (setf (aref old i) (aref old j)))
-      (setf (fill-pointer old) (- (length old) (- end start)))
+      (if (= (length old) end)
+          (vector-pop old)
+          (array-utils:array-shift old :n (- start end) :from end :adjust T))
       (when (<= start (pos cursor) end)
         (set-pos start cursor))
       (when (and (anchor cursor) (<= start (anchor cursor) end))

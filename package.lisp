@@ -74,6 +74,8 @@
    #:text-input-component
    #:insert-mode
    #:cursor
+   #:pos
+   #:anchor
    #:insert-text
    #:input-line
    #:input-box)
