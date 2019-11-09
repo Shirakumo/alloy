@@ -35,7 +35,8 @@
   ((kind :initarg :kind :initform :left :reader kind)))
 
 (defclass scroll (pointer-event)
-  ((delta :initarg :delta :initform (arg! :delta) :reader delta)))
+  ((dx :initarg :dx :initform (arg! :dx) :reader dx)
+   (dy :initarg :dy :initform (arg! :dy) :reader dy)))
 
 (defclass direct-event (event)
   ())

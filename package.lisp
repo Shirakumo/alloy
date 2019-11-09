@@ -144,7 +144,8 @@
    #:pointer-up
    #:kind
    #:scroll
-   #:delta
+   #:dx
+   #:dy
    #:direct-event
    #:paste-event
    #:content

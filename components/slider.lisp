@@ -41,7 +41,7 @@
   (assert (< 0 value) (value)))
 
 (defmethod handle ((event scroll) (slider slider) ctx)
-  (incf (value slider) (* (delta event) (step slider))))
+  (incf (value slider) (* (dy event) (step slider))))
 
 (defmethod handle ((event key-up) (slider slider) ctx)
   (case (key event)

@@ -338,7 +338,8 @@
 
 (define-callback scroll-callback (window (x :double) (y :double))
   (handle (make-instance 'alloy:scroll
-                         :delta y
+                         :dy y
+                         :dx x
                          :location (cursor-location window))))
 
 (define-callback char-callback (window (char :unsigned-int))
