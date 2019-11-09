@@ -100,22 +100,9 @@
   (slot-makunbound element 'focus-parent)
   (setf (slot-value element 'focus-tree) NIL))
 
-;; FIXME: might want to disconnect this from the vector-container to generalise.
-(defclass focus-chain (focus-element vector-container)
+(defclass focus-chain (focus-element container)
   ((index :initform -1 :accessor index)
    (focused :initform NIL :accessor focused)))
-
-(defmethod initialize-instance :after ((element focus-chain) &key elements)
-  (when elements
-    (adjust-array (elements element) (length elements) :initial-contents elements)))
-
-(defmethod reinitialize-instance :after ((element focus-chain) &key elements)
-  (when elements
-    (when (find (focused element) elements)
-      (exit (focused element))
-      (setf (focused element) NIL))
-    (adjust-array (elements element) (length elements))
-    (replace (elements element) elements)))
 
 (defmethod (setf focus-tree) :after (tree (element focus-chain))
   (do-elements (child element)
@@ -134,21 +121,21 @@
     (let ((focused (focused chain)))
       (setf (slot-value chain 'focused) NIL)
       (setf (focus focused) NIL)))
-  (setf (slot-value chain 'index) (position element (elements chain))))
+  (setf (slot-value chain 'index) (element-index element chain)))
 
 (defmethod (setf focused) :after ((element focus-element) (chain focus-chain))
   (when (eql NIL (focus element))
     (setf (focus element) :weak)))
 
 (defmethod (setf index) :before ((index integer) (chain focus-chain))
-  (unless (<= 0 index (1- (length (elements chain))))
+  (unless (<= 0 index (1- (element-count chain)))
     (error 'index-out-of-range
-           :index index :range (list 0 (length (elements chain)))))
+           :index index :range (list 0 (element-count chain))))
   (when (focused chain)
     (let ((focused (focused chain)))
       (setf (slot-value chain 'focused) NIL)
       (setf (focus focused) NIL)))
-  (setf (slot-value chain 'focused) (aref (elements chain) index)))
+  (setf (slot-value chain 'focused) (index-element index chain)))
 
 (defmethod (setf index) :after ((index integer) (chain focus-chain))
   (when (eql NIL (focus (focused chain)))
@@ -176,13 +163,13 @@
        (setf (focus element) :weak)))))
 
 (defmethod focus-next ((chain focus-chain))
-  (unless (= 0 (length (elements chain)))
-    (setf (index chain) (mod (1+ (index chain)) (length (elements chain))))
+  (unless (= 0 (element-count chain))
+    (setf (index chain) (mod (1+ (index chain)) (element-count chain)))
     (focused chain)))
 
 (defmethod focus-prev ((chain focus-chain))
-  (unless (= 0 (length (elements chain)))
-    (setf (index chain) (mod (1- (index chain)) (length (elements chain))))
+  (unless (= 0 (element-count chain))
+    (setf (index chain) (mod (1- (index chain)) (element-count chain)))
     (focused chain)))
 
 (defmethod activate :around ((chain focus-chain))
@@ -194,7 +181,7 @@
 (defmethod update :after ((element focus-element) (chain focus-chain) &key index)
   ;; Fixup index position
   (when (and index (focused chain))
-    (setf (slot-value chain 'index) (position (focused chain) (elements chain)))))
+    (setf (slot-value chain 'index) (element-index (focused chain) chain))))
 
 (defmethod handle ((event focus-next) (chain focus-chain) ui)
   (focus-next chain))
@@ -202,14 +189,26 @@
 (defmethod handle ((event focus-prev) (chain focus-chain) ui)
   (focus-prev chain))
 
-(defclass focus-list (focus-chain)
+(defclass focus-list (focus-chain vector-container)
   ())
+
+(defmethod initialize-instance :after ((chain focus-chain) &key elements)
+  (when elements
+    (adjust-array (elements chain) (length elements) :initial-contents elements)))
+
+(defmethod reinitialize-instance :after ((chain focus-chain) &key elements)
+  (when elements
+    (when (find (focused chain) elements)
+      (exit (focused chain))
+      (setf (focused chain) NIL))
+    (adjust-array (elements chain) (length elements))
+    (replace (elements chain) elements)))
 
 ;; FIXME: visually represent which focus chain we're going through by associating it with a layout.
 ;;        This is a problem because we don't know the focus for a layout. Maybe we should make those
 ;;        another combined subclass? Would be annoying, though.
 
-(defclass focus-grid (focus-chain)
+(defclass focus-grid (focus-list)
   ((width :initarg :width :initform (arg! :width) :accessor width)))
 
 (defmethod focus-up ((chain focus-chain))
