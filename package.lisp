@@ -104,6 +104,8 @@
    #:element-count
    #:call-with-elements
    #:do-elements
+   #:index-element
+   #:element-index
    #:clear
    #:vector-container)
   ;; data.lisp
@@ -173,7 +175,6 @@
    #:notice-focus
    #:index
    #:focused
-   #:element-index
    #:focus-next
    #:focus-prev
    #:focus-up

@@ -18,6 +18,7 @@
 (defgeneric element-count (container))
 (defgeneric elements (container))
 (defgeneric element-index (element container))
+(defgeneric index-element (index container))
 (defgeneric call-with-elements (function container &key start end))
 (defgeneric clear (container))
 
@@ -82,6 +83,9 @@
 
 (defmethod element-index ((element element) (container vector-container))
   (position element (elements container)))
+
+(defmethod index-element ((index integer) (container vector-container))
+  (aref (elements container) index))
 
 (defmethod clear ((container vector-container))
   (loop for i downfrom (1- (length (elements container))) to 0

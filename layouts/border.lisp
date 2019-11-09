@@ -66,6 +66,14 @@
         ((eq element (car (slot-value layout 'b))) :south)
         ((eq element (car (slot-value layout 'c))) :center)))
 
+(defmethod index-element (index (layout border-layout))
+  (ecase index
+    (:west (car (slot-value layout 'l)))
+    (:north (car (slot-value layout 'u)))
+    (:east (car (slot-value layout 'r)))
+    (:south (car (slot-value layout 'b)))
+    (:center (car (slot-value layout 'c)))))
+
 (defmethod call-with-elements (function (layout border-layout) &key start end)
   (declare (ignore start end))
   (flet ((test (slot)

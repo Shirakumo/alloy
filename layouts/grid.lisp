@@ -79,6 +79,9 @@
         (when (eq element (aref elements i j))
           (return-from element-index (list i j)))))))
 
+(defmethod index-element ((index cons) (layout grid-layout))
+  (aref (elements layout) (first index) (second index)))
+
 (defmethod notice-bounds ((element layout-element) (layout grid-layout))
   (let ((updated (suggest-bounds (bounds layout) layout)))
     (unless (extent= (bounds layout) updated)
