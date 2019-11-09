@@ -27,22 +27,21 @@
 
 (defclass focus-element (element)
   ((focus-tree :initform NIL :accessor focus-tree)
-   (focus-parent :initarg :focus-parent :initform (arg! :focus-parent) :reader focus-parent)
+   (focus-parent :initarg :focus-parent :reader focus-parent)
    (focus :initform NIL :accessor focus)))
 
 (defmethod initialize-instance :after ((element focus-element) &key focus)
   ;; Tie-up with focus-tree root.
-  (etypecase (focus-parent element)
-    (focus-tree
-     (let ((focus-tree (focus-parent element)))
-       (setf (focus-tree element) focus-tree)
-       (setf (slot-value element 'focus-parent) element)
-       (setf (root focus-tree) element)))
-    (focus-element
-     (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))
-     (enter element (focus-parent element)))
-    (null
-     (slot-makunbound element 'focus-parent)))
+  (when (slot-boundp element 'focus-parent)
+    (etypecase (focus-parent element)
+      (focus-tree
+       (let ((focus-tree (focus-parent element)))
+         (setf (focus-tree element) focus-tree)
+         (setf (slot-value element 'focus-parent) element)
+         (setf (root focus-tree) element)))
+      (focus-element
+       (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))
+       (enter element (focus-parent element)))))
   (when focus (setf (focus element) focus)))
 
 (defmethod print-object ((element focus-element) stream)

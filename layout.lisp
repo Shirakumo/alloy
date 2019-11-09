@@ -16,21 +16,20 @@
 
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree)
-   (layout-parent :initarg :layout-parent :initform (arg! :layout-parent) :reader layout-parent)
+   (layout-parent :initarg :layout-parent :reader layout-parent)
    (bounds :initform (extent) :accessor bounds)))
 
 (defmethod initialize-instance :after ((element layout-element) &key)
-  (etypecase (layout-parent element)
-    (layout-tree
-     (let ((layout-tree (layout-parent element)))
-       (setf (slot-value element 'layout-tree) layout-tree)
-       (setf (slot-value element 'layout-parent) element)
-       (setf (root layout-tree) element)))
-    (layout-element
-     (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element)))
-     (enter element (layout-parent element)))
-    (null
-     (slot-makunbound element 'layout-parent))))
+  (when (slot-boundp element 'layout-parent)
+    (etypecase (layout-parent element)
+      (layout-tree
+       (let ((layout-tree (layout-parent element)))
+         (setf (slot-value element 'layout-tree) layout-tree)
+         (setf (slot-value element 'layout-parent) element)
+         (setf (root layout-tree) element)))
+      (layout-element
+       (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element)))
+       (enter element (layout-parent element))))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
