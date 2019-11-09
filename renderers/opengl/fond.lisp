@@ -181,6 +181,7 @@ void main(){
 (defmethod shared-initialize :after ((selection selection) slots &key start end)
   (when (or start end)
     (let ((text (text selection)))
+      ;; FIXME: This will not work with multiline.
       (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text)
                                                                             :end (or start (start selection)))
         (declare (ignore gap))

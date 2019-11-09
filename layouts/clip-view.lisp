@@ -55,6 +55,14 @@
                                                      (max (pxh ideal) (pxh bounds))
                                                      (h ideal))))))))
 
+(defmethod handle ((event scroll) (layout clip-view) ctx)
+  (unless (call-next-method)
+    (let ((off (offset layout))
+          (bo (bounds layout))
+          (bi (bounds (inner layout))))
+      (setf (offset layout) (px-point (min (max 0 (+ (dx event) (pxx off))) (- (pxw bo) (pxw bi)))
+                                      (min (max 0 (+ (dy event) (pxy off))) (- (pxh bo) (pxh bi))))))))
+
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)
     (with-constrained-visibility ((bounds layout) renderer)
@@ -73,3 +81,5 @@
     (setf (offset layout) (px-point (+ (pxx (offset layout)) shiftx)
                                     (+ (pxy (offset layout)) shifty))))
   (call-next-method))
+
+;; FIXME: This might need to be a component instead.. ?

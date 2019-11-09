@@ -100,8 +100,7 @@
 (defmethod handle ((event pointer-event) (layout layout) ui)
   (do-elements (element layout :result (decline))
     (when (contained-p (location event) (bounds element))
-      (handle event element ui)
-      (return))))
+      (return (handle event element ui)))))
 
 (defclass layout-tree ()
   ((root :initform NIL :accessor root)
