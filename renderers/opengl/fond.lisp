@@ -11,6 +11,7 @@
    (#:simple #:org.shirakumo.alloy.renderers.simple)
    (#:opengl #:org.shirakumo.alloy.renderers.opengl)
    (#:font-discovery #:org.shirakumo.font-discovery)
+   (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:export
    #:*default-charset*
@@ -174,6 +175,7 @@ void main(){
   ((text :initarg :text :accessor text)
    (start :initarg :start :accessor start)
    (end :initarg :end :accessor end)
+   (simple:pattern :initform (colored:color 0 0 1 0.5))
    (simple:bounds :initform NIL)))
 
 (defmethod shared-initialize :after ((selection selection) slots &key start end)
@@ -182,7 +184,7 @@ void main(){
       (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text)
                                                                             :end (or start (start selection)))
         (declare (ignore gap))
-        (destructuring-bind (&key r2 &allow-other-keys) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text)
+        (destructuring-bind (&key ((:r r2)) &allow-other-keys) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text)
                                                                                 :end (or end (end selection)))
           (let ((s (* 2 (/ (alloy:to-px (simple:size (text selection))) (cl-fond:size (atlas (simple:font (text selection))))))))
             (setf (simple:bounds selection) (alloy:px-extent (* s (- r l)) (* s b) (* s (- r2 r)) (* s (+ u b))))))))))

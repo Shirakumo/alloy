@@ -90,7 +90,11 @@
   ((:cursor simple:cursor)
    (find-shape :label alloy:renderable)
    0
-   :pattern colors:black))
+   :composite-mode :invert
+   :pattern colors:white)
+  ((:selection simple:selection)
+   (find-shape :label alloy:renderable)
+   0 0))
 
 (define-update (default-look-and-feel alloy:input-line)
   (:background
@@ -101,6 +105,12 @@
   (:cursor
    :hidden-p (null alloy:focus)
    :position (alloy:pos (alloy:cursor alloy:renderable)))
+  (:selection
+   :hidden-p (null (alloy:anchor (alloy:cursor alloy:renderable)))
+   :start (min (or (alloy:anchor (alloy:cursor alloy:renderable)) 0)
+               (alloy:pos (alloy:cursor alloy:renderable)))
+   :end (max (or (alloy:anchor (alloy:cursor alloy:renderable)) 0)
+             (alloy:pos (alloy:cursor alloy:renderable))))
   (:label
    :text alloy:value))
 

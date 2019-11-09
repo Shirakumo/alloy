@@ -111,9 +111,9 @@
       (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
     (let* ((start (max 0 (min start (length old))))
            (end (max start (min end (length old)))))
-      (if (= (length old) end)
-          (vector-pop old)
-          (array-utils:array-shift old :n (- start end) :from end :adjust T))
+      (when (/= (length old) end)
+        (array-utils:array-shift old :n (- start end) :from end :adjust NIL))
+      (decf (fill-pointer old) (- end start))
       (when (<= start (pos cursor) end)
         (set-pos start cursor))
       (when (and (anchor cursor) (<= start (anchor cursor) end))
@@ -121,6 +121,11 @@
       (setf (value component) old))))
 
 (defmethod handle ((event text-event) (component text-input-component) ctx)
+  (let ((cursor (cursor component)))
+    (when (anchor cursor)
+      (delete-text (min (anchor cursor) (pos cursor))
+                   (max (anchor cursor) (pos cursor))
+                   component)))
   (insert-text (text event) component))
 
 (defmethod handle ((event key-up) (component text-input-component) ctx)
@@ -181,6 +186,11 @@
   (let ((content (content event)))
     (typecase content
       (string
+       (let ((cursor (cursor component)))
+         (when (anchor cursor)
+           (delete-text (min (anchor cursor) (pos cursor))
+                        (max (anchor cursor) (pos cursor))
+                        component)))
        (insert-text content component))
       (T
        (call-next-method)))))
