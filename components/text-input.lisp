@@ -79,7 +79,8 @@
    (cursor :reader cursor)))
 
 (defmethod initialize-instance :after ((component text-input-component) &key)
-  (setf (slot-value component 'cursor) (make-instance 'cursor :component component)))
+  (setf (slot-value component 'cursor) (make-instance 'cursor :component component))
+  (set-pos (length (value component)) (cursor component)))
 
 (defun maybe-enlarge (array size)
   (if (< (array-total-size array) size)
