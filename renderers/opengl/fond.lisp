@@ -10,7 +10,8 @@
    (#:alloy #:org.shirakumo.alloy)
    (#:simple #:org.shirakumo.alloy.renderers.simple)
    (#:opengl #:org.shirakumo.alloy.renderers.opengl)
-   (#:font-discovery #:org.shirakumo.font-discovery))
+   (#:font-discovery #:org.shirakumo.font-discovery)
+   (#:colors #:org.shirakumo.alloy.colored.colors))
   (:export
    #:*default-charset*
    #:renderer
@@ -153,5 +154,38 @@ void main(){
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
 
-(defmethod simple:cursor ((text simple:text) position &key pattern))
-(defmethod simple:selection ((text simple:text) start end &key pattern))
+(defclass cursor (simple:filled-rectangle)
+  ((text :initarg :text :accessor text)
+   (simple:bounds :initform NIL)))
+
+(defmethod shared-initialize :after ((cursor cursor) slots &key position)
+  (when position
+    (alloy:allocate (simple:font (text cursor)))
+    (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font (text cursor))) (alloy:text (text cursor))
+                                                                          :end position)
+      (declare (ignore gap))
+      (let ((s (* 2 (/ (alloy:to-px (simple:size (text cursor))) (cl-fond:size (atlas (simple:font (text cursor))))))))
+        (setf (simple:bounds cursor) (alloy:px-extent (* s (- r l)) (* s b) 2 (* s (+ u b))))))))
+
+(defmethod simple:cursor ((renderer renderer) (text simple:text) position &rest initargs)
+  (apply #'make-instance 'cursor :text text :position position initargs))
+
+(defclass selection (simple:filled-rectangle)
+  ((text :initarg :text :accessor text)
+   (start :initarg :start :accessor start)
+   (end :initarg :end :accessor end)
+   (simple:bounds :initform NIL)))
+
+(defmethod shared-initialize :after ((selection selection) slots &key start end)
+  (when (or start end)
+    (let ((text (text selection)))
+      (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text)
+                                                                            :end (or start (start selection)))
+        (declare (ignore gap))
+        (destructuring-bind (&key r2 &allow-other-keys) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text)
+                                                                                :end (or end (end selection)))
+          (let ((s (* 2 (/ (alloy:to-px (simple:size (text selection))) (cl-fond:size (atlas (simple:font (text selection))))))))
+            (setf (simple:bounds selection) (alloy:px-extent (* s (- r l)) (* s b) (* s (- r2 r)) (* s (+ u b))))))))))
+
+(defmethod simple:selection ((renderer renderer) (text simple:text) start end &rest initargs)
+  (apply #'make-instance 'selection :text text :start start :end end initargs))

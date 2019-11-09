@@ -96,6 +96,10 @@
 
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
 
+(defmethod realize-renderable :around ((renderer renderer) (renderable renderable))
+  (alloy:with-unit-parent renderable
+    (call-next-method)))
+
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))
 

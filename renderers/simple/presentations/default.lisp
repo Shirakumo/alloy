@@ -87,8 +87,10 @@
    (alloy:margins 1)
    alloy:value
    :valign :middle)
-  ((:cursor simple:rectangle)
-   (alloy:extent 0 (alloy:ph 0.15) 1 (alloy:ph 0.7))))
+  ((:cursor simple:cursor)
+   (find-shape :label alloy:renderable)
+   0
+   :pattern colors:black))
 
 (define-update (default-look-and-feel alloy:input-line)
   (:background
@@ -98,7 +100,7 @@
               (T (colored:color 0.15 0.15 0.15))))
   (:cursor
    :hidden-p (null alloy:focus)
-   :pattern colors:black)
+   :position (alloy:pos (alloy:cursor alloy:renderable)))
   (:label
    :text alloy:value))
 
