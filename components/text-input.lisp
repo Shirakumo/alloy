@@ -198,10 +198,15 @@
 (defclass input-line (text-input-component)
   ())
 
+(define-observable accept (observable))
+
+(defmethod accept ((component input-line))
+  (exit component))
+
 (defmethod handle ((event key-up) (component input-line) ctx)
   (case (key event)
     (:return
-      (exit component))
+      (accept component))
     (T
      (call-next-method))))
 

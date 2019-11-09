@@ -78,6 +78,7 @@
    #:anchor
    #:insert-text
    #:input-line
+   #:accept
    #:input-box)
   ;; components/scroll.lisp
   (:export
