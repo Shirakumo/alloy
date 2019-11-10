@@ -278,6 +278,11 @@
    #:align
    #:vertical-linear-layout
    #:horizontal-linear-layout)
+  ;; layouts/stack.lisp
+  (:export
+   #:stack-layout
+   #:index
+   #:current)
   ;; observable.lisp
   (:export
    #:observable

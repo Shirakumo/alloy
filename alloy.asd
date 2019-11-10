@@ -30,7 +30,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "linear")
                              (:file "grid")
                              (:file "border")
-                             (:file "clip-view")))
+                             (:file "clip-view")
+                             (:file "stack")))
                (:module "components"
                 :components ((:file "base")
                              (:file "button")
