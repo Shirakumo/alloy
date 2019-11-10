@@ -6,7 +6,7 @@
 
 (defpackage #:org.shirakumo.alloy
   (:use #:cl)
-  (:shadow #:step)
+  (:shadow #:step #:structure #:close)
   ;; component.lisp
   (:export
    #:component
@@ -309,6 +309,29 @@
    #:extent-visible-p
    #:renderer
    #:renderable)
+  ;; structure.lisp
+  (:export
+   #:structure
+   #:layout-element
+   #:focus-element
+   #:finish-structure)
+  ;; structures/query.lisp
+  (:export
+   #:query)
+  ;; structures/scroll-view.lisp
+  (:export
+   #:scroll-view)
+  ;; structures/tab-view.lisp
+  (:export
+   #:tab-view
+   #:tab-button
+   #:index)
+  ;; structures/window.lisp
+  (:export
+   #:window
+   #:close
+   #:minimize
+   #:maximize)
   ;; ui.lisp
   (:export
    #:clipboard

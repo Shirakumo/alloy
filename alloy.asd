@@ -20,10 +20,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "observable")
                (:file "renderer")
                (:file "data")
-               (:file "component")
                (:file "container")
                (:file "focus-tree")
                (:file "layout")
+               (:file "component")
+               (:file "structure")
                (:file "ui")
                (:module "layouts"
                 :components ((:file "fixed")
@@ -42,6 +43,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "combo")
                              (:file "scroll")
                              (:file "plot")))
+               (:module "structures"
+                :components ((:file "query")
+                             (:file "scroll-view")
+                             (:file "tab-view")
+                             (:file "window")))
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)
