@@ -13,9 +13,18 @@
   (when (< 0 (length (elements layout)))
     (aref (elements layout) (index layout))))
 
+(defmethod (setf current) :before ((current layout-element) (layout stack-layout))
+  (unless (eq layout (layout-parent current))
+    (error 'element-has-different-parent
+           :parent (layout-parent current) :element current :container layout)))
+
+(defmethod (setf current) ((current layout-element) (layout stack-layout))
+  (setf (index layout) (element-index current layout)))
+
 (defmethod (setf index) :before (index (layout stack-layout))
-  (assert (<= 0 index (1- (length (elements layout)))) ()
-          'index-out-of-range :index index :range (list 0 (length (elements layout)))))
+  (unless (<= 0 index (1- (length (elements layout))))
+    (error 'index-out-of-range
+           :index index :range (list 0 (length (elements layout))))))
 
 (defmethod (setf index) :after (index (layout stack-layout))
   (setf (bounds (current layout)) (bounds layout)))

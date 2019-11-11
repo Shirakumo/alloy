@@ -21,7 +21,7 @@
     (:south 'b)
     (:center 'c)))
 
-(defmethod enter ((element layout-element) (layout border-layout) &key (place :center) (size (un 10)))
+(defmethod enter ((element layout-element) (layout border-layout) &key (place :center) (size (un 20)))
   (let ((slot (border-place-slot place)))
     (when (slot-value layout slot)
       (cerror "Replace the element" 'place-already-occupied

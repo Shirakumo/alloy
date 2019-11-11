@@ -65,6 +65,7 @@
   ;; components/radio.lisp
   (:export
    #:radio
+   #:active-value
    #:active-p)
   ;; components/switch.lisp
   (:export
@@ -323,6 +324,7 @@
    #:scroll-view)
   ;; structures/tab-view.lisp
   (:export
+   #:tab
    #:tab-view
    #:tab-button
    #:index)

@@ -221,3 +221,23 @@
 (define-update (default-look-and-feel alloy:plot)
   (:curve
    :points (alloy:plot-points alloy:renderable)))
+
+(define-realization (default-look-and-feel alloy:tab-button)
+  ((:background simple:polygon)
+   (list (alloy:point 0 0) (alloy:point 1 0)
+         (alloy:point 0.9 1) (alloy:point 0.1 1))
+   :scale (alloy:size (alloy:pw 1) (alloy:ph 1)))
+  ((:label simple:text)
+   (alloy:margins 1)
+   (alloy:active-value alloy:renderable)
+   :halign :middle
+   :valign :middle))
+
+(define-update (default-look-and-feel alloy:tab-button)
+  (:background
+   :pattern (case alloy:focus
+              (:strong (colored:color 0.9 0.9 0.9))
+              (:weak (colored:color 0.7 0.7 0.7))
+              (T (if (alloy:active-p alloy:renderable)
+                     (colored:color 0.25 0.2 0.8)
+                     (colored:color 0.2 0.2 0.2))))))
