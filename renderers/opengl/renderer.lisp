@@ -390,18 +390,18 @@ void main(){
     (draw-vertex-array (resource 'circ-line-vao renderer) :triangles (* *circ-polycount* 6))))
 
 (defclass polygon (simple:polygon)
-  ((data :reader data)))
+  ((data :accessor data)))
 
 (defmethod shared-initialize :after ((shape polygon) slots &key (points NIL points-p))
   (when points-p
-    (let ((data (make-array (* 3 (length points)))))
+    (let ((data (make-array (* 3 (length points)) :element-type 'single-float)))
       (loop with i = -1
             for point in points
             do (setf (aref data (incf i)) (alloy:pxx point))
                (setf (aref data (incf i)) (alloy:pxy point)))
       (setf (data shape) data))))
 
-(defmethod simple:polygon ((renderer renderer) (points vector) &rest initargs)
+(defmethod simple:polygon ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'polygon :points points initargs))
 
 (defmethod alloy:render ((renderer renderer) (shape polygon))

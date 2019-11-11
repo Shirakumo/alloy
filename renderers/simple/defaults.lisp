@@ -70,19 +70,19 @@
 (defclass polygon (filled-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod polygon ((renderer renderer) (points vector) &rest initargs)
-  (apply #'make-instance 'outlined-polygon :points points initargs))
+(defmethod polygon ((renderer renderer) points &rest initargs)
+  (apply #'make-instance 'polygon :points points initargs))
 
 (defclass line-strip (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod line-strip ((renderer renderer) (points vector) &rest initargs)
+(defmethod line-strip ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'line-strip :points points initargs))
 
 (defclass curve (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
-(defmethod curve ((renderer renderer) (points vector) &rest initargs)
+(defmethod curve ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'curve :points points initargs))
 
 ;; TODO: changing styles and size, multiple styles and size per text
