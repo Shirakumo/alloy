@@ -241,3 +241,10 @@
               (T (if (alloy:active-p alloy:renderable)
                      (colored:color 0.25 0.2 0.8)
                      (colored:color 0.2 0.2 0.2))))))
+
+;; KLUDGE: Bad, spilling protocol
+(defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))
+  (let ((shape (find-shape :label element)))
+    (if shape
+        (simple:ideal-bounds shape)
+        extent)))

@@ -155,6 +155,14 @@ void main(){
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
 
+;; FIXME: bad
+(defmethod simple:ideal-bounds ((text simple:text))
+  (alloy:allocate (simple:font text))
+  (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
+    (declare (ignore gap))
+    (let ((s (* 3 (/ (alloy:to-px (simple:size text)) (cl-fond:size (atlas (simple:font text)))))))
+      (alloy:px-extent (* l s) (* u s) (* s (+ l r)) (* s (+ u b))))))
+
 (defclass cursor (simple:filled-rectangle)
   ((text :initarg :text :accessor text)
    (simple:bounds :initform NIL)))

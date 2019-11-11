@@ -27,6 +27,7 @@
 (defgeneric text (renderer bounds string &key pattern font size halign valign direction &allow-other-keys))
 (defgeneric cursor (renderer text position &key pattern &allow-other-keys))
 (defgeneric selection (renderer text start end &key pattern &allow-other-keys))
+(defgeneric ideal-bounds (text))
 
 (defgeneric request-font (renderer family &key slant spacing weight stretch &allow-other-keys))
 (defgeneric request-image (renderer data &key size &allow-other-keys))
