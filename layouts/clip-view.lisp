@@ -68,8 +68,9 @@
     (with-constrained-visibility ((bounds layout) renderer)
       (render renderer (inner layout)))))
 
-(defmethod ensure-visible ((extent extent) (layout clip-view))
+(defmethod ensure-visible ((element layout-element) (layout clip-view))
   (let* ((bounds (bounds layout))
+         (extent (bounds element))
          (hwe (/ (pxw extent) 2)) (hhe (/ (pxh extent) 2))
          (hwb (/ (pxw bounds) 2)) (hhb (/ (pxh bounds) 2))
          (cxe (+ (pxx extent) hwe)) (cye (+ (pxy extent) hhe))
@@ -81,5 +82,3 @@
     (setf (offset layout) (px-point (+ (pxx (offset layout)) shiftx)
                                     (+ (pxy (offset layout)) shifty))))
   (call-next-method))
-
-;; FIXME: This might need to be a component instead.. ?

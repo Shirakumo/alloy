@@ -7,9 +7,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass component (observable layout-element focus-element renderable)
-  ((focus-parent :initform NIL)
-   (layout-parent :initform NIL)
-   (data :initarg :data :initform (arg! :data) :reader data)))
+  ((data :initarg :data :initform (arg! :data) :reader data)))
 
 (defmethod suggest-bounds (extent (component component))
   extent)
@@ -30,6 +28,7 @@
 (defmethod maybe-render ((renderer renderer) (component component)))
 
 (defmethod (setf focus) :after (value (component component))
+  (when value (ensure-visible component T))
   (mark-for-render component))
 
 (defmethod (setf bounds) :after (value (component component))

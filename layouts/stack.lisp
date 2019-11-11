@@ -44,3 +44,11 @@
 (defmethod maybe-render ((renderer renderer) (layout stack-layout))
   (when (< 0 (length (elements layout)))
     (maybe-render renderer (current layout))))
+
+(defmethod ensure-visible ((element layout-element) (layout stack-layout))
+  (loop until (or (eq layout (layout-parent element))
+                  (eq element (layout-parent element)))
+        do (setf element (layout-parent element)))
+  (let ((index (position element (elements layout))))
+    (when index (setf (index layout) index)))
+  (call-next-method))
