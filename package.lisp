@@ -111,7 +111,9 @@
    #:index-element
    #:element-index
    #:clear
-   #:vector-container)
+   #:vector-container
+   #:stack-container
+   #:layers)
   ;; data.lisp
   (:export
    #:data

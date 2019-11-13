@@ -90,3 +90,77 @@
 (defmethod clear ((container vector-container))
   (loop for i downfrom (1- (length (elements container))) to 0
         do (leave (aref (elements container) i) container)))
+
+(defclass stack-container (container)
+  ((layers :initform (make-array 0 :adjustable T :fill-pointer T) :reader layers)))
+
+(defmethod enter ((element element) (container stack-container) &key (layer (max 0 (1- (length (layers container))))))
+  (let ((layers (layers container)))
+    (when (<= (length layers) layer)
+      (adjust-array layers (1+ layer) :initial-element NIL)
+      (loop for i from 0 to layer
+            do (unless (aref layers i)
+                 (setf (aref layers i) (make-array 0 :adjustable T :fill-pointer T)))))
+    (vector-push-extend element (aref layers layer))))
+
+(defmethod update ((element element) (container stack-container) &key layer)
+  (when layer
+    (let ((layers (layers container)))
+      (loop for layer across layers
+            for position = (position element layer)
+            do (when position
+                 (array-utils:vector-pop-position layer position)
+                 (return)))
+      (when (<= (length layers) layer)
+        (adjust-array layers (1+ layer) :initial-element NIL)
+        (loop for i from 0 to layer
+              do (unless (aref layers i)
+                   (setf (aref layers i) (make-array 0 :adjustable T :fill-pointer T)))))
+      (vector-push-extend element (aref layers layer)))))
+
+(defmethod leave ((element element) (container stack-container))
+  (loop for layer across (layers container)
+        for position = (position element layer)
+        do (when position
+             (array-utils:vector-pop-position layer position)
+             (return))))
+
+(defmethod element-count ((container stack-container))
+  (loop for layer across (layers container)
+        sum (length layer)))
+
+(defmethod elements ((container stack-container))
+  (let ((list ()))
+    (loop for layer across (layers container)
+          do (loop for element across layer
+                   do (push element list)))
+    (nreverse list)))
+
+(defmethod element-index ((element element) (container stack-container))
+  (loop for layer across (layers container)
+        for row from 0
+        for col = (position element layer)
+        do (when col (return (cons row col)))))
+
+(defmethod index-element ((index cons) (container stack-container))
+  (unless (<= 0 (car index) (1- (length (layers container))))
+    (error 'index-out-of-range :index (car index) :range (list 0 (1- (length (layers container))))))
+  (let ((layer (aref (layers container) (car index))))
+    (unless (<= 0 (cdr index) (1- (length layer)))
+      (error 'index-out-of-range :index (cdr index) :range (list 0 (1- (length layer)))))
+    (aref layer (cdr index))))
+
+(defmethod call-with-elements (function (container stack-container) &key (start 0) end)
+  (loop with i = 0
+        for layer across (layers container)
+        while (<= end i)
+        do (loop for element across layer
+                 while (<= end i)
+                 do (when (<= i start)
+                      (funcall function element))
+                    (incf i))))
+
+(defmethod clear ((container stack-container))
+  (loop for layer across (layers container)
+        do (loop for i downfrom (1- (length layer)) to 0
+                 do (leave (aref layer i) container))))
