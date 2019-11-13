@@ -281,9 +281,9 @@
    #:align
    #:vertical-linear-layout
    #:horizontal-linear-layout)
-  ;; layouts/stack.lisp
+  ;; layouts/swap.lisp
   (:export
-   #:stack-layout
+   #:swap-layout
    #:index
    #:current)
   ;; observable.lisp
@@ -327,6 +327,7 @@
   ;; structures/tab-view.lisp
   (:export
    #:tab
+   #:name
    #:tab-view
    #:tab-button
    #:index)

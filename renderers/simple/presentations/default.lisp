@@ -229,7 +229,7 @@
    :scale (alloy:size (alloy:pw 1) (alloy:ph 1)))
   ((:label simple:text)
    (alloy:margins 1)
-   (alloy:active-value alloy:renderable)
+   (alloy:name (alloy:active-value alloy:renderable))
    :halign :middle
    :valign :middle))
 

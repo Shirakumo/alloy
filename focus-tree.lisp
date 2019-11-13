@@ -100,7 +100,7 @@
   (setf (slot-value element 'focus-tree) NIL))
 
 (defclass focus-chain (focus-element container)
-  ((index :initform -1 :accessor index)
+  ((index :initform NIL :accessor index)
    (focused :initform NIL :accessor focused)))
 
 (defmethod (setf focus-tree) :after (tree (element focus-chain))
@@ -108,7 +108,7 @@
     (setf (focus-tree child) tree)))
 
 (defmethod (setf focused) :before ((none null) (chain focus-chain))
-  (setf (slot-value chain 'index) -1)
+  (setf (slot-value chain 'index) NIL)
   (when (focused chain)
     (setf (focus (focused chain)) NIL)))
 
@@ -171,6 +171,12 @@
     (setf (index chain) (mod (1- (index chain)) (element-count chain)))
     (focused chain)))
 
+(defmethod focus-up ((chain focus-chain))
+  (focus-next chain))
+
+(defmethod focus-down ((chain focus-chain))
+  (focus-prev chain))
+
 (defmethod activate :around ((chain focus-chain))
   (if (and (eql :strong (focus chain))
            (focused chain))
@@ -187,6 +193,12 @@
 
 (defmethod handle ((event focus-prev) (chain focus-chain) ui)
   (focus-prev chain))
+
+(defmethod handle ((event focus-up) (chain focus-chain) ui)
+  (focus-up chain))
+
+(defmethod handle ((event focus-down) (chain focus-chain) ui)
+  (focus-down chain))
 
 (defclass focus-list (focus-chain vector-container)
   ())
@@ -220,11 +232,24 @@
         (row (1+ (floor (index chain) (width chain)))))
     (setf (index chain) (+ col (* row (width chain))))))
 
-(defmethod handle ((event focus-up) (grid focus-grid) ui)
-  (focus-up grid))
+(defclass focus-stack (focus-chain stack-container)
+  ())
 
-(defmethod handle ((event focus-down) (grid focus-grid) ui)
-  (focus-down grid))
+(defmethod focus-up ((stack focus-stack))
+  (when (< 0 (car (index stack)))
+    (decf (car (index stack)))))
+
+(defmethod focus-down ((stack focus-stack))
+  (when (< (car (index stack)) (1- (length (layers stack))))
+    (incf (car (index stack)))))
+
+(defmethod focus-next ((stack focus-stack))
+  (destructuring-bind (row . col) (index stack)
+    (setf (cdr (index stack)) (mod (1+ col) (length (aref (layers stack) row))))))
+
+(defmethod focus-prev ((stack focus-stack))
+  (destructuring-bind (row . col) (index stack)
+    (setf (cdr (index stack)) (mod (1- col) (length (aref (layers stack) row))))))
 
 (defclass focus-tree ()
   ((root :initform NIL :accessor root)
