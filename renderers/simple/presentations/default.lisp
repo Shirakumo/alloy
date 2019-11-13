@@ -248,3 +248,10 @@
     (if shape
         (simple:ideal-bounds shape)
         extent)))
+
+(define-realization (default-look-and-feel alloy::window-title)
+  ((:label simple:text)
+   (alloy:margins)
+   (alloy:data alloy:renderable)
+   :pattern (colored:color 1 1 1)
+   :halign :middle :valign :middle))

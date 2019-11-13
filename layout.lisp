@@ -15,7 +15,7 @@
 (defgeneric ensure-visible (element parent))
 
 (defclass layout-element (element)
-  ((layout-tree :initform NIL :reader layout-tree)
+  ((layout-tree :initform NIL :reader layout-tree :writer set-layout-tree)
    (layout-parent :initarg :layout-parent :reader layout-parent)
    (bounds :initform (extent) :accessor bounds)))
 
@@ -29,7 +29,9 @@
          (setf (root layout-tree) element)))
       (layout-element
        (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element)))
-       (enter element (layout-parent element))))))
+       (enter element (layout-parent element)))
+      (null
+       (slot-makunbound element 'layout-parent)))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -39,6 +41,11 @@
 (defmethod y ((element layout-element)) (extent-y (bounds element)))
 (defmethod w ((element layout-element)) (extent-w (bounds element)))
 (defmethod h ((element layout-element)) (extent-h (bounds element)))
+
+(defmethod set-layout-tree :before (tree (element layout-element))
+  (when (and (layout-tree element) tree (not (eq tree (layout-tree element))))
+    (error 'element-has-different-root
+           :element element :container tree)))
 
 (defmethod handle ((event event) (element layout-element) ui)
   (decline))
@@ -59,12 +66,17 @@
 (defclass layout (layout-element container renderable)
   ())
 
+(defmethod set-layout-tree :before (value (layout layout))
+  (do-elements (element layout)
+    (set-layout-tree value element)))
+
 (defmethod enter :after ((element layout-element) (layout layout) &key)
-  (notice-bounds element layout))
+  (when (layout-tree layout)
+    (notice-bounds element layout)))
 
 (defmethod enter :before ((element layout-element) (parent layout) &key)
   (cond ((not (slot-boundp element 'layout-parent))
-         (setf (slot-value element 'layout-tree) (layout-tree parent))
+         (set-layout-tree (layout-tree parent) element)
          (setf (slot-value element 'layout-parent) parent))
         ((not (eq parent (layout-parent element)))
          (error 'element-has-different-parent
@@ -76,11 +88,12 @@
            :element element :container parent :parent (layout-parent element))))
 
 (defmethod leave :after ((element layout-element) (parent layout))
-  (slot-makunbound element 'layout-tree)
+  (set-layout-tree NIL element)
   (slot-makunbound element 'layout-parent))
 
 (defmethod update :after ((element layout-element) (layout layout) &key)
-  (notice-bounds element layout))
+  (when (layout-tree layout)
+    (notice-bounds element layout)))
 
 (defmethod element-index :before ((element layout-element) (layout layout))
   (unless (eq layout (layout-parent element))
@@ -92,8 +105,9 @@
     (register element renderer)))
 
 (defmethod render ((renderer renderer) (layout layout))
-  (do-elements (element layout)
-    (render renderer element)))
+  (with-constrained-visibility ((bounds layout) renderer)
+    (do-elements (element layout)
+      (render renderer element))))
 
 (defmethod maybe-render ((renderer renderer) (layout layout))
   (do-elements (element layout)

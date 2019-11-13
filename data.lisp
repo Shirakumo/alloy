@@ -29,6 +29,8 @@
 (defgeneric (setf value) (new-value data))
 (make-observable '(setf value) '(new-value observable))
 
+(defmethod value ((string string)) string)
+
 (defmethod refresh ((data value-data))
   (notify-observers '(setf value) data (value data) data))
 

@@ -26,7 +26,7 @@
 (defgeneric root (focus-tree))
 
 (defclass focus-element (element)
-  ((focus-tree :initform NIL :accessor focus-tree)
+  ((focus-tree :initform NIL :reader focus-tree :writer set-focus-tree)
    (focus-parent :initarg :focus-parent :reader focus-parent)
    (focus :initform NIL :accessor focus)))
 
@@ -36,17 +36,24 @@
     (etypecase (focus-parent element)
       (focus-tree
        (let ((focus-tree (focus-parent element)))
-         (setf (focus-tree element) focus-tree)
+         (set-focus-tree focus-tree element)
          (setf (slot-value element 'focus-parent) element)
          (setf (root focus-tree) element)))
       (focus-element
        (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))
-       (enter element (focus-parent element)))))
+       (enter element (focus-parent element)))
+      (null
+       (slot-makunbound element 'focus-parent))))
   (when focus (setf (focus element) focus)))
 
 (defmethod print-object ((element focus-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~s" (focus element))))
+
+(defmethod set-focus-tree :before (tree (element focus-element))
+  (when (and (focus-tree element) tree (not (eq tree (focus-tree element))))
+    (error 'element-has-different-root
+           :element element :container tree)))
 
 (defmethod (setf focus) :before (focus (element focus-element))
   (check-type focus (member NIL :weak :strong)))
@@ -84,7 +91,7 @@
 
 (defmethod enter :before ((element focus-element) (parent focus-element) &key)
   (cond ((not (slot-boundp element 'focus-parent))
-         (setf (focus-tree element) (focus-tree parent))
+         (set-focus-tree (focus-tree parent) element)
          (setf (slot-value element 'focus-parent) parent))
         ((not (eq parent (focus-parent element)))
          (error 'element-has-different-parent
@@ -97,15 +104,15 @@
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
   (slot-makunbound element 'focus-parent)
-  (setf (slot-value element 'focus-tree) NIL))
+  (set-focus-tree NIL element))
 
 (defclass focus-chain (focus-element container)
   ((index :initform NIL :accessor index)
    (focused :initform NIL :accessor focused)))
 
-(defmethod (setf focus-tree) :after (tree (element focus-chain))
-  (do-elements (child element)
-    (setf (focus-tree child) tree)))
+(defmethod set-focus-tree :before (value (chain focus-chain))
+  (do-elements (element chain)
+    (set-focus-tree value element)))
 
 (defmethod (setf focused) :before ((none null) (chain focus-chain))
   (setf (slot-value chain 'index) NIL)

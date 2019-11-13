@@ -97,7 +97,7 @@
 (defmethod enter ((element element) (container stack-container) &key (layer (max 0 (1- (length (layers container))))))
   (let ((layers (layers container)))
     (when (<= (length layers) layer)
-      (adjust-array layers (1+ layer) :initial-element NIL)
+      (adjust-array layers (1+ layer) :initial-element NIL :fill-pointer (1+ layer))
       (loop for i from 0 to layer
             do (unless (aref layers i)
                  (setf (aref layers i) (make-array 0 :adjustable T :fill-pointer T)))))
@@ -112,7 +112,7 @@
                  (array-utils:vector-pop-position layer position)
                  (return)))
       (when (<= (length layers) layer)
-        (adjust-array layers (1+ layer) :initial-element NIL)
+        (adjust-array layers (1+ layer) :initial-element NIL :fill-pointer (1+ layer))
         (loop for i from 0 to layer
               do (unless (aref layers i)
                    (setf (aref layers i) (make-array 0 :adjustable T :fill-pointer T)))))
@@ -150,15 +150,16 @@
       (error 'index-out-of-range :index (cdr index) :range (list 0 (1- (length layer)))))
     (aref layer (cdr index))))
 
-(defmethod call-with-elements (function (container stack-container) &key (start 0) end)
-  (loop with i = 0
-        for layer across (layers container)
-        while (<= end i)
-        do (loop for element across layer
-                 while (<= end i)
-                 do (when (<= i start)
-                      (funcall function element))
-                    (incf i))))
+(defmethod call-with-elements (function (container stack-container) &key start end)
+  (let ((start (or start 0)))
+    (loop with i = 0
+          for layer across (layers container)
+          while (or (not end) (<= end i))
+          do (loop for element across layer
+                   while (or (not end) (<= end i))
+                   do (when (<= start i)
+                        (funcall function element))
+                      (incf i)))))
 
 (defmethod clear ((container stack-container))
   (loop for layer across (layers container)
