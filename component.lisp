@@ -12,13 +12,13 @@
 (defmethod suggest-bounds (extent (component component))
   extent)
 
-(defmethod handle ((event pointer-down) (component component) ctx)
+(defmethod handle ((event pointer-down) (component component))
   (if (and (slot-boundp component 'focus-parent)
            (contained-p (location event) (bounds component)))
       (activate component)
       (call-next-method)))
 
-(defmethod handle ((event pointer-move) (component component) ctx)
+(defmethod handle ((event pointer-move) (component component))
   (if (and (slot-boundp component 'focus-parent)
            (eql NIL (focus component))
            (contained-p (location event) (bounds component)))
@@ -36,7 +36,7 @@
 
 (make-observable '(setf focus) '(focus observable))
 (make-observable '(setf bounds) '(bounds observable))
-(make-observable 'handle '(event observable ctx))
+(make-observable 'handle '(event observable))
 (make-observable 'activate '(observable))
 (make-observable 'exit '(observable))
 

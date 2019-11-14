@@ -28,10 +28,10 @@
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting))
 
-(defmethod handle :around ((event pointer-event) (combo combo) ctx)
+(defmethod handle :around ((event pointer-event) (combo combo))
   (case (state combo)
     (:selecting
-     (unless (handle event (combo-list combo) ctx)
+     (unless (handle event (combo-list combo))
        (when (typep event 'pointer-up)
          (exit combo)))
      T)

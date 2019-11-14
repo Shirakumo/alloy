@@ -29,19 +29,12 @@
 (defmethod focused ((ui ui))
   (focused (focus-tree ui)))
 
-(defmethod handle ((event direct-event) (all (eql T)) (ui ui))
-  (handle event (focus-tree ui) ui))
+(defmethod handle ((event direct-event) (ui ui))
+  (handle event (focus-tree ui)))
 
-(defmethod handle ((event pointer-event) (all (eql T)) (ui ui))
-  (unless (handle event (focus-tree ui) ui)
-    (handle event (layout-tree ui) ui)))
-
-(defmethod handle ((event direct-event) (ui ui) ctx)
-  (handle event (focus-tree ui) ctx))
-
-(defmethod handle ((event pointer-event) (ui ui) ctx)
-  (unless (handle event (focus-tree ui) ctx)
-    (handle event (layout-tree ui) ctx)))
+(defmethod handle ((event pointer-event) (ui ui))
+  (unless (handle event (focus-tree ui))
+    (handle event (layout-tree ui))))
 
 (defmethod render ((renderer renderer) (ui ui))
   (render renderer (layout-tree ui)))

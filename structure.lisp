@@ -14,6 +14,13 @@
   (setf (slot-value structure 'layout-element) layout)
   (setf (slot-value structure 'focus-element) focus))
 
+(defmethod bounds ((structure structure)) (bounds (layout-element structure)))
+(defmethod (setf bounds) (value (structure structure)) (setf (bounds (layout-element structure)) value))
+(defmethod x ((structure structure)) (x (layout-element structure)))
+(defmethod y ((structure structure)) (y (layout-element structure)))
+(defmethod w ((structure structure)) (w (layout-element structure)))
+(defmethod h ((structure structure)) (h (layout-element structure)))
+
 (defmethod enter ((structure structure) (element layout-element) &rest initargs)
   (apply #'enter (layout-element structure) element initargs))
 

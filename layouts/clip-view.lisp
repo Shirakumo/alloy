@@ -55,7 +55,7 @@
                                                      (max (pxh ideal) (pxh bounds))
                                                      (h ideal))))))))
 
-(defmethod handle ((event scroll) (layout clip-view) ctx)
+(defmethod handle ((event scroll) (layout clip-view))
   (unless (call-next-method)
     (let ((off (offset layout))
           (bo (bounds layout))

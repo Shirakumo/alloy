@@ -42,7 +42,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "radio")
                              (:file "combo")
                              (:file "scroll")
-                             (:file "plot")))
+                             (:file "plot")
+                             (:file "drag")))
                (:module "structures"
                 :components ((:file "query")
                              (:file "scroll-view")

@@ -253,5 +253,14 @@
   ((:label simple:text)
    (alloy:margins)
    (alloy:data alloy:renderable)
-   :pattern (colored:color 1 1 1)
+   :pattern colors:white
    :halign :middle :valign :middle))
+
+(define-update (default-look-and-feel alloy::window-title)
+  (:label
+   :pattern colors:white))
+
+(define-realization (default-look-and-feel alloy::frame)
+  ((:background simple:rectangle)
+   (alloy:margins)
+   :pattern (colored:color 0.9 0.9 0.9)))

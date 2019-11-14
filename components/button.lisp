@@ -12,20 +12,20 @@
 (defmethod (setf pressed) :after (value (button button))
   (mark-for-render button))
 
-(defmethod handle ((event pointer-down) (button button) ctx)
+(defmethod handle ((event pointer-down) (button button))
   (setf (pressed button) T)
   (activate button))
 
-(defmethod handle ((event pointer-up) (button button) ctx)
+(defmethod handle ((event pointer-up) (button button))
   (setf (pressed button) NIL)
   (exit button))
 
-(defmethod handle ((event button-down) (button button) ctx)
+(defmethod handle ((event button-down) (button button))
   (case (button event)
     (:a (setf (pressed button) T))
     (T (call-next-method))))
 
-(defmethod handle ((event button-up) (button button) ctx)
+(defmethod handle ((event button-up) (button button))
   (case (button event)
     (:a (setf (pressed button) NIL))
     (T (call-next-method))))

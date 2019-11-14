@@ -11,7 +11,8 @@
    (u :initform NIL :accessor u)
    (r :initform NIL :accessor r)
    (b :initform NIL :accessor b)
-   (c :initform NIL :accessor c)))
+   (c :initform NIL :accessor c)
+   (padding :initarg :padding :initform (margins) :accessor padding)))
 
 (defun border-place-slot (place)
   (ecase place
@@ -115,7 +116,12 @@
                `(destructuring-bind (&optional element size) (slot-value layout ,slot)
                   (when element ,@body))))
     (with-unit-parent layout
-      (let ((w (pxw extent)) (h (pxh extent)) (x (pxx extent)) (y (pxy extent)))
+      (let ((w (pxw extent)) (h (pxh extent)) (x (pxx extent)) (y (pxy extent))
+            (p (padding layout)))
+        (incf x (pxl p))
+        (incf y (pxb p))
+        (decf w (+ (pxl p) (pxr p)))
+        (decf h (+ (pxb p) (pxu p)))
         (with-border 'b
           (let ((diff (pxh (suggest-bounds (px-extent x y w size) element))))
             (setf (bounds element) (px-extent x y w diff))
@@ -123,7 +129,7 @@
             (incf y diff)))
         (with-border 'u
           (let ((diff (pxh (suggest-bounds (px-extent x y w size) element))))
-            (setf (bounds element) (px-extent x (- (pxh extent) diff) w diff))
+            (setf (bounds element) (px-extent x (+ y (- h diff)) w diff))
             (decf h diff)))
         (with-border 'l
           (let ((diff (pxw (suggest-bounds (px-extent x y size h) element))))
@@ -132,7 +138,7 @@
             (incf x diff)))
         (with-border 'r
           (let ((diff (pxw (suggest-bounds (px-extent x y size h) element))))
-            (setf (bounds element) (px-extent (- (pxw extent) diff) y diff h))
+            (setf (bounds element) (px-extent (+ x (- w diff)) y diff h))
             (decf w diff)))
         (with-border 'c
           (setf (bounds element) (px-extent x y w h)))))))

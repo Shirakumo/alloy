@@ -77,7 +77,6 @@
     (realize-renderable renderer renderable)))
 
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
-  (when (next-method-p) (call-next-method))
   (simple:with-pushed-transforms (renderer)
     (simple:translate renderer (alloy:bounds renderable))
     (loop for (name . shape) across (shapes renderable)
@@ -92,7 +91,8 @@
                (simple:scale renderer (scale shape))
                (simple:translate renderer (alloy:px-point (- (alloy:pxx (pivot shape)))
                                                           (- (alloy:pxy (pivot shape)))))
-               (alloy:render renderer shape)))))
+               (alloy:render renderer shape))))
+  (when (next-method-p) (call-next-method)))
 
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
 

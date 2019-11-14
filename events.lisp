@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defgeneric handle (event handler context))
+(defgeneric handle (event handler))
 
 (defclass event ()
   ())
@@ -14,7 +14,7 @@
 (defun decline ()
   (invoke-restart 'decline))
 
-(defmethod handle :around ((event event) handler context)
+(defmethod handle :around ((event event) handler)
   (restart-case
       (prog1 T
         (call-next-method))

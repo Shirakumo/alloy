@@ -120,7 +120,7 @@
         (set-anchor NIL cursor))
       (setf (value component) old))))
 
-(defmethod handle ((event text-event) (component text-input-component) ctx)
+(defmethod handle ((event text-event) (component text-input-component))
   (let ((cursor (cursor component)))
     (when (anchor cursor)
       (delete-text (min (anchor cursor) (pos cursor))
@@ -128,7 +128,7 @@
                    component)))
   (insert-text (text event) component))
 
-(defmethod handle ((event key-up) (component text-input-component) ctx)
+(defmethod handle ((event key-up) (component text-input-component))
   (let ((cursor (cursor component)))
     (flet ((move (target)
              (cond ((find :shift (modifiers event))
@@ -182,7 +182,7 @@
               (subseq (text component) (min pos anchor) (max pos anchor))
               (text component)))))
 
-(defmethod handle ((event paste-event) (component text-input-component) ctx)
+(defmethod handle ((event paste-event) (component text-input-component))
   (let ((content (content event)))
     (typecase content
       (string
@@ -203,14 +203,14 @@
 (defmethod accept ((component input-line))
   (exit component))
 
-(defmethod handle ((event key-up) (component input-line) ctx)
+(defmethod handle ((event key-up) (component input-line))
   (case (key event)
     (:return
       (accept component))
     (T
      (call-next-method))))
 
-(defmethod handle ((event paste-event) (component text-input-component) ctx)
+(defmethod handle ((event paste-event) (component text-input-component))
   ;; Override to leave out returns and linefeeds.
   (let ((content (content event)))
     (typecase content
@@ -222,7 +222,7 @@
 (defclass input-box (text-input-component)
   ())
 
-(defmethod handle ((event key-up) (component input-box) ctx)
+(defmethod handle ((event key-up) (component input-box))
   (case (key event)
     (:return
       (insert-text (string #\Linefeed) component))

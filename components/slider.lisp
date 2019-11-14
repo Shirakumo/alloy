@@ -40,10 +40,10 @@
 (defmethod (setf step) :before (value (slider slider))
   (assert (< 0 value) (value)))
 
-(defmethod handle ((event scroll) (slider slider) ctx)
+(defmethod handle ((event scroll) (slider slider))
   (incf (value slider) (* (dy event) (step slider))))
 
-(defmethod handle ((event key-up) (slider slider) ctx)
+(defmethod handle ((event key-up) (slider slider))
   (case (key event)
     ((:down :left)
      (decf (value slider) (step slider)))
@@ -56,7 +56,7 @@
     (T
      (call-next-method))))
 
-(defmethod handle ((event pointer-move) (slider slider) ctx)
+(defmethod handle ((event pointer-move) (slider slider))
   (case (state slider)
     (:dragging
      (let ((range (ecase (orientation slider)
@@ -68,15 +68,15 @@
     (T
      (call-next-method))))
 
-(defmethod handle ((event pointer-up) (slider slider) ctx)
+(defmethod handle ((event pointer-up) (slider slider))
   (case (state slider)
     (:dragging
-     (handle (make-instance 'pointer-move :location (location event) :old-location (location event)) slider ctx)
+     (handle (make-instance 'pointer-move :location (location event) :old-location (location event)) slider)
      (setf (state slider) NIL))
     (T
      (call-next-method))))
 
-(defmethod handle ((event pointer-down) (slider slider) ctx)
+(defmethod handle ((event pointer-down) (slider slider))
   (call-next-method)
   (setf (state slider) :dragging))
 
