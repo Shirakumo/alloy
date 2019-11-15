@@ -8,7 +8,7 @@
 
 (defclass window (structure)
   ((state :initform :normal :accessor state)
-   (central-layout :initarg :layout :reader central-layout)
+   (central-layout :accessor central-layout)
    (normal-bounds :initform (extent) :accessor normal-bounds)))
 
 (defclass frame (border-layout)
@@ -57,13 +57,21 @@
     (:minimized (restore structure) (maximize structure))
     (:maximized)))
 
+(defmethod enter ((element layout-element) (structure window) &key)
+  (when (next-method-p) (call-next-method))
+  (enter element (layout-element structure) :place :center)
+  (setf (central-layout structure) element))
+
+(defmethod enter ((element focus-element) (structure window) &key)
+  (when (next-method-p) (call-next-method))
+  (enter element (focus-element structure) :layer 1))
+
 (defmethod initialize-instance :after ((structure window) &key layout focus focus-parent layout-parent (title "Untitled") (closeable T) (minimizable T) (maximizable T))
-  (let ((frame (make-instance 'frame :layout-parent layout-parent :padding (margins 5)))
+  (let ((frame (make-instance 'frame :layout-parent layout-parent :padding (margins 10)))
         (header (make-instance 'grid-layout :row-sizes '(20) :col-sizes '(T  20 20 20) :cell-margins (margins 2)))
         (focus-stack (make-instance 'focus-stack :focus-parent focus-parent))
         (title (represent-with 'window-title (or title ""))))
     (enter header frame :place :north)
-    (enter layout frame :place :center)
     (enter title focus-stack :layer 0)
     (enter title header :row 0 :col 0)
     (on drag-to (location title)
@@ -95,6 +103,8 @@
           (case (state structure)
             (:maximized (restore structure))
             (T (maximize structure))))))
+    (when layout
+      (enter layout structure))
     (when focus
-      (enter focus focus-stack :layer 1))
+      (enter focus structure))
     (finish-structure structure frame focus-stack)))

@@ -47,7 +47,7 @@
     (error 'element-has-different-root
            :element element :container tree)))
 
-(defmethod handle ((event event) (element layout-element) ui)
+(defmethod handle ((event event) (element layout-element))
   (decline))
 
 (defmethod render :around ((renderer renderer) (element layout-element))
@@ -56,7 +56,8 @@
       (call-next-method))))
 
 (defmethod ensure-visible (element (parent layout-element))
-  (unless (eq parent (layout-parent parent))
+  (when (and (slot-boundp parent 'layout-parent)
+             (not (eq parent (layout-parent parent))))
     (ensure-visible element (layout-parent parent))))
 
 (defmethod ensure-visible ((element layout-element) (parent (eql T)))
@@ -113,10 +114,10 @@
   (do-elements (element layout)
     (maybe-render renderer element)))
 
-(defmethod handle ((event pointer-event) (layout layout) ui)
+(defmethod handle ((event pointer-event) (layout layout))
   (do-elements (element layout :result (decline))
     (when (contained-p (location event) (bounds element))
-      (return (handle event element ui)))))
+      (return (handle event element)))))
 
 (defclass layout-tree ()
   ((root :initform NIL :accessor root)
@@ -136,8 +137,8 @@
 (defmethod maybe-render ((renderer renderer) (tree layout-tree))
   (maybe-render renderer (root tree)))
 
-(defmethod handle ((event pointer-event) (tree layout-tree) ui)
-  (unless (handle event (root tree) ui)
+(defmethod handle ((event pointer-event) (tree layout-tree))
+  (unless (handle event (root tree))
     (decline)))
 
 (defmethod suggest-bounds (extent (tree layout-tree))

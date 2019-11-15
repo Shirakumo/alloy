@@ -21,6 +21,9 @@
 (defmethod w ((structure structure)) (w (layout-element structure)))
 (defmethod h ((structure structure)) (h (layout-element structure)))
 
+(defmethod register ((structure structure) (renderer renderer))
+  (register (layout-element structure) renderer))
+
 (defmethod enter ((structure structure) (element layout-element) &rest initargs)
   (apply #'enter (layout-element structure) element initargs))
 

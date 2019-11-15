@@ -53,7 +53,13 @@
 (defmethod set-focus-tree :before (tree (element focus-element))
   (when (and (focus-tree element) tree (not (eq tree (focus-tree element))))
     (error 'element-has-different-root
-           :element element :container tree)))
+           :element element :container tree))
+  (when (eq :strong (focus element))
+    ;; We have been unhooked. Ideally we'd find the closest, still-hooked parent.
+    ;; however, since currently unhooking happens from the leaf up, we don't know
+    ;; at which parent the hooking would happen, so
+    ;; KLUDGE: set root as focus
+    (setf (focused (focus-tree element)) NIL)))
 
 (defmethod (setf focus) :before (focus (element focus-element))
   (check-type focus (member NIL :weak :strong)))
@@ -76,17 +82,17 @@
     (setf (focus (focus-parent element)) :strong)
     (focus-parent element)))
 
-(defmethod handle ((event event) (element focus-element) ui)
+(defmethod handle ((event event) (element focus-element))
   (unless (eq element (focus-parent element))
-    (handle event (focus-parent element) ui)))
+    (handle event (focus-parent element))))
 
-(defmethod handle ((event pointer-event) (element focus-element) ui)
+(defmethod handle ((event pointer-event) (element focus-element))
   (decline))
 
-(defmethod handle ((event activate) (element focus-element) ui)
+(defmethod handle ((event activate) (element focus-element))
   (activate element))
 
-(defmethod handle ((event exit) (element focus-element) ui)
+(defmethod handle ((event exit) (element focus-element))
   (exit element))
 
 (defmethod enter :before ((element focus-element) (parent focus-element) &key)
@@ -109,6 +115,11 @@
 (defclass focus-chain (focus-element container)
   ((index :initform NIL :accessor index)
    (focused :initform NIL :accessor focused)))
+
+(defmethod leave :after ((element focus-element) (chain focus-chain))
+  (when (eq element (focused chain))
+    (setf (slot-value chain 'focused) NIL)
+    (setf (index chain) NIL)))
 
 (defmethod set-focus-tree :before (value (chain focus-chain))
   (do-elements (element chain)
@@ -195,16 +206,16 @@
   (when (and index (focused chain))
     (setf (slot-value chain 'index) (element-index (focused chain) chain))))
 
-(defmethod handle ((event focus-next) (chain focus-chain) ui)
+(defmethod handle ((event focus-next) (chain focus-chain))
   (focus-next chain))
 
-(defmethod handle ((event focus-prev) (chain focus-chain) ui)
+(defmethod handle ((event focus-prev) (chain focus-chain))
   (focus-prev chain))
 
-(defmethod handle ((event focus-up) (chain focus-chain) ui)
+(defmethod handle ((event focus-up) (chain focus-chain))
   (focus-up chain))
 
-(defmethod handle ((event focus-down) (chain focus-chain) ui)
+(defmethod handle ((event focus-down) (chain focus-chain))
   (focus-down chain))
 
 (defclass focus-list (focus-chain vector-container)
@@ -285,8 +296,13 @@
   (unless (eq :strong (focus element))
     (setf (focus element) :strong)))
 
-(defmethod handle ((event event) (tree focus-tree) ui)
-  (unless (handle event (focused tree) ui)
+(defmethod (setf focused) ((none null) (tree focus-tree))
+  (if (root tree)
+      (setf (focused tree) (root tree))
+      (call-next-method)))
+
+(defmethod handle ((event event) (tree focus-tree))
+  (unless (handle event (focused tree))
     (decline)))
 
 ;;; NOTE: Initialisation of the tree must happen roughly as follows:

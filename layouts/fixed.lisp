@@ -36,9 +36,10 @@
 
 (defmethod update :after ((element layout-element) (layout fixed-layout) &key x y w h)
   (let ((e (bounds element)))
-    (setf (bounds element)
-          (px-extent (or x (extent-x e))
-                     (or y (extent-y e))
-                     (or w (extent-w e))
-                     (or h (extent-h e))))
+    (with-unit-parent layout
+      (setf (bounds element)
+            (px-extent (or x (extent-x e))
+                       (or y (extent-y e))
+                       (or w (extent-w e))
+                       (or h (extent-h e)))))
     element))

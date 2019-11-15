@@ -62,6 +62,6 @@
     (when index (setf (index layout) index)))
   (call-next-method))
 
-(defmethod handle ((event pointer-event) (layout swap-layout) ui)
+(defmethod handle ((event pointer-event) (layout swap-layout))
   (when (contained-p (location event) (bounds (current layout)))
-    (handle event (current layout) ui)))
+    (handle event (current layout))))

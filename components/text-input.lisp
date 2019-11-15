@@ -173,11 +173,11 @@
         (T
          (call-next-method))))))
 
-(defmethod handle ((event copy-event) (component text-input-component) (ui ui))
+(defmethod handle ((event copy-event) (component text-input-component))
   (let* ((cursor (cursor component))
          (pos (pos cursor))
          (anchor (anchor cursor)))
-    (setf (clipboard ui)
+    (setf (clipboard (ui (layout-tree component)))
           (if anchor
               (subseq (text component) (min pos anchor) (max pos anchor))
               (text component)))))
