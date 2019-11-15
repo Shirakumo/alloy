@@ -9,6 +9,11 @@
 (defclass renderer (simple:renderer)
   ())
 
+;;; TODO: The shapes should be able to influence the renderable's "ideal size" as returned
+;;;       by the SUGGEST-BOUNDS function. This is a bit tricky, since some shapes might have
+;;;       bounds that are just adaptive, whereas others might have bounds that are restrictive
+;;;       and we need to only consider restrictive bounds.
+
 ;;; KLUDGE: This is "poisoning" as it injects a class that might not be wanted if other
 ;;;         systems than presentations are used to perform drawing operations. Ideally
 ;;;         we'd instead create subclasses of all shapes with our extra stuff as a mixin.

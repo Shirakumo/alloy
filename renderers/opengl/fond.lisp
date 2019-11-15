@@ -174,7 +174,8 @@ void main(){
                                                                           :end position)
       (declare (ignore gap))
       (let ((s (* 2 (/ (alloy:to-px (simple:size (text cursor))) (cl-fond:size (atlas (simple:font (text cursor))))))))
-        (setf (simple:bounds cursor) (alloy:px-extent (* s (- r l)) (* s b) 2 (* s (+ u b))))))))
+        ;; FIXME: handle alignment of the cursor depending on text alignment
+        (setf (simple:bounds cursor) (alloy:px-extent (* s (- r l)) (* s b) 2 (* s u)))))))
 
 (defmethod simple:cursor ((renderer renderer) (text simple:text) position &rest initargs)
   (apply #'make-instance 'cursor :text text :position position initargs))
