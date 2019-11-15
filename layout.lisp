@@ -14,6 +14,10 @@
 (defgeneric suggest-bounds (extent layout-element))
 (defgeneric ensure-visible (element parent))
 
+;;; TODO: How do we resize a layout to its preferred size?
+;;;       Using a (suggest-bounds (extent) ..) will give us a minimal
+;;;       bound, not a preferred bound.
+
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree :writer set-layout-tree)
    (layout-parent :initarg :layout-parent :reader layout-parent)

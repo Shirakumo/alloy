@@ -55,10 +55,9 @@
     (error 'element-has-different-root
            :element element :container tree))
   (when (eq :strong (focus element))
-    ;; We have been unhooked. Ideally we'd find the closest, still-hooked parent.
-    ;; however, since currently unhooking happens from the leaf up, we don't know
-    ;; at which parent the hooking would happen, so
-    ;; KLUDGE: set root as focus
+    ;; KLUDGE: We have been unhooked. Ideally we'd find the closest, still-hooked parent.
+    ;;         however, since currently unhooking happens from the leaf up, we don't know
+    ;;         at which parent the hooking would happen, so set root as focus for now.
     (setf (focused (focus-tree element)) NIL)))
 
 (defmethod (setf focus) :before (focus (element focus-element))

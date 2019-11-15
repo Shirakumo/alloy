@@ -198,8 +198,6 @@ Note that as long as an object is observable, and the generic functions and obse
 ## Component
 Representing user interactions happens through Components. Components are "leaf elements" and should not contain any further elements. Instead, if something should be made up of different interactions, it should be modelled as a combination of layouts, focus chains, and components. Every component is tied to a ``data`` instance that provides the data to visualise and the metadata to determine the interaction constraints.
 
-; TODO: Need a system to create these more complex interactions easily. I've named this "structures" so far but have not yet implemented or designed a system for it.
-
 Being an interactable leaf element, a component is both a ``layout-element``, a ``focus-element``, a ``renderable``, and an ``observable``. Particularly, it is possible to observe any component's focus and size changes, and react to them remotely. Specific components may offer additional interactions, though typically it is more apt to observe the changes on its data object instead.
 
 Multiple components may share the same data instance and changes between them will update automatically. This allows representing the same information in multiple places, potentially in different ways simultaneously.
@@ -238,6 +236,11 @@ Aside from the protocols, Core provides a set of standard implementations of the
 - Observables
   - Observable Object
   - Observable Table
+- Structures
+  - Query
+  - Scroll View
+  - Tab View
+  - Window
 
 Note that Core does //not// provide any standard implementations for renderers. Rendering is a very involved and complex process, and as such is left up to secondary systems and protocol extensions.
 
@@ -257,6 +260,11 @@ Note that Core does //not// provide any standard implementations for renderers. 
 ### Scroll
 ### Slider
 ### Switch
+## Structures
+### Query
+### Scroll View
+### Tab View
+### Window
 
 # Project Systems
 Aside from this Core, the project also includes several other systems that fill or extend parts of Alloy.

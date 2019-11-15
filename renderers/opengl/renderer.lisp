@@ -209,7 +209,7 @@ void main(){
   (gl:depth-mask T))
 
 (defmethod simple:clip ((renderer renderer) (extent alloy:extent))
-  ;; FIXME: avoid allocation of rectangle
+  ;; KLUDGE: avoid allocation of rectangle
   (simple:clip renderer (simple:rectangle renderer extent)))
 
 (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
