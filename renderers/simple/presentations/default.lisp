@@ -26,12 +26,13 @@
 (define-realization (default-look-and-feel alloy:label)
   ((:label simple:text)
    (alloy:margins)
-   (alloy:data alloy:renderable)
-   :pattern (colored:color 1 1 1)))
+   (princ-to-string alloy:value)
+   :pattern (colored:color 1 1 1)
+   :halign :start :valign :middle))
 
 (define-update (default-look-and-feel alloy:label)
   (:label
-   :text (alloy:data alloy:renderable)))
+   :text (princ-to-string alloy:value)))
 
 (define-realization (default-look-and-feel alloy:icon)
   ((:icon simple:icon)
@@ -252,7 +253,7 @@
 (define-realization (default-look-and-feel alloy::window-title)
   ((:label simple:text)
    (alloy:margins)
-   (alloy:data alloy:renderable)
+   alloy:value
    :pattern colors:white
    :halign :middle :valign :middle))
 

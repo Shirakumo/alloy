@@ -14,7 +14,7 @@
 (defclass frame (border-layout)
   ())
 
-(defclass window-title (label draggable)
+(defclass window-title (label* draggable)
   ())
 
 (define-observable close (observable))
@@ -70,7 +70,7 @@
   (let ((frame (make-instance 'frame :layout-parent layout-parent :padding (margins 10)))
         (header (make-instance 'grid-layout :row-sizes '(20) :col-sizes '(T  20 20 20) :cell-margins (margins 2)))
         (focus-stack (make-instance 'focus-stack :focus-parent focus-parent))
-        (title (represent-with 'window-title (or title ""))))
+        (title (make-instance 'window-title :value (or title ""))))
     (enter header frame :place :north)
     (enter title focus-stack :layer 0)
     (enter title header :row 0 :col 0)

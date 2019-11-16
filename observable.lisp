@@ -122,7 +122,8 @@
                                    #+clozure "CCL"
                                    #+mezzano "MEZZANO.CLOS")))
                `(defmethod (setf ,(s "SLOT-VALUE-USING-CLASS")) :after (value class (object observable-object) slot)
-                  (notify-observers (,(s "SLOT-DEFINITION-NAME") slot) object value object)))))
+                  (when (slot-boundp object 'observers)
+                    (notify-observers (,(s "SLOT-DEFINITION-NAME") slot) object value object))))))
   (def))
 
 (defclass observable-table (observable)

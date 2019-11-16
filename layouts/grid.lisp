@@ -6,6 +6,9 @@
 
 (in-package #:org.shirakumo.alloy)
 
+;;; FIXME: Allow "automatic enter" by remembering which cell to fill next,
+;;;        and by allowing to duplicate the last row as necessary.
+
 (defclass grid-layout (layout)
   ((stretch :initarg :stretch :initform T :accessor stretch)
    (cell-margins :initarg :cell-margins :initform (margins) :accessor cell-margins)
@@ -33,8 +36,10 @@
   (setf (slot-value layout 'col-sizes) (map 'vector #'coerce-grid-size value)))
 
 (defmethod (setf row-sizes) :after (value (layout grid-layout))
-  (adjust-array (elements layout) (list (length (row-sizes layout))
-                                        (length (col-sizes layout)))
+  ;; FIXME: This is /not/ correct. Shrinking and growing needs to be handled
+  ;;        explicitly to preserve grid layout, and to LEAVE elements as necessary.
+  (adjust-array (elements layout) (* (length (row-sizes layout))
+                                     (length (col-sizes layout)))
                 :initial-element NIL)
   (when (slot-boundp layout 'layout-parent)
     (suggest-bounds (bounds layout) layout)))

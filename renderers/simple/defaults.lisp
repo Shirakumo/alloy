@@ -102,6 +102,10 @@
 (defmethod text ((renderer renderer) bounds (string string) &rest initargs)
   (apply #'make-instance 'text :text string :bounds bounds :font (or (getf initargs :font) (request-font renderer :default)) initargs))
 
+(defmethod alloy:render :around ((renderer renderer) (text text))
+  (alloy:with-constrained-visibility ((alloy:ensure-extent (bounds text)) renderer)
+    (call-next-method)))
+
 (defclass icon (shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)
    (size :initarg :size :initform (arg! :size) :accessor size)
