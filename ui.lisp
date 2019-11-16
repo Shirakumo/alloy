@@ -30,11 +30,13 @@
   (focused (focus-tree ui)))
 
 (defmethod handle ((event direct-event) (ui ui))
-  (handle event (focus-tree ui)))
+  (or (handle event (focus-tree ui))
+      (decline)))
 
 (defmethod handle ((event pointer-event) (ui ui))
-  (unless (handle event (focus-tree ui))
-    (handle event (layout-tree ui))))
+  (or (handle event (focus-tree ui))
+      (handle event (layout-tree ui))
+      (decline)))
 
 (defmethod render ((renderer renderer) (ui ui))
   (render renderer (layout-tree ui)))
