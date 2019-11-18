@@ -56,7 +56,7 @@
     (leave element container)))
 
 (defclass vector-container (container)
-  ((elements :initform (make-array 0 :adjustable T :fill-pointer T) :reader elements)))
+  ((elements :initform (make-array 0 :adjustable T :fill-pointer T :initial-element NIL) :reader elements)))
 
 (defmethod enter ((element element) (container vector-container) &key index)
   (if index

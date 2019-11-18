@@ -6,15 +6,11 @@
 
 (in-package #:org.shirakumo.alloy)
 
-;;; FIXME: Allow "automatic enter" by remembering which cell to fill next,
-;;;        and by allowing to duplicate the last row as necessary.
-
-(defclass grid-layout (layout)
+(defclass grid-layout (layout vector-container)
   ((stretch :initarg :stretch :initform T :accessor stretch)
    (cell-margins :initarg :cell-margins :initform (margins) :accessor cell-margins)
-   (row-sizes :initform #() :reader row-sizes)
-   (col-sizes :initform #() :reader col-sizes)
-   (elements :initform (make-array (list 0 0) :adjustable T :initial-element NIL) :reader elements)))
+   (row-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader row-sizes)
+   (col-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader col-sizes)))
 
 (defmethod initialize-instance :after ((layout grid-layout) &key row-sizes col-sizes)
   (setf (row-sizes layout) row-sizes)
@@ -30,62 +26,66 @@
     ((eql T) T)))
 
 (defmethod (setf row-sizes) ((value sequence) (layout grid-layout))
-  (setf (slot-value layout 'row-sizes) (map 'vector #'coerce-grid-size value)))
+  (adjust-grid layout (length value) (length (col-sizes layout)))
+  (adjust-array (row-sizes layout) (length value) :fill-pointer (length value))
+  (map-into (row-sizes layout) #'coerce-grid-size value))
 
 (defmethod (setf col-sizes) ((value sequence) (layout grid-layout))
-  (setf (slot-value layout 'col-sizes) (map 'vector #'coerce-grid-size value)))
+  (adjust-grid layout (length (row-sizes layout)) (length value))
+  (adjust-array (col-sizes layout) (length value) :fill-pointer (length value))
+  (map-into (col-sizes layout) #'coerce-grid-size value))
 
-(defmethod (setf row-sizes) :after (value (layout grid-layout))
-  ;; FIXME: This is /not/ correct. Shrinking and growing needs to be handled
-  ;;        explicitly to preserve grid layout, and to LEAVE elements as necessary.
-  (adjust-array (elements layout) (* (length (row-sizes layout))
-                                     (length (col-sizes layout)))
-                :initial-element NIL)
-  (when (slot-boundp layout 'layout-parent)
-    (suggest-bounds (bounds layout) layout)))
+(defmethod adjust-grid ((layout grid-layout) nrows ncols)
+  (let ((orows (length (row-sizes layout)))
+        (ocols (length (col-sizes layout)))
+        (old (elements layout))
+        (new (make-array (* nrows ncols) :initial-element NIL :adjustable T :fill-pointer 0)))
+    ;; Leave old ones
+    (loop for row from nrows below orows
+          do (loop for col from ncols below ocols
+                   do (leave (aref old (+ col (* row ocols))) layout)))
+    ;; Populate new grid
+    (loop for row from 0 below (min nrows orows)
+          do (loop for col from 0 below (min ncols ocols)
+                   for oidx = (+ col (* row ocols))
+                   while (< oidx (fill-pointer old))
+                   do (vector-push (aref old oidx) new)))
+    ;; Update if possible
+    (setf (slot-value layout 'elements) new)
+    (when (slot-boundp layout 'layout-parent)
+      (suggest-bounds (bounds layout) layout))))
 
-(defmethod (setf col-sizes) :after (value (layout grid-layout))
-  (adjust-array (elements layout) (list (length (row-sizes layout))
-                                        (length (col-sizes layout)))
-                :initial-element NIL)
-  (when (slot-boundp layout 'layout-parent)
-    (suggest-bounds (bounds layout) layout)))
+(defmethod enter :before ((element layout-element) (layout grid-layout) &key row col)
+  (when (and row col)
+    (let ((idx (+ col (* row (length (col-sizes layout))))))
+      (when (aref (elements layout) idx)
+        (error 'place-already-occupied
+               :element element :place (cons row col) :layout layout :existing (aref (elements layout) idx))))))
 
-(defmethod enter :before ((element layout-element) (layout grid-layout) &key (row (arg! :row)) (col (arg! :col)))
-  (when (aref (elements layout) row col)
-    (error 'place-already-occupied
-           :element element :place (cons row col) :layout layout :existing (aref (elements layout) row col))))
-
-(defmethod enter ((element layout-element) (layout grid-layout) &key row col)
-  (setf (aref (elements layout) row col) element)
-  element)
+(defmethod enter ((element layout-element) (layout grid-layout) &key row col index)
+  (call-next-method element layout :index (if (and row col)
+                                              (+ col (* row (length (col-sizes layout))))
+                                              index))
+  ;; Extend rows as much as necessary
+  (loop while (< (* (length (row-sizes layout)) (length (col-sizes layout)))
+                 (fill-pointer (elements layout)))
+        do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout))))
 
 (defmethod leave ((element layout-element) (layout grid-layout))
-  (destructuring-bind (r c) (element-index element layout)
-    (setf (aref (elements layout) r c) NIL))
+  (setf (aref (elements layout) (element-index element layout)) NIL)
   element)
 
-(defmethod update ((element layout-element) (layout grid-layout) &key row col)
-  (destructuring-bind (r c) (element-index element layout)
-    (setf (aref (elements layout) r c) NIL))
-  (setf (aref (elements layout) row col) element)
+(defmethod update ((element layout-element) (layout grid-layout) &key row col index)
+  (when (or index (and row col))
+    (let ((idx (element-index element layout)))
+      (setf (aref (elements layout) idx) NIL))
+    (array-utils:vector-push-extend-position element (elements container)
+                                             (or index (+ col (* row (length (col-sizes layout))))))
+    ;; Extend rows as much as necessary
+    (loop while (< (* (length (row-sizes layout)) (length (col-sizes layout)))
+                   (fill-pointer (elements layout)))
+          do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout))))
   element)
-
-(defmethod call-with-elements (function (layout grid-layout) &key start end)
-  (loop with elements = (elements layout)
-        for i from (or start 0) below (or end (array-total-size elements))
-        for element = (row-major-aref elements i)
-        do (when element (funcall function element))))
-
-(defmethod element-index ((element layout-element) (layout grid-layout))
-  (let ((elements (elements layout)))
-    (dotimes (i (length (row-sizes layout)))
-      (dotimes (j (length (col-sizes layout)))
-        (when (eq element (aref elements i j))
-          (return-from element-index (list i j)))))))
-
-(defmethod index-element ((index cons) (layout grid-layout))
-  (aref (elements layout) (first index) (second index)))
 
 (defmethod notice-bounds ((element layout-element) (layout grid-layout))
   (let ((updated (suggest-bounds (bounds layout) layout)))
@@ -117,13 +117,15 @@
                        for wish across (col-sizes layout)
                        for w = (if (eql T wish) tw (to-px wish))
                        for j from 0
-                       for element = (aref elements i j)
-                       do (when element
-                            (let ((ideal (suggest-bounds (px-extent x y (- w ml mr) (- h mb mu)) element)))
-                              (setf (bounds element)
-                                    (px-extent x y
-                                               (if (stretch layout) (- w ml mr) (extent-w ideal))
-                                               (if (stretch layout) (- h mb mu) (extent-h ideal))))))))))))
+                       for idx from (* i (length (col-sizes layout)))
+                       while (< idx (fill-pointer elements))
+                       do (let ((element (aref elements idx)))
+                            (when element
+                              (let ((ideal (suggest-bounds (px-extent x y (- w ml mr) (- h mb mu)) element)))
+                                (setf (bounds element)
+                                      (px-extent x y
+                                                 (if (stretch layout) (- w ml mr) (extent-w ideal))
+                                                 (if (stretch layout) (- h mb mu) (extent-h ideal)))))))))))))
 
 (defmethod suggest-bounds (extent (layout grid-layout))
   (with-unit-parent layout
