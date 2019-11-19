@@ -49,6 +49,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "scroll-view")
                              (:file "tab-view")
                              (:file "window")))
+               (:file "builder")
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils)
