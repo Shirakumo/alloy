@@ -47,7 +47,7 @@
    :line-width (alloy:un 1))
   ((:label simple:text)
    (alloy:margins 1)
-   (alloy:data alloy:renderable)
+   (princ-to-string alloy:value)
    :halign :middle
    :valign :middle))
 
@@ -58,7 +58,7 @@
                  (:weak (colored:color 0.7 0.7 0.7))
                  (T (colored:color 0.25 0.2 0.8))))
   (:label
-   :text (alloy:data alloy:renderable)))
+   :text (princ-to-string alloy:value)))
 
 (define-realization (default-look-and-feel alloy:switch)
   ((:background simple:rectangle)

@@ -16,9 +16,6 @@
 (defmethod expand-place-data ((place cons))
   (expand-compound-place-data (first place) (rest place)))
 
-(defmethod expand-place-data (atom)
-  atom)
-
 (defmacro place-data (place)
   (expand-place-data place))
 
@@ -33,6 +30,9 @@
 
 (defmethod refresh ((data value-data))
   (notify-observers '(setf value) data (value data) data))
+
+(defmethod expand-place-data (atom)
+  `(make-instance 'value-data :value ,atom))
 
 ;;; General case.
 (defclass place-data (value-data)
