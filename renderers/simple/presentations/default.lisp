@@ -191,7 +191,7 @@
    (alloy:margins))
   ((:label simple:text)
    (alloy:margins 1)
-   (alloy:data alloy:renderable)))
+   (princ-to-string alloy:value)))
 
 (define-update (default-look-and-feel alloy:combo-item)
   (:background

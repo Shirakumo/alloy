@@ -88,7 +88,7 @@
           unless (hidden-p shape)
           do (simple:with-pushed-transforms (renderer)
                (setf (simple:composite-mode renderer) (composite-mode shape))
-               (setf (simple:z-index renderer) (z-index shape))
+               (incf (simple:z-index renderer) (z-index shape))
                ;; TODO: Not sure this is quite right.
                (simple:translate renderer (offset shape))
                (simple:translate renderer (pivot shape))

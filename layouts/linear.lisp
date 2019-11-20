@@ -10,34 +10,34 @@
   ((min-size :initarg :min-size :initform (size 20 20) :accessor min-size)
    (stretch :initarg :stretch :initform T :accessor stretch)
    (align :initarg :align :initform :start :accessor align)
-   (cell-margins :initarg :cell-margins :initform (margins) :accessor cell-margins)))
+   (cell-margins :initarg :cell-margins :initform (margins 2) :accessor cell-margins)))
 
-(defgeneric update-linear-layout (layout index extent))
+(defgeneric fit-linear-layout-contents (layout extent))
 
-(defmethod (setf align) :after (value (layout linear-layout))
-  (update-linear-layout layout 0 (bounds layout))
-  (notice-bounds layout (layout-parent layout)))
-
-(defmethod (setf stretch) :after (value (layout linear-layout))
-  (update-linear-layout layout 0 (bounds layout))
-  (notice-bounds layout (layout-parent layout)))
-
-(defmethod (setf min-size) :after (value (layout linear-layout))
-  (update-linear-layout layout 0 (bounds layout))
-  (notice-bounds layout (layout-parent layout)))
-
-(defmethod notice-bounds ((element layout-element) (layout linear-layout))
-  ;; TODO: optimise bounds update.
-  (let ((updated (update-linear-layout layout 0 (bounds layout))))
+(defmethod update-linear-layout ((layout linear-layout) extent)
+  (let ((updated (fit-linear-layout-contents layout extent)))
     (unless (extent= (bounds layout) updated)
       (setf (bounds layout) updated)
-      (notice-bounds layout (layout-parent layout)))))
+      (when (slot-boundp layout 'layout-parent)
+        (notice-bounds layout (layout-parent layout))))))
+
+(defmethod (setf align) :after (value (layout linear-layout))
+  (update-linear-layout layout (bounds layout)))
+
+(defmethod (setf stretch) :after (value (layout linear-layout))
+  (update-linear-layout layout (bounds layout)))
+
+(defmethod (setf min-size) :after (value (layout linear-layout))
+  (update-linear-layout layout (bounds layout)))
+
+(defmethod notice-bounds ((element layout-element) (layout linear-layout))
+  (update-linear-layout layout (bounds layout)))
 
 (defmethod (setf bounds) :after (extent (layout linear-layout))
-  (update-linear-layout layout 0 extent))
+  (fit-linear-layout-contents layout extent))
 
 (defclass vertical-linear-layout (linear-layout)
-  ())
+  ((align :initform :end)))
 
 (defmethod suggest-bounds (extent (layout vertical-linear-layout))
   (with-unit-parent layout
@@ -49,14 +49,14 @@
                    (:start (+ oy b))
                    (:end (- (+ oy h) u))))
               (x (+ l x)))
-          (do-elements (element layout :start 0 :result (px-extent x oy w (- y oy)))
+          (do-elements (element layout :result (px-extent x oy w (- (+ oy h) y)))
             (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x b mw mh) element)
               (setf w (max w (+ ew l r)))
               (ecase (align layout)
                 (:start (incf y (+ eh u b)))
                 (:end (decf y (+ eh u b)))))))))))
 
-(defmethod update-linear-layout ((layout vertical-linear-layout) index extent)
+(defmethod fit-linear-layout-contents ((layout vertical-linear-layout) extent)
   (with-unit-parent layout
     (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
       (destructure-extent (:x x :y oy :w w :h h :to-px T) extent
@@ -66,7 +66,7 @@
                    (:start (+ oy b))
                    (:end (- (+ oy h) u))))
               (x (+ l x)))
-          (do-elements (element layout :start index :result (px-extent x oy w (- y oy)))
+          (do-elements (element layout :result (px-extent x oy w (- oy y)))
             (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x y mw mh) element)
               (setf (bounds element)
                     (px-extent x
@@ -96,7 +96,7 @@
                 (:start (incf x (+ ew l r)))
                 (:end (decf x (+ ew l r)))))))))))
 
-(defmethod update-linear-layout ((layout horizontal-linear-layout) index extent)
+(defmethod fit-linear-layout-contents ((layout horizontal-linear-layout) extent)
   (with-unit-parent layout
     (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
       (destructure-extent (:x ox :y y :w w :h h :to-px T) extent
@@ -106,7 +106,7 @@
                    (:start (+ ox l))
                    (:end (- (+ ox w) r))))
               (y (+ y b)))
-          (do-elements (element layout :start index :result (px-extent ox y (- x ox) h))
+          (do-elements (element layout :result (px-extent ox y (- x ox) h))
             (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x y mw mh) element)
               (setf (bounds element)
                     (px-extent (ecase (align layout)

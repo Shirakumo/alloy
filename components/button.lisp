@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass button (component)
+(defclass button (value-component)
   ((pressed :initform NIL :accessor pressed)))
 
 (defmethod (setf pressed) :after (value (button button))

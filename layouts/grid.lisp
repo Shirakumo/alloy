@@ -8,7 +8,7 @@
 
 (defclass grid-layout (layout vector-container)
   ((stretch :initarg :stretch :initform T :accessor stretch)
-   (cell-margins :initarg :cell-margins :initform (margins) :accessor cell-margins)
+   (cell-margins :initarg :cell-margins :initform (margins 5) :accessor cell-margins)
    (row-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader row-sizes)
    (col-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader col-sizes)))
 
@@ -109,7 +109,7 @@
       (let ((th (spanning-size (row-sizes layout) (extent-h extent)))
             (tw (spanning-size (col-sizes layout) (extent-w extent))))
         (loop with elements = (elements layout)
-              for y = (+ (pxy extent) mb) then (+ y h)
+              for y = (+ (pxy extent) (pxh extent) (- mb)) then (- y h)
               for hish across (row-sizes layout)
               for h = (if (eql T hish) th (to-px hish))
               for i from 0
@@ -123,7 +123,7 @@
                             (when element
                               (let ((ideal (suggest-bounds (px-extent x y (- w ml mr) (- h mb mu)) element)))
                                 (setf (bounds element)
-                                      (px-extent x y
+                                      (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
                                                  (if (stretch layout) (- w ml mr) (extent-w ideal))
                                                  (if (stretch layout) (- h mb mu) (extent-h ideal)))))))))))))
 

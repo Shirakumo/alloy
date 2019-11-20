@@ -6,15 +6,12 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass combo-item (button)
+(defclass combo-item (button direct-value-component)
   ())
-
-(defmethod data ((component combo-item))
-  (princ-to-string (call-next-method)))
 
 (defclass combo (value-component focus-list)
   ((state :initform NIL :accessor state)
-   (combo-list :initform (make-instance 'vertical-linear-layout :layout-parent NIL :align :end) :reader combo-list)))
+   (combo-list :initform (make-instance 'vertical-linear-layout :layout-parent NIL :cell-margins (margins)) :reader combo-list)))
 
 (defgeneric combo-item (item combo))
 (defgeneric value-set (data))
@@ -24,6 +21,9 @@
   (update-combo-items combo (value-set combo))
   (on (setf value-set) (set (data combo))
     (update-combo-items combo set)))
+
+(defmethod set-layout-tree :before (value (combo combo))
+  (set-layout-tree value (combo-list combo)))
 
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting))
@@ -46,7 +46,7 @@
   (exit combo))
 
 (defmethod combo-item (item (combo combo))
-  (make-instance 'combo-item :data item))
+  (make-instance 'combo-item :value item))
 
 (defmethod update-combo-items ((combo combo) items)
   (let ((list (combo-list combo)))
@@ -60,7 +60,7 @@
                (enter item list)
                (enter item combo)
                (on activate (item)
-                 (setf (value combo) (slot-value item 'data))))))
+                 (setf (value combo) (value item))))))
       (etypecase items
         (list (loop for item in items do (add item)))
         (vector (loop for item across items do (add item)))))))
@@ -71,11 +71,13 @@
 (defmethod render :after ((renderer renderer) (combo combo))
   (case (state combo)
     (:selecting
-     (render renderer (combo-list combo)))))
+     (org.shirakumo.alloy.renderers.simple:with-pushed-transforms (renderer)
+       (incf (org.shirakumo.alloy.renderers.simple:z-index renderer) 100)
+       (render renderer (combo-list combo))))))
 
 (defmethod (setf bounds) :after (bounds (combo combo))
+  (setf (min-size (combo-list combo)) (size 0 (pxh bounds)))
   (let ((ideal (suggest-bounds bounds (combo-list combo))))
-    (setf (min-size (combo-list combo)) (size 0 (pxh bounds)))
     (setf (bounds (combo-list combo))
           (px-extent (pxx bounds)
                      (+ (- (pxy bounds) (pxh ideal)) (pxh bounds))
