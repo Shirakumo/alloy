@@ -46,7 +46,7 @@
         inner)))
 
 (defgeneric %to-px (unit))
-(declaim (ftype (function (T) single-float) to-px %to-px))
+(cl:declaim (ftype (function (T) single-float) to-px %to-px))
 
 (defmethod %to-px ((real real))
   (float real 0f0))
@@ -97,7 +97,7 @@
                  ,to-px)))))))
 
 ;;; Early
-(declaim (ftype (function (T) single-float) pxx pxy pxw pxh pxl pxu pxr pxb))
+(cl:declaim (ftype (function (T) single-float) pxx pxy pxw pxh pxl pxu pxr pxb))
 
 (define-unit px (px)
   px

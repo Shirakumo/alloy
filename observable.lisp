@@ -113,17 +113,9 @@
   ())
 
 (macrolet ((def ()
-             (flet ((s (name)
-                      (find-symbol name
-                                   #+sbcl "SB-MOP"
-                                   #+(or abcl allegro) "MOP"
-                                   #+(or clisp ecl clasp lispworks scl) "CLOS"
-                                   #+cmucl "CLOS-MOP"
-                                   #+clozure "CCL"
-                                   #+mezzano "MEZZANO.CLOS")))
-               `(defmethod (setf ,(s "SLOT-VALUE-USING-CLASS")) :after (value class (object observable-object) slot)
-                  (when (slot-boundp object 'observers)
-                    (notify-observers (,(s "SLOT-DEFINITION-NAME") slot) object value object))))))
+             `(defmethod (setf c2mop:slot-value-using-class) :after (value class (object observable-object) slot)
+                (when (slot-boundp object 'observers)
+                  (notify-observers (c2mop:slot-definition-name slot) object value object)))))
   (def))
 
 (defclass observable-table (observable)
