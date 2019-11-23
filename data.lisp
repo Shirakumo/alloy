@@ -61,6 +61,11 @@
   ((object :initarg :object :initform (arg! :object) :accessor object)
    (slot :initarg :slot :initform (arg! :slot) :accessor slot)))
 
+(defmethod initialize-instance :after ((data slot-data) &key)
+  (when (typep (object data) 'observable-object)
+    (observe (slot data) (object data) (lambda (value object)
+                                         (notify-observers '(setf value) data value object)))))
+
 (defmethod value ((data slot-data))
   (slot-value (object data) (slot data)))
 
