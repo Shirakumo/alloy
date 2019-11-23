@@ -14,19 +14,22 @@
 (defgeneric build (stub body))
 
 (defmethod build ((stub symbol) body)
-  (build (find-class stub) body))
+  (cond ((find-class stub NIL)
+         (build (find-class stub) body))
+        (T
+         `(,stub ,@body))))
 
 (defmethod build ((class class) body)
   (build (allocate-instance class) body))
 
-(defmacro build-ui (layout focus &rest body)
+(defmacro build-ui (layout &optional focus &rest body)
   (let ((*var-counter* 0))
     (multiple-value-bind (constructor bindings) (build (car layout) (cdr layout))
       `(let ,bindings
          (let ((layout ,constructor)
-               (focus ,(build (car focus) (cdr focus))))
+               (focus ,(when focus (build (car focus) (cdr focus)))))
            (declare (ignorable layout focus))
-           ,@body)))))
+           ,@(or body '(layout)))))))
 
 (defmacro define-builder (class destructure &body body)
   (let ((expr (gensym "EXPR")))
