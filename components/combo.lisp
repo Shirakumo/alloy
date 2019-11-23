@@ -71,9 +71,7 @@
 (defmethod render :after ((renderer renderer) (combo combo))
   (case (state combo)
     (:selecting
-     (org.shirakumo.alloy.renderers.simple:with-pushed-transforms (renderer)
-       (incf (org.shirakumo.alloy.renderers.simple:z-index renderer) 100)
-       (render renderer (combo-list combo))))))
+     (render renderer (combo-list combo)))))
 
 (defmethod (setf bounds) :after (bounds (combo combo))
   (setf (min-size (combo-list combo)) (size 0 (pxh bounds)))

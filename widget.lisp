@@ -11,6 +11,11 @@
    (effective-initializers :initform () :accessor effective-initializers)
    (foreign-slots :initform () :reader foreign-slots)))
 
+(defgeneric add-slot (name class &key if-exists))
+(defgeneric remove-slot (name class))
+(defgeneric add-initializer (name class &key priority function if-exists))
+(defgeneric remove-initializer (name class))
+
 (defmethod c2mop:validate-superclass ((a widget-class) (b T)) NIL)
 (defmethod c2mop:validate-superclass ((a widget-class) (b standard-class)) T)
 (defmethod c2mop:validate-superclass ((a widget-class) (b widget-class)) T)
@@ -34,7 +39,7 @@
   (loop for name in (foreign-slots class)
         do (unless (find name direct-slots :key (lambda (s) (getf s :name)))
              (push (list :name name :readers NIL :writers NIL :initargs NIL) direct-slots)))
-  (call-next-method class :direct-slots direct-slots options))
+  (apply #'call-next-method class :direct-slots direct-slots options))
 
 (defmethod add-slot ((name symbol) (class widget-class) &key (if-exists :error))
   ;; Check against "normal" slots since you most likely do not want to thrash those.
@@ -50,9 +55,15 @@
   (reinitialize-instance class :foreign-slots (list* name (foreign-slots class)))
   name)
 
+(defmethod add-slot (name (class symbol) &rest args)
+  (apply #'add-slot name (find-class class) args))
+
 (defmethod remove-slot ((name symbol) (class widget-class))
   (reinitialize-instance class :foreign-slots (remove name (foreign-slots class)))
   name)
+
+(defmethod remove-slot (name (class symbol))
+  (remove-slot name (find-class class)))
 
 (defmethod add-initializer ((name symbol) (class widget-class) &key priority (function name) (if-exists :error))
   (let* ((init (direct-initializers class))
@@ -74,13 +85,19 @@
     (unless (and existing (eq if-exists NIL))
       name)))
 
+(defmethod add-initializer (name (class symbol) &rest args)
+  (apply #'add-initializer name (find-class class) args))
+
 (defmethod remove-initializer ((name symbol) (class widget-class))
   (reinitialize-instance class :direct-initializers (remove name (direct-initializers class) :key #'car :test #'equal))
   name)
 
+(defmethod remove-initializer (name (class symbol))
+  (remove-initializer name (find-class class)))
+
 (defmethod compute-effective-initializers ((class widget-class))
   (let ((initializers ()))
-    (loop for super in (reverse (c2mop:class-precedence-list class))
+    (loop for super in (reverse (c2mop:compute-class-precedence-list class))
           do (when (typep super 'widget-class)
                (setf initializers (merge-initializers initializers (direct-initializers super)))))
     (merge-initializers initializers (direct-initializers class))))
@@ -115,12 +132,24 @@
   ;; on its own, but I do not expect that to be a big deal.
   (run-initializers (class-of widget) widget))
 
-(defmacro define-subwidget ((widget name &optional priority) type &body options)
-  `(flet ((,name (,widget)
-            (let ((,name (setf (slot-value ,widget ',name) (make-instance ',type initargs))))
-              ,@body)))
-     (add-slot ',name ',widget)
-     (add-initializer ',name ',widget :function #',name :priority ,priority :if-exists :supersede)))
+(defmacro define-widget (name direct-superclasses direct-slots &rest options)
+  (unless (assoc :metaclass options)
+    (push '(:metaclass widget-class) options))
+  `(defclass ,name (,@direct-superclasses widget)
+     ,direct-slots
+     ,@options))
+
+(defmacro define-subwidget ((widget name &optional priority) type &body body)
+  (let ((initargs (loop for (key val) = body
+                        while (and body (symbolp key))
+                        collect key collect val
+                        do (setf body (cddr body)))))
+    `(flet ((,name (,widget)
+              (let ((,name (setf (slot-value ,widget ',name) (make-instance ',type ,@initargs))))
+                (declare (ignorable ,name))
+                ,@body)))
+       (add-slot ',name ',widget)
+       (add-initializer ',name ',widget :function #',name :priority ,priority :if-exists :supersede))))
 
 (defun remove-subwidget (widget name)
   (remove-slot name widget)
@@ -140,10 +169,12 @@
       (destructuring-bind (function widget observed) (rest form)
         ;; KLUDGE: This means a function can only observe one particular change
         ;;         per widget class.
-        (flet ((setup (widget)
-                 (observe observed widget
+        (flet ((setup (instance)
+                 (when (listp widget)
+                   (setf instance (slot-value instance (second widget))))
+                 (observe observed instance
                           (lambda (&rest args)
-                            (apply function widget args))
+                            (apply function instance args))
                           function)))
           (add-initializer function widget :function #'setup :priority -100 :if-exists :supersede)))
       (cl:proclaim form)))
