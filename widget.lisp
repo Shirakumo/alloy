@@ -9,7 +9,8 @@
 (defclass widget-class (standard-class)
   ((direct-initializers :initform () :reader direct-initializers)
    (effective-initializers :initform () :accessor effective-initializers)
-   (foreign-slots :initform () :reader foreign-slots)))
+   (foreign-slots :initform () :reader foreign-slots)
+   (direct-slots :initform () :reader direct-slots)))
 
 (defgeneric add-slot (name class &key if-exists))
 (defgeneric remove-slot (name class))
@@ -21,11 +22,44 @@
 (defmethod c2mop:validate-superclass ((a widget-class) (b widget-class)) T)
 (defmethod c2mop:validate-superclass ((a standard-class) (b widget-class)) NIL)
 
+(defclass direct-representation-slot (c2mop:standard-direct-slot-definition)
+  ((representation-form :initarg :representation :accessor representation-form)))
+
+(defmethod c2mop:direct-slot-definition-class ((class widget-class) &key representation)
+  (if representation
+      (find-class 'direct-representation-slot)
+      (call-next-method)))
+
+(defclass effective-representation-slot (c2mop:standard-effective-slot-definition)
+  ((initializer :accessor initializer)))
+
+(defmethod c2mop:compute-effective-slot-definition ((class widget-class) name slots)
+  (let ((slot (find name slots :key #'c2mop:slot-definition-name))
+        (effective (call-next-method)))
+    (when (typep slot 'direct-representation-slot)
+      (let ((proper (allocate-instance (find-class 'effective-representation-slot)))
+            (instance (gensym "INSTANCE")))
+        ;; Copy shit over because the MOP is bad.
+        (dolist (slot (c2mop:class-slots (find-class 'c2mop:standard-effective-slot-definition)))
+          (let ((name (c2mop:slot-definition-name slot)))
+            (setf (slot-value proper name) (slot-value effective name))))
+        (setf effective proper)
+        ;; Build initializer function
+        (destructuring-bind (type &rest args) (representation-form slot)
+          (setf (initializer effective)
+                (compile NIL `(lambda (,instance)
+                                (setf (gethash ',name (representations ,instance))
+                                      (represent (slot-value ,instance ',name) ',type ,@args))))))))
+    effective))
+
 (defmethod c2mop:finalize-inheritance :after ((class widget-class))
   (dolist (super (c2mop:class-direct-superclasses class))
     (unless (c2mop:class-finalized-p super)
       (c2mop:finalize-inheritance super)))
   (setf (effective-initializers class) (compute-effective-initializers class)))
+
+(defmethod initialize-instance :after ((class widget-class) &key direct-slots)
+  (setf (slot-value class 'direct-slots) direct-slots))
 
 (defmethod reinitialize-instance :after ((class widget-class) &key (direct-initializers NIL d-p))
   (when d-p
@@ -33,9 +67,12 @@
   (setf (effective-initializers class) (compute-effective-initializers class))
   (make-instances-obsolete class))
 
-(defmethod reinitialize-instance :around ((class widget-class) &rest options &key (foreign-slots NIL f-p) direct-slots)
+(defmethod reinitialize-instance :around ((class widget-class) &rest options &key (foreign-slots NIL f-p) (direct-slots NIL d-p))
   (when f-p
     (setf (slot-value class 'foreign-slots) foreign-slots))
+  (if d-p
+      (setf (slot-value class 'direct-slots) direct-slots)
+      (setf direct-slots (direct-slots class)))
   (loop for name in (foreign-slots class)
         do (unless (find name direct-slots :key (lambda (s) (getf s :name)))
              (push (list :name name :readers NIL :writers NIL :initargs NIL) direct-slots)))
@@ -118,19 +155,35 @@
                     (setf (cdr orig) (list* prio data)))))
     (stable-sort initializers #'> :key #'second)))
 
-(defmethod run-initializers ((class widget-class) instance)
-  (loop for initializer in (effective-initializers class)
-        do (funcall (third initializer) instance)))
-
-(defclass widget (observable)
-  ()
+(defclass widget (observable-object)
+  ((representations :initform (make-hash-table :test 'eq) :reader representations))
   (:metaclass widget-class))
 
-(defmethod shared-initialize :after ((widget widget) slots &key)
-  ;; Run initializers here to ensure they will be run again when u-i-f-r-c runs.
-  ;; This will also cause initilaizers to run again when the instance is reinitialized
-  ;; on its own, but I do not expect that to be a big deal.
-  (run-initializers (class-of widget) widget))
+(defmethod initialize-instance :after ((widget widget) &key)
+  (clrhash (representations widget))
+  (loop for slot in (c2mop:class-slots (class-of widget))
+        when (typep slot 'effective-representation-slot)
+        do (funcall (initializer slot) widget))
+  (loop for initializer in (effective-initializers (class-of widget))
+        do (funcall (third initializer) widget)))
+
+(defmethod update-instance-for-redefined-class :after ((widget widget) added discarded plist &key)
+  ;; Remove representations of discarded slots
+  (loop for name in discarded
+        for representation = (gethash name (representations widget))
+        do (when representation
+             (leave representation T)
+             (remhash name (representations widget))))
+  ;; FIXME: udpate representations of changed slots
+  ;; Run initializers of new representation slots
+  (loop for name in added
+        for slot = (find name (c2mop:class-slots (class-of widget)) :key #'c2mop:slot-definition-name)
+        when (typep slot 'effective-representation-slot)
+        do (funcall (initializer slot) widget)))
+
+(defmethod representation ((name symbol) (widget widget))
+  (or (gethash name (representations widget))
+      (error "The slot~%  ~s~%does not have a representation in~%  ~s" name widget)))
 
 (defmacro define-widget (name direct-superclasses direct-slots &rest options)
   (unless (assoc :metaclass options)
@@ -139,17 +192,36 @@
      ,direct-slots
      ,@options))
 
-(defmacro define-subwidget ((widget name &optional priority) type &body body)
-  (let ((initargs (loop for (key val) = body
-                        while (and body (symbolp key))
-                        collect key collect val
-                        do (setf body (cddr body)))))
+(defmacro define-slot ((widget name &optional (priority 0)) constructor &body body)
+  (let ((rep (gensym "REPRESENTATIONS")))
     `(flet ((,name (,widget)
-              (let ((,name (setf (slot-value ,widget ',name) (make-instance ',type ,@initargs))))
-                (declare (ignorable ,name))
-                ,@body)))
+              (let ((,rep (representations ,widget)))
+                (flet ((rep (name)
+                         (or (gethash name ,rep)
+                             (error "a"))))
+                  (declare (inline rep) (ignorable #'rep))
+                  (let ((,name (setf (slot-value ,widget ',name) ,constructor)))
+                    (declare (ignorable ,name))
+                    ,@body)))))
        (add-slot ',name ',widget)
        (add-initializer ',name ',widget :function #',name :priority ,priority :if-exists :supersede))))
+
+(defmacro with-representations ((instance class) &body body)
+  (let ((instanceg (gensym "INSTANCE")))
+    `(let ((,instanceg ,instance))
+       (symbol-macrolet ,(loop for slot in (c2mop:class-direct-slots (find-class class))
+                               for name = (c2mop:slot-definition-name slot)
+                               collect `(,name (representation ',name ,instanceg)))
+         ,@body))))
+
+(defmacro define-subui ((widget name &optional (priority 0)) type &body body)
+  `(define-slot (,widget ,name ,priority)
+       (with-representations (,widget ,widget)
+         (build-ui (,type ,@body)))))
+
+(defmacro define-subcomponent ((widget name &optional (priority 0)) (place type &rest initargs) &body body)
+  `(define-slot (,widget ,name ,priority) (represent ,place ,type ,@initargs)
+     ,@body))
 
 (defun remove-subwidget (widget name)
   (remove-slot name widget)
@@ -178,3 +250,9 @@
                           function)))
           (add-initializer function widget :function #'setup :priority -100 :if-exists :supersede)))
       (cl:proclaim form)))
+
+#+(or)
+(progn
+  (trivial-indent:define-indentation define-slot (4 4 &body))
+  (trivial-indent:define-indentation define-subui (4 4 &body))
+  (trivial-indent:define-indentation define-subcomponent (4 4 &body)))

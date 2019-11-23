@@ -50,6 +50,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "tab-view")
                              (:file "window")))
                (:file "builder")
+               (:file "widget")
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils
