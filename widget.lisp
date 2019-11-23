@@ -37,8 +37,7 @@
   (let ((slot (find name slots :key #'c2mop:slot-definition-name))
         (effective (call-next-method)))
     (when (typep slot 'direct-representation-slot)
-      (let ((proper (allocate-instance (find-class 'effective-representation-slot)))
-            (instance (gensym "INSTANCE")))
+      (let ((proper (allocate-instance (find-class 'effective-representation-slot))))
         ;; Copy shit over because the MOP is bad.
         (dolist (slot (c2mop:class-slots (find-class 'c2mop:standard-effective-slot-definition)))
           (let ((name (c2mop:slot-definition-name slot)))
@@ -46,10 +45,7 @@
         (setf effective proper)
         ;; Build initializer function
         (destructuring-bind (type &rest args) (representation-form slot)
-          (setf (initializer effective)
-                (compile NIL `(lambda (,instance)
-                                (setf (gethash ',name (representations ,instance))
-                                      (represent (slot-value ,instance ',name) ',type ,@args))))))))
+          (setf (initializer effective) (compile NIL `(lambda () (list ',type ,@args)))))))
     effective))
 
 (defmethod c2mop:finalize-inheritance :after ((class widget-class))
@@ -160,26 +156,35 @@
   (:metaclass widget-class))
 
 (defmethod initialize-instance :after ((widget widget) &key)
-  (clrhash (representations widget))
-  (loop for slot in (c2mop:class-slots (class-of widget))
-        when (typep slot 'effective-representation-slot)
-        do (funcall (initializer slot) widget))
   (loop for initializer in (effective-initializers (class-of widget))
         do (funcall (third initializer) widget)))
 
+(defmethod shared-initialize :after ((widget widget) slots &key)
+  ;; Update or add new slots
+  (loop with representations = (representations widget)
+        for slot in (c2mop:class-slots (class-of widget))
+        for name = (c2mop:slot-definition-name slot)
+        when (typep slot 'effective-representation-slot)
+        do (let ((representation (gethash name representations))
+                 (new-data (funcall (initializer slot))))
+             (cond ((null representation)
+                    (setf (gethash name representations)
+                          (apply #'make-instance (first new-data)
+                                 :data (make-instance 'slot-data :slot name :object widget)
+                                 (rest new-data))))
+                   ((eq (first new-data) (type-of representation))
+                    (apply #'reinitialize-instance representation (rest new-data)))
+                   (T
+                    (apply #'change-class representation new-data))))))
+
 (defmethod update-instance-for-redefined-class :after ((widget widget) added discarded plist &key)
+  (declare (ignore added plist))
   ;; Remove representations of discarded slots
   (loop for name in discarded
         for representation = (gethash name (representations widget))
         do (when representation
              (leave representation T)
-             (remhash name (representations widget))))
-  ;; FIXME: udpate representations of changed slots
-  ;; Run initializers of new representation slots
-  (loop for name in added
-        for slot = (find name (c2mop:class-slots (class-of widget)) :key #'c2mop:slot-definition-name)
-        when (typep slot 'effective-representation-slot)
-        do (funcall (initializer slot) widget)))
+             (remhash name (representations widget)))))
 
 (defmethod representation ((name symbol) (widget widget))
   (or (gethash name (representations widget))
