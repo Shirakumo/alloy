@@ -87,6 +87,12 @@
           do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout))))
   element)
 
+(defmethod call-with-elements (function (layout grid-layout) &key start end)
+  (loop with elements = (elements layout)
+        for i from (or start 0) below (or end (length elements))
+        for el = (aref elements i)
+        do (when el (funcall function el))))
+
 (defmethod notice-bounds ((element layout-element) (layout grid-layout))
   (let ((updated (suggest-bounds (bounds layout) layout)))
     (unless (extent= (bounds layout) updated)
