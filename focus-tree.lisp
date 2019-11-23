@@ -31,19 +31,8 @@
    (focus :initform NIL :accessor focus)))
 
 (defmethod initialize-instance :after ((element focus-element) &key focus)
-  ;; Tie-up with focus-tree root.
   (when (slot-boundp element 'focus-parent)
-    (etypecase (focus-parent element)
-      (focus-tree
-       (let ((focus-tree (focus-parent element)))
-         (set-focus-tree focus-tree element)
-         (setf (slot-value element 'focus-parent) element)
-         (setf (root focus-tree) element)))
-      (focus-element
-       (setf (slot-value element 'focus-tree) (focus-tree (focus-parent element)))
-       (enter element (focus-parent element)))
-      (null
-       (slot-makunbound element 'focus-parent))))
+    (enter element (focus-parent element)))
   (when focus (setf (focus element) focus)))
 
 (defmethod print-object ((element focus-element) stream)
@@ -110,6 +99,9 @@
 (defmethod leave :after ((element focus-element) (parent focus-element))
   (slot-makunbound element 'focus-parent)
   (set-focus-tree NIL element))
+
+(defmethod leave ((element focus-element) (parent (eql T)))
+  (leave element (focus-parent element)))
 
 (defclass focus-chain (focus-element container)
   ((index :initform NIL :accessor index)
@@ -272,12 +264,24 @@
   ((root :initform NIL :accessor root)
    (focused :initform NIL :accessor focused)))
 
+(defmethod enter ((element focus-element) (tree focus-tree) &key force)
+  (when (next-method-p) (call-next-method))
+  (when force (setf (root tree) NIL))
+  (setf (root tree) element))
+
+(defmethod (setf root) :before ((none null) (tree focus-tree))
+  (when (root tree)
+    (set-focus-tree NIL (root tree))
+    (setf (focused tree) NIL)))
+
 (defmethod (setf root) :before ((element focus-element) (tree focus-tree))
   (when (root tree)
     (error 'root-already-established
            :element element :tree tree)))
 
 (defmethod (setf root) :after ((element focus-element) (tree focus-tree))
+  (set-focus-tree tree element)
+  (setf (slot-value element 'focus-parent) element)
   (setf (focused tree) element))
 
 (defmethod (setf focused) :around ((element focus-element) (tree focus-tree))
@@ -303,8 +307,3 @@
 (defmethod handle ((event event) (tree focus-tree))
   (unless (handle event (focused tree))
     (decline)))
-
-;;; NOTE: Initialisation of the tree must happen roughly as follows:
-;;;         (let ((tree (make-instance 'focus-tree))
-;;;               (element (make-instance 'focus-element :focus-parent tree)))
-;;;           ...)

@@ -25,17 +25,7 @@
 
 (defmethod initialize-instance :after ((element layout-element) &key)
   (when (slot-boundp element 'layout-parent)
-    (etypecase (layout-parent element)
-      (layout-tree
-       (let ((layout-tree (layout-parent element)))
-         (setf (slot-value element 'layout-tree) layout-tree)
-         (setf (slot-value element 'layout-parent) element)
-         (setf (root layout-tree) element)))
-      (layout-element
-       (setf (slot-value element 'layout-tree) (layout-tree (layout-parent element)))
-       (enter element (layout-parent element)))
-      (null
-       (slot-makunbound element 'layout-parent)))))
+    (enter element (layout-parent element))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
@@ -67,6 +57,9 @@
 (defmethod ensure-visible ((element layout-element) (parent (eql T)))
   (when (slot-boundp element 'layout-parent)
     (ensure-visible element (layout-parent element))))
+
+(defmethod leave ((element layout-element) (parent (eql T)))
+  (leave element (layout-parent element)))
 
 (defclass layout (layout-element container renderable)
   ())
@@ -126,10 +119,23 @@
   ((root :initform NIL :accessor root)
    (ui :initarg :ui :reader ui)))
 
+(defmethod enter ((element layout-element) (tree layout-tree) &key force)
+  (when (next-method-p) (call-next-method))
+  (when force (setf (root tree) NIL))
+  (setf (root tree) element))
+
+(defmethod (setf root) :before ((none null) (tree layout-tree))
+  (when (root tree)
+    (set-layout-tree NIL (root tree))))
+
 (defmethod (setf root) :before ((element layout-element) (tree layout-tree))
   (when (root tree)
     (error 'root-already-established
            :element element :tree tree)))
+
+(defmethod (setf root) :after ((element layout-element) (tree layout-tree))
+  (set-layout-tree tree element)
+  (setf (slot-value element 'layout-parent) element))
 
 (defmethod register ((tree layout-tree) (renderer renderer))
   (register (root tree) renderer))

@@ -57,3 +57,9 @@
 
 (defmethod represent-with ((name symbol) data &rest initargs)
   (apply #'represent-with (find-class name) data initargs))
+
+(defmethod leave ((component component) (parent (eql T)))
+  (when (slot-boundp component 'layout-parent)
+    (leave component (layout-parent component)))
+  (when (slot-boundp component 'focus-parent)
+    (leave component (focus-parent component))))
