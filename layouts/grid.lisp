@@ -99,9 +99,11 @@
         do (when element (leave element layout))))
 
 (defmethod notice-bounds ((element layout-element) (layout grid-layout))
-  (let ((updated (suggest-bounds (bounds layout) layout)))
-    (unless (extent= (bounds layout) updated)
-      (setf (bounds layout) updated))))
+  (if (eq layout (layout-parent layout))
+      (setf (bounds layout) (bounds layout))
+      (let ((updated (suggest-bounds (bounds layout) layout)))
+        (unless (extent= (bounds layout) updated)
+          (setf (bounds layout) updated)))))
 
 (defun spanning-size (sizes total)
   (let ((count 0)
