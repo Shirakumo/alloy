@@ -140,4 +140,6 @@
 ;;; on tons of batch updates that would never be shown.
 (defmethod alloy:render :before ((renderer renderer) (renderable renderable))
   (when (alloy:render-needed-p renderable)
+    (when (= 0 (array-total-size (shapes renderable)))
+      (realize-renderable renderer renderable))
     (update-shape renderer renderable T)))
