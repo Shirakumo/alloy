@@ -212,18 +212,6 @@
 (defclass focus-list (focus-chain vector-container)
   ())
 
-(defmethod initialize-instance :after ((chain focus-chain) &key elements)
-  (when elements
-    (adjust-array (elements chain) (length elements) :initial-contents elements)))
-
-(defmethod reinitialize-instance :after ((chain focus-chain) &key elements)
-  (when elements
-    (when (find (focused chain) elements)
-      (exit (focused chain))
-      (setf (focused chain) NIL))
-    (adjust-array (elements chain) (length elements))
-    (replace (elements chain) elements)))
-
 ;; FIXME: visually represent which focus chain we're going through by associating it with a layout.
 ;;        This is a problem because we don't know the focus for a layout. Maybe we should make those
 ;;        another combined subclass? Would be annoying, though.

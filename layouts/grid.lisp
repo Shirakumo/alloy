@@ -12,9 +12,9 @@
    (row-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader row-sizes)
    (col-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader col-sizes)))
 
-(defmethod initialize-instance :after ((layout grid-layout) &key row-sizes col-sizes)
-  (setf (row-sizes layout) row-sizes)
-  (setf (col-sizes layout) col-sizes))
+(defmethod shared-initialize :after ((layout grid-layout) slots &key (row-sizes NIL r-p) (col-sizes NIL c-p))
+  (when r-p (setf (row-sizes layout) row-sizes))
+  (when c-p (setf (col-sizes layout) col-sizes)))
 
 (defmethod (setf stretch) :after (value (layout grid-layout))
   (suggest-bounds (bounds layout) layout))

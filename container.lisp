@@ -30,6 +30,12 @@
          (call-with-elements #',thunk ,container :start ,start :end ,end)
          ,result))))
 
+(defmethod shared-initialize :around ((container container) slots &key (elements NIL c-p))
+  (call-next-method)
+  (when c-p
+    (clear container)
+    (map NIL (lambda (e) (enter e container)) elements)))
+
 (defmethod describe-object :after ((container container) stream)
   (format stream "~&~%Container Tree:~%")
   (let ((*level* 0))
