@@ -6,6 +6,12 @@
 
 (in-package #:org.shirakumo.alloy)
 
+(defun remove-slotspec (name slots)
+  (remove name slots :key (lambda (s) (getf s :name))))
+
+(defun find-slotspec (name slots)
+  (find name slots :key (lambda (s) (getf s :name))))
+
 (defclass widget-class (standard-class)
   ((direct-initializers :initform () :reader direct-initializers)
    (effective-initializers :initform () :accessor effective-initializers)
@@ -22,30 +28,47 @@
 (defmethod c2mop:validate-superclass ((a widget-class) (b widget-class)) T)
 (defmethod c2mop:validate-superclass ((a standard-class) (b widget-class)) NIL)
 
-(defclass direct-representation-slot (c2mop:standard-direct-slot-definition)
-  ((representation-form :initarg :representation :accessor representation-form)))
+(defclass direct-initializer-slot (c2mop:standard-direct-slot-definition)
+  ((usage :initarg :usage :initform NIL :accessor usage)
+   (initializer-lambda :initarg :initializer :accessor initializer-lambda)))
 
-(defmethod c2mop:direct-slot-definition-class ((class widget-class) &key representation)
-  (if representation
-      (find-class 'direct-representation-slot)
+(defmethod initialize-instance :after ((slot direct-initializer-slot) &key representation)
+  (when representation
+    (destructuring-bind (type &rest initargs) representation
+      (setf (usage slot) :representation)
+      (setf (initializer-lambda slot) `(lambda (widget)
+                                         (declare (ignorable widget))
+                                         (list ',type ,@initargs))))))
+
+(defmethod c2mop:direct-slot-definition-class ((class widget-class) &key initializer representation)
+  (if (or representation initializer)
+      (find-class 'direct-initializer-slot)
       (call-next-method)))
 
-(defclass effective-representation-slot (c2mop:standard-effective-slot-definition)
+(defclass effective-initializer-slot (c2mop:standard-effective-slot-definition)
   ((initializer :accessor initializer)))
+
+(defclass effective-object-slot (effective-initializer-slot)
+  ())
+
+(defclass effective-representation-slot (effective-initializer-slot)
+  ())
 
 (defmethod c2mop:compute-effective-slot-definition ((class widget-class) name slots)
   (let ((slot (find name slots :key #'c2mop:slot-definition-name))
         (effective (call-next-method)))
-    (when (typep slot 'direct-representation-slot)
-      (let ((proper (allocate-instance (find-class 'effective-representation-slot))))
+    (when (typep slot 'direct-initializer-slot)
+      (let ((proper (allocate-instance (ecase (usage slot)
+                                         (:representation (find-class 'effective-representation-slot))
+                                         (:object (find-class 'effective-object-slot))
+                                         ((NIL) (find-class 'effective-initializer-slot))))))
         ;; Copy shit over because the MOP is bad.
         (dolist (slot (c2mop:class-slots (find-class 'c2mop:standard-effective-slot-definition)))
           (let ((name (c2mop:slot-definition-name slot)))
             (setf (slot-value proper name) (slot-value effective name))))
         (setf effective proper)
         ;; Build initializer function
-        (destructuring-bind (type &rest args) (representation-form slot)
-          (setf (initializer effective) (compile NIL `(lambda () (list ',type ,@args)))))))
+        (setf (initializer effective) (compile NIL (initializer-lambda slot)))))
     effective))
 
 (defmethod c2mop:finalize-inheritance :after ((class widget-class))
@@ -69,30 +92,33 @@
   (if d-p
       (setf (slot-value class 'direct-slots) direct-slots)
       (setf direct-slots (direct-slots class)))
-  (loop for name in (foreign-slots class)
-        do (unless (find name direct-slots :key (lambda (s) (getf s :name)))
-             (push (list :name name :readers NIL :writers NIL :initargs NIL) direct-slots)))
-  (apply #'call-next-method class :direct-slots direct-slots options))
+  (let ((direct-slots (copy-list direct-slots)))
+    (loop for spec in (foreign-slots class)
+          for name = (getf spec :name)
+          do (when (find-slotspec name direct-slots)
+               (setf direct-slots (remove-slotspec name direct-slots))))
+    (apply #'call-next-method class :direct-slots (append direct-slots (foreign-slots class)) options)))
 
-(defmethod add-slot ((name symbol) (class widget-class) &key (if-exists :error))
+(defmethod add-slot ((spec cons) (class widget-class) &key (if-exists :error))
   ;; Check against "normal" slots since you most likely do not want to thrash those.
   (unless (c2mop:class-finalized-p class)
     (c2mop:finalize-inheritance class))
-  (when (and (not (find name (foreign-slots class)))
-             (find name (c2mop:class-slots class) :key #'c2mop:slot-definition-name))
-    (ecase if-exists
-      (:error
-       (error "FIXME: slot named ~s already exists as an inherited or direct slot!" name))
-      (:supersede)
-      ((NIL) (return-from add-slot NIL))))
-  (reinitialize-instance class :foreign-slots (list* name (foreign-slots class)))
-  name)
+  (let ((name (getf spec :name)))
+    (when (and (not (find-slotspec name (foreign-slots class)))
+               (find name (c2mop:class-slots class) :key #'c2mop:slot-definition-name))
+      (ecase if-exists
+        (:error
+         (error "FIXME: slot named ~s already exists as an inherited or direct slot!" name))
+        (:supersede)
+        ((NIL) (return-from add-slot NIL))))
+    (reinitialize-instance class :foreign-slots (append (remove-slotspec name (foreign-slots class)) (list spec)))
+    spec))
 
 (defmethod add-slot (name (class symbol) &rest args)
   (apply #'add-slot name (find-class class) args))
 
 (defmethod remove-slot ((name symbol) (class widget-class))
-  (reinitialize-instance class :foreign-slots (remove name (foreign-slots class)))
+  (reinitialize-instance class :foreign-slots (remove name (foreign-slots class) :key (lambda (s) (getf s :name))))
   name)
 
 (defmethod remove-slot (name (class symbol))
@@ -155,27 +181,41 @@
   ((representations :initform (make-hash-table :test 'eq) :reader representations))
   (:metaclass widget-class))
 
+(defmethod update-slot-value ((slot c2mop:standard-effective-slot-definition) (widget widget)))
+
+(defmethod update-slot-value ((slot effective-initializer-slot) (widget widget))
+  (setf (slot-value widget (c2mop:slot-definition-name slot)) (funcall (initializer slot) widget)))
+
+(defmethod update-slot-value ((slot effective-object-slot) (widget widget))
+  (destructuring-bind (type &rest initargs) (funcall (initializer slot) widget)
+    (let* ((name (c2mop:slot-definition-name slot))
+           (value (if (slot-boundp widget name) (slot-value widget name) NIL)))
+      (cond ((null value)
+             (setf (slot-value widget name) (apply #'make-instance type initargs)))
+            ((eq type (type-of value))
+             (apply #'reinitialize-instance value initargs))
+            (T
+             (apply #'change-class value type initargs))))))
+
+(defmethod update-slot-value ((slot effective-representation-slot) (widget widget))
+  (destructuring-bind (type &rest initargs) (funcall (initializer slot) widget)
+    (let* ((name (c2mop:slot-definition-name slot))
+           (value (gethash name (representations widget))))
+      (cond ((null value)
+             (setf (gethash name (representations widget))
+                   (apply #'make-instance type :data (make-instance 'slot-data :slot name :object widget) initargs)))
+            ((eq type (type-of value))
+             (apply #'reinitialize-instance value initargs))
+            (T
+             (apply #'change-class value type initargs))))))
+
+(defmethod shared-initialize :after ((widget widget) slots &key)
+  (dolist (slot (c2mop:class-slots (class-of widget)))
+    (update-slot-value slot widget)))
+
 (defmethod initialize-instance :after ((widget widget) &key)
   (loop for initializer in (effective-initializers (class-of widget))
         do (funcall (third initializer) widget)))
-
-(defmethod shared-initialize :after ((widget widget) slots &key)
-  ;; Update or add new slots
-  (loop with representations = (representations widget)
-        for slot in (c2mop:class-slots (class-of widget))
-        for name = (c2mop:slot-definition-name slot)
-        when (typep slot 'effective-representation-slot)
-        do (let ((representation (gethash name representations))
-                 (new-data (funcall (initializer slot))))
-             (cond ((null representation)
-                    (setf (gethash name representations)
-                          (apply #'make-instance (first new-data)
-                                 :data (make-instance 'slot-data :slot name :object widget)
-                                 (rest new-data))))
-                   ((eq (first new-data) (type-of representation))
-                    (apply #'reinitialize-instance representation (rest new-data)))
-                   (T
-                    (apply #'change-class representation new-data))))))
 
 (defmethod update-instance-for-redefined-class :after ((widget widget) added discarded plist &key)
   (declare (ignore added plist))
@@ -197,19 +237,10 @@
      ,direct-slots
      ,@options))
 
-(defmacro define-slot ((widget name &optional (priority 0)) constructor &body body)
-  (let ((rep (gensym "REPRESENTATIONS")))
-    `(flet ((,name (,widget)
-              (let ((,rep (representations ,widget)))
-                (flet ((rep (name)
-                         (or (gethash name ,rep)
-                             (error "a"))))
-                  (declare (inline rep) (ignorable #'rep))
-                  (let ((,name (setf (slot-value ,widget ',name) ,constructor)))
-                    (declare (ignorable ,name))
-                    ,@body)))))
-       (add-slot ',name ',widget)
-       (add-initializer ',name ',widget :function #',name :priority ,priority :if-exists :supersede))))
+(defmacro define-slot ((widget name &optional usage) &body body)
+  `(add-slot '(:name ,name :initargs () :readers () :writers ()
+               :usage ,usage :initializer (lambda (,widget) ,@body))
+             ',widget))
 
 (defmacro with-representations ((instance class) &body body)
   (let ((instanceg (gensym "INSTANCE")))
@@ -219,16 +250,28 @@
                                collect `(,name (representation ',name ,instanceg)))
          ,@body))))
 
-(defmacro define-subui ((widget name &optional (priority 0)) type &body body)
-  `(define-slot (,widget ,name ,priority)
-       (with-representations (,widget ,widget)
-         (build-ui (,type ,@body)))))
+(defmacro define-subobject ((widget name &optional (priority 0)) constructor &body body)
+  (let ((thunk (gensym "THUNK")))
+    `(flet ((,thunk (,widget)
+              (let ((,name (slot-value ,widget ,name)))
+                (declare (ignorable ,name))
+                ,@body)))
+       (define-slot (,widget ,name :object)
+         (list ,@constructor))
+       ,(if body
+            `(add-initializer ',name ',widget :priority ,priority :function #',thunk)
+            `(remove-initializer ',name ',widget)))))
 
-(defmacro define-subcomponent ((widget name &optional (priority 0)) (place type &rest initargs) &body body)
-  `(define-slot (,widget ,name ,priority) (represent ,place ,type ,@initargs)
+(defmacro define-subcomponent ((widget name &optional (priority 0)) (place class &rest initargs) &body body)
+  `(define-subobject (,widget ,name ,priority) (',class ,@initargs :data ,(expand-place-data place))
      ,@body))
 
-(defun remove-subwidget (widget name)
+(defmacro define-subcontainer ((widget name) (class &rest initargs) &body contents)
+  `(define-slot (,widget ,name :object)
+     (with-representations (,widget ,widget)
+       (list ',class ,@initargs :elements (list ,@contents)))))
+
+(defun remove-subobject (widget name)
   (remove-slot name widget)
   (remove-initializer name widget))
 
