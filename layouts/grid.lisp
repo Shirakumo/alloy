@@ -93,6 +93,11 @@
         for el = (aref elements i)
         do (when el (funcall function el))))
 
+(defmethod clear ((layout grid-layout))
+  (loop for i downfrom (1- (length (elements layout))) to 0
+        for element = (aref (elements layout) i)
+        do (when element (leave element layout))))
+
 (defmethod notice-bounds ((element layout-element) (layout grid-layout))
   (let ((updated (suggest-bounds (bounds layout) layout)))
     (unless (extent= (bounds layout) updated)
