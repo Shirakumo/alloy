@@ -243,11 +243,17 @@
              ',widget))
 
 (defmacro with-representations ((instance class) &body body)
-  (let ((instanceg (gensym "INSTANCE")))
-    `(let ((,instanceg ,instance))
-       (symbol-macrolet ,(loop for slot in (c2mop:class-direct-slots (find-class class))
+  (let ((instanceg (gensym "INSTANCE"))
+        (representations (gensym "REPRESENTATIONS")))
+    `(let* ((,instanceg ,instance)
+            (,representations (representations ,instanceg)))
+       (symbol-macrolet ,(loop for slot in (c2mop:class-slots (find-class class))
                                for name = (c2mop:slot-definition-name slot)
-                               collect `(,name (representation ',name ,instanceg)))
+                               when (typep slot 'effective-initializer-slot)
+                               collect `(,name ,(etypecase slot
+                                                  (effective-representation-slot
+                                                   `(gethash ',name ,representations))
+                                                  (T `(slot-value ,instanceg ',name)))))
          ,@body))))
 
 (defmacro define-subobject ((widget name &optional (priority 0)) constructor &body body)
@@ -290,13 +296,14 @@
         ;; KLUDGE: This means a function can only observe one particular change
         ;;         per widget class.
         (flet ((setup (instance)
-                 (when (listp widget)
-                   (setf instance (slot-value instance (second widget))))
-                 (observe observed instance
+                 (observe observed (if (listp widget)
+                                       (slot-value instance (second widget))
+                                       instance)
                           (lambda (&rest args)
                             (apply function instance args))
                           function)))
-          (add-initializer function widget :function #'setup :priority -100 :if-exists :supersede)))
+          (add-initializer function (if (listp widget) (first widget) widget)
+                           :function #'setup :priority -100 :if-exists :supersede)))
       (cl:proclaim form)))
 
 #+(or)
