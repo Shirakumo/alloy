@@ -96,7 +96,8 @@
 (defmethod clear ((layout grid-layout))
   (loop for i downfrom (1- (length (elements layout))) to 0
         for element = (aref (elements layout) i)
-        do (when element (leave element layout))))
+        do (when element (leave element layout)))
+  (setf (fill-pointer (elements layout)) 0))
 
 (defmethod notice-bounds ((element layout-element) (layout grid-layout))
   (if (eq layout (layout-parent layout))
