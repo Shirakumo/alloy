@@ -15,11 +15,13 @@
 (defgeneric fit-linear-layout-contents (layout extent))
 
 (defmethod update-linear-layout ((layout linear-layout) extent)
-  (let ((updated (fit-linear-layout-contents layout extent)))
-    (unless (extent= (bounds layout) updated)
-      (setf (bounds layout) updated)
-      (when (slot-boundp layout 'layout-parent)
-        (notice-bounds layout (layout-parent layout))))))
+  (if (eq layout (layout-parent layout))
+      (setf (bounds layout) (bounds layout))
+      (let ((updated (fit-linear-layout-contents layout extent)))
+        (unless (extent= (bounds layout) updated)
+          (setf (bounds layout) updated)
+          (when (slot-boundp layout 'layout-parent)
+            (notice-bounds layout (layout-parent layout)))))))
 
 (defmethod (setf align) :after (value (layout linear-layout))
   (update-linear-layout layout (bounds layout)))
