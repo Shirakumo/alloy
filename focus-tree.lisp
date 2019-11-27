@@ -88,8 +88,12 @@
          (set-focus-tree (focus-tree parent) element)
          (setf (slot-value element 'focus-parent) parent))
         ((not (eq parent (focus-parent element)))
-         (error 'element-has-different-parent
-                :element element :container parent :parent (focus-parent element)))))
+         (restart-case
+             (error 'element-has-different-parent
+                    :element element :container parent :parent (focus-parent element))
+           (reparent ()
+             :report "Leave the element from its current parent."
+             (leave element T))))))
 
 (defmethod leave :before ((element focus-element) (parent focus-element))
   (unless (eq parent (focus-parent element))

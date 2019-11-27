@@ -77,8 +77,12 @@
          (set-layout-tree (layout-tree parent) element)
          (setf (slot-value element 'layout-parent) parent))
         ((not (eq parent (layout-parent element)))
-         (error 'element-has-different-parent
-                :element element :container parent :parent (layout-parent element)))))
+         (restart-case
+             (error 'element-has-different-parent
+                    :element element :container parent :parent (layout-parent element))
+           (reparent ()
+             :report "Leave the element from its current parent."
+             (leave element T))))))
 
 (defmethod leave :before ((element layout-element) (parent layout))
   (unless (eq parent (layout-parent element))

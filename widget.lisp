@@ -190,12 +190,15 @@
   (destructuring-bind (type &rest initargs) (funcall (initializer slot) widget)
     (let* ((name (c2mop:slot-definition-name slot))
            (value (if (slot-boundp widget name) (slot-value widget name) NIL)))
-      (cond ((null value)
-             (setf (slot-value widget name) (apply #'make-instance type initargs)))
-            ((eq type (type-of value))
-             (apply #'reinitialize-instance value initargs))
-            (T
-             (apply #'change-class value type initargs))))))
+      ;; KLUDGE: This is really not nice.
+      (handler-bind ((element-has-different-parent
+                       (lambda (c) (invoke-restart 'reparent))))
+        (cond ((null value)
+               (setf (slot-value widget name) (apply #'make-instance type initargs)))
+              ((eq type (type-of value))
+               (apply #'reinitialize-instance value initargs))
+              (T
+               (apply #'change-class value type initargs)))))))
 
 (defmethod update-slot-value ((slot effective-representation-slot) (widget widget))
   (destructuring-bind (type &rest initargs) (funcall (initializer slot) widget)
