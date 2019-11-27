@@ -97,8 +97,8 @@
            :element element :container parent :parent (focus-parent element))))
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
-  (slot-makunbound element 'focus-parent)
-  (set-focus-tree NIL element))
+  (set-focus-tree NIL element)
+  (slot-makunbound element 'focus-parent))
 
 (defmethod leave ((element focus-element) (parent (eql T)))
   (leave element (focus-parent element)))
