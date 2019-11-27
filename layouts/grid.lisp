@@ -79,7 +79,7 @@
   (when (or index (and row col))
     (let ((idx (element-index element layout)))
       (setf (aref (elements layout) idx) NIL))
-    (array-utils:vector-push-extend-position element (elements container)
+    (array-utils:vector-push-extend-position element (elements layout)
                                              (or index (+ col (* row (length (col-sizes layout))))))
     ;; Extend rows as much as necessary
     (loop while (< (* (length (row-sizes layout)) (length (col-sizes layout)))

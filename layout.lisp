@@ -20,12 +20,12 @@
 
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree :writer set-layout-tree)
-   (layout-parent :initarg :layout-parent :reader layout-parent)
+   (layout-parent :reader layout-parent)
    (bounds :initform (extent) :accessor bounds)))
 
-(defmethod initialize-instance :after ((element layout-element) &key)
-  (when (slot-boundp element 'layout-parent)
-    (enter element (layout-parent element))))
+(defmethod initialize-instance :after ((element layout-element) &key layout-parent)
+  (when layout-parent
+    (enter element layout-parent)))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)

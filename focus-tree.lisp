@@ -27,12 +27,12 @@
 
 (defclass focus-element (element)
   ((focus-tree :initform NIL :reader focus-tree :writer set-focus-tree)
-   (focus-parent :initarg :focus-parent :reader focus-parent)
+   (focus-parent :reader focus-parent)
    (focus :initform NIL :accessor focus)))
 
-(defmethod initialize-instance :after ((element focus-element) &key focus)
-  (when (slot-boundp element 'focus-parent)
-    (enter element (focus-parent element)))
+(defmethod initialize-instance :after ((element focus-element) &key focus-parent focus)
+  (when focus-parent
+    (enter element focus-parent))
   (when focus (setf (focus element) focus)))
 
 (defmethod print-object ((element focus-element) stream)
@@ -102,7 +102,8 @@
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
   (set-focus-tree NIL element)
-  (slot-makunbound element 'focus-parent))
+  (slot-makunbound element 'focus-parent)
+  (setf (slot-value element 'focus) NIL))
 
 (defmethod leave ((element focus-element) (parent (eql T)))
   (leave element (focus-parent element)))
@@ -176,12 +177,12 @@
 
 (defmethod focus-next ((chain focus-chain))
   (unless (= 0 (element-count chain))
-    (setf (index chain) (mod (1+ (index chain)) (element-count chain)))
+    (setf (index chain) (mod (1+ (or (index chain) -1)) (element-count chain)))
     (focused chain)))
 
 (defmethod focus-prev ((chain focus-chain))
   (unless (= 0 (element-count chain))
-    (setf (index chain) (mod (1- (index chain)) (element-count chain)))
+    (setf (index chain) (mod (1- (or (index chain) 0)) (element-count chain)))
     (focused chain)))
 
 (defmethod focus-up ((chain focus-chain))
@@ -224,13 +225,15 @@
   ((width :initarg :width :initform (arg! :width) :accessor width)))
 
 (defmethod focus-up ((chain focus-chain))
-  (let ((col (mod (index chain) (width chain)))
-        (row (1- (floor (index chain) (width chain)))))
+  (let* ((idx (or (index chain) 0))
+         (col (mod idx (width chain)))
+         (row (1- (floor idx (width chain)))))
     (setf (index chain) (+ col (* row (width chain))))))
 
 (defmethod focus-down ((chain focus-chain))
-  (let ((col (mod (index chain) (width chain)))
-        (row (1+ (floor (index chain) (width chain)))))
+  (let* ((idx (or (index chain) 0))
+         (col (mod idx (width chain)))
+         (row (1+ (floor idx (width chain)))))
     (setf (index chain) (+ col (* row (width chain))))))
 
 (defclass focus-stack (focus-chain stack-container)
