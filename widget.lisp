@@ -187,12 +187,13 @@
   (setf (slot-value widget (c2mop:slot-definition-name slot)) (funcall (initializer slot) widget)))
 
 (defmethod update-slot-value ((slot effective-object-slot) (widget widget))
-  (destructuring-bind (type &rest initargs) (funcall (initializer slot) widget)
-    (let* ((name (c2mop:slot-definition-name slot))
-           (value (if (slot-boundp widget name) (slot-value widget name) NIL)))
-      ;; KLUDGE: This is really not nice.
-      (handler-bind ((element-has-different-parent
-                       (lambda (c) (invoke-restart 'reparent))))
+  ;; KLUDGE: Ideally we'd know exactly which elements to remove to retain errors on
+  ;;         double-enter or stealing an enter from a different container.
+  (handler-bind ((element-has-different-parent
+                   (lambda (c) (invoke-restart 'reparent))))
+    (destructuring-bind (type &rest initargs) (funcall (initializer slot) widget)
+      (let* ((name (c2mop:slot-definition-name slot))
+             (value (if (slot-boundp widget name) (slot-value widget name) NIL)))
         (cond ((null value)
                (setf (slot-value widget name) (apply #'make-instance type initargs)))
               ((eq type (type-of value))
@@ -242,7 +243,9 @@
 
 (defmacro define-slot ((widget name &optional usage) &body body)
   `(add-slot '(:name ,name :initargs () :readers () :writers ()
-               :usage ,usage :initializer (lambda (,widget) ,@body))
+               :usage ,usage :initializer (lambda (,widget)
+                                            (declare (ignorable ,widget))
+                                            ,@body))
              ',widget))
 
 (defmacro with-representations ((instance class) &body body)
@@ -262,9 +265,10 @@
 (defmacro define-subobject ((widget name &optional (priority 0)) constructor &body body)
   (let ((thunk (gensym "THUNK")))
     `(flet ((,thunk (,widget)
-              (let ((,name (slot-value ,widget ,name)))
+              (let ((,name (slot-value ,widget ',name)))
                 (declare (ignorable ,name))
                 ,@body)))
+       (declare (ignorable #',thunk))
        (define-slot (,widget ,name :object)
          (list ,@constructor))
        ,(if body
