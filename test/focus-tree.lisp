@@ -56,6 +56,9 @@
     (is eq list (alloy:focus-parent e1))
     (is eq list (alloy:focus-parent e2))
     (is eq list (alloy:focus-parent e3))
+    (is eq tree (alloy:focus-tree e1))
+    (is eq tree (alloy:focus-tree e2))
+    (is eq tree (alloy:focus-tree e3))
     (is eq NIL (alloy:focus e1))
     (is eq NIL (alloy:focus e2))
     (is eq NIL (alloy:focus e3))
@@ -135,7 +138,13 @@
          (e3 (make-instance 'alloy:focus-list :focus-parent root))
          (e3e1 (make-instance 'alloy:focus-list :focus-parent e3))
          (e3e1e1 (make-instance 'alloy:focus-element :focus-parent e3e1)))
-    (declare (ignore e1))
+    (is eq tree (alloy:focus-tree e1))
+    (is eq tree (alloy:focus-tree e2))
+    (is eq tree (alloy:focus-tree e2e1))
+    (is eq tree (alloy:focus-tree e2e2))
+    (is eq tree (alloy:focus-tree e3))
+    (is eq tree (alloy:focus-tree e3e1))
+    (is eq tree (alloy:focus-tree e3e1e1))
     ;; Simple focus movement
     (is eq e2 (alloy:activate e2))
     (is eq :strong (alloy:focus e2))
@@ -163,3 +172,65 @@
     (is eq e3 (alloy:focused root))
     (is eq e3e1 (alloy:focused e3))
     (is eq e3e1e1 (alloy:focused e3e1))))
+
+(define-test leaf-tree-updates
+  :parent focus-list
+  :depends-on (one-level-focus-list)
+  (let* ((tree (make-instance 'alloy:focus-tree))
+         (root (make-instance 'alloy:focus-list :focus-parent tree))
+         (e1 (make-instance 'alloy:focus-element :focus-parent root)))
+    ;; Check consistency
+    (is eq root (alloy:focus-parent e1))
+    (is eq tree (alloy:focus-tree e1))
+    (is eq root (alloy:focused tree))
+    ;; Leave e1
+    (finish (alloy:leave e1 T))
+    (fail (alloy:leave e1 root))
+    (is eq NIL (alloy:focus-tree e1))
+    (fail (alloy:focus-parent e1))
+    (is eq root (alloy:focused tree))
+    ;; Re-enter e1
+    (finish (alloy:enter e1 root))
+    (is eq root (alloy:focus-parent e1))
+    (is eq tree (alloy:focus-tree e1))
+    ;; Focus e1
+    (finish (alloy:activate e1))
+    (is eq e1 (alloy:focused tree))
+    (is eq :strong (alloy:focus e1))
+    ;; Leave e1
+    (finish (alloy:leave e1 T))
+    (is eq NIL (alloy:focus-tree e1))
+    (fail (alloy:focus-parent e1))
+    (is eq NIL (alloy:focus e1))
+    (is eq root (alloy:focused tree))))
+
+(define-test multi-level-tree-updates
+  :parent focus-list
+  :depends-on (leaf-tree-updates multi-level-focus-list)
+  (let* ((tree (make-instance 'alloy:focus-tree))
+         (root (make-instance 'alloy:focus-list :focus-parent tree))
+         (e1 (make-instance 'alloy:focus-list :focus-parent root))
+         (e1e1 (make-instance 'alloy:focus-element :focus-parent e1)))
+    (is eq tree (alloy:focus-tree e1e1))
+    ;; Leave e1
+    (finish (alloy:leave e1 T))
+    (fail (alloy:leave e1 root))
+    (is eq NIL (alloy:focus-tree e1))
+    (is eq NIL (alloy:focus-tree e1e1))
+    (fail (alloy:focus-parent e1))
+    (is eq e1 (alloy:focus-parent e1e1))
+    ;; Re-enter e1
+    (finish (alloy:enter e1 root))
+    (is eq root (alloy:focus-parent e1))
+    (is eq e1 (alloy:focus-parent e1e1))
+    (is eq tree (alloy:focus-tree e1))
+    (is eq tree (alloy:focus-tree e1e1))
+    ;; Focus e1e1
+    (finish (alloy:activate e1e1))
+    (is eq e1e1 (alloy:focused tree))
+    (is eq :strong (alloy:focus e1e1))
+    ;; Leave e1
+    (finish (alloy:leave e1 T))
+    (is eq :weak (alloy:focus e1e1))
+    (is eq NIL (alloy:focus e1))
+    (is eq root (alloy:focused tree))))
