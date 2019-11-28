@@ -116,6 +116,24 @@
 (defmethod icon ((renderer renderer) bounds (image image) &rest initargs)
   (apply #'make-instance 'icon :image image :size (or (getf initargs :size) (size image)) initargs))
 
+(defclass cursor (filled-rectangle)
+  ((text-object :initarg :text :accessor text-object)
+   (start :initarg :start :accessor start)
+   (bounds :initform NIL)))
+
+(defmethod cursor ((renderer renderer) (text text) (start integer) &rest initargs)
+  (apply #'make-instance 'cursor :text text :start start initargs))
+
+(defclass selection (filled-rectangle)
+  ((text-object :initarg :text :accessor text-object)
+   (start :initarg :start :accessor start)
+   (end :initarg :end :accessor end)
+   (pattern :initform (colored:color 0 0 1 0.5))
+   (bounds :initform NIL)))
+
+(defmethod selection ((renderer renderer) (text text) (start integer) (end integer) &rest initargs)
+  (apply #'make-instance 'selection :text text :start start :end end initargs))
+
 (defun resolve-alignment (extent halign valign size)
   (let ((extent (alloy:ensure-extent extent)))
     (alloy:px-point

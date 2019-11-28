@@ -56,6 +56,11 @@
    #:direction
    #:icon
    #:image
+   #:cursor
+   #:text-object
+   #:start
+   #:selection
+   #:end
    #:resolve-alignment)
   ;; protocol.lisp
   (:export
