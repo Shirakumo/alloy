@@ -16,8 +16,28 @@
   (:export))
 (in-package #:org.shirakumo.alloy.renderers.opengl.msdf)
 
+(defun fontcache-default-directory ()
+  ;; KLUDGE: Would be better to use the LOCALAPPDATA envvar, but that requires portable getenv.
+  #+win32 (merge-pathnames "AppData/Local/alloy/msdf/" (user-homedir-pathname))
+  #-win32 (merge-pathnames ".cache/alloy/msdf/" (user-homedir-pathname)))
+
+(defun fontcache-file (path cache)
+  (cond ((string= (pathname-type path) "font")
+         path)
+        ((or (string= (pathname-type path) "otf")
+             (string= (pathname-type path) "ttf"))
+         ;; KLUDGE: would be better to name the files by font properties to collate duplicate files
+         ;;         and to avoid pathname length or depth overflow.
+         (merge-pathnames (make-pathname :type "font"
+                                         :directory (list :relative (rest (pathname-directory path)))
+                                         :defaults path)
+                          cache))
+        (T
+         (error "Unrecognised font format for file~%  ~a" path))))
+
 (defclass renderer (opengl:renderer)
-  ())
+  ((fontcache-directory :initarg :fontcache :initform (fontcache-default-directory) :accessor fontcache-directory)
+   (fontcache :initform (make-hash-table :test 'equal) :accessor fontcache)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (setf (opengl:resource 'text-vbo renderer)
@@ -57,36 +77,50 @@ void main() {
     out_color = opacity*color;
 }")))
 
+(defmethod alloy:deallocate ((renderer renderer))
+  (loop for font being the hash-values of (fontcache renderer)
+        do (alloy:deallocate font)))
+
+(defmethod cached-font ((renderer renderer) file)
+  (unless (probe-file file)
+    (error "Specified font file does not exist or is not accessible.~%  ~a" file))
+  (let ((cache (fontcache-file file (fontcache-directory renderer))))
+    (unless (probe-file cache)
+      (ensure-directories-exist cache)
+      ;; FIXME: Use lisp-native solution and generate all available glyphs in the font
+      (sb-ext:run-program "msdf-bmfont" (list "-o" (namestring cache) (namestring file))))
+    (or (gethash cache (fontcache renderer))
+        (setf (gethash cache (fontcache renderer))
+              (make-instance 'font :file cache :renderer renderer)))))
+
 (defclass font (simple:font)
-  ((file :initarg :file :accessor file)
+  ((renderer :initarg :renderer :accessor renderer)
+   (file :initarg :file :accessor file)
    (data :accessor data)
    (atlas :accessor atlas)))
 
 (defmethod alloy:allocate ((font font))
-  (unless (slot-boundp font 'data)
-    ;; FIXME: Check if file is cached msdf font, or ttf/otf, and cache in latter case.
-    (let* ((data (3b-bmfont:read-bmfont (file font)))
-           (file (merge-pathnames (getf (aref (3b-bmfont:pages data) 0) :file) (file font)))
-           (pixels (load-image file)))
-      (setf (data font) data)
-      (opengl:make-texture renderer widht height pixels))))
+  (let ((renderer (renderer font)))
+    (unless (slot-boundp font 'data)
+      (setf (data font) (3b-bmfont:read-bmfont (file font))))
+    (unless (slot-boundp font 'atlas)
+      (let* ((file (merge-pathnames (getf (aref (3b-bmfont:pages (data font)) 0) :file) (file font)))
+             (image (simple:request-image renderer file)))
+        (opengl:make-texture renderer
+                             (alloy:pxw (simple:size image))
+                             (alloy:pxh (simple:size image))
+                             (simple:channels image)
+                             (simple:data image))))))
 
-(defmethod simple:request-font ((renderer renderer) (family string) &key slant spacing weight stretch)
-  (let ((font (font-discovery:find-font
-               :family family
-               :weight weight
-               :stretch stretch
-               :spacing spacing
-               :slant slant)))
-    (make-instance 'font :file (font-discovery:file font)
-                         :family (font-discovery:family font)
-                         :weight (font-discovery:weight font)
-                         :stretch (font-discovery:stretch font)
-                         :spacing (font-discovery:spacing font)
-                         :slant (font-discovery:slant font))))
+(defmethod alloy:deallocate ((font font))
+  (slot-makunbound font 'atlas))
 
-(defmethod simple:request-font ((renderer renderer) (family pathname) &key)
-  (simple:request-font renderer (make-instance 'font :file family)))
+(defmethod simple:request-font ((renderer renderer) (family string) &rest args)
+  (let ((font (apply #'font-discovery:find-font :family family args)))
+    (cached-font renderer (font-discovery:file font))))
+
+(defmethod simple:request-font ((renderer renderer) (file pathname) &key)
+  (cached-font renderer file))
 
 (defmethod simple:request-font ((renderer renderer) (default (eql :default)) &key)
   (simple:request-font renderer "Arial"))
@@ -119,16 +153,16 @@ void main() {
     (values array minx miny maxx maxy)))
 
 (defclass text (simple:text)
-  ((vertex-data)
-   (dimensions)))
+  ((vertex-data :accessor vertex-data)
+   (dimensions :accessor dimensions)))
 
 (defmethod scale ((text text))
-  (/ (alloy:to-px (simple:size text)) (3b-bmfont:size (font text))))
+  (/ (alloy:to-px (simple:size text)) (3b-bmfont:size (simple:font text))))
 
 (defmethod shared-initialize :after ((text text) slots &key)
-  (alloy:allocate (font text))
+  (alloy:allocate (simple:font text))
   (let ((s (scale text)))
-    (multiple-value-bind (array x- y- x+ y+) (compute-text (font text) (text text) s)
+    (multiple-value-bind (array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) s)
       (let ((p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
                                          (alloy:px-size (- x+ x-) (- y+ y-)))))
         (setf (vertex-data text) array)
@@ -136,12 +170,12 @@ void main() {
 
 (defmethod alloy:render ((renderer renderer) (shape text))
   (gl:active-texture :texture0)
-  (gl:bind-texture :texture-2d (atlas (font shape)))
+  (gl:bind-texture :texture-2d (atlas (simple:font shape)))
   (let ((shader (opengl:resource 'text-shader renderer))
         (vbo (opengl:resource 'text-vbo renderer))
         (vao (opengl:resource 'text-vao renderer)))
     (simple:with-pushed-transforms (renderer)
-      (simple:translate renderer (dimensions text))
+      (simple:translate renderer (dimensions shape))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer))
       (setf (opengl:uniform shader "color") (simple:pattern shape))
       (opengl:update-vertex-buffer vbo (vertex-data shape))
@@ -161,7 +195,7 @@ void main() {
     (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
                (declare (ignore x- y- y+ u- v- u+ v+))
                (setf x x+)))
-      (3b-bmfont:map-glyphs (data (font text)) #'thunk text :end (position cursor)))
+      (3b-bmfont:map-glyphs (data (simple:font text)) #'thunk text :end (simple:start cursor)))
     (let ((s (scale text))
           (d (dimensions text)))
       (setf (simple:bounds cursor) (alloy:px-extent (* s x) 0 (* s 2) (alloy:pxh d))))))
@@ -172,17 +206,16 @@ void main() {
   (apply #'make-instance 'selection :text text :start start :end end initargs))
 
 (defmethod shared-initialize :after ((selection selection) slots &key)
-  (let ((text (simple:text-object selection))
-        (minx 0))
+  (let* ((text (simple:text-object selection))
+         (s (scale text))
+         (d (dimensions text))
+         (x 0) (w 0))
     (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
                (declare (ignore x- y- y+ u- v- u+ v+))
-               (setf minx x+)))
-      (3b-bmfont:map-glyphs (data (font text)) #'thunk text :end (start selection)))
-    (let ((maxw 0))
-      (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
-                 (declare (ignore x- y- y+ u- v- u+ v+))
-                 (setf maxw x+)))
-        (3b-bmfont:map-glyphs (data (font text)) #'thunk text :start (start selection) :end (end selection)))
-      (let ((s (scale text))
-            (d (dimensions text)))
-        (setf (simple:bounds selection) (alloy:px-extent (* s minx) (pxy d) (* s maxw) (pxh d)))))))
+               (setf x x+)))
+      (3b-bmfont:map-glyphs (data (simple:font text)) #'thunk text :end (simple:start selection)))
+    (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
+               (declare (ignore x- y- y+ u- v- u+ v+))
+               (setf w x+)))
+      (3b-bmfont:map-glyphs (data (simple:font text)) #'thunk text :start (simple:start selection) :end (simple:end selection)))
+    (setf (simple:bounds selection) (alloy:px-extent (* s x) (alloy:pxy d) (* s w) (alloy:pxh d)))))
