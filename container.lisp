@@ -171,3 +171,39 @@
   (loop for layer across (layers container)
         do (loop for i downfrom (1- (length layer)) to 0
                  do (leave (aref layer i) container))))
+
+(defclass single-container (container)
+  ((inner :initarg :inner :initform NIL :accessor inner)))
+
+(defmethod enter ((element layout-element) (container single-container) &key)
+  (when (inner container)
+    (cerror "Replace the element" 'place-already-occupied
+            :element element :place T :layout container :existing (inner container)))
+  (setf (inner container) element))
+
+(defmethod update ((element element) (container single-container) &key))
+
+(defmethod leave ((element element) (container single-container))
+  (setf (inner layout) NIL))
+
+(defmethod call-with-elements (function (container single-container) &key start end)
+  (declare (ignore start end))
+  (when (inner layout)
+    (funcall function (inner layout))))
+
+(defmethod element-count ((container single-container))
+  (if (inner container) 1 0))
+
+(defmethod elements ((container single-container))
+  (when (inner container) (list (inner container))))
+
+(defmethod element-index ((element element) (container single-container))
+  (when (eq element (inner container)) 0))
+
+(defmethod index-element ((index integer) (container single-container))
+  (if (and (inner container) (= 0 index))
+      (inner container)
+      (error 'index-out-of-range :index index :range (list 0 (if (inner container) 1 0)))))
+
+(defmethod clear ((container single-container))
+  (setf (inner container) 0))

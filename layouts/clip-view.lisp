@@ -6,26 +6,9 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass clip-view (layout observable)
-  ((inner :initarg :inner :initform NIL :accessor inner)
-   (offset :initarg :offset :initform (px-point 0 0) :accessor offset)
+(defclass clip-view (layout single-container observable)
+  ((offset :initarg :offset :initform (px-point 0 0) :accessor offset)
    (stretch :initarg :stretch :initform T :accessor stretch)))
-
-(defmethod enter ((element layout-element) (layout clip-view) &key)
-  (when (inner layout)
-    (cerror "Replace the element" 'place-already-occupied
-            :element element :place T :layout layout :existing (inner layout)))
-  (setf (inner layout) element))
-
-(defmethod update ((element layout-element) (layout clip-view) &key))
-
-(defmethod leave ((element layout-element) (layout clip-view))
-  (setf (inner layout) NIL))
-
-(defmethod call-with-elements (function (layout clip-view) &key start end)
-  (declare (ignore start end))
-  (when (inner layout)
-    (funcall function (inner layout))))
 
 (defmethod suggest-bounds (extent (layout clip-view))
   (if (inner layout)

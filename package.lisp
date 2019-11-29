@@ -113,7 +113,9 @@
    #:clear
    #:vector-container
    #:stack-container
-   #:layers)
+   #:layers
+   #:single-container
+   #:inner)
   ;; data.lisp
   (:export
    #:data
