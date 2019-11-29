@@ -41,4 +41,4 @@
 (defgeneric make-vertex-array (renderer bindings))
 (defgeneric draw-vertex-array (array primitive-type count))
 
-(defgeneric make-texture (renderer width height data))
+(defgeneric make-texture (renderer width height channels data))

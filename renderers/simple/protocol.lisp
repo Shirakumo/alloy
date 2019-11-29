@@ -30,7 +30,7 @@
 (defgeneric ideal-bounds (text))
 
 (defgeneric request-font (renderer family &key slant spacing weight stretch &allow-other-keys))
-(defgeneric request-image (renderer data &key size &allow-other-keys))
+(defgeneric request-image (renderer data &key size channels &allow-other-keys))
 (defgeneric request-gradient (renderer type start stop stops &key &allow-other-keys))
 
 (defclass renderer (alloy:renderer)

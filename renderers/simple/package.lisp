@@ -22,6 +22,7 @@
    #:image
    #:size
    #:data
+   #:channels
    #:gradient
    #:start
    #:stop

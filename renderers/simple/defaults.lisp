@@ -18,7 +18,8 @@
 
 (defclass image ()
   ((size :initarg :size :reader size)
-   (data :initarg :data :reader data)))
+   (data :initarg :data :reader data)
+   (channels :initarg :channels :reader channels)))
 
 (defmethod request-image ((renderer renderer) (data vector) &rest initargs)
   (apply #'make-instance 'image :data data initargs))
