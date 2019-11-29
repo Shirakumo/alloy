@@ -94,7 +94,7 @@
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
    (pattern :initarg :pattern :initform colors:black :accessor pattern)
-   (size :initarg :size :initform (alloy:un 10) :accessor size)
+   (size :initarg :size :initform (alloy:un 12) :accessor size)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
    (valign :initarg :valign :initform :bottom :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)

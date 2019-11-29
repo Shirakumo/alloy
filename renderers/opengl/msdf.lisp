@@ -162,7 +162,7 @@ void main() {
    (dimensions :accessor dimensions)))
 
 (defmethod scale ((text text))
-  (/ (alloy:to-px (simple:size text)) (3b-bmfont:size (data (simple:font text)))))
+  (/ (alloy:to-px (simple:size text)) (3b-bmfont:base (data (simple:font text)))))
 
 (defmethod shared-initialize :after ((text text) slots &key)
   (alloy:allocate (simple:font text))
