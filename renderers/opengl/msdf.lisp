@@ -73,17 +73,17 @@ uniform float pxRange = 4;
 uniform vec4 color = vec4(0, 0, 0, 1);
 out vec4 out_color;
 
-float median(float r, float g, float b) {
-    return max(min(r, g), min(max(r, g), b));
+float median(float r, float g, float b){
+  return max(min(r, g), min(max(r, g), b));
 }
 
-void main() {
-    vec2 msdfUnit = pxRange/vec2(textureSize(image, 0));
-    vec3 msdfData = texture(image, uv).rgb;
-    float sigDist = median(msdfData.r, msdfData.g, msdfData.b) - 0.5;
-    sigDist *= dot(msdfUnit, 0.5/fwidth(uv));
-    float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
-    out_color = opacity*color;
+void main(){
+  vec2 msdfUnit = pxRange/vec2(textureSize(image, 0));
+  vec3 msdfData = texture(image, uv).rgb;
+  float sigDist = median(msdfData.r, msdfData.g, msdfData.b) - 0.5;
+  sigDist *= dot(msdfUnit, 0.5/fwidth(uv));
+  float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
+  out_color = vec4(color.rgb, color.a*opacity);
 }")))
 
 (defmethod alloy:deallocate ((renderer renderer))
@@ -168,10 +168,12 @@ void main() {
   (alloy:allocate (simple:font text))
   (let ((s (scale text)))
     (multiple-value-bind (array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) s)
-      (let ((p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
-                                         (alloy:px-size (- x+ x-) (- y+ y-)))))
+      (declare (ignore y- y+))
+      (let* ((h (* s (3b-bmfont:line-height (data (simple:font text)))))
+             (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
+                                          (alloy:px-size (- x+ x-) h))))
         (setf (vertex-data text) array)
-        (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (alloy:pxy p) (- x+ x-) (- y+ y-)))))))
+        (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (alloy:pxy p) (- x+ x-) h))))))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
   (apply #'make-instance 'text :text string :bounds bounds :font (or font (simple:request-font renderer :default)) args))
@@ -198,15 +200,11 @@ void main() {
   (apply #'make-instance 'cursor :text text :start start initargs))
 
 (defmethod shared-initialize :after ((cursor cursor) slots &key)
-  (let ((text (simple:text-object cursor))
-        (x 0))
-    (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
-               (declare (ignore y- y+ u- v- u+ v+))
-               (setf x (max x- x+))))
-      (3b-bmfont:map-glyphs (data (simple:font text)) #'thunk (alloy:text text) :end (simple:start cursor)))
-    (let ((s (scale text))
+  (let ((text (simple:text-object cursor)))
+    (let ((x (3b-bmfont:measure-glyphs (data (simple:font text)) (alloy:text text) :end (simple:start cursor)))
+          (s (scale text))
           (d (dimensions text)))
-      (setf (simple:bounds cursor) (alloy:px-extent (* s x) (alloy:pxy d) (* s 2) (alloy:pxh d))))))
+      (setf (simple:bounds cursor) (alloy:px-extent (* s x) (alloy:pxy d) (* s 4) (alloy:pxh d))))))
 
 (defclass selection (simple:selection) ())
 
@@ -217,15 +215,8 @@ void main() {
   (let* ((text (simple:text-object selection))
          (s (scale text))
          (d (dimensions text))
-         (x 0) (w 0))
-    (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
-               (declare (ignore y- y+ u- v- u+ v+))
-               (setf x (max x- x+))))
-      (3b-bmfont:map-glyphs (data (simple:font text)) #'thunk (alloy:text text)
-                            :end (simple:start selection)))
-    (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
-               (declare (ignore y- y+ u- v- u+ v+))
-               (setf w (max x- x+))))
-      (3b-bmfont:map-glyphs (data (simple:font text)) #'thunk (alloy:text text)
-                            :start (simple:start selection) :end (simple:end selection)))
+         (x (3b-bmfont:measure-glyphs (data (simple:font text)) (alloy:text text)
+                                      :end (simple:start selection)))
+         (w (3b-bmfont:measure-glyphs (data (simple:font text)) (alloy:text text)
+                                      :start (simple:start selection) :end (simple:end selection))))
     (setf (simple:bounds selection) (alloy:px-extent (* s x) (alloy:pxy d) (* s w) (alloy:pxh d)))))
