@@ -32,7 +32,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "grid")
                              (:file "border")
                              (:file "clip-view")
-                             (:file "swap")))
+                             (:file "swap")
+                             (:file "popup")))
                (:module "components"
                 :components ((:file "base")
                              (:file "button")

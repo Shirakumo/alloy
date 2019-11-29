@@ -283,6 +283,10 @@
    #:align
    #:vertical-linear-layout
    #:horizontal-linear-layout)
+  ;; popup.lisp
+  (:export
+   #:popup
+   #:location)
   ;; layouts/swap.lisp
   (:export
    #:swap-layout
