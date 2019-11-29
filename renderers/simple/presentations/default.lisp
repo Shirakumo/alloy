@@ -105,7 +105,7 @@
               (T (colored:color 0.2 0.2 0.2))))
   (:cursor
    :hidden-p (null alloy:focus)
-   :position (alloy:pos (alloy:cursor alloy:renderable)))
+   :start (alloy:pos (alloy:cursor alloy:renderable)))
   (:selection
    :hidden-p (null (alloy:anchor (alloy:cursor alloy:renderable)))
    :start (min (or (alloy:anchor (alloy:cursor alloy:renderable)) 0)

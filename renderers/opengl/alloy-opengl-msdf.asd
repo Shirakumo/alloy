@@ -15,5 +15,6 @@
   :components ((:file "msdf"))
   :depends-on (:alloy-opengl
                :font-discovery
-               :3b-bmfont)
+               :3b-bmfont
+               :3b-bmfont/json)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))

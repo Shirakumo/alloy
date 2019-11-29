@@ -30,6 +30,7 @@
 (defstruct (texture (:constructor make-tex (name)) (:include gl-resource) (:copier NIL) (:predicate NIL)))
 
 (defmethod bind ((texture texture))
+  (gl:active-texture :texture0)
   (gl:bind-texture :texture-2d (gl-resource-name texture)))
 
 (defmethod make-shader ((renderer renderer) &key vertex-shader fragment-shader)
@@ -111,7 +112,7 @@
   (gl:bind-vertex-array 0)
   array)
 
-(defmethod make-texture ((renderer renderer) width height channels data)
+(defmethod make-texture ((renderer renderer) width height data &key (channels 4) (filtering :linear))
   (let ((name (gl:gen-texture))
         (format (ecase channels (1 :r) (2 :rg) (3 :rgb) (4 :rgba))))
     (gl:bind-texture :texture-2d name)
@@ -119,7 +120,7 @@
     (gl:tex-sub-image-2d :texture-2d 0 0 0 width height format :unsigned-byte data)
     (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-border)
     (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-border)
-    (gl:tex-parameter :texture-2d :texture-min-filter :linear)
-    (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+    (gl:tex-parameter :texture-2d :texture-min-filter filtering)
+    (gl:tex-parameter :texture-2d :texture-mag-filter filtering)
     (gl:bind-texture :texture-2d 0)
     (make-tex name)))
