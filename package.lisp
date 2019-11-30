@@ -7,6 +7,11 @@
 (defpackage #:org.shirakumo.alloy
   (:use #:cl)
   (:shadow #:step #:structure #:close #:declaim #:proclaim)
+  ;; builder.lisp
+  (:export
+   #:build
+   #:build-ui
+   #:define-builder)
   ;; component.lisp
   (:export
    #:component
@@ -376,4 +381,20 @@
    #:u<
    #:u>
    #:u<=
-   #:u>=))
+   #:u>=)
+  ;; widget.lisp
+  (:export
+   #:widget-class
+   #:add-slot
+   #:remove-slot
+   #:add-initializer
+   #:remove-initializer
+   #:widget
+   #:representation
+   #:define-widget
+   #:define-subobject
+   #:define-subcomponent
+   #:define-subcontainer
+   #:remove-subobject
+   #:declaim
+   #:proclaim))
