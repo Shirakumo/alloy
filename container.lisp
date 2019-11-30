@@ -175,7 +175,7 @@
 (defclass single-container (container)
   ((inner :initarg :inner :initform NIL :accessor inner)))
 
-(defmethod enter ((element layout-element) (container single-container) &key)
+(defmethod enter ((element element) (container single-container) &key)
   (when (inner container)
     (cerror "Replace the element" 'place-already-occupied
             :element element :place T :layout container :existing (inner container)))

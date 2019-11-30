@@ -322,6 +322,7 @@
    #:with-constrained-visibility
    #:extent-visible-p
    #:renderer
+   #:visible-bounds
    #:renderable)
   ;; structure.lisp
   (:export
