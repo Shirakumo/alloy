@@ -432,7 +432,7 @@ void main(){
         (bind shader)
         (bind (simple:image shape))
         (setf (uniform shader "uv_scale") size)
-        (setf (uniform shader "uv_offset") (simple:offset shape))
+        (setf (uniform shader "uv_offset") (simple:shift shape))
         (simple:translate renderer bounds)
         (simple:scale renderer bounds))
       (setf (uniform shader "transform") (simple:transform-matrix renderer))
