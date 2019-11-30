@@ -70,6 +70,10 @@
     (setf (focus (focus-parent element)) :strong)
     (focus-parent element)))
 
+(defmethod handle :around ((event event) (element focus-element))
+  (when (focus-tree element)
+    (call-next-method)))
+
 (defmethod handle ((event event) (element focus-element))
   (unless (eq element (focus-parent element))
     (handle event (focus-parent element))))
