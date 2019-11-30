@@ -300,5 +300,5 @@
       (call-next-method)))
 
 (defmethod handle ((event event) (tree focus-tree))
-  (unless (handle event (focused tree))
+  (unless (and (root tree) (handle event (focused tree)))
     (decline)))
