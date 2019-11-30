@@ -243,13 +243,6 @@
                      (colored:color 0.25 0.2 0.8)
                      (colored:color 0.2 0.2 0.2))))))
 
-;; KLUDGE: Bad, spilling protocol
-(defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))
-  (let ((shape (find-shape :label element)))
-    (if shape
-        (simple:ideal-bounds shape)
-        extent)))
-
 (define-realization (default-look-and-feel alloy::window-title)
   ((:label simple:text)
    (alloy:margins)
@@ -269,3 +262,17 @@
    (alloy:margins)
    :line-width (alloy:un 1)
    :pattern colors:black))
+
+
+;; KLUDGE: Bad, spilling protocol
+(defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))
+  (let ((shape (find-shape :label element)))
+    (if shape
+        (simple:ideal-bounds shape)
+        extent)))
+
+(defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:label))
+  (let ((shape (find-shape :label element)))
+    (if shape
+        (simple:ideal-bounds shape)
+        extent)))
