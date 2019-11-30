@@ -181,6 +181,10 @@
   ((representations :initform (make-hash-table :test 'eq) :reader representations))
   (:metaclass widget-class))
 
+(defmethod update-slot-value :around (slot (widget widget))
+  (with-simple-restart (abort "Ignore the slot.")
+    (call-next-method)))
+
 (defmethod update-slot-value ((slot c2mop:standard-effective-slot-definition) (widget widget)))
 
 (defmethod update-slot-value ((slot effective-initializer-slot) (widget widget))
@@ -272,7 +276,7 @@
        (define-slot (,widget ,name :object)
          (list ,@constructor))
        ,(if body
-            `(add-initializer ',name ',widget :priority ,priority :function #',thunk)
+            `(add-initializer ',name ',widget :priority ,priority :function #',thunk :if-exists :supersede)
             `(remove-initializer ',name ',widget)))))
 
 (defmacro define-subcomponent ((widget name &optional (priority 0)) (place class &rest initargs) &body body)

@@ -23,8 +23,9 @@
 
 (defmethod alloy:render :around ((renderer renderer) (ui alloy:ui))
   (let ((*clip-depth* 0))
-    (gl:stencil-func :lequal *clip-depth* #xFF)
-    (call-next-method)))
+    (gl:enable :depth-test)
+    (call-next-method)
+    (gl:disable :depth-test)))
 
 (defmethod (setf resource) (value name (renderer renderer))
   (setf (gethash name (resources renderer)) value))
@@ -177,11 +178,13 @@ void main(){
 }"
                  "#version 330 core
 uniform sampler2D image;
+uniform vec2 uv_offset = vec2(0,0);
+uniform vec2 uv_scale = vec2(1,1);
 in vec2 uv;
 out vec4 out_color;
 
 void main(){
-  out_color = texture(image, uv);
+  out_color = texture(image, (uv+uv_offset)/uv_scale);
 }")))
 
 (defmethod alloy:allocate ((renderer renderer))
@@ -419,20 +422,21 @@ void main(){
     (setf (uniform shader "color") (simple:pattern shape))
     (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (/ (length data) 2))))
 
-(defmethod alloy:render ((renderer renderer) (icon simple:icon))
+(defmethod alloy:render ((renderer renderer) (shape simple:icon))
   (let ((shader (resource 'image-shader renderer)))
-    ;; FIXME: alignment
-    (bind shader)
-    (bind (simple:image icon))
     (simple:with-pushed-transforms (renderer)
-      (let ((bounds (alloy:ensure-extent (simple:bounds icon)))
-            (size (alloy:ensure-extent (simple:size icon))))
+      (let ((bounds (alloy:ensure-extent (simple:bounds shape)))
+            (size (alloy:ensure-extent (simple:size shape))))
         (simple:clip renderer bounds)
+        ;; FIXME: alignment
+        (bind shader)
+        (bind (simple:image shape))
+        (setf (uniform shader "uv_scale") size)
+        (setf (uniform shader "uv_offset") (simple:offset shape))
         (simple:translate renderer bounds)
-        (simple:scale renderer (alloy:px-size (alloy:pxw size)
-                                              (alloy:pxh size))))
-      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
-    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
+        (simple:scale renderer bounds))
+      (setf (uniform shader "transform") (simple:transform-matrix renderer))
+      (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6))))
 
 (defmethod simple:request-image ((renderer renderer) data &key size)
   (make-texture renderer (alloy:pxw size) (alloy:pxh size) data))

@@ -108,3 +108,5 @@
     (when focus
       (enter focus structure))
     (finish-structure structure frame focus-stack)))
+
+;; FIXME: reinitialize-instance

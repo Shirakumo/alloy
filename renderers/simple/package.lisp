@@ -56,6 +56,7 @@
    #:halign
    #:direction
    #:icon
+   #:offset
    #:image
    #:cursor
    #:text-object

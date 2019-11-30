@@ -15,7 +15,7 @@
 (defgeneric fit-linear-layout-contents (layout extent))
 
 (defmethod update-linear-layout ((layout linear-layout) extent)
-  (if (eq layout (layout-parent layout))
+  (if (and (slot-boundp layout 'layout-parent) (eq layout (layout-parent layout)))
       (setf (bounds layout) (bounds layout))
       (let ((updated (fit-linear-layout-contents layout extent)))
         (unless (extent= (bounds layout) updated)

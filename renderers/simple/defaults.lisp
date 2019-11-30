@@ -109,13 +109,14 @@
 
 (defclass icon (shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)
-   (size :initarg :size :initform (arg! :size) :accessor size)
+   (size :initarg :size :initform (alloy:px-size 1 1) :accessor size)
+   (offset :initarg :offset :initform (alloy:px-point 0 0) :accessor offset)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :left :accessor halign)))
 
 (defmethod icon ((renderer renderer) bounds (image image) &rest initargs)
-  (apply #'make-instance 'icon :image image :size (or (getf initargs :size) (size image)) initargs))
+  (apply #'make-instance 'icon :image image initargs))
 
 (defclass cursor (filled-rectangle)
   ((text-object :initarg :text :accessor text-object)

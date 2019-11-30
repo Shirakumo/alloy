@@ -179,7 +179,8 @@
    :line-width (alloy:un 1))
   ((:label simple:text)
    (alloy:margins 1)
-   (princ-to-string (alloy:value alloy:renderable))))
+   (princ-to-string (alloy:value alloy:renderable))
+   :valign :middle))
 
 (define-update (default-look-and-feel alloy:combo)
   (:label
@@ -263,9 +264,19 @@
    :line-width (alloy:un 1)
    :pattern colors:black))
 
+(define-update (default-look-and-feel alloy::frame)
+  (:background
+   :pattern (colored:color 0.1 0.1 0.1)))
+
 
 ;; KLUDGE: Bad, spilling protocol
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))
+  (let ((shape (find-shape :label element)))
+    (if shape
+        (simple:ideal-bounds shape)
+        extent)))
+
+(defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:button))
   (let ((shape (find-shape :label element)))
     (if shape
         (simple:ideal-bounds shape)
