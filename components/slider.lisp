@@ -8,6 +8,7 @@
 
 (defclass slider (value-component)
   ((step :initarg :step :initform 1 :accessor step)
+   (grid :initarg :grid :initform 0 :accessor grid)
    (state :initform NIL :accessor state)
    (orientation :initarg :orientation :initform :horizontal :accessor orientation)))
 
@@ -31,14 +32,20 @@
         (/ (- (value slider) min) (- max min)))))
 
 (defmethod (setf value) :around (value (slider slider))
-  (destructuring-bind (min . max) (range slider)
-    (call-next-method (max min (min max value)) slider)))
+  (let ((value (if (< 0 (grid slider))
+                   (* (round (/ value (grid slider))) (grid slider))
+                   value)))
+    (destructuring-bind (min . max) (range slider)
+      (call-next-method (max min (min max value)) slider))))
 
 (defmethod (setf value) :after (value (slider slider))
   (mark-for-render slider))
 
 (defmethod (setf step) :before (value (slider slider))
   (assert (< 0 value) (value)))
+
+(defmethod (setf grid) :before (value (slider slider))
+  (assert (<= 0 value) (value)))
 
 (defmethod handle ((event scroll) (slider slider))
   (incf (value slider) (* (dy event) (step slider))))
