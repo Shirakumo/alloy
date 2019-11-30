@@ -144,7 +144,7 @@ void main(){
     (gl:active-texture :texture0)
     (gl:bind-texture :texture-2d (cl-fond:texture atlas))
     (simple:with-pushed-transforms (renderer)
-      (let ((s (* 2 (/ (alloy:to-px (simple:size shape)) (cl-fond:size atlas)))))
+      (let ((s (* 1.5 (/ (alloy:to-px (simple:size shape)) (cl-fond:size atlas)))))
         (simple:translate renderer (text-point shape s))
         (simple:scale renderer (alloy:px-size s s)))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer)))
@@ -160,25 +160,25 @@ void main(){
   (alloy:allocate (simple:font text))
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
     (declare (ignore gap))
-    (let ((s (* 3 (/ (alloy:to-px (simple:size text)) (cl-fond:size (atlas (simple:font text)))))))
+    (let ((s (* (/ (alloy:to-px (simple:size text)) (cl-fond:size (atlas (simple:font text)))))))
       (alloy:px-extent (* l s) (* u s) (* s (+ l r)) (* s (+ u b))))))
 
 (defclass cursor (simple:filled-rectangle)
   ((text :initarg :text :accessor text)
    (simple:bounds :initform NIL)))
 
-(defmethod shared-initialize :after ((cursor cursor) slots &key position)
-  (when position
+(defmethod shared-initialize :after ((cursor cursor) slots &key start)
+  (when start
     (alloy:allocate (simple:font (text cursor)))
     (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font (text cursor))) (alloy:text (text cursor))
-                                                                          :end position)
+                                                                          :end start)
       (declare (ignore gap))
       (let ((s (* 2 (/ (alloy:to-px (simple:size (text cursor))) (cl-fond:size (atlas (simple:font (text cursor))))))))
         ;; FIXME: handle alignment of the cursor depending on text alignment
         (setf (simple:bounds cursor) (alloy:px-extent (* s (- r l)) (* s b) 2 (* s u)))))))
 
-(defmethod simple:cursor ((renderer renderer) (text simple:text) position &rest initargs)
-  (apply #'make-instance 'cursor :text text :position position initargs))
+(defmethod simple:cursor ((renderer renderer) (text simple:text) start &rest initargs)
+  (apply #'make-instance 'cursor :text text :start start initargs))
 
 (defclass selection (simple:filled-rectangle)
   ((text :initarg :text :accessor text)

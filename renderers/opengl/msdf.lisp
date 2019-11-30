@@ -97,7 +97,7 @@ void main(){
     (unless (probe-file cache)
       (ensure-directories-exist cache)
       ;; FIXME: Use lisp-native solution and generate all available glyphs in the font
-      (sb-ext:run-program "msdf-bmfont" (list "-o" (namestring cache) "-f" "json" (namestring file)) :search T)
+      (sb-ext:run-program "msdf-bmfont" (list "-o" (namestring cache) "-f" "json" "-s" "64" (namestring file)) :search T)
       (rename-file (make-pathname :type "json" :defaults cache) cache))
     (or (gethash cache (fontcache renderer))
         (setf (gethash cache (fontcache renderer))
@@ -115,7 +115,7 @@ void main(){
       (setf (data font) (3b-bmfont:read-bmfont (file font))))
     (unless (slot-boundp font 'atlas)
       (let ((file (merge-pathnames (getf (aref (3b-bmfont:pages (data font)) 0) :file) (file font))))
-        (setf (atlas font) (simple:request-image renderer file :filtering :nearest))))))
+        (setf (atlas font) (simple:request-image renderer file :filtering :linear))))))
 
 (defmethod alloy:deallocate ((font font))
   (slot-makunbound font 'atlas))
