@@ -58,14 +58,18 @@
 (defmethod enter :before ((element layout-element) (layout grid-layout) &key row col)
   (when (and row col)
     (let ((idx (+ col (* row (length (col-sizes layout))))))
-      (when (aref (elements layout) idx)
+      (when (and (< idx (length (elements layout)))
+                 (aref (elements layout) idx))
         (error 'place-already-occupied
                :element element :place (cons row col) :layout layout :existing (aref (elements layout) idx))))))
 
 (defmethod enter ((element layout-element) (layout grid-layout) &key row col index)
-  (call-next-method element layout :index (if (and row col)
-                                              (+ col (* row (length (col-sizes layout))))
-                                              index))
+  (let ((index (if (and row col)
+                   (+ col (* row (length (col-sizes layout))))
+                   (or index (length (elements layout))))))
+    (when (and index (<= (length (elements layout)) index))
+      (adjust-array (elements layout) (1+ index) :initial-element NIL :fill-pointer (1+ index)))
+    (setf (aref (elements layout) index) element))
   ;; Extend rows as much as necessary
   (loop while (< (* (length (row-sizes layout)) (length (col-sizes layout)))
                  (fill-pointer (elements layout)))
