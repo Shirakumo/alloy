@@ -18,6 +18,6 @@
         (submit (represent "Go" 'button)))
     (enter input layout :row 0 :col 0)
     (enter submit layout :row 0 :col 1)
-    (on accept (input) (accept query))
-    (on activate (submit) (accept query))
+    (on accept (input) (accept structure))
+    (on activate (submit) (accept structure))
     (finish-structure structure layout focus)))

@@ -10,7 +10,7 @@
   ())
 
 (defmethod location ((layout popup))
-  (bounds popup))
+  (bounds layout))
 
 (defmethod (setf location) (location (layout popup))
   (setf (slot-value layout 'bounds)

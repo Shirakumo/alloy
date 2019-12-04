@@ -210,6 +210,12 @@
      (:horizontal (alloy:extent -10 0 20 (alloy:ph)))
      (:vertical (alloy:extent 0 -10 (alloy:pw) 20)))))
 
+(define-update (default-look-and-feel alloy:scrollbar)
+  (:handle
+   :pattern (case alloy:focus
+              (:strong (colored:color 0.5 0.5 0.5))
+              (T (colored:color 0.2 0.2 0.2)))))
+
 (define-realization (default-look-and-feel alloy:plot)
   ((:background simple:rectangle)
    (alloy:margins))

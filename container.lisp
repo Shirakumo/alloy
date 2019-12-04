@@ -184,11 +184,11 @@
 (defmethod update ((element element) (container single-container) &key))
 
 (defmethod leave ((element element) (container single-container))
-  (setf (inner layout) NIL))
+  (setf (inner container) NIL))
 
 (defmethod call-with-elements (function (container single-container) &key start end)
   (declare (ignore start end))
-  (when (inner layout)
+  (when (inner container)
     (funcall function (inner layout))))
 
 (defmethod element-count ((container single-container))

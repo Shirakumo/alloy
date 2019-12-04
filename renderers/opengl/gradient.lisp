@@ -10,7 +10,7 @@
   ((data :reader data)))
 
 (defmethod shared-initialize :after ((gradient gradient) slots &key)
-  (setf data (compute-gradient-data gradient)))
+  (setf (slot-value gradient 'data) (compute-gradient-data gradient)))
 
 (defmethod simple:request-gradient ((renderer renderer) type start stop stops &key)
   (make-instance (find-symbol (string type) #.*package*) :start start :stop stop :stops stops))
@@ -20,7 +20,7 @@
         (data (data shape)))
     (update-vertex-buffer (resource 'gradient-vbo renderer) data)
     (bind shader)
-    (setf (uniform shader "transform") (simple:transform-matrix (simple:transform renderer)))
+    (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (draw-vertex-array (resource 'gradient-vao renderer) :triangles (/ (length data) 6))))
 
 (defmethod alloy:render :around ((renderer renderer) (shape simple:patterned-shape))
