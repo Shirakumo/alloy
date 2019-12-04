@@ -272,6 +272,9 @@
   ;; layouts/fixed.lisp
   (:export
    #:fixed-layout)
+  ;; layouts/flow.lisp
+  (:export
+   #:flow-layout)
   ;; layouts/grid.lisp
   (:export
    #:grid-layout
