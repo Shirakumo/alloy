@@ -27,8 +27,8 @@
 
 (defmethod (setf offset) :around ((offset point) (layout clip-view))
   (let ((clamped (clamp-offset offset layout)))
-    (when (and (/= (pxx clamped) (pxx (offset layout)))
-               (/= (pxy clamped) (pxy (offset layout))))
+    (unless (and (/= (pxx clamped) (pxx (offset layout)))
+                 (/= (pxy clamped) (pxy (offset layout))))
       (call-next-method clamped layout))))
 
 (defmethod (setf offset) :after (offset (layout clip-view))
@@ -51,7 +51,8 @@
                                                        ((eq :y (limit layout)) (h bounds))
                                                        (T (max (pxh ideal) (pxh bounds)))))))
       ;; Ensure we clamp the offset into valid bounds.
-      (setf (offset layout) (offset layout)))))
+      ;;(setf (offset layout) (offset layout))
+      )))
 
 (defmethod handle ((event scroll) (layout clip-view))
   (restart-case (call-next-method)
