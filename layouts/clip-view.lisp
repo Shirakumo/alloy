@@ -19,12 +19,17 @@
 (defmethod notice-bounds ((element layout-element) (layout clip-view))
   (setf (bounds layout) (bounds layout)))
 
-(defmethod (setf offset) :around ((offset point) (layout clip-view))
+(defun clamp-offset (offset layout)
   (flet ((clamp (l x u)
            (min (max l x) u)))
-    (call-next-method (px-point (clamp (min 0 (- (pxw (bounds layout)) (pxw (bounds (inner layout))))) (pxx offset) 0)
-                                (clamp (min 0 (- (pxh (bounds layout)) (pxh (bounds (inner layout))))) (pxy offset) 0))
-                      layout)))
+    (px-point (clamp (min 0 (- (pxw (bounds layout)) (pxw (bounds (inner layout))))) (pxx offset) 0)
+              (clamp (min 0 (- (pxh (bounds layout)) (pxh (bounds (inner layout))))) (pxy offset) 0))))
+
+(defmethod (setf offset) :around ((offset point) (layout clip-view))
+  (let ((clamped (clamp-offset offset layout)))
+    (when (and (/= (pxx clamped) (pxx (offset layout)))
+               (/= (pxy clamped) (pxy (offset layout))))
+      (call-next-method clamped layout))))
 
 (defmethod (setf offset) :after (offset (layout clip-view))
   (setf (bounds layout) (bounds layout)))
@@ -44,7 +49,9 @@
                                                        (T (max (pxw ideal) (pxw bounds))))
                                                  (cond ((null (stretch layout)) (h ideal))
                                                        ((eq :y (limit layout)) (h bounds))
-                                                       (T (max (pxh ideal) (pxh bounds))))))))))
+                                                       (T (max (pxh ideal) (pxh bounds)))))))
+      ;; Ensure we clamp the offset into valid bounds.
+      (setf (offset layout) (offset layout)))))
 
 (defmethod handle ((event scroll) (layout clip-view))
   (restart-case (call-next-method)
