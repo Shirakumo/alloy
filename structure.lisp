@@ -24,23 +24,23 @@
 (defmethod register ((structure structure) (renderer renderer))
   (register (layout-element structure) renderer))
 
-(defmethod enter ((structure structure) (element layout-element) &rest initargs)
-  (apply #'enter (layout-element structure) element initargs))
-
-(defmethod enter ((structure structure) (element focus-element) &rest initargs)
-  (apply #'enter (focus-element structure) element initargs))
-
-(defmethod update ((structure structure) (element layout-element) &rest initargs)
-  (apply #'update (layout-element structure) element initargs))
-
-(defmethod update ((structure structure) (element focus-element) &rest initargs)
-  (apply #'update (focus-element structure) element initargs))
-
-(defmethod leave ((structure structure) (element layout-element))
-  (leave (layout-element structure) element))
-
-(defmethod leave ((structure structure) (element focus-element))
-  (leave (focus-element structure) element))
+(macrolet ((define-deferral (gf target wrapper &optional rest-p)
+             `(defmethod ,gf ((structure structure) (,target ,target) ,@(when rest-p '(&rest initargs)))
+                ,(if rest-p
+                     `(apply #',gf (,wrapper structure) ,target initargs)
+                     `(,gf (,wrapper structure) ,target)))))
+  (define-deferral enter layout-element layout-element &rest)
+  (define-deferral enter layout-tree layout-element &rest)
+  (define-deferral enter focus-element focus-element &rest)
+  (define-deferral enter focus-tree focus-element &rest)
+  (define-deferral update layout-element layout-element &rest)
+  (define-deferral update layout-tree layout-element &rest)
+  (define-deferral update focus-element focus-element &rest)
+  (define-deferral update focus-tree focus-element &rest)
+  (define-deferral leave layout-element layout-element)
+  (define-deferral leave layout-tree layout-element)
+  (define-deferral leave focus-element focus-element)
+  (define-deferral leave focus-tree focus-element))
 
 (defmethod leave ((structure structure) (self (eql T)))
   (leave (layout-element structure) (layout-parent (layout-element structure)))

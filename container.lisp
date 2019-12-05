@@ -189,7 +189,7 @@
 (defmethod call-with-elements (function (container single-container) &key start end)
   (declare (ignore start end))
   (when (inner container)
-    (funcall function (inner layout))))
+    (funcall function (inner container))))
 
 (defmethod element-count ((container single-container))
   (if (inner container) 1 0))

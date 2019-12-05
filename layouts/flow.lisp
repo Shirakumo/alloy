@@ -47,7 +47,11 @@
                             (setf rh mh))
                            (T
                             (incf x (+ ew ml mr)))))
-                   (incf i))
+                   (incf i)
+                finally (when (/= x (+ ml ox))
+                          (ecase (align layout)
+                            (:start (incf y (+ rh mu mb)))
+                            (:end (decf y (+ rh mu mb))))))
           (px-extent ox oy w (ecase (align layout)
                                (:start (- (+ y mu) oy))
                                (:end (- (+ oy oh) y mb)))))))))
