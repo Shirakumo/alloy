@@ -19,6 +19,13 @@
 (defmethod notice-bounds ((element layout-element) (layout clip-view))
   (setf (bounds layout) (bounds layout)))
 
+(defmethod (setf offset) :around ((offset point) (layout clip-view))
+  (flet ((clamp (l x u)
+           (min (max l x) u)))
+    (call-next-method (px-point (clamp (min 0 (- (pxw (bounds layout)) (pxw (bounds (inner layout))))) (pxx offset) 0)
+                                (clamp (min 0 (- (pxh (bounds layout)) (pxh (bounds (inner layout))))) (pxy offset) 0))
+                      layout)))
+
 (defmethod (setf offset) :after (offset (layout clip-view))
   (setf (bounds layout) (bounds layout)))
 
@@ -40,12 +47,11 @@
                                                        (T (max (pxh ideal) (pxh bounds))))))))))
 
 (defmethod handle ((event scroll) (layout clip-view))
-  (unless (call-next-method)
-    (let ((off (offset layout))
-          (bo (bounds layout))
-          (bi (bounds (inner layout))))
-      (setf (offset layout) (px-point (min (max 0 (+ (dx event) (pxx off))) (- (pxw bo) (pxw bi)))
-                                      (min (max 0 (+ (dy event) (pxy off))) (- (pxh bo) (pxh bi))))))))
+  (restart-case (call-next-method)
+    (decline ()
+      (let ((off (offset layout)))
+        (setf (offset layout) (px-point (+ (* 4 (dx event)) (pxx off))
+                                        (+ (* 4 (dy event)) (pxy off))))))))
 
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)
@@ -63,6 +69,8 @@
          (dw (- hwe hwb)) (dh (- hhe hhb))
          (shiftx (- (* dw (signum dx)) dx))
          (shifty (- (* dh (signum dy)) dy)))
-    (setf (offset layout) (px-point (+ (pxx (offset layout)) shiftx)
-                                    (+ (pxy (offset layout)) shifty))))
+    ;; FIXME: This is not correct.
+    ;; (setf (offset layout) (px-point (+ (pxx (offset layout)) shiftx)
+    ;;                                 (+ (pxy (offset layout)) shifty)))
+    )
   (call-next-method))
