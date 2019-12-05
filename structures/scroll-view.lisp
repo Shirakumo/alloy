@@ -12,7 +12,10 @@
 (defmethod initialize-instance :after ((structure scroll-view) &key layout focus (scroll T))
   (let ((border-layout (make-instance 'border-layout))
         (focus-list (make-instance 'focus-list))
-        (clipper (make-instance 'clip-view)))
+        (clipper (make-instance 'clip-view :limit (ecase scroll
+                                                    ((T) NIL)
+                                                    (:x :y)
+                                                    (:y :x)))))
     (enter clipper border-layout :position :center)
     (enter layout clipper)
     (when focus

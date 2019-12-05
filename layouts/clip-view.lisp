@@ -8,7 +8,8 @@
 
 (defclass clip-view (layout single-container observable)
   ((offset :initarg :offset :initform (px-point 0 0) :accessor offset)
-   (stretch :initarg :stretch :initform T :accessor stretch)))
+   (stretch :initarg :stretch :initform T :accessor stretch)
+   (limit :initarg :limit :initform NIL :accessor limit)))
 
 (defmethod suggest-bounds (extent (layout clip-view))
   (if (inner layout)
@@ -31,12 +32,12 @@
                                    (inner layout))))
         (setf (bounds (inner layout)) (px-extent (- (pxx ideal) (- (pxw ideal) (pxw bounds)))
                                                  (- (pxy ideal) (- (pxh ideal) (pxh bounds)))
-                                                 (if (stretch layout)
-                                                     (max (pxw ideal) (pxw bounds))
-                                                     (w ideal))
-                                                 (if (stretch layout)
-                                                     (max (pxh ideal) (pxh bounds))
-                                                     (h ideal))))))))
+                                                 (cond ((null (stretch layout)) (w ideal))
+                                                       ((eq :x (limit layout)) (w bounds))
+                                                       (T (max (pxw ideal) (pxw bounds))))
+                                                 (cond ((null (stretch layout)) (h ideal))
+                                                       ((eq :y (limit layout)) (h bounds))
+                                                       (T (max (pxh ideal) (pxh bounds))))))))))
 
 (defmethod handle ((event scroll) (layout clip-view))
   (unless (call-next-method)
