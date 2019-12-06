@@ -107,10 +107,10 @@
           (case (state structure)
             (:maximized (restore structure))
             (T (maximize structure))))))
+    (finish-structure structure frame focus-stack)
     (when layout
       (enter layout structure))
     (when focus
-      (enter focus structure))
-    (finish-structure structure frame focus-stack)))
+      (enter focus structure))))
 
 ;; FIXME: reinitialize-instance

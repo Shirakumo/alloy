@@ -41,3 +41,30 @@
   (case (button event)
     (:a (setf (initial-pos draggable) NIL))
     (T (call-next-method))))
+
+(defclass resizer (draggable)
+  ((side :initarg :side :accessor side)
+   (initial-bounds :initform NIL :accessor initial-bounds)))
+
+(defmethod (setf initial-pos) :after (value (resizer resizer))
+  (setf (initial-bounds resizer) (if value
+                                     (bounds (data resizer))
+                                     NIL)))
+
+(defmethod drag-to (location (resizer resizer))
+  (let* ((dx (- (pxx location) (pxx (initial-pos resizer))))
+         (dy (- (pxy location) (pxy (initial-pos resizer))))
+         (target (data resizer))
+         (ib (initial-bounds resizer)))
+    (ecase (side resizer)
+      (:north
+       (setf (bounds target) (px-extent (x ib) (y ib) (w ib) (+ (pxh ib) dy))))
+      (:east
+       (setf (bounds target) (px-extent (x ib) (y ib) (+ (pxw ib) dx) (h ib))))
+      (:south
+       (setf (bounds target) (px-extent (x ib) (+ (pxy ib) dy) (w ib) (- (pxh ib) dy))))
+      (:west
+       (setf (bounds target) (px-extent (+ (pxx ib) dx) (y ib) (- (pxw ib) dx) (h ib)))))))
+
+(defmethod suggest-bounds (extent (resizer resizer))
+  (px-extent (pxx extent) (pxy extent) (un 5) (un 5)))

@@ -61,6 +61,13 @@
    #:combo-item
    #:value-set
    #:combo-set)
+  ;; components/drag.lisp
+  (:export
+   #:draggable
+   #:initial-pos
+   #:drag-to
+   #:resizer
+   #:side)
   ;; components/plot.lisp
   (:export
    #:plot
@@ -339,6 +346,9 @@
   ;; structures/scroll-view.lisp
   (:export
    #:scroll-view)
+  ;; structures/sidebar.lisp
+  (:export
+   #:sidebar)
   ;; structures/tab-view.lisp
   (:export
    #:tab
