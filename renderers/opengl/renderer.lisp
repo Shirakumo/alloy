@@ -8,6 +8,7 @@
 
 (defparameter *circ-polycount* 36)
 (defvar *clip-depth*)
+(defvar *clip-region*)
 
 ;; TODO: With a UBO we could avoid having to re-set uniforms at ever draw
 ;;       and instead change them when the style is set.
@@ -207,11 +208,14 @@ void main(){
   (call-next-method (- value) renderer))
 
 (defmethod simple:clip ((renderer renderer) (shape simple:shape))
+  (when *clip-region*
+    (error "Clipping already applied."))
   (gl:stencil-op :keep :incr :incr)
   (gl:color-mask NIL NIL NIL NIL)
   (gl:depth-mask NIL)
   (alloy:render renderer shape)
   (incf *clip-depth* 1)
+  (setf *clip-region* shape)
   (gl:stencil-op :keep :keep :keep)
   (gl:stencil-func :lequal *clip-depth* #xFF)
   (gl:color-mask T T T T)
@@ -222,8 +226,19 @@ void main(){
   (simple:clip renderer (simple:rectangle renderer extent)))
 
 (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
-  (let ((*clip-depth* *clip-depth*))
-    (call-next-method))
+  (let ((*clip-depth* *clip-depth*)
+        (*clip-region* NIL))
+    (call-next-method)
+    ;; Undo current clip region if set.
+    (when *clip-region*
+      (gl:stencil-op :keep :decr :decr)
+      (gl:color-mask NIL NIL NIL NIL)
+      (gl:depth-mask NIL)
+      (alloy:render renderer *clip-region*)
+      (gl:stencil-op :keep :keep :keep)
+      (gl:stencil-func :lequal *clip-depth* #xFF)
+      (gl:color-mask T T T T)
+      (gl:depth-mask T)))
   (gl:stencil-func :lequal *clip-depth* #xFF))
 
 (defmethod simple:clear ((renderer renderer) extent)
