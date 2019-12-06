@@ -14,6 +14,10 @@
 (defclass frame (border-layout)
   ())
 
+(defmethod handle ((event pointer-event) (layout frame))
+  (restart-case (call-next-method)
+    (decline ())))
+
 (defclass window-title (label* draggable)
   ())
 

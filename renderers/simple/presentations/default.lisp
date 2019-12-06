@@ -216,6 +216,11 @@
               (:strong (colored:color 0.5 0.5 0.5))
               (T (colored:color 0.2 0.2 0.2)))))
 
+(defmethod alloy:render ((renderer renderer) (component alloy:scrollbar))
+  (simple:with-pushed-transforms (renderer)
+    (simple:clip renderer (alloy:bounds component))
+    (call-next-method)))
+
 (define-realization (default-look-and-feel alloy:plot)
   ((:background simple:rectangle)
    (alloy:margins))
