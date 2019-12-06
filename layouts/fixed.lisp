@@ -43,3 +43,13 @@
                        (or w (extent-w e))
                        (or h (extent-h e)))))
     element))
+
+(defmethod ensure-visible :before ((element layout-element) (layout fixed-layout))
+  ;; Find parent
+  (loop until (or (eq layout (layout-parent element))
+                  (eq element (layout-parent element)))
+        do (setf element (layout-parent element)))
+  (when (eq layout (layout-parent element))
+    ;; Shuffle to ensure element is last, and thus drawn on top.
+    (rotatef (aref (elements layout) (1- (length (elements layout))))
+             (aref (elements layout) (position element (elements layout))))))
