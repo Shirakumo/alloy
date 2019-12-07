@@ -7,10 +7,11 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass component (observable layout-element focus-element renderable)
-  ((data :initarg :data :initform (arg! :data) :reader data)))
+  ((data :initarg :data :initform (arg! :data) :reader data)
+   (ideal-bounds :initarg :ideal-bounds :initform NIL :accessor ideal-bounds)))
 
 (defmethod suggest-bounds (extent (component component))
-  extent)
+  (or (ideal-bounds component) extent))
 
 (defmethod handle ((event pointer-down) (component component))
   (if (and (slot-boundp component 'focus-parent)
