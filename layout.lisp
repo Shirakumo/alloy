@@ -49,6 +49,10 @@
     (with-unit-parent element
       (call-next-method))))
 
+(defmethod register :around ((element layout-element) (renderer renderer))
+  (with-unit-parent element
+    (call-next-method)))
+
 (defmethod ensure-visible (element (parent layout-element))
   (when (and (slot-boundp parent 'layout-parent)
              (not (eq parent (layout-parent parent))))
