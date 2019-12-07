@@ -100,10 +100,10 @@
     (apply #'call-next-method class :direct-slots (append direct-slots (foreign-slots class)) options)))
 
 (defmethod add-slot ((spec cons) (class widget-class) &key (if-exists :error))
-  ;; Check against "normal" slots since you most likely do not want to thrash those.
   (unless (c2mop:class-finalized-p class)
     (c2mop:finalize-inheritance class))
   (let ((name (getf spec :name)))
+    ;; Check against "normal" slots since you most likely do not want to thrash those.
     (when (and (not (find-slotspec name (foreign-slots class)))
                (find name (c2mop:class-slots class) :key #'c2mop:slot-definition-name))
       (ecase if-exists
@@ -245,18 +245,19 @@
      ,direct-slots
      ,@options))
 
-(defmacro define-slot ((widget name &optional usage) &body body)
+(defmacro define-slot ((widget name &optional usage &rest slot-args) &body body)
   `(add-slot '(:name ,name :initargs () :readers () :writers ()
                :usage ,usage :initializer (lambda (,widget)
                                             (declare (ignorable ,widget))
                                             ,@body))
-             ',widget))
+             ',widget ,@slot-args))
 
 (defmacro with-representations ((instance class) &body body)
   (let ((instanceg (gensym "INSTANCE"))
         (representations (gensym "REPRESENTATIONS")))
     `(let* ((,instanceg ,instance)
             (,representations (representations ,instanceg)))
+       (declare (ignorable ,representations))
        (symbol-macrolet ,(loop for slot in (c2mop:class-slots (find-class class))
                                for name = (c2mop:slot-definition-name slot)
                                when (typep slot 'effective-initializer-slot)
@@ -266,25 +267,35 @@
                                                   (T `(slot-value ,instanceg ',name)))))
          ,@body))))
 
-(defmacro define-subobject ((widget name &optional (priority 0)) constructor &body body)
+(defmacro define-subobject ((widget name &optional (priority 0) &rest slot-args) constructor &body body)
   (let ((thunk (gensym "THUNK")))
     `(flet ((,thunk (,widget)
               (let ((,name (slot-value ,widget ',name)))
                 (declare (ignorable ,name))
                 ,@body)))
        (declare (ignorable #',thunk))
-       (define-slot (,widget ,name :object)
+       (define-slot (,widget ,name :object ,@slot-args)
          (list ,@constructor))
        ,(if body
             `(add-initializer ',name ',widget :priority ,priority :function #',thunk :if-exists :supersede)
             `(remove-initializer ',name ',widget)))))
 
-(defmacro define-subcomponent ((widget name &optional (priority 0)) (place class &rest initargs) &body body)
-  `(define-subobject (,widget ,name ,priority) (',class ,@initargs :data ,(expand-place-data place))
+(defmacro define-subcomponent ((widget name &optional (priority 0) &rest slot-args) (place class &rest initargs) &body body)
+  `(define-subobject (,widget ,name ,priority ,@slot-args) (',class ,@initargs :data ,(expand-place-data place))
      ,@body))
 
-(defmacro define-subcontainer ((widget name) (class &rest initargs) &body contents)
-  `(define-slot (,widget ,name :object)
+(defmacro define-subbutton ((widget name &optional fun &rest slot-args) (&optional label (class 'button) &rest initargs) &body body)
+  (let ((fun (or fun (intern (format NIL "~a-~a-~a" (symbol-name widget) (symbol-name name) (symbol-name 'activate)))))
+        (label (or label (string-capitalize name))))
+    `(progn
+       (define-subcomponent (,widget ,name 0 ,@slot-args) (,label ,class ,@initargs))
+       (declaim (observation ,fun (,widget ,name) activate))
+       (defun ,fun (,widget ,name)
+         (declare (ignorable ,widget ,name))
+         ,@body))))
+
+(defmacro define-subcontainer ((widget name &rest slot-args) (class &rest initargs) &body contents)
+  `(define-slot (,widget ,name :object ,@slot-args)
      (with-representations (,widget ,widget)
        (list ',class ,@initargs :elements (list ,@contents)))))
 

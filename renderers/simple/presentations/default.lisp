@@ -71,7 +71,7 @@
 
 (define-update (default-look-and-feel alloy:switch)
   (:switch
-   :offset (alloy:point (if alloy:value
+   :offset (alloy:point (if (alloy:active-p alloy:renderable)
                             (alloy:pw 0.7)
                             0))
    :pattern (case alloy:focus
@@ -269,7 +269,7 @@
 (define-realization (default-look-and-feel alloy::frame)
   ((:background simple:rectangle)
    (alloy:margins)
-   :pattern (colored:color 0.9 0.9 0.9))
+   :pattern (colored:color 0.1 0.1 0.1))
   ((:frame-border simple:rectangle)
    (alloy:margins)
    :line-width (alloy:un 1)
@@ -284,17 +284,17 @@
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))
   (let ((shape (find-shape :label element)))
     (if shape
-        (simple:ideal-bounds shape)
+        (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
         extent)))
 
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:button))
   (let ((shape (find-shape :label element)))
     (if shape
-        (simple:ideal-bounds shape)
+        (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
         extent)))
 
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:label))
   (let ((shape (find-shape :label element)))
     (if shape
-        (simple:ideal-bounds shape)
+        (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
         extent)))

@@ -202,10 +202,10 @@ void main(){
 (defmethod alloy:register (renderable (renderer renderer)))
 
 (defmethod simple:z-index ((renderer renderer))
-  (- (call-next-method)))
+  (call-next-method))
 
 (defmethod (setf simple:z-index) (value (renderer renderer))
-  (call-next-method (- value) renderer))
+  (call-next-method value renderer))
 
 (defmethod simple:clip ((renderer renderer) (shape simple:shape))
   (when *clip-region*
