@@ -255,6 +255,7 @@
    #:overlapping-p
    #:ensure-extent
    #:extent-intersection
+   #:widen
    #:destructure-extent)
   ;; layout.lisp
   (:export

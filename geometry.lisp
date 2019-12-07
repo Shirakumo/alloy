@@ -195,6 +195,12 @@
       (and (< x1 (+ x2 w2)) (< x2 (+ x1 w1))
            (< y1 (+ y2 h2)) (< y2 (+ y1 h1))))))
 
+(defun widen (extent margins)
+  (extent (u- (x extent) (l margins))
+          (u- (y extent) (b margins))
+          (u+ (w extent) (l margins) (r margins))
+          (u+ (h extent) (b margins) (u margins))))
+
 (defun ensure-extent (extent-ish)
   (etypecase extent-ish
     (extent
