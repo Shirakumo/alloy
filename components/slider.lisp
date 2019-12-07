@@ -29,7 +29,7 @@
   (destructuring-bind (min . max) (range slider)
     (if (= min max)
         0
-        (/ (- (value slider) min) (- max min)))))
+        (max 0 (min 1 (/ (- (value slider) min) (- max min)))))))
 
 (defmethod (setf value) :around (value (slider slider))
   (let ((value (if (< 0 (grid slider))
