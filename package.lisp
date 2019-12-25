@@ -372,7 +372,11 @@
    #:dots-per-cm
    #:target-resolution
    #:resolution-scale
-   #:base-scale)
+   #:base-scale
+   #:smooth-scaling-ui
+   #:lock-step-scaling-ui
+   #:scale-step
+   #:scale-direction)
   ;; units.lisp
   (:export
    #:with-unit-parent

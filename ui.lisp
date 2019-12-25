@@ -51,12 +51,44 @@
   (bounds (root (layout-tree ui))))
 
 (defmethod suggest-bounds (extent (ui ui))
-  (let* ((target (target-resolution ui))
-         (wr (/ (pxw extent) (pxw target)))
-         (hr (/ (pxh extent) (pxh target))))
-    (setf (resolution-scale ui) (min wr hr)))
   (setf (visible-bounds ui) extent)
   (suggest-bounds extent (layout-tree ui)))
 
 (defmethod register ((ui ui) renderer)
   (register (layout-tree ui) renderer))
+
+(defclass smooth-scaling-ui (ui)
+  ())
+
+(defmethod suggest-bounds (extent (ui smooth-scaling-ui))
+  (let* ((target (target-resolution ui))
+         (wr (/ (pxw extent) (pxw target)))
+         (hr (/ (pxh extent) (pxh target))))
+    (setf (resolution-scale ui) (min wr hr)))
+  (call-next-method))
+
+(defclass lock-step-scaling-ui (ui)
+  ((scale-step :initform 0.5 :initarg :scale-step :accessor scale-step)
+   (scale-direction :initform :down :initarg :scale-direction :accessor scale-direction)))
+
+(defmethod suggest-bounds (extent (ui lock-step-scaling-ui))
+  (let ((target (target-resolution ui))
+        (step (scale-step ui)))
+    (flet ((factor (ratio)
+             (ecase (scale-direction ui)
+               (:down
+                (if (< step ratio)
+                    (* step (floor ratio step))
+                    (/ step (ceiling step ratio))))
+               (:closest
+                (if (< step ratio)
+                    (* step (round ratio step))
+                    (/ step (round step ratio))))
+               (:up
+                (if (< step ratio)
+                    (* step (ceiling ratio step))
+                    (/ step (floor step ratio)))))))
+      (let ((wr (factor (/ (pxw extent) (pxw target))))
+            (hr (factor (/ (pxh extent) (pxh target)))))
+        (setf (resolution-scale ui) (min wr hr)))))
+  (call-next-method))
