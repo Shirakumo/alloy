@@ -292,9 +292,3 @@
     (if shape
         (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
         extent)))
-
-(defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:label))
-  (let ((shape (find-shape :label element)))
-    (if shape
-        (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
-        extent)))

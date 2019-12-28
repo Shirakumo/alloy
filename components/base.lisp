@@ -41,10 +41,10 @@
 (defclass label (value-component)
   ())
 
-(defclass label* (label direct-value-component) ())
-
 (defmethod component-class-for-object ((string string))
-  (find-class 'label*))
+  (find-class 'label))
+
+(defclass label* (label direct-value-component) ())
 
 (defmethod enter ((string string) (layout layout) &rest args)
   (apply #'enter (make-instance 'label* :value string) layout args))
