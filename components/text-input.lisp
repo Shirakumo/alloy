@@ -12,10 +12,10 @@
    (component :initarg :component :initform (arg! :component) :reader component)))
 
 (defmethod (setf pos) ((position integer) (cursor cursor))
-  (set-pos (max 0 (min position (length (value (component cursor))))) cursor))
+  (set-pos (max 0 (min position (length (text (component cursor))))) cursor))
 
 (defmethod (setf anchor) ((position integer) (cursor cursor))
-  (set-anchor (max 0 (min position (length (value (component cursor))))) cursor))
+  (set-anchor (max 0 (min position (length (text (component cursor))))) cursor))
 
 (defmethod (setf anchor) ((null null) (cursor cursor))
   (set-anchor null cursor))
@@ -27,13 +27,13 @@
   (set-pos 0 cursor))
 
 (defmethod move-to ((_ (eql :end)) (cursor cursor))
-  (set-pos (length (value (component cursor))) cursor))
+  (set-pos (length (text (component cursor))) cursor))
 
 (defmethod move-to ((_ (eql :prev-char)) (cursor cursor))
   (set-pos (max 0 (1- (pos cursor))) cursor))
 
 (defmethod move-to ((_ (eql :next-char)) (cursor cursor))
-  (set-pos (min (length (value (component cursor))) (1+ (pos cursor))) cursor))
+  (set-pos (min (length (text (component cursor))) (1+ (pos cursor))) cursor))
 
 (defmethod move-to ((_ (eql :prev-line)) (cursor cursor))
   (let ((pos (pos cursor)))
@@ -50,13 +50,13 @@
     (move-to :line-start cursor)
     (let ((col (- (pos cursor) pos)))
       (move-to :line-end cursor)
-      (when (< (pos cursor) (length (value (component cursor))))
+      (when (< (pos cursor) (length (text (component cursor))))
         (let ((start (1+ (pos cursor))))
           (move-to :line-end cursor)
           (set-pos (min (+ start col) (pos cursor)) cursor))))))
 
 (defmethod move-to ((_ (eql :line-start)) (cursor cursor))
-  (let ((string (value (component cursor))))
+  (let ((string (text (component cursor))))
     (set-pos (loop for i downfrom (pos cursor) above 0
                    do (when (char= #\Linefeed (char string (1- i)))
                         (return i))
@@ -64,7 +64,7 @@
              cursor)))
 
 (defmethod move-to ((_ (eql :line-end)) (cursor cursor))
-  (let ((string (value (component cursor))))
+  (let ((string (text (component cursor))))
     (set-pos (loop for i from (pos cursor) below (length string)
                    do (when (char= #\Linefeed (char string i))
                         (return i))
@@ -72,7 +72,7 @@
              cursor)))
 
 (defmethod move-to ((position integer) (cursor cursor))
-  (set-pos (max 0 (min position (length (value (component cursor))))) cursor))
+  (set-pos (max 0 (min position (length (text (component cursor))))) cursor))
 
 (defclass text-input-component (value-component)
   ((insert-mode :initform :add :initarg :insert-mode :accessor insert-mode)
@@ -80,7 +80,13 @@
 
 (defmethod initialize-instance :after ((component text-input-component) &key)
   (setf (slot-value component 'cursor) (make-instance 'cursor :component component))
-  (set-pos (length (value component)) (cursor component)))
+  (set-pos (length (text component)) (cursor component)))
+
+(defmethod text ((component text-input-component))
+  (value component))
+
+(defmethod (setf text) ((text string) (component text-input-component))
+  (setf (value component) text))
 
 (defun maybe-enlarge (array size)
   (if (< (array-total-size array) size)
@@ -88,7 +94,7 @@
       (setf (fill-pointer array) size)))
 
 (defmethod insert-text (text (component text-input-component))
-  (let ((old (value component))
+  (let ((old (text component))
         (cursor (pos (cursor component))))
     (unless (adjustable-array-p old)
       (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
@@ -101,11 +107,11 @@
       (:replace
        (maybe-enlarge old (max (length old) (+ cursor (length text))))
        (replace old text :start1 cursor)))
-    (setf (value component) old)
+    (setf (text component) old)
     (move-to (+ cursor (length text)) (cursor component))))
 
 (defmethod delete-text (start end (component text-input-component))
-  (let ((old (value component))
+  (let ((old (text component))
         (cursor (cursor component)))
     (unless (adjustable-array-p old)
       (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
@@ -118,7 +124,7 @@
         (set-pos start cursor))
       (when (and (anchor cursor) (<= start (anchor cursor) end))
         (set-anchor NIL cursor))
-      (setf (value component) old))))
+      (setf (text component) old))))
 
 (defmethod handle ((event text-event) (component text-input-component))
   (let ((cursor (cursor component)))
@@ -149,7 +155,7 @@
                 (delete-text (min (anchor cursor) (pos cursor))
                              (max (anchor cursor) (pos cursor))
                              component))
-               ((< (pos cursor) (length (value component)))
+               ((< (pos cursor) (length (text component)))
                 (delete-text (pos cursor) (1+ (pos cursor)) component))))
         (:left
          (move :prev-char))

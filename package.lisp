@@ -85,6 +85,7 @@
   ;; components/text-input.lisp
   (:export
    #:text-input-component
+   #:text
    #:insert-mode
    #:cursor
    #:pos
@@ -103,12 +104,18 @@
    #:slider
    #:range
    #:step
+   #:grid
    #:state
    #:orientation
    #:minimum
    #:maximum
    #:slider-unit
    #:ranged-slider)
+  ;; components/wheel.lisp
+  (:export
+   #:wheel
+   #:step
+   #:grid)
   ;; container.lisp
   (:export
    #:element
