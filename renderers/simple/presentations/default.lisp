@@ -78,7 +78,7 @@
                  (:strong colors:white)
                  (T (colored:color 0.25 0.2 0.8)))))
 
-(define-realization (default-look-and-feel alloy:input-line)
+(define-realization (default-look-and-feel alloy:text-input-component)
   ((:background simple:rectangle)
    (alloy:margins))
   ((:border simple:rectangle)
@@ -86,7 +86,7 @@
    :line-width (alloy:un 1))
   ((:label simple:text)
    (alloy:margins 1)
-   alloy:value
+   (alloy:text alloy:renderable)
    :valign :middle)
   ((:cursor simple:cursor)
    (find-shape :label alloy:renderable)
@@ -97,7 +97,7 @@
    (find-shape :label alloy:renderable)
    0 0))
 
-(define-update (default-look-and-feel alloy:input-line)
+(define-update (default-look-and-feel alloy:text-input-component)
   (:background
    :pattern (case alloy:focus
               (:strong (colored:color 0.9 0.9 0.9))
@@ -113,7 +113,7 @@
    :end (max (or (alloy:anchor (alloy:cursor alloy:renderable)) 0)
              (alloy:pos (alloy:cursor alloy:renderable))))
   (:label
-   :text alloy:value))
+   :text (alloy:text alloy:renderable)))
 
 (define-realization (default-look-and-feel alloy:slider)
   ((:background simple:rectangle)

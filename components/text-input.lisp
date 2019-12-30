@@ -85,8 +85,14 @@
 (defmethod text ((component text-input-component))
   (value component))
 
-(defmethod (setf text) ((text string) (component text-input-component))
+(defmethod (setf text) (text (component text-input-component))
+  (check-type text string)
   (setf (value component) text))
+
+(defmethod (setf text) :after (value (component text-input-component))
+  ;; Ensure we clamp the cursor.
+  (move-to (pos (cursor component)) (cursor component))
+  (mark-for-render component))
 
 (defun maybe-enlarge (array size)
   (if (< (array-total-size array) size)
@@ -211,7 +217,7 @@
 
 (defmethod handle ((event key-up) (component input-line))
   (case (key event)
-    (:return
+    ((:enter :return)
       (accept component))
     (T
      (call-next-method))))
