@@ -25,13 +25,18 @@
                    value)))
     (call-next-method (make-number-like (value wheel) value) wheel)))
 
-(defmethod accept-character ((wheel wheel) c &optional (found-dot (typep (value wheel) 'integer)))
-  (values
-   (if (char= #\. c)
-       (unless found-dot
-         (setf found-dot T))
-       (find c "0123456789"))
-   found-dot))
+(defmethod accept-character ((wheel wheel) c &optional state)
+  (destructuring-bind (&optional found-dot) state
+    (values
+     (case c
+       (#\.
+        (unless found-dot
+          (setf found-dot T)))
+       (#\-
+        (null state))
+       (T
+        (find c "0123456789")))
+     (list found-dot))))
 
 (defmethod value->text ((wheel wheel) value)
   (etypecase value
