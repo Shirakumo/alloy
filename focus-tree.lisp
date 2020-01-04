@@ -206,6 +206,11 @@
   (when (and index (focused chain))
     (setf (slot-value chain 'index) (element-index (focused chain) chain))))
 
+(defmethod handle ((event key-up) (chain focus-chain))
+  (case (key event)
+    (:tab (focus-next chain))
+    (T (call-next-method))))
+
 (defmethod handle ((event focus-next) (chain focus-chain))
   (focus-next chain))
 
