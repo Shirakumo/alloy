@@ -15,7 +15,10 @@
 (defmethod initialize-instance :after ((component value-component) &key)
   (on (setf value) (value (data component))
     (declare (ignore value))
-    (mark-for-render component)))
+    (value-changed component)))
+
+(defmethod value-changed ((component value-component))
+  (mark-for-render component))
 
 (defmethod value ((component value-component))
   (value (data component)))

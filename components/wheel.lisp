@@ -15,13 +15,9 @@
     (integer (round a))
     (ratio (rational a))))
 
-(defclass wheel (input-line)
+(defclass wheel (input-line filtered-text-input validated-text-input transformed-text-input)
   ((step :initarg :step :initform 1 :accessor step)
-   (grid :initarg :grid :initform 0 :accessor grid)
-   (text :initarg :text :initform "" :accessor text)))
-
-(defmethod initialize-instance :after ((wheel wheel) &key)
-  (setf (text wheel) (prin1-to-string (value wheel))))
+   (grid :initarg :grid :initform 0 :accessor grid)))
 
 (defmethod (setf value) :around (value (wheel wheel))
   (let ((value (if (< 0 (grid wheel))
@@ -29,35 +25,23 @@
                    value)))
     (call-next-method (make-number-like (value wheel) value) wheel)))
 
-(defmethod accept :before ((wheel wheel))
-  (let ((text (string-trim " " (text wheel))))
-    (cond ((string= "" text)
-           (setf (value wheel) 0))
-          ((and (every (lambda (c) (find c "0123456789.")) text)
-                (<= (count #\. text) 1))
-           (setf (value wheel) (read-from-string text)))
-          (T
-           (warn "Invalidly formatted wheel input: ~a" text)
-           ;; KLUDGE: Invalid format: what do we do here?
-           ))))
+(defmethod accept-character ((wheel wheel) c &optional (found-dot (typep (value wheel) 'integer)))
+  (values
+   (if (char= #\. c)
+       (unless found-dot
+         (setf found-dot T))
+       (find c "0123456789"))
+   found-dot))
 
-(defmethod mark-for-render :after ((wheel wheel))
-  ;; (unless (eql :strong (focus wheel))
-  ;;   (setf (text wheel) (prin1-to-string (value wheel))))
-  )
+(defmethod value->text ((wheel wheel) value)
+  (etypecase value
+    (integer (prin1-to-string value))
+    (float (format NIL "~f" value))))
 
-(defmethod (setf focus) :after (focus (wheel wheel))
-  (unless (eql :strong (focus wheel))
-    (setf (text wheel) (prin1-to-string (value wheel)))))
-
-(defmethod (setf text) ((text string) (wheel wheel))
-  (let ((found-dot (typep (value wheel) 'integer)))
-    (flet ((character-ok-p (c)
-             (if (char= #\. c)
-                 (unless found-dot
-                   (setf found-dot T))
-                 (find c "0123456789"))))
-      (call-next-method (remove-if-not #'character-ok-p text) wheel))))
+(defmethod text->value ((wheel wheel) text)
+  (if (string= "" text)
+      0
+      (read-from-string text)))
 
 (defmethod (setf step) :before (value (wheel wheel))
   (assert (< 0 value) (value)))
