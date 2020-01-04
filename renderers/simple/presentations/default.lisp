@@ -115,6 +115,15 @@
   (:label
    :text (alloy:text alloy:renderable)))
 
+(define-realization (default-look-and-feel alloy:validated-text-input T)
+  ((:invalid-marker simple:rectangle)
+   (alloy:extent 0 -2 (alloy:pw 1) 2)
+   :pattern colors:red))
+
+(define-update (default-look-and-feel alloy:validated-text-input)
+  (:invalid-marker
+   :hidden-p (alloy:valid-p alloy:renderable (alloy:text alloy:renderable))))
+
 (define-realization (default-look-and-feel alloy:slider)
   ((:background simple:rectangle)
    (ecase (alloy:orientation alloy:renderable)

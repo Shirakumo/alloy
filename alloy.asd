@@ -46,7 +46,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "scroll")
                              (:file "plot")
                              (:file "drag")
-                             (:file "wheel")))
+                             (:file "wheel")
+                             (:file "symbol")))
                (:module "structures"
                 :components ((:file "query")
                              (:file "scroll-view")

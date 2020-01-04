@@ -85,12 +85,23 @@
   ;; components/text-input.lisp
   (:export
    #:text-input-component
+   #:accept
+   #:reject
    #:text
    #:insert-mode
    #:cursor
    #:pos
    #:anchor
    #:insert-text
+   #:filtered-text-input
+   #:accept-character
+   #:filter-text
+   #:validated-text-input
+   #:valid-p
+   #:transformed-text-input
+   #:previous-value
+   #:value->text
+   #:text->value
    #:input-line
    #:accept
    #:input-box)
@@ -111,6 +122,11 @@
    #:maximum
    #:slider-unit
    #:ranged-slider)
+  ;; components/symbol.lisp
+  (:export
+   #:symb
+   #:constrained-package
+   #:allow-interning)
   ;; components/wheel.lisp
   (:export
    #:wheel
