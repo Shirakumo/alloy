@@ -45,9 +45,11 @@
 (defgeneric find-shape (id renderable &optional errorp))
 (defgeneric (setf find-shape) (shape id renderable))
 
-(defmacro define-realization ((renderer renderable) &body shapes)
+(defmacro define-realization ((renderer renderable &optional append) &body shapes)
   `(defmethod realize-renderable ((alloy:renderer ,renderer) (alloy:renderable ,renderable))
-     (clear-shapes alloy:renderable)
+     ,(if append
+          `(call-next-method)
+          `(clear-shapes alloy:renderable))
      (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                        (alloy:bounds (alloy:bounds alloy:renderable))
                        (alloy:value (alloy:value alloy:renderable)))
