@@ -35,22 +35,19 @@
               (class)
               (null
                (let ((slot-type (c2mop:slot-definition-type (find-slot name class))))
-                 (setf type (cond ((or (eq slot-type NIL) (eq slot-type T))
-                                   (class-of (slot-value object name)))
-                                  ((symbolp slot-type)
-                                   (find-class slot-type))
-                                  (T
-                                   ;; KLUDGE: This is /bad/
-                                   T)))))
+                 (when (and (symbolp slot-type) (not (eql T slot-type)) (not (eql NIL slot-type)))
+                   ;; FIXME: We can do better here if we analyse compound types
+                   (setf type (find-class slot-type)))))
               (symbol
                (setf type (find-class type))))
-            (let ((component (apply #'represent-with
-                                    (component-class-for-object (c2mop:class-prototype type))
-                                    (make-instance 'slot-data :object object :slot name)
-                                    initargs)))
-              (enter (string name) layout)
-              (enter component layout)
-              (enter component focus))))))))
+            (when type
+              (let ((component (apply #'represent-with
+                                      (component-class-for-object (c2mop:class-prototype type))
+                                      (make-instance 'slot-data :object object :slot name)
+                                      initargs)))
+                (enter (string name) layout)
+                (enter component layout)
+                (enter component focus)))))))))
 
 (defmethod initialize-instance :after ((structure inspector) &key focus-parent layout-parent)
   (let ((layout (make-instance 'grid-layout :col-sizes '(100 T) :row-sizes '(30) :layout-parent layout-parent))
