@@ -114,3 +114,73 @@
                     :closure (,place ,(mapcar #'first args) ,@body)
                     :observe (list ,@(loop for (function object) in (mapcar #'second args)
                                            collect `(list ',function ,object))))))
+
+(defclass sequence-data (data)
+  ((value :initarg :sequence :initform (arg! :sequence) :reader value)))
+
+(defgeneric element (data index))
+(defgeneric (setf element) (value data index))
+(make-observable '(setf element) '(value observable index))
+(defgeneric size (data))
+(defgeneric resize (data size))
+(make-observable 'resize '(observable size))
+
+;; Defaults for a generic version with support for extensible sequences without having to
+;; explicitly depend on that protocol
+(defmethod element ((data sequence-data) (index integer))
+  (elt (value data) index))
+
+(defmethod (setf element) (value (data sequence-data) (index integer))
+  (setf (elt (value data) index) value))
+
+(defmethod size ((data sequence-data))
+  (length (value data)))
+
+(defclass list-data (sequence-data)
+  ((value :initarg :list :initform (arg! :list) :reader value)
+   (size :reader size)))
+
+(defmethod initialize-instance :after ((data list-data) &key list)
+  (setf (slot-value data 'size) (length list)))
+
+(defmethod shared-initialize :before ((data list-data) &key (list NIL list-p))
+  (when list-p
+    (check-type list list)))
+
+(defmethod refresh ((data list-data))
+  (setf (slot-value data 'size) (length (value data))))
+
+(defmethod element ((data list-data) (index integer))
+  (nth index (value data)))
+
+(defmethod (setf element) (value (data list-data) (index integer))
+  (setf (nth index (value data)) value))
+
+(defmethod resize ((data list-data) (size integer))
+  (let ((list (value data)))
+    (cond ((< size (size data))
+           (setf (slot-value data 'list) (nthcdr (- (size data) size) list)))
+          ((< (size data) size)
+           (dotimes (i (- size (size data)))
+             (push NIL list))
+           (setf (slot-value data 'list) list)))
+    (setf (slot-value data 'size) size)))
+
+(defclass vector-data (sequence-data)
+  ((value :initarg :vector :initform (arg! :vector) :reader value)))
+
+(defmethod shared-initialize :before ((data vector-data) slots &key (vector NIL vector-p))
+  (when vector-p
+    (check-type vector vector)))
+
+(defmethod element ((data vector-data) (index integer))
+  (aref (value data) index))
+
+(defmethod (setf element) (value (data vector-data) (index integer))
+  (setf (aref (value data) index) value))
+
+(defmethod resize ((data vector-data) (size integer))
+  (unless (adjustable-array-p (value data))
+    (error "FIXME: Can't resize."))
+  (adjust-array (value data) size :fill-pointer (when (array-has-fill-pointer-p (value data))
+                                                  size)))
