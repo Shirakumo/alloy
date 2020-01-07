@@ -6,7 +6,7 @@
 
 (defpackage #:org.shirakumo.alloy
   (:use #:cl)
-  (:shadow #:step #:structure #:close #:declaim #:proclaim)
+  (:shadow #:count #:step #:structure #:close #:declaim #:proclaim)
   ;; builder.lisp
   (:export
    #:build

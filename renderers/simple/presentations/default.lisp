@@ -34,6 +34,24 @@
   (:label
    :text (princ-to-string alloy:value)))
 
+(define-realization (default-look-and-feel alloy::list-label)
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:label simple:text)
+   (alloy:margins)
+   (princ-to-string alloy:value)
+   :pattern (colored:color 1 1 1)
+   :halign :start :valign :middle))
+
+(define-update (default-look-and-feel alloy::list-label)
+  (:label
+   :pattern colors:white)
+  (:background
+   :pattern (case alloy:focus
+              (:strong (colored:color 0.25 0.2 0.8))
+              (:weak (colored:color 0.25 0.25 0.25))
+              (T colors:transparent))))
+
 (define-realization (default-look-and-feel alloy:icon)
   ((:icon simple:icon)
    (alloy:margins)

@@ -120,10 +120,12 @@
 
 (defgeneric element (data index))
 (defgeneric (setf element) (value data index))
+(defgeneric count (data))
+(defgeneric push-element (value data &optional index))
+(defgeneric pop-element (data &optional index))
 (make-observable '(setf element) '(value observable index))
-(defgeneric size (data))
-(defgeneric resize (data size))
-(make-observable 'resize '(observable size))
+(make-observable 'push-element '(value observable &optional index))
+(make-observable 'pop-element '(observable &optional index))
 
 ;; Defaults for a generic version with support for extensible sequences without having to
 ;; explicitly depend on that protocol
@@ -133,22 +135,22 @@
 (defmethod (setf element) (value (data sequence-data) (index integer))
   (setf (elt (value data) index) value))
 
-(defmethod size ((data sequence-data))
+(defmethod count ((data sequence-data))
   (length (value data)))
 
 (defclass list-data (sequence-data)
   ((value :initarg :list :initform (arg! :list) :reader value)
-   (size :reader size)))
+   (count :reader count)))
 
 (defmethod initialize-instance :after ((data list-data) &key list)
-  (setf (slot-value data 'size) (length list)))
+  (setf (slot-value data 'count) (length list)))
 
-(defmethod shared-initialize :before ((data list-data) &key (list NIL list-p))
+(defmethod shared-initialize :before ((data list-data) slots &key (list NIL list-p))
   (when list-p
     (check-type list list)))
 
 (defmethod refresh ((data list-data))
-  (setf (slot-value data 'size) (length (value data))))
+  (setf (slot-value data 'count) (length (value data))))
 
 (defmethod element ((data list-data) (index integer))
   (nth index (value data)))
@@ -156,15 +158,20 @@
 (defmethod (setf element) (value (data list-data) (index integer))
   (setf (nth index (value data)) value))
 
-(defmethod resize ((data list-data) (size integer))
-  (let ((list (value data)))
-    (cond ((< size (size data))
-           (setf (slot-value data 'list) (nthcdr (- (size data) size) list)))
-          ((< (size data) size)
-           (dotimes (i (- size (size data)))
-             (push NIL list))
-           (setf (slot-value data 'list) list)))
-    (setf (slot-value data 'size) size)))
+(defmethod push-element (value (data list-data) &optional index)
+  (if (and index (< 0 index))
+      (let ((cons (nthcdr (1- index) (value data))))
+        (setf (cdr cons) (list* value (cddr cons))))
+      (push value (value data)))
+  (incf (slot-value data 'count)))
+
+(defmethod pop-element ((data list-data) &optional index)
+  (decf (slot-value data 'count))
+  (if (and index (< 0 index))
+      (let ((cons (nthcdr (1- index) (value data))))
+        (prog1 (cadr cons)
+          (setf (cdr cons) (cddr cons))))
+      (pop (value data))))
 
 (defclass vector-data (sequence-data)
   ((value :initarg :vector :initform (arg! :vector) :reader value)))
@@ -179,8 +186,12 @@
 (defmethod (setf element) (value (data vector-data) (index integer))
   (setf (aref (value data) index) value))
 
-(defmethod resize ((data vector-data) (size integer))
-  (unless (adjustable-array-p (value data))
-    (error "FIXME: Can't resize."))
-  (adjust-array (value data) size :fill-pointer (when (array-has-fill-pointer-p (value data))
-                                                  size)))
+(defmethod push-element (value (data list-data) &optional index)
+  (if index
+      (array-utils:vector-push-extend-position value (value data) index)
+      (vector-push-extend value (value data))))
+
+(defmethod pop-element ((data list-data) &optional index)
+  (if index
+      (array-utils:vector-pop-position (value data) index)
+      (vector-pop (value data))))

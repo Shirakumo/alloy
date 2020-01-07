@@ -43,6 +43,7 @@
 
 (defgeneric component-class-for-object (data))
 (defgeneric represent-with (component-type data &rest initargs))
+(defgeneric represent-for (component data &rest initargs))
 
 (defmacro represent (place type &rest initargs)
   `(represent-with ,type
