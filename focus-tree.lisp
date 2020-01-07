@@ -42,7 +42,7 @@
 (defmethod set-focus-tree :before (tree (element focus-element))
   (when (and (focus-tree element) tree (not (eq tree (focus-tree element))))
     (error 'element-has-different-root
-           :element element :container tree))
+           :bad-element element :container tree))
   (when (eq :strong (focus element))
     ;; KLUDGE: We have been unhooked. Ideally we'd find the closest, still-hooked parent.
     ;;         however, since currently unhooking happens from the leaf up, we don't know
@@ -94,7 +94,7 @@
         ((not (eq parent (focus-parent element)))
          (restart-case
              (error 'element-has-different-parent
-                    :element element :container parent :parent (focus-parent element))
+                    :bad-element element :container parent :parent (focus-parent element))
            (reparent ()
              :report "Leave the element from its current parent."
              (leave element T))))))
@@ -102,7 +102,7 @@
 (defmethod leave :before ((element focus-element) (parent focus-element))
   (unless (eq parent (focus-parent element))
     (error 'element-has-different-parent
-           :element element :container parent :parent (focus-parent element))))
+           :bad-element element :container parent :parent (focus-parent element))))
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
   (set-focus-tree NIL element)
@@ -133,7 +133,7 @@
 (defmethod (setf focused) :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (focus-parent element))
     (error 'element-has-different-parent
-           :element element :container chain :parent (focus-parent element)))
+           :bad-element element :container chain :parent (focus-parent element)))
   (when (focused chain)
     (let ((focused (focused chain)))
       (setf (slot-value chain 'focused) NIL)
@@ -161,7 +161,7 @@
 (defmethod element-index :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (focus-parent element))
     (error 'element-not-contained
-           :element element :container chain)))
+           :bad-element element :container chain)))
 
 (defmethod notice-focus ((element focus-element) (chain focus-chain))
   (case (focus element)
@@ -281,7 +281,7 @@
 (defmethod (setf root) :before ((element focus-element) (tree focus-tree))
   (when (root tree)
     (error 'root-already-established
-           :element element :tree tree)))
+           :bad-element element :tree tree)))
 
 (defmethod (setf root) :after ((element focus-element) (tree focus-tree))
   (set-focus-tree tree element)
@@ -295,7 +295,7 @@
 (defmethod (setf focused) :before ((element focus-element) (tree focus-tree))
   (unless (eq (focus-tree element) tree)
     (error 'element-has-different-root
-           :element element :container tree))
+           :bad-element element :container tree))
   (when (focused tree)
     (setf (focus (focused tree)) NIL)))
 

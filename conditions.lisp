@@ -31,34 +31,34 @@
   index range)
 
 (define-alloy-condition hierarchy-error (error)
-    NIL container element)
+    NIL container bad-element)
 
 (define-alloy-condition element-has-different-parent (hierarchy-error)
     "Cannot perform operation with~%  ~s~%on~%  ~s~%as it is a parent on~%  ~s"
-  element container parent)
+  bad-element container parent)
 
 (define-alloy-condition element-not-contained (hierarchy-error)
     "The element~%  ~s~%is not a child of~%  ~s"
-  element container)
+  bad-element container)
 
 (define-alloy-condition element-has-different-root (hierarchy-error)
     "The element~%  ~s~%comes from the tree~%  ~s~%which is not~%  ~s"
-  element (focus-tree (element c)) container)
+  bad-element (focus-tree (element c)) container)
 
 (define-alloy-condition root-already-established (error)
     "Cannot set~%  ~a~%as the root of~%  ~a~%as it already has a root in~%  ~a"
-  element tree (root (tree c)))
+  bad-element tree (root (tree c)))
 
 (define-alloy-condition layout-condition ()
     NIL layout)
 
 (define-alloy-condition place-already-occupied (layout-condition error)
     "Cannot enter~%  ~a~%at ~a into~%  ~a~%as it is already occupied by~%  ~a"
-  element place layout existing)
+  bad-element place layout existing)
 
 (define-alloy-condition element-has-different-ui (error)
     "The element~%  ~s~%cannot be used with~%  ~s~%as it is set-up with~%  ~s"
-  element ui (ui (element c)))
+  bad-element ui (ui (element c)))
 
 (define-alloy-condition allocation-failed (error)
     "The allocation of the renderer~%  ~s~%failed."

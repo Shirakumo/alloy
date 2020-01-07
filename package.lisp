@@ -30,7 +30,7 @@
    #:range
    #:hierarchy-error
    #:container
-   #:element
+   #:bad-element
    #:element-has-different-parent
    #:element-not-contained
    #:element-has-different-root

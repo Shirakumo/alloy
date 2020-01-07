@@ -16,7 +16,7 @@
 (defmethod (setf current) :before ((current layout-element) (layout swap-layout))
   (unless (eq layout (layout-parent current))
     (error 'element-has-different-parent
-           :parent (layout-parent current) :element current :container layout)))
+           :bad-parent (layout-parent current) :element current :container layout)))
 
 (defmethod (setf current) ((current layout-element) (layout swap-layout))
   (setf (index layout) (element-index current layout)))

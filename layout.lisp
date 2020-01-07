@@ -39,7 +39,7 @@
 (defmethod set-layout-tree :before (tree (element layout-element))
   (when (and (layout-tree element) tree (not (eq tree (layout-tree element))))
     (error 'element-has-different-root
-           :element element :container tree)))
+           :bad-element element :container tree)))
 
 (defmethod handle ((event event) (element layout-element))
   (decline))
@@ -83,7 +83,7 @@
         ((not (eq parent (layout-parent element)))
          (restart-case
              (error 'element-has-different-parent
-                    :element element :container parent :parent (layout-parent element))
+                    :bad-element element :container parent :parent (layout-parent element))
            (reparent ()
              :report "Leave the element from its current parent."
              (leave element T))))))
@@ -91,7 +91,7 @@
 (defmethod leave :before ((element layout-element) (parent layout))
   (unless (eq parent (layout-parent element))
     (error 'element-has-different-parent
-           :element element :container parent :parent (layout-parent element))))
+           :bad-element element :container parent :parent (layout-parent element))))
 
 (defmethod leave :after ((element layout-element) (parent layout))
   (set-layout-tree NIL element)
@@ -104,7 +104,7 @@
 (defmethod element-index :before ((element layout-element) (layout layout))
   (unless (eq layout (layout-parent element))
     (error 'element-not-contained
-           :element element :container layout)))
+           :bad-element element :container layout)))
 
 (defmethod register :after ((layout layout) (renderer renderer))
   (do-elements (element layout)
@@ -141,7 +141,7 @@
 (defmethod (setf root) :before ((element layout-element) (tree layout-tree))
   (when (root tree)
     (error 'root-already-established
-           :element element :tree tree)))
+           :bad-element element :tree tree)))
 
 (defmethod (setf root) :after ((element layout-element) (tree layout-tree))
   (set-layout-tree tree element)
