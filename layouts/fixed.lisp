@@ -9,32 +9,42 @@
 (defclass fixed-layout (layout vector-container)
   ())
 
+(defmethod (setf bounds) ((bounds extent) (layout fixed-layout)))
+
 (defmethod notice-bounds ((element layout-element) (layout fixed-layout))
   ;; Calculate max bound
-  (let ((extent (bounds layout)))
-    (destructure-extent (:x lx :y ly :w lw :h lh :to-px T) extent
-      (destructure-extent (:x ex :y ey :w ew :h eh :to-px T) (bounds element)
-        (let ((l (min lx ex))
-              (b (min ly ey))
-              (r (max (+ lx lw) (+ ex ew)))
-              (u (max (+ ly lh) (+ ey eh))))
-          (setf (bounds layout)
-                (px-extent l b (- r l) (- u b))))))))
+  (cond ((= 1 (element-count layout))
+         (setf (slot-value layout 'bounds) (bounds element)))
+        (T
+         (destructure-extent (:x lx :y ly :w lw :h lh :to-px T) (bounds layout)
+           (destructure-extent (:x ex :y ey :w ew :h eh :to-px T) (bounds element)
+             (let ((l (min lx ex))
+                   (b (min ly ey))
+                   (r (max (+ lx lw) (+ ex ew)))
+                   (u (max (+ ly lh) (+ ey eh))))
+               (setf (slot-value layout 'bounds)
+                     (print (px-extent l b (- r l) (- u b))))))))))
 
-(defmethod suggest-bounds (extent (layout fixed-layout)))
+(defmethod suggest-bounds (extent (layout fixed-layout))
+  extent)
 
-(defmethod enter :after ((element layout-element) (layout fixed-layout) &key x y w h)
-  (update element layout :x x :y y :w w :h h)
-  ;; Ensure we set the layout extent to the element bounds or we would calculate
-  ;; the max bound wrong.
-  (when (= 1 (element-count layout))
-    (setf (bounds layout) (bounds element))))
+(defmethod enter ((element layout-element) (layout fixed-layout) &key x y w h)
+  (call-next-method)
+  (let ((e (bounds element)))
+    (with-unit-parent layout
+      (setf (bounds element)
+            (px-extent (or x (extent-x e))
+                       (or y (extent-y e))
+                       (or w (extent-w e))
+                       (or h (extent-h e)))))
+    element))
 
 (defmethod leave :after ((element layout-element) (layout fixed-layout))
   (when (= 0 (element-count layout))
-    (setf (bounds layout) (extent))))
+    (setf (slot-value layout 'bounds) (px-extent))))
 
-(defmethod update :after ((element layout-element) (layout fixed-layout) &key x y w h)
+(defmethod update ((element layout-element) (layout fixed-layout) &key x y w h)
+  (call-next-method)
   (let ((e (bounds element)))
     (with-unit-parent layout
       (setf (bounds element)
