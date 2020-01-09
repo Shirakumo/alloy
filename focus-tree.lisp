@@ -75,8 +75,9 @@
     (call-next-method)))
 
 (defmethod handle ((event event) (element focus-element))
-  (unless (eq element (focus-parent element))
-    (handle event (focus-parent element))))
+  (if (eq element (focus-parent element))
+      (decline)
+      (handle event (focus-parent element))))
 
 (defmethod handle ((event pointer-event) (element focus-element))
   (decline))
