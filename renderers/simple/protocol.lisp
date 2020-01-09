@@ -44,11 +44,6 @@
     (clip renderer extent)
     (call-next-method)))
 
-(defmethod alloy:render :around ((renderer renderer) (layout alloy:popup))
-  (with-pushed-transforms (renderer)
-    (incf (z-index renderer) 100)
-    (call-next-method)))
-
 (defmethod alloy:render :around ((renderer renderer) (layout alloy:combo))
   (with-pushed-transforms (renderer)
     (incf (z-index renderer) 100)

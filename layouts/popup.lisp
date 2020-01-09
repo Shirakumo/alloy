@@ -6,27 +6,35 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass popup (layout single-container)
+(defclass popup (layout-element)
   ())
 
-(defmethod location ((layout popup))
-  (bounds layout))
+(defmethod enter ((popup popup) (tree layout-tree) &rest args)
+  (apply #'enter popup (popups tree) args))
 
-(defmethod (setf location) (location (layout popup))
-  (setf (slot-value layout 'bounds)
-        (px-extent (pxx location) (pxy location) (w (bounds layout)) (h (bounds layout)))))
+(defmethod update ((popup popup) (tree layout-tree) &rest args)
+  (apply #'update popup (popups tree) args))
 
-;;; Ignore bounds enforced by the outside
-(defmethod (setf bounds) (bounds (layout popup)))
+(defmethod leave ((popup popup) (tree layout-tree))
+  (leave popup (popups tree)))
 
-(defmethod suggest-bounds (extent (layout popup))
-  extent)
+(defmethod enter ((popup popup) (tree focus-tree) &rest args)
+  (apply #'enter popup (popups tree) args))
 
-;;; Let inner element govern size.
-(defmethod notice-bounds ((element layout-element) (layout popup))
-  (setf (slot-value layout 'bounds)
-        (px-extent (x (bounds layout)) (y (bounds layout)) (pxw (bounds element)) (pxh (bounds element)))))
+(defmethod update ((popup popup) (tree focus-tree) &rest args)
+  (apply #'update popup (popups tree) args))
 
-(defmethod render ((renderer renderer) (layout popup))
-  (when (inner layout)
-    (render renderer (inner layout))))
+(defmethod leave ((popup popup) (tree focus-tree))
+  (leave popup (popups tree)))
+
+(defmethod enter ((popup popup) (ui ui) &rest args)
+  (apply #'enter popup (focus-tree ui) args)
+  (apply #'enter popup (layout-tree ui) args))
+
+(defmethod update ((popup popup) (ui ui) &rest args)
+  (apply #'update popup (focus-tree ui) args)
+  (apply #'update popup (layout-tree ui) args))
+
+(defmethod leave ((popup popup) (ui ui))
+  (leave popup (focus-tree ui))
+  (leave popup (layout-tree ui)))

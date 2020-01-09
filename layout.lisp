@@ -127,7 +127,12 @@
 
 (defclass layout-tree ()
   ((root :initform NIL :accessor root)
+   (popups :initform (make-instance 'fixed-layout) :reader popups)
    (ui :initarg :ui :reader ui)))
+
+(defmethod initialize-instance :after ((tree layout-tree) &key)
+  (set-layout-tree tree (popups tree))
+  (setf (slot-value (popups tree) 'layout-parent) (popups tree)))
 
 (defmethod enter ((element layout-element) (tree layout-tree) &key force)
   (when (next-method-p) (call-next-method))
@@ -148,17 +153,21 @@
   (setf (slot-value element 'layout-parent) element))
 
 (defmethod register ((tree layout-tree) (renderer renderer))
-  (register (root tree) renderer))
+  (register (root tree) renderer)
+  (register (popups tree) renderer))
 
 (defmethod render ((renderer renderer) (tree layout-tree))
-  (render renderer (root tree)))
+  (render renderer (root tree))
+  (render renderer (popups tree)))
 
 (defmethod maybe-render ((renderer renderer) (tree layout-tree))
-  (maybe-render renderer (root tree)))
+  (maybe-render renderer (root tree))
+  (maybe-render renderer (popups tree)))
 
 (defmethod handle ((event pointer-event) (tree layout-tree))
-  (unless (handle event (root tree))
-    (decline)))
+  (or (handle event (popups tree))
+      (handle event (root tree))
+      (decline)))
 
 (defmethod suggest-bounds (extent (tree layout-tree))
   (let ((root (root tree)))

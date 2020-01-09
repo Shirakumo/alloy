@@ -262,7 +262,12 @@
 
 (defclass focus-tree ()
   ((root :initform NIL :accessor root)
+   (popups :initform (make-instance 'focus-list) :reader popups)
    (focused :initform NIL :accessor focused)))
+
+(defmethod initialize-instance :after ((tree focus-tree) &key)
+  (set-focus-tree tree (popups tree))
+  (setf (slot-value (popups tree) 'focus-parent) (popups tree)))
 
 (defmethod enter ((element focus-element) (tree focus-tree) &key force)
   (when (next-method-p) (call-next-method))
@@ -305,5 +310,6 @@
       (call-next-method)))
 
 (defmethod handle ((event event) (tree focus-tree))
-  (unless (and (root tree) (handle event (focused tree)))
-    (decline)))
+  (or (handle event (popups tree))
+      (handle event (focused tree))
+      (decline)))

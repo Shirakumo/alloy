@@ -11,7 +11,7 @@
    (central-layout :accessor central-layout)
    (normal-bounds :initform (extent) :accessor normal-bounds)))
 
-(defclass frame (border-layout)
+(defclass frame (border-layout popup)
   ())
 
 (defmethod handle ((event pointer-event) (layout frame))
@@ -70,11 +70,13 @@
   (when (next-method-p) (call-next-method))
   (enter element (focus-element structure) :layer 1))
 
-(defmethod initialize-instance :after ((structure window) &key layout focus focus-parent layout-parent (title "Untitled") (closeable T) (minimizable T) (maximizable T))
-  (let ((frame (make-instance 'frame :layout-parent layout-parent :padding (margins 10)))
+(defmethod initialize-instance :after ((structure window) &key layout focus (title "Untitled") (closeable T) (minimizable T) (maximizable T) (extent (size 300 200)) (ui (arg! :ui)))
+  (let ((frame (make-instance 'frame :padding (margins 10)))
         (header (make-instance 'grid-layout :row-sizes '(20) :col-sizes '(T  20 20 20) :cell-margins (margins 2)))
-        (focus-stack (make-instance 'focus-stack :focus-parent focus-parent))
+        (focus-stack (make-instance 'focus-stack))
         (title (make-instance 'window-title :value (or title ""))))
+    (enter focus-stack (popups (focus-tree ui)))
+    (enter frame (popups (layout-tree ui)) :extent (ensure-extent extent))
     (enter header frame :place :north)
     (enter title focus-stack :layer 0)
     (enter title header :row 0 :col 0)

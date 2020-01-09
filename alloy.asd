@@ -33,8 +33,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "border")
                              (:file "clip-view")
                              (:file "swap")
-                             (:file "popup")
-                             (:file "flow")))
+                             (:file "flow")
+                             (:file "popup")))
                (:module "components"
                 :components ((:file "base")
                              (:file "button")

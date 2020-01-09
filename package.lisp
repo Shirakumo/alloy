@@ -228,7 +228,8 @@
    #:focus-chain
    #:focus-list
    #:focus-grid
-   #:focus-tree)
+   #:focus-tree
+   #:popups)
   ;; geometry.lisp
   (:export
    #:x
@@ -291,7 +292,8 @@
    #:ensure-visible
    #:layout-element
    #:layout
-   #:layout-tree)
+   #:layout-tree
+   #:popups)
   ;; layouts/border.lisp
   (:export
    #:border-layout)
@@ -324,8 +326,7 @@
    #:horizontal-linear-layout)
   ;; popup.lisp
   (:export
-   #:popup
-   #:location)
+   #:popup)
   ;; layouts/swap.lisp
   (:export
    #:swap-layout
