@@ -364,6 +364,12 @@
    #:layout-element
    #:focus-element
    #:finish-structure)
+  ;; structures/dialog.lisp
+  (:export
+   #:dialog
+   #:accept
+   #:reject
+   #:dialog*)
   ;; structures/query.lisp
   (:export
    #:query)
@@ -437,6 +443,7 @@
    #:define-subobject
    #:define-subcomponent
    #:define-subcontainer
+   #:define-subbutton
    #:remove-subobject
    #:declaim
    #:proclaim))

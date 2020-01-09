@@ -54,6 +54,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "scroll-view")
                              (:file "tab-view")
                              (:file "window")
+                             (:file "dialog")
                              (:file "sidebar")
                              (:file "inspector")))
                (:file "builder")
