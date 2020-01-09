@@ -43,5 +43,7 @@
   (define-deferral leave focus-tree focus-element))
 
 (defmethod leave ((structure structure) (self (eql T)))
-  (leave (layout-element structure) (layout-parent (layout-element structure)))
-  (leave (focus-element structure) (focus-parent (focus-element structure))))
+  (when (slot-boundp (layout-element structure) 'layout-parent)
+    (leave (layout-element structure) (layout-parent (layout-element structure))))
+  (when (slot-boundp (focus-element structure) 'focus-parent)
+    (leave (focus-element structure) (focus-parent (focus-element structure)))))
