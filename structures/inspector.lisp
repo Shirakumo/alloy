@@ -56,4 +56,6 @@
     (update-inspector-slots structure)))
 
 (defmethod reinitialize-instance :after ((structure inspector) &key)
+  (clear (focus-element structure))
+  (clear (layout-element structure))
   (update-inspector-slots structure))
