@@ -103,12 +103,31 @@
         do (when element (leave element layout)))
   (setf (fill-pointer (elements layout)) 0))
 
-(defmethod notice-bounds ((element layout-element) (layout grid-layout))
-  (if (eq layout (layout-parent layout))
-      (setf (bounds layout) (bounds layout))
-      (let ((updated (suggest-bounds (bounds layout) layout)))
-        (unless (extent= (bounds layout) updated)
-          (setf (bounds layout) updated)))))
+(defmethod notice-bounds ((target layout-element) (layout grid-layout))
+  ;; FIXME: This is almost 100% the same as (setf bounds) update.
+  (with-unit-parent layout
+    (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
+      (let* ((extent (bounds layout))
+             (th (spanning-size (row-sizes layout) (extent-h extent)))
+             (tw (spanning-size (col-sizes layout) (extent-w extent))))
+        (loop with elements = (elements layout)
+              for y = (+ (pxy extent) (pxh extent) (- mb)) then (- y h)
+              for hish across (row-sizes layout)
+              for h = (if (eql T hish) th (to-px hish))
+              for i from 0
+              do (loop for x = (+ (pxx extent) ml) then (+ x w)
+                       for wish across (col-sizes layout)
+                       for w = (if (eql T wish) tw (to-px wish))
+                       for j from 0
+                       for idx from (* i (length (col-sizes layout)))
+                       while (< idx (fill-pointer elements))
+                       do (let ((element (aref elements idx)))
+                            (when (eq element target)
+                              (let ((ideal (suggest-bounds (px-extent x y (- w ml mr) (- h mb mu)) element)))
+                                (setf (bounds element)
+                                      (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
+                                                 (if (stretch layout) (- w ml mr) (extent-w ideal))
+                                                 (if (stretch layout) (- h mb mu) (extent-h ideal)))))))))))))
 
 (defun spanning-size (sizes total)
   (let ((count 0)
