@@ -26,20 +26,20 @@
 (define-realization (default-look-and-feel alloy:label)
   ((:label simple:text)
    (alloy:margins)
-   (princ-to-string alloy:value)
+   alloy:text
    :pattern (colored:color 1 1 1)
    :halign :start :valign :middle))
 
 (define-update (default-look-and-feel alloy:label)
   (:label
-   :text (princ-to-string alloy:value)))
+   :text alloy:text))
 
 (define-realization (default-look-and-feel alloy::list-label)
   ((:background simple:rectangle)
    (alloy:margins))
   ((:label simple:text)
    (alloy:margins)
-   (princ-to-string alloy:value)
+   alloy:text
    :pattern (colored:color 1 1 1)
    :halign :start :valign :middle))
 
@@ -65,7 +65,7 @@
    :line-width (alloy:un 1))
   ((:label simple:text)
    (alloy:margins 1)
-   (princ-to-string alloy:value)
+   alloy:text
    :halign :middle
    :valign :middle))
 
@@ -76,7 +76,7 @@
                  (:weak (colored:color 0.7 0.7 0.7))
                  (T (colored:color 0.25 0.2 0.8))))
   (:label
-   :text (princ-to-string alloy:value)))
+   :text alloy:text))
 
 (define-realization (default-look-and-feel alloy:switch)
   ((:background simple:rectangle)
@@ -104,7 +104,7 @@
    :line-width (alloy:un 1))
   ((:label simple:text)
    (alloy:margins 1)
-   (alloy:text alloy:renderable)
+   alloy:text
    :valign :middle)
   ((:cursor simple:cursor)
    (find-shape :label alloy:renderable)
@@ -131,7 +131,7 @@
    :end (max (or (alloy:anchor (alloy:cursor alloy:renderable)) 0)
              (alloy:pos (alloy:cursor alloy:renderable))))
   (:label
-   :text (alloy:text alloy:renderable)))
+   :text alloy:text))
 
 (define-realization (default-look-and-feel alloy:validated-text-input T)
   ((:invalid-marker simple:rectangle)
@@ -140,7 +140,7 @@
 
 (define-update (default-look-and-feel alloy:validated-text-input)
   (:invalid-marker
-   :hidden-p (alloy:valid-p alloy:renderable (alloy:text alloy:renderable))))
+   :hidden-p (alloy:valid-p alloy:renderable alloy:text)))
 
 (define-realization (default-look-and-feel alloy:slider)
   ((:background simple:rectangle)
@@ -181,7 +181,7 @@
    :scale (let ((p (/ alloy:value (alloy:maximum alloy:renderable))))
             (alloy:px-size p 1)))
   (:label
-   :text (format NIL "~,1f%" (/ (alloy:value alloy:renderable) (alloy:maximum alloy:renderable) 1/100))
+   :text (format NIL "~,1f%" (/ alloy:value (alloy:maximum alloy:renderable) 1/100))
    :pattern colors:white))
 
 (define-realization (default-look-and-feel alloy:radio)
@@ -206,13 +206,13 @@
    :line-width (alloy:un 1))
   ((:label simple:text)
    (alloy:margins 1)
-   (princ-to-string (alloy:value alloy:renderable))
+   alloy:text
    :valign :middle))
 
 (define-update (default-look-and-feel alloy:combo)
   (:label
    :pattern colors:white
-   :text (princ-to-string (alloy:value alloy:renderable))))
+   :text alloy:text))
 
 (define-realization (default-look-and-feel alloy:combo-item)
   ((:background simple:rectangle)
@@ -220,7 +220,7 @@
    :z-index 100)
   ((:label simple:text)
    (alloy:margins 1)
-   (princ-to-string alloy:value)
+   alloy:text
    :z-index 100))
 
 (define-update (default-look-and-feel alloy:combo-item)
@@ -287,7 +287,7 @@
 (define-realization (default-look-and-feel alloy::window-title)
   ((:label simple:text)
    (alloy:margins)
-   alloy:value
+   alloy:text
    :pattern colors:white
    :halign :middle :valign :middle))
 

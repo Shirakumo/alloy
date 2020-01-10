@@ -52,7 +52,8 @@
           `(clear-shapes alloy:renderable))
      (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                        (alloy:bounds (alloy:bounds alloy:renderable))
-                       (alloy:value (alloy:value alloy:renderable)))
+                       (alloy:value (alloy:value alloy:renderable))
+                       (alloy:text (alloy:text alloy:renderable)))
        (declare (ignorable alloy:focus alloy:bounds alloy:value))
        ,@(loop for shape in shapes
                collect (destructuring-bind ((name type) &body initargs) shape
@@ -66,7 +67,8 @@
     `(defmethod update-shape progn ((alloy:renderer ,renderer) (alloy:renderable ,renderable) (shape shape))
        (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                          (alloy:bounds (alloy:bounds alloy:renderable))
-                         (alloy:value (alloy:value alloy:renderable)))
+                         (alloy:value (alloy:value alloy:renderable))
+                         (alloy:text (alloy:text alloy:renderable)))
          (declare (ignorable alloy:focus alloy:bounds alloy:value))
          (case (name shape)
            ,@(loop for (name . initargs) in shapes

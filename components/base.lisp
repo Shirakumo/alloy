@@ -29,6 +29,9 @@
 (defmethod refresh ((component value-component))
   (setf (value component) (value component)))
 
+(defmethod text ((component value-component))
+  (princ-to-string (value component)))
+
 (defclass direct-value-component (value-component)
   ((value :initarg :value :accessor value)
    (data :initform ())))
