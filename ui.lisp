@@ -51,7 +51,6 @@
   (bounds (root (layout-tree ui))))
 
 (defmethod suggest-bounds (extent (ui ui))
-  (setf (visible-bounds ui) extent)
   (suggest-bounds extent (layout-tree ui)))
 
 (defmethod register ((ui ui) renderer)

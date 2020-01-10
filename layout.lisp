@@ -170,6 +170,8 @@
       (decline)))
 
 (defmethod suggest-bounds (extent (tree layout-tree))
-  (let ((root (root tree)))
+  (let ((root (root tree))
+        (popups (popups tree)))
     (suggest-bounds extent root)
-    (setf (bounds root) extent)))
+    (setf (bounds root) extent)
+    (setf (bounds popups) (bounds popups))))

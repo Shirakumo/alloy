@@ -9,7 +9,9 @@
 (defclass fixed-layout (layout vector-container)
   ())
 
-(defmethod (setf bounds) ((bounds extent) (layout fixed-layout)))
+(defmethod (setf bounds) ((bounds extent) (layout fixed-layout))
+  (do-elements (element layout)
+    (setf (bounds element) (bounds element))))
 
 (defmethod notice-bounds ((element layout-element) (layout fixed-layout))
   ;; Calculate max bound

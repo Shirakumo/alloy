@@ -28,6 +28,16 @@
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting))
 
+(defmethod handle ((event key-up) (combo combo))
+  (case (key event)
+    (:up
+     (focus-prev combo))
+    (:down
+     (focus-next combo))
+    (:enter
+     (setf (value combo) (value (focused combo))))
+    (T (call-next-method))))
+
 (defmethod handle :around ((event pointer-event) (combo combo))
   (case (state combo)
     (:selecting
@@ -74,7 +84,6 @@
      (render renderer (combo-list combo)))))
 
 (defmethod (setf bounds) :after (bounds (combo combo))
-  (setf (min-size (combo-list combo)) (size 0 12))
   (let ((ideal (suggest-bounds bounds (combo-list combo))))
     (setf (bounds (combo-list combo))
           (px-extent (pxx bounds)

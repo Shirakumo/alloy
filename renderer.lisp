@@ -41,6 +41,9 @@
 (defmethod deallocate :after ((renderer renderer))
   (setf (slot-value renderer 'allocated-p) NIL))
 
+(defmethod suggest-bounds :before (extent (renderer renderer))
+  (setf (visible-bounds renderer) extent))
+
 (defclass renderable ()
   ((render-needed-p :initform T :reader render-needed-p)))
 
