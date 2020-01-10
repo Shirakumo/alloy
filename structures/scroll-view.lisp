@@ -9,9 +9,9 @@
 (defclass scroll-view (structure)
   ())
 
-(defmethod initialize-instance :after ((structure scroll-view) &key layout focus (scroll T))
-  (let ((border-layout (make-instance 'border-layout))
-        (focus-list (make-instance 'focus-list))
+(defmethod initialize-instance :after ((structure scroll-view) &key layout focus layout-parent focus-parent (scroll T))
+  (let ((border-layout (make-instance 'border-layout :layout-parent layout-parent))
+        (focus-list (make-instance 'focus-list :focus-parent focus-parent))
         (clipper (make-instance 'clip-view :limit (ecase scroll
                                                     ((T) NIL)
                                                     (:x :y)
