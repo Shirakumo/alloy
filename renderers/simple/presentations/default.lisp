@@ -216,10 +216,12 @@
 
 (define-realization (default-look-and-feel alloy:combo-item)
   ((:background simple:rectangle)
-   (alloy:margins))
+   (alloy:margins)
+   :z-index 100)
   ((:label simple:text)
    (alloy:margins 1)
-   (princ-to-string alloy:value)))
+   (princ-to-string alloy:value)
+   :z-index 100))
 
 (define-update (default-look-and-feel alloy:combo-item)
   (:background
