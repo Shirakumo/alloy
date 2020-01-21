@@ -6,6 +6,9 @@
 
 (in-package #:org.shirakumo.alloy)
 
+(deftype focus ()
+  `(member NIL :weak :strong))
+
 (defgeneric focus-tree (focus-element))
 (defgeneric focus-parent (focus-element))
 (defgeneric focus (focus-element))
@@ -13,6 +16,9 @@
 (defgeneric exit (focus-element))
 (defgeneric activate (focus-element))
 (defgeneric notice-focus (focused parent))
+
+(declaim (ftype (function (T) focus) focus))
+(declaim (ftype (function (focus T) focus) (setf focus)))
 
 (defgeneric index (focus-chain))
 (defgeneric (setf index) (index focus-chain))
@@ -71,8 +77,9 @@
     (focus-parent element)))
 
 (defmethod handle :around ((event event) (element focus-element))
-  (when (focus-tree element)
-    (call-next-method)))
+  (if (focus-tree element)
+      (call-next-method)
+      (decline)))
 
 (defmethod handle ((event event) (element focus-element))
   (if (eq element (focus-parent element))
