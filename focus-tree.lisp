@@ -17,8 +17,8 @@
 (defgeneric activate (focus-element))
 (defgeneric notice-focus (focused parent))
 
-(declaim (ftype (function (T) focus) focus))
-(declaim (ftype (function (focus T) focus) (setf focus)))
+(cl:declaim (ftype (function (T) focus) focus))
+(cl:declaim (ftype (function (focus T) focus) (setf focus)))
 
 (defgeneric index (focus-chain))
 (defgeneric (setf index) (index focus-chain))
