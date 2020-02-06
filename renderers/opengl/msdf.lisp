@@ -46,7 +46,8 @@
 
 (defclass renderer (opengl:renderer)
   ((fontcache-directory :initarg :fontcache :initform (fontcache-default-directory) :accessor fontcache-directory)
-   (fontcache :initform (make-hash-table :test 'equal) :accessor fontcache)))
+   (fontcache :initform (make-hash-table :test 'equal) :accessor fontcache)
+   (font-name-cache :initform (make-hash-table :test 'equal) :accessor font-name-cache)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (setf (opengl:resource 'text-vbo renderer)
@@ -121,8 +122,10 @@ void main(){
   (slot-makunbound font 'atlas))
 
 (defmethod simple:request-font ((renderer renderer) (family string) &rest args)
-  (let ((font (apply #'font-discovery:find-font :family family args)))
-    (cached-font renderer (font-discovery:file font))))
+  (let ((font (or (gethash family (font-name-cache renderer))
+                  (setf (gethash family (font-name-cache renderer))
+                        (font-discovery:file (apply #'font-discovery:find-font :family family args))))))
+    (cached-font renderer font)))
 
 (defmethod simple:request-font ((renderer renderer) (file pathname) &key)
   (cached-font renderer file))
