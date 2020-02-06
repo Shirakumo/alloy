@@ -29,6 +29,8 @@
          ,matrix))))
 
 (defun mat* (a b)
+  (declare (type (simple-array single-float (9)) a b))
+  (declare (optimize speed (safety 1)))
   (let ((r (make-array 9 :element-type 'single-float)))
     (macrolet ((thunk ()
                  (labels ((a (r c) `(aref a (+ ,c (* ,r 3))))
