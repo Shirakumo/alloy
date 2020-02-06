@@ -102,16 +102,23 @@
 (defmethod add-slot ((spec cons) (class widget-class) &key (if-exists :error))
   (unless (c2mop:class-finalized-p class)
     (c2mop:finalize-inheritance class))
-  (let ((name (getf spec :name)))
+  (let ((name (getf spec :name))
+        (slotspecs (copy-list (foreign-slots class))))
     ;; Check against "normal" slots since you most likely do not want to thrash those.
-    (when (and (not (find-slotspec name (foreign-slots class)))
-               (find name (c2mop:class-slots class) :key #'c2mop:slot-definition-name))
+    (when (and (find name (c2mop:class-slots class) :key #'c2mop:slot-definition-name)
+               (not (find-slotspec name slotspecs)))
       (ecase if-exists
         (:error
          (error "FIXME: slot named ~s already exists as an inherited or direct slot!" name))
         (:supersede)
         ((NIL) (return-from add-slot NIL))))
-    (reinitialize-instance class :foreign-slots (append (remove-slotspec name (foreign-slots class)) (list spec)))
+    ;; Add the slotspec at the same position if it exists already
+    (loop for slotspec on slotspecs
+          do (when (eql name (getf (car slotspec) :name))
+               (setf (car slotspec) spec)
+               (return))
+          finally (setf slotspecs (nconc slotspecs (list spec))))
+    (reinitialize-instance class :foreign-slots slotspecs)
     spec))
 
 (defmethod add-slot (name (class symbol) &rest args)
