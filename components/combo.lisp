@@ -93,3 +93,6 @@
 
 (defclass combo-set (combo)
   ((value-set :initform (arg! :value-set) :initarg :value-set :accessor value-set)))
+
+(defmethod (setf value-set) :after (set (combo combo-set))
+  (update-combo-items combo set))
