@@ -18,19 +18,24 @@
   (enter element (focus-element structure)))
 
 (defmethod initialize-instance :after ((structure sidebar) &key layout focus focus-parent layout-parent (side :west))
-  (let* ((side (ecase side
-                 (:north :south)
-                 (:east :west)
-                 (:south :north)
-                 (:west :east)))
-         (frame (make-instance 'frame :layout-parent layout-parent :padding (margins 0)))
-         (focus-list (make-instance 'focus-list :focus-parent focus-parent))
-         (dragger (make-instance 'resizer :side side :data frame :focus-parent focus-list)))
-    (enter dragger frame :place side)
+  (let* ((opposite (ecase side
+                     (:north :south)
+                     (:east :west)
+                     (:south :north)
+                     (:west :east)))
+         (frame (make-instance 'frame :padding (margins 0)))
+         (focus-list (make-instance 'focus-list))
+         (dragger (make-instance 'resizer :side opposite :data frame)))
+    (enter dragger frame :place opposite)
     (finish-structure structure frame focus-list)
     (when layout
       (enter layout structure))
     (when focus
-      (enter focus structure))))
+      (enter focus structure))
+    (when layout-parent
+      (enter frame layout-parent :place side))
+    (when focus-parent
+      (enter focus-list focus-parent :place side)
+      (enter dragger focus-parent :place side))))
 
 ;; FIXME: reinitialize-instance
