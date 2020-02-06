@@ -42,6 +42,18 @@
   (define-deferral leave focus-element focus-element)
   (define-deferral leave focus-tree focus-element))
 
+(defmethod enter ((source structure) (target structure) &rest initargs)
+  (apply #'enter (layout-element source) target initargs)
+  (apply #'enter (focus-element source) target initargs))
+
+(defmethod update ((source structure) (target structure) &rest initargs)
+  (apply #'update (layout-element source) target initargs)
+  (apply #'update (focus-element source) target initargs))
+
+(defmethod leave ((source structure) (target structure))
+  (leave (layout-element source) target)
+  (leave (focus-element source) target))
+
 (defmethod leave ((structure structure) (self (eql T)))
   (when (slot-boundp (layout-element structure) 'layout-parent)
     (leave (layout-element structure) (layout-parent (layout-element structure))))
