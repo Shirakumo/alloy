@@ -21,3 +21,5 @@
 (defmethod component-class-for-object ((_ (eql NIL))) 'switch)
 (defmethod component-class-for-object ((_ (eql T))) 'switch)
 
+(defclass checkbox (switch)
+  ())

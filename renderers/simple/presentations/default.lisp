@@ -96,6 +96,22 @@
                  (:strong colors:white)
                  (T (colored:color 0.25 0.2 0.8)))))
 
+(define-realization (default-look-and-feel alloy:checkbox)
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:border simple:rectangle)
+   (alloy:margins -3)
+   :line-width (alloy:un 1))
+  ((:switch simple:rectangle)
+   (alloy:margins 2)))
+
+(define-update (default-look-and-feel alloy:checkbox)
+  (:switch
+   :hidden-p (not (alloy:active-p alloy:renderable))
+   :pattern (case alloy:focus
+              (:strong colors:white)
+              (T (colored:color 0.25 0.2 0.8)))))
+
 (define-realization (default-look-and-feel alloy:text-input-component)
   ((:background simple:rectangle)
    (alloy:margins))

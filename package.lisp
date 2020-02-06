@@ -81,7 +81,10 @@
    #:active-p)
   ;; components/switch.lisp
   (:export
-   #:switch)
+   #:switch
+   #:off-value
+   #:on-value
+   #:checkbox)
   ;; components/text-input.lisp
   (:export
    #:text-input-component
