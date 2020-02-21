@@ -25,6 +25,11 @@
 (defmethod set-layout-tree :before (value (combo combo))
   (set-layout-tree value (combo-list combo)))
 
+(defmethod text ((combo combo))
+  (if (focused combo)
+      (text (focused combo))
+      ""))
+
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting))
 
