@@ -102,14 +102,14 @@
   ((:border simple:rectangle)
    (alloy:margins -3)
    :line-width (alloy:un 1))
-  ((:switch simple:rectangle)
-   (alloy:margins 2)))
+  ((:button simple:rectangle)
+   (alloy:margins 3)))
 
 (define-update (default-look-and-feel alloy:checkbox)
-  (:switch
+  (:button
    :hidden-p (not (alloy:active-p alloy:renderable))
    :pattern (case alloy:focus
-              (:strong colors:white)
+              ((NIL) (colored:color 0.25 0.25 0.25))
               (T (colored:color 0.25 0.2 0.8)))))
 
 (define-realization (default-look-and-feel alloy:text-input-component)
