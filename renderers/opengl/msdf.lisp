@@ -14,6 +14,7 @@
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:export
+   #:fontcache-default-directory
    #:renderer
    #:fontcache-directory
    #:font
@@ -38,7 +39,7 @@
          ;; KLUDGE: would be better to name the files by font properties to collate duplicate files
          ;;         and to avoid pathname length or depth overflow.
          (merge-pathnames (make-pathname :type "fnt"
-                                         :directory (list* :relative (rest (pathname-directory path)))
+                                         :directory (list :relative)
                                          :defaults path)
                           cache))
         (T
