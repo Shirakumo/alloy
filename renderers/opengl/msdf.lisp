@@ -48,7 +48,12 @@
 (defclass renderer (opengl:renderer)
   ((fontcache-directory :initarg :fontcache :initform (fontcache-default-directory) :accessor fontcache-directory)
    (fontcache :initform (make-hash-table :test 'equal) :accessor fontcache)
-   (font-name-cache :initform (make-hash-table :test 'equal) :accessor font-name-cache)))
+   (font-name-cache :initform (make-hash-table :test 'equalp) :accessor font-name-cache)))
+
+(defmethod initialize-instance :after ((renderer renderer) &key)
+  ;; Init font cache
+  (dolist (path (directory (make-pathname :name :wild :type "fnt" :defaults (fontcache-directory renderer))))
+    (setf (gethash (pathname-name path) (font-name-cache renderer)) path)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (setf (opengl:resource 'text-vbo renderer)
@@ -92,10 +97,12 @@ void main(){
   (loop for font being the hash-values of (fontcache renderer)
         do (alloy:deallocate font)))
 
-(defmethod cached-font ((renderer renderer) file)
+(defmethod cached-font ((renderer renderer) file &optional family)
   (unless (probe-file file)
     (error "Specified font file does not exist or is not accessible.~%  ~a" file))
-  (let ((cache (fontcache-file file (fontcache-directory renderer))))
+  (let ((cache (if family
+                   (make-pathname :name family :type "fnt" :defaults (fontcache-directory renderer))
+                   (fontcache-file file (fontcache-directory renderer)))))
     (unless (probe-file cache)
       (ensure-directories-exist cache)
       ;; FIXME: Use lisp-native solution and generate all available glyphs in the font
@@ -126,7 +133,7 @@ void main(){
   (let ((font (or (gethash family (font-name-cache renderer))
                   (setf (gethash family (font-name-cache renderer))
                         (font-discovery:file (apply #'font-discovery:find-font :family family args))))))
-    (cached-font renderer font)))
+    (cached-font renderer font family)))
 
 (defmethod simple:request-font ((renderer renderer) (file pathname) &key)
   (cached-font renderer file))
