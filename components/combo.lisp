@@ -17,6 +17,12 @@
 (defgeneric value-set (data))
 (define-observable (setf value-set) (set observable))
 
+(defmethod value-changed :after ((combo combo))
+  ;; FIXME: This is bad
+  (do-elements (element combo)
+    (when (eql (value combo) (value element))
+      (return (setf (focused combo) element)))))
+
 (defmethod initialize-instance :after ((combo combo) &key)
   (update-combo-items combo (value-set combo))
   (on (setf value-set) (set (data combo))

@@ -112,11 +112,9 @@
 (defclass observable-object (observable)
   ())
 
-(macrolet ((def ()
-             `(defmethod (setf c2mop:slot-value-using-class) :after (value class (object observable-object) slot)
-                (when (slot-boundp object 'observers)
-                  (notify-observers (c2mop:slot-definition-name slot) object value object)))))
-  (def))
+(defmethod (setf c2mop:slot-value-using-class) :after (value class (object observable-object) slot)
+  (when (slot-boundp object 'observers)
+    (notify-observers (c2mop:slot-definition-name slot) object value object)))
 
 (defclass observable-table (observable)
   ((storage :reader storage)))
