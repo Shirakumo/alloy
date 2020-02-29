@@ -19,6 +19,8 @@
   ((step :initarg :step :initform 1 :accessor step)
    (grid :initarg :grid :initform 0 :accessor grid)))
 
+(defmethod component-class-for-object ((real real)) (find-class 'wheel))
+
 (defmethod (setf value) :around (value (wheel wheel))
   (let ((value (if (< 0 (grid wheel))
                    (* (round (/ value (grid wheel))) (grid wheel))
