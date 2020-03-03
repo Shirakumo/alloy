@@ -110,7 +110,10 @@
 (defmethod leave :before ((element focus-element) (parent focus-element))
   (unless (eq parent (focus-parent element))
     (error 'element-has-different-parent
-           :bad-element element :container parent :parent (focus-parent element))))
+           :bad-element element :container parent :parent (focus-parent element)))
+  ;; Make sure we delegate focus to the parent first if we are currently strongly focused
+  (when (eq :strong (focus element))
+    (exit element)))
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
   (set-focus-tree NIL element)
