@@ -53,8 +53,9 @@
 
 (defmethod initialize-instance :after ((renderer renderer) &key)
   ;; Init font cache
-  (dolist (path (directory (make-pathname :name :wild :type "fnt" :defaults (fontcache-directory renderer))))
-    (setf (gethash (pathname-name path) (font-name-cache renderer)) path)))
+  (dolist (path (directory (make-pathname :name :wild :type "json" :defaults (fontcache-directory renderer))))
+    (setf (gethash (pathname-name path) (fontcache renderer))
+          (make-instance 'font :family (pathname-name path) :file path :renderer renderer))))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (setf (opengl:resource 'text-vbo renderer)
@@ -109,7 +110,7 @@ void main(){
       (sdf-bmfont:create-bmfont file cache :size 32))
     (or (gethash cache (fontcache renderer))
         (setf (gethash cache (fontcache renderer))
-              (make-instance 'font :family NIL :file cache :renderer renderer)))))
+              (make-instance 'font :family family :file cache :renderer renderer)))))
 
 (defclass font (simple:font)
   ((renderer :initarg :renderer :accessor renderer)
