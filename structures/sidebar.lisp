@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass sidebar (structure)
-  ())
+  ((dragger :reader dragger)))
 
 (defmethod enter ((element layout-element) (structure sidebar) &key)
   (when (next-method-p) (call-next-method))
@@ -26,6 +26,7 @@
          (frame (make-instance 'frame :padding (margins 0)))
          (focus-list (make-instance 'focus-list))
          (dragger (make-instance 'resizer :side opposite :data frame)))
+    (setf (slot-value structure 'dragger) dragger)
     (enter dragger frame :place opposite)
     (finish-structure structure frame focus-list)
     (when layout
@@ -37,5 +38,8 @@
     (when focus-parent
       (enter focus-list focus-parent :place side)
       (enter dragger focus-parent :place side))))
+
+(defmethod enter :after ((structure sidebar) (focus focus-element) &key)
+  (enter (dragger structure) focus))
 
 ;; FIXME: reinitialize-instance
