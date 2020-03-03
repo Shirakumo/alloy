@@ -46,14 +46,15 @@
     (format stream "~s" (focus element))))
 
 (defmethod set-focus-tree :before (tree (element focus-element))
-  (when (and (focus-tree element) tree (not (eq tree (focus-tree element))))
-    (error 'element-has-different-root
-           :bad-element element :container tree))
-  (when (eq :strong (focus element))
-    ;; KLUDGE: We have been unhooked. Ideally we'd find the closest, still-hooked parent.
-    ;;         however, since currently unhooking happens from the leaf up, we don't know
-    ;;         at which parent the hooking would happen, so set root as focus for now.
-    (setf (focused (focus-tree element)) NIL)))
+  (when (focus-tree element)
+    (when (and tree (not (eq tree (focus-tree element))))
+      (error 'element-has-different-root
+             :bad-element element :container tree))
+    (when (eq (focused (focus-tree element)) element)
+      ;; KLUDGE: We have been unhooked. Ideally we'd find the closest, still-hooked parent.
+      ;;         however, since currently unhooking happens from the leaf up, we don't know
+      ;;         at which parent the hooking would happen, so set root as focus for now.
+      (setf (focused (focus-tree element)) NIL))))
 
 (defmethod (setf focus) :before (focus (element focus-element))
   (check-type focus (member NIL :weak :strong)))
@@ -112,7 +113,7 @@
     (error 'element-has-different-parent
            :bad-element element :container parent :parent (focus-parent element)))
   ;; Make sure we delegate focus to the parent first if we are currently strongly focused
-  (when (eq :strong (focus element))
+  (when (eq (focused (focus-tree element)) element)
     (exit element)))
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
