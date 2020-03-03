@@ -32,13 +32,14 @@
 
 (defun fontcache-file (path cache)
   (cond ((or (string= (pathname-type path) "font")
-             (string= (pathname-type path) "fnt"))
+             (string= (pathname-type path) "fnt")
+             (string= (pathname-type path) "json"))
          path)
         ((or (string= (pathname-type path) "otf")
              (string= (pathname-type path) "ttf"))
          ;; KLUDGE: would be better to name the files by font properties to collate duplicate files
          ;;         and to avoid pathname length or depth overflow.
-         (merge-pathnames (make-pathname :type "fnt"
+         (merge-pathnames (make-pathname :type "json"
                                          :directory (list :relative)
                                          :defaults path)
                           cache))
@@ -101,13 +102,11 @@ void main(){
   (unless (probe-file file)
     (error "Specified font file does not exist or is not accessible.~%  ~a" file))
   (let ((cache (if family
-                   (make-pathname :name family :type "fnt" :defaults (fontcache-directory renderer))
+                   (make-pathname :name family :type "json" :defaults (fontcache-directory renderer))
                    (fontcache-file file (fontcache-directory renderer)))))
     (unless (probe-file cache)
       (ensure-directories-exist cache)
-      ;; FIXME: Use lisp-native solution and generate all available glyphs in the font
-      (sb-ext:run-program "msdf-bmfont" (list "-o" (namestring cache) "-f" "json" "-s" "64" (namestring file)) :search T)
-      (rename-file (make-pathname :type "json" :defaults cache) cache))
+      (sdf-bmfont:create-bmfont file cache :size 32))
     (or (gethash cache (fontcache renderer))
         (setf (gethash cache (fontcache renderer))
               (make-instance 'font :family NIL :file cache :renderer renderer)))))
