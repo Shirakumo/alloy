@@ -22,7 +22,7 @@
     (:south 'b)
     (:center 'c)))
 
-(defmethod enter ((element layout-element) (layout border-layout) &key (place :center) (size (un 20)))
+(defmethod enter ((element layout-element) (layout border-layout) &key (place :center) size)
   (let ((slot (border-place-slot place)))
     (when (slot-value layout slot)
       (cerror "Replace the element" 'place-already-occupied
@@ -88,34 +88,47 @@
     layout))
 
 (defmethod notice-bounds ((element layout-element) (layout border-layout))
+  ;; FIXME: this is slow. Should only update as necessary by the change.
   (setf (bounds layout) (bounds layout)))
 
 (defmethod suggest-bounds (extent (layout border-layout))
-  (macrolet ((with-border (slot &body body)
-               `(destructuring-bind (&optional element size) (slot-value layout ,slot)
-                  (when element ,@body))))
+  (macrolet ((with-border ((slot dim) &body body)
+               `(destructuring-bind (&optional element size) (slot-value layout ',slot)
+                  (when element
+                    (let ((size (or size (,dim element))))
+                      ,@body)))))
     (with-unit-parent layout
       (let ((w 0) (h 0) (x (pxx extent)) (y (pxy extent)))
-        (with-border 'b
+        (with-border (b pxh)
           (incf h (pxh (suggest-bounds (px-extent x y (w extent) size) element)))
           (incf y h))
-        (dolist (border '(l c r))
-          (with-border border
-            (let ((bounds (suggest-bounds (px-extent x y size (- (pxh extent) h)) element)))
-              (incf w (pxw bounds))
-              (incf x (pxw bounds))
-              (setf h (max h (+ (- y (pxy extent)) (pxh bounds)))))))
+        (with-border (l w)
+          (let ((bounds (suggest-bounds (px-extent x y size (- (pxh extent) h)) element)))
+            (incf w (pxw bounds))
+            (incf x (pxw bounds))
+            (setf h (max h (+ (- y (pxy extent)) (pxh bounds))))))
+        (with-border (c w)
+          (let ((bounds (suggest-bounds (px-extent x y size (- (pxh extent) h)) element)))
+            (incf w (pxw bounds))
+            (incf x (pxw bounds))
+            (setf h (max h (+ (- y (pxy extent)) (pxh bounds))))))
+        (with-border (r w)
+          (let ((bounds (suggest-bounds (px-extent x y size (- (pxh extent) h)) element)))
+            (incf w (pxw bounds))
+            (incf x (pxw bounds))
+            (setf h (max h (+ (- y (pxy extent)) (pxh bounds))))))
         (setf y (+ (pxy extent) h))
-        (with-border 'u
+        (with-border (u pxh)
           (incf h (pxh (suggest-bounds (px-extent x y (w extent) size) element)))
           (incf y h))
         (px-extent (pxx extent) (pxy extent) w h)))))
 
 (defmethod (setf bounds) :after (extent (layout border-layout))
-  (macrolet ((with-border (slot &body body)
-               `(destructuring-bind (&optional element size) (slot-value layout ,slot)
-                  (let ((size (or size (un 0))))
-                    (when element ,@body)))))
+  (macrolet ((with-border ((slot dim) &body body)
+               `(destructuring-bind (&optional element size) (slot-value layout ',slot)
+                  (when element
+                    (let ((size (or size (,dim element))))
+                      ,@body)))))
     (with-unit-parent layout
       (let ((w (pxw extent)) (h (pxh extent)) (x (pxx extent)) (y (pxy extent))
             (p (padding layout)))
@@ -123,23 +136,24 @@
         (incf y (pxb p))
         (decf w (+ (pxl p) (pxr p)))
         (decf h (+ (pxb p) (pxu p)))
-        (with-border 'b
-          (let ((diff (umax (pxh (suggest-bounds (px-extent x y w size) element)))))
+        (with-border (b pxh)
+          (let ((diff (umax size (pxh (suggest-bounds (px-extent x y w size) element)))))
             (setf (bounds element) (px-extent x y w diff))
             (decf h diff)
             (incf y diff)))
-        (with-border 'u
+        (with-border (u pxh)
           (let ((diff (umax size (pxh (suggest-bounds (px-extent x y w size) element)))))
             (setf (bounds element) (px-extent x (+ y (- h diff)) w diff))
             (decf h diff)))
-        (with-border 'l
+        (with-border (l pxw)
           (let ((diff (umax size (pxw (suggest-bounds (px-extent x y size h) element)))))
             (setf (bounds element) (px-extent x y diff h))
             (decf w diff)
             (incf x diff)))
-        (with-border 'r
+        (with-border (r pxw)
           (let ((diff (umax size (pxw (suggest-bounds (px-extent x y size h) element)))))
             (setf (bounds element) (px-extent (+ x (- w diff)) y diff h))
             (decf w diff)))
-        (with-border 'c
+        (with-border (c pxh)
+          (declare (ignore size))
           (setf (bounds element) (px-extent x y w h)))))))

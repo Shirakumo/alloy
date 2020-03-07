@@ -64,7 +64,8 @@
       (:south
        (setf (bounds target) (px-extent (x ib) (+ (pxy ib) dy) (w ib) (- (pxh ib) dy))))
       (:west
-       (setf (bounds target) (px-extent (+ (pxx ib) dx) (y ib) (- (pxw ib) dx) (h ib)))))))
+       (setf (bounds target) (px-extent (+ (pxx ib) dx) (y ib) (- (pxw ib) dx) (h ib)))))
+    (notice-bounds target (layout-parent target))))
 
 (defmethod suggest-bounds (extent (resizer resizer))
   (px-extent (pxx extent) (pxy extent) (un 5) (un 5)))

@@ -27,7 +27,7 @@
          (focus-list (make-instance 'focus-list))
          (dragger (make-instance 'resizer :side opposite :data frame)))
     (setf (slot-value structure 'dragger) dragger)
-    (enter dragger frame :place opposite)
+    (enter dragger frame :place opposite :size (un 20))
     (finish-structure structure frame focus-list)
     (when layout
       (enter layout structure))
