@@ -197,6 +197,7 @@
    #:key-event
    #:key
    #:code
+   #:modifiers
    #:key-down
    #:key-up
    #:button-event
