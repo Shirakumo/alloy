@@ -166,7 +166,8 @@
     (is eq e3e1e1 (alloy:activate e3e1e1))
     (is eq :strong (alloy:focus e3e1e1))
     (is eq e3e1e1 (alloy:focused tree))
-    (is eq :weak (alloy:focus e2e2))
+    (is eq NIL (alloy:focus e2))
+    (is eq NIL (alloy:focus e2e2))
     (is eq :weak (alloy:focus e3e1))
     (is eq :weak (alloy:focus e3))
     (is eq e3 (alloy:focused root))
@@ -231,7 +232,7 @@
     (is eq :strong (alloy:focus e1e1))
     ;; Leave e1
     (finish (alloy:leave e1 T))
-    (is eq :weak (alloy:focus e1e1))
+    (is eq NIL (alloy:focus e1e1))
     (is eq NIL (alloy:focus e1))
     (is eq root (alloy:focused tree))
     ;; Re-enter e1 and re-focus e1e1

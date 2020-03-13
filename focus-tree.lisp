@@ -171,6 +171,10 @@
   (when (eql NIL (focus (focused chain)))
     (setf (focus (focused chain)) :weak)))
 
+(defmethod (setf focus) :after ((focus (eql :strong)) (chain focus-chain))
+  (when (focused chain)
+    (setf (focus (focused chain)) :weak)))
+
 (defmethod element-index :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (focus-parent element))
     (error 'element-not-contained
@@ -189,8 +193,10 @@
      (unless (eq element (focused chain))
        (setf (focused chain) element)))
     ((NIL)
-     (when (eq element (focused chain))
-       (setf (focus element) :weak)))))
+     ;; Propagate all the way down
+     (loop until (eq chain (focus-parent chain))
+           do (setf (focus chain) NIL)
+              (setf chain (focus-parent chain))))))
 
 (defmethod focus-next ((chain focus-chain))
   (unless (= 0 (element-count chain))
