@@ -243,3 +243,15 @@
     (is eq NIL (alloy:focus e1e1))
     (is eq :strong (alloy:focus e1))
     (is eq e1 (alloy:focused tree))))
+
+;; TODO: Write a randomised test suite that checks invariants such as:
+;;       - The focus-tree must be the same across the entire tree
+;;       - There can only be one strongly focused element
+;;       - If an element is strongly focused it is pointed to by the FOCUSED pointer from the tree
+;;       - If an element is not part of a tree, its focus-tree must be unset
+;;       - An element can only be weakly focused if:
+;;         - A child at some depth is strongly focused
+;;         - The immediate parent is strongly focused
+;;       - If the parent is strongly focused there can only be one weakly focused child
+;;       - If an element is strongly focused, all of its parents must be weakly focused.
+;;       etc.
