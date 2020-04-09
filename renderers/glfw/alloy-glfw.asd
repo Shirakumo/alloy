@@ -24,5 +24,6 @@
                :alloy-opengl-fond
                :alloy-windowing
                :cl-opengl
-               :cl-glfw3)
+               :cl-glfw3
+               :colored)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))

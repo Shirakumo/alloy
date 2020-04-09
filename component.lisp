@@ -10,7 +10,7 @@
   ((data :initarg :data :initform (arg! :data) :reader data)
    (ideal-bounds :initarg :ideal-bounds :initform NIL :accessor ideal-bounds)))
 
-(defmethod print-object ((element layout-element) stream)
+(defmethod print-object ((element component) stream)
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a ~a" (bounds element) (focus element))))
 

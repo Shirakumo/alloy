@@ -34,6 +34,7 @@
    #:max-size
    #:min-size
    #:decorated-p
+   #:background-color
    #:title
    #:icon
    #:always-on-top-p

@@ -95,7 +95,7 @@
                         (alloy:deallocate window)))
                     (when (= 0 (alloy:element-count (alloy:root (alloy:layout-tree screen))))
                       (window:close screen))
-                    (alloy:render screen T)))
+                    (alloy:render screen screen)))
       (when screen (alloy:deallocate screen))
       (%glfw:terminate))))
 
@@ -112,12 +112,14 @@
    (icon :initarg :icon :accessor window:icon)
    (cursor-location :initform (alloy:px-point 0 0) :accessor cursor-location)
    (min-size :initarg :min-size :accessor window:min-size)
-   (max-size :initarg :max-size :accessor window:max-size)))
+   (max-size :initarg :max-size :accessor window:max-size)
+   (background-color :initarg :background-color :initform colors:black :accessor window:background-color)))
 
 (defmethod window:make-window ((screen screen) &key (title window:*default-window-title*)
                                                     (icon window:*default-window-icon*)
                                                     (bounds window:*default-window-bounds*)
                                                     (decorated-p T) (state :normal)
+                                                    (background-color colors:black)
                                                     min-size max-size always-on-top-p
                                                     &allow-other-keys)
   (let* ((window (make-instance 'window :parent screen
@@ -125,7 +127,8 @@
                                         :layout-parent (alloy:root (alloy:layout-tree screen))
                                         :title title
                                         :size bounds
-                                        :decorated-p decorated-p))
+                                        :decorated-p decorated-p
+                                        :background-color background-color))
          (pointer (pointer window)))
     (when (typep bounds 'alloy:extent)
       (%glfw:set-window-position pointer (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
@@ -167,6 +170,10 @@
 (defmethod alloy:render ((screen screen) (window window))
   (%glfw:make-context-current (cffi:null-pointer))
   (%glfw:make-context-current (pointer window))
+  (gl:clear-color (colored:red (window:background-color window))
+                  (colored:green (window:background-color window))
+                  (colored:blue (window:background-color window))
+                  (colored:alpha (window:background-color window)))
   (gl:clear :color-buffer :depth-buffer :stencil-buffer)
   (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
     (gl:viewport 0 0 w h))
@@ -192,7 +199,7 @@
         (%glfw:set-window-size (pointer window) (max 1 (round (alloy:pxw bounds))) (max 1 (round (alloy:pxh bounds))))))))
 
 (defmethod (setf alloy:bounds) :after (extent (window window))
-  (let ((target (simple:transform-matrix (simple:transform window))))
+  (let ((target (simple:transform-matrix window)))
     (setf (aref target 0) (/ 2f0 (max 1f0 (alloy:pxw extent))))
     (setf (aref target 1) 0f0)
     (setf (aref target 2) -1f0)
@@ -320,8 +327,8 @@
        (defun ,name (,window ,@(mapcar #'car args))
          (flet ((handle (ev)
                   (if (typep ev 'alloy:pointer-event)
-                      (alloy:handle ev window window)
-                      (alloy:handle ev (parent window) window))))
+                      (alloy:handle ev window)
+                      (alloy:handle ev (parent window)))))
            (declare (ignore #'handle))
            ,@body)))))
 

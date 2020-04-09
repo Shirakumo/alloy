@@ -98,6 +98,7 @@
             :existing (layout-element window) :place T :element element :layout window)
     (alloy:leave (layout-element window) window))
   (setf (layout-element window) element)
+  (alloy::set-layout-tree (alloy:layout-tree window) element)
   (when (typep element 'alloy:focus-element)
     (call-next-method)))
 
@@ -106,6 +107,7 @@
     (cerror "Replace the element" 'alloy:place-already-occupied
             :existing (focus-element window) :place T :element element :focus window)
     (alloy:leave (focus-element window) window))
+  (alloy::set-focus-tree (alloy:focus-tree window) element)
   (setf (focus-element window) element))
 
 (defmethod alloy:leave ((element alloy:layout-element) (window window))
