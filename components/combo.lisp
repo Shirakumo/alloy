@@ -59,6 +59,12 @@
     (T
      (call-next-method))))
 
+(defmethod handle ((event scroll) (combo combo))
+  (cond ((< 0 (dy event))
+         (focus-prev combo))
+        ((< (dy event) 0)
+         (focus-next combo))))
+
 (defmethod (setf focus) :after (focus (combo combo))
   (when (null focus)
     (setf (state combo) NIL)))
