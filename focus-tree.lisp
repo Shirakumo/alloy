@@ -56,11 +56,16 @@
       ;;         at which parent the hooking would happen, so set root as focus for now.
       (setf (focused (focus-tree element)) NIL))))
 
+(defmethod (setf focus) :around (focus (element focus-element))
+  (unless (eq focus (focus element))
+    (call-next-method)))
+
 (defmethod (setf focus) :before (focus (element focus-element))
   (check-type focus (member NIL :weak :strong)))
 
-(defmethod (setf focus) :after ((focus (eql :strong)) (element focus-element))
-  (setf (focused (focus-tree element)) element))
+(defmethod (setf focus) ((focus (eql :strong)) (element focus-element))
+  (setf (focused (focus-tree element)) element)
+  (call-next-method))
 
 (defmethod (setf focus) :after (focus (element focus-element))
   (unless (eq element (focus-parent element))
@@ -175,6 +180,10 @@
   (when (focused chain)
     (setf (focus (focused chain)) :weak)))
 
+(defmethod (setf focus) :after ((focus (eql NIL)) (chain focus-chain))
+  (when (focused chain)
+    (setf (focus (focused chain)) NIL)))
+
 (defmethod element-index :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (focus-parent element))
     (error 'element-not-contained
@@ -185,18 +194,21 @@
     (:strong
      (unless (eq element (focused chain))
        (setf (focused chain) element))
-     ;; Propagate all the way down
-     (loop until (eq chain (focus-parent chain))
-           do (setf (focus chain) :weak)
-              (setf chain (focus-parent chain))))
+     (setf (focus chain) :weak)
+     (loop do (setf chain (focus-parent chain))
+              (setf (focus chain) :weak)
+           until (eq chain (focus-parent chain))))
     (:weak
      (unless (eq element (focused chain))
-       (setf (focused chain) element)))
+       (setf (focused chain) element))
+     (unless (eql :strong (focus chain))
+       (setf (focus chain) :weak)
+       (loop do (setf chain (focus-parent chain))
+                (setf (focus chain) :weak)
+             until (eq chain (focus-parent chain)))))
     ((NIL)
-     ;; Propagate all the way down
-     (loop until (eq chain (focus-parent chain))
-           do (setf (focus chain) NIL)
-              (setf chain (focus-parent chain))))))
+     (unless (eql :strong (focus chain))
+       (setf (focus chain) NIL)))))
 
 (defmethod focus-next ((chain focus-chain))
   (unless (= 0 (element-count chain))
