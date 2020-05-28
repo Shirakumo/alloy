@@ -87,10 +87,6 @@
   (call-next-method)
   (setf (state slider) :dragging))
 
-(defmethod (setf focus) :after (focus (slider slider))
-  (unless (eql :strong focus)
-    (setf (state slider) NIL)))
-
 (defclass ranged-slider (slider)
   ((range :initarg :range :initform '(0 . 100) :accessor range)))
 
