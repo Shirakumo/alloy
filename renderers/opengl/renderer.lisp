@@ -24,9 +24,7 @@
 
 (defmethod alloy:render :around ((renderer renderer) (ui alloy:ui))
   (let ((*clip-depth* 0))
-    (gl:enable :depth-test)
-    (call-next-method)
-    (gl:disable :depth-test)))
+    (call-next-method)))
 
 (defmethod (setf resource) (value name (renderer renderer))
   (setf (gethash name (resources renderer)) value))

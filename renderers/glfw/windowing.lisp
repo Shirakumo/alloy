@@ -210,7 +210,7 @@
 
     (setf (aref target 6) 0f0)
     (setf (aref target 7) 0f0)
-    (setf (aref target 8) -1f0)))
+    (setf (aref target 8) 0.0001f0)))
 
 (defmethod alloy:dots-per-cm ((window window))
   (alloy:dots-per-cm (parent window)))

@@ -32,7 +32,7 @@
                  (pointer (parent renderer))
                  (cffi:null-pointer)))
     (gl:clear-color 0 0 0 0)
-    (gl:enable :blend :depth-test :stencil-test)
+    (gl:enable :blend :depth-test :depth-clamp :stencil-test)
     (gl:clear-stencil #x00)
     (gl:stencil-func :always 1 #xFF)
     (gl:stencil-mask #xFF)
