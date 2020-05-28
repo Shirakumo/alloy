@@ -314,6 +314,12 @@
      (window:fullscreen window (first (window:list-monitors (parent window))))))
   state)
 
+(defun handle-window-event (window ev)
+  (if (typep ev 'alloy:pointer-event)
+      (or (alloy:handle ev (alloy:focus-tree (parent window)))
+          (alloy:handle ev window))
+      (alloy:handle ev (parent window))))
+
 (defmacro define-callback (name args &body body)
   (destructuring-bind (window &rest args) args
     `(progn
@@ -326,9 +332,7 @@
                   (format *error-output* "~&[GLFW] Callback ~a on unknown window." ',name)))))
        (defun ,name (,window ,@(mapcar #'car args))
          (flet ((handle (ev)
-                  (if (typep ev 'alloy:pointer-event)
-                      (alloy:handle ev window)
-                      (alloy:handle ev (parent window)))))
+                  (handle-window-event ,window ev)))
            (declare (ignore #'handle))
            ,@body)))))
 

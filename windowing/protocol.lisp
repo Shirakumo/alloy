@@ -81,8 +81,9 @@
   ((new-state :initarg :new-state :initform (alloy:arg! :new-state) :reader new-state)))
 
 (defmethod alloy:handle ((event alloy:pointer-event) (window window))
-  (when (layout-element window)
-    (alloy:handle event (layout-element window))))
+  (or (when (layout-element window)
+        (alloy:handle event (layout-element window)))
+      (alloy:decline)))
 
 (defmethod alloy:render ((renderer alloy:renderer) (window window))
   (when (layout-element window)
