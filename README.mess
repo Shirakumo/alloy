@@ -122,13 +122,22 @@ In alloy there is a notion of a "focus tree" -- a hierarchy of elements that des
 
 Within a ``focus-tree`` there must always be exactly one element with strong focus, but there may be many elements with weak or no focus. Every element in a focus tree has exactly one parent element. For the element at the root of the focus tree, this is the element itself. Focus may flow inwards and outwards, meaning that a strongly focused element may pass the strong focus to a child element (``activate``), or it may pass the focus to its parent (``exit``).
 
-An element may also be strongly focused directly, referred to as "focus stealing". This will cause the previously strongly focused element to become weakly focused. 
+An element may also be strongly focused directly, referred to as "focus stealing".
 
 Within a ``focus-chain`` -- an element that can contain child elements -- only one of its direct children may have strong or weak focus. This is used when the focus-chain is activated, to determine which of the child elements to give strong focus to. Each child also has a direct successor and predecessor. There may be additional ties between child elements that offer more intuitive navigation, but this basic connection is always present.
 
 Note that there is no necessary visual correspondence to the way focus moves between elements. This is important as elements may have a certain visual grouping, but the ideal way focus travels between the elements may not be directly encoded in this grouping.
 
 An element may only be contained in one focus chain at a time. Attempting to ``enter`` an element into multiply focus chain before ``leave``ing it will signal an error.
+
+More specifically, within a ``focus-tree`` the following invariants must be upheld at any time:
+
+- There must always be exactly one strongly focused element
+- All predecessors of the strongly focused element must be weakly focused
+- An element may only be weakly focused if:
+  - Its immediate predecessor is strongly focused
+  - Or one of its successors is strongly focused
+- If an element is an immediate successor of another, the other element must be its ``focus-parent``.
 
 ## Events
 Alloy is a retained mode toolkit where you construct an interface, which then reacts to changes in the environment. These changes are communicated via events. When an element ``handle``s an event, it can either decide to handle it and perform whatever action necessary to do so, or call ``decline`` in order to allow the event to propagate to an element that might want to handle it instead. The behaviour of this propagation is distinguished between the following two types of events:
