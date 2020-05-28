@@ -6,6 +6,73 @@
 
 (in-package #:org.shirakumo.alloy.test)
 
+(defclass named-focus-list (alloy:focus-list)
+  ((name :initarg :name :reader name)))
+
+(defmethod print-object ((focus-list named-focus-list) stream)
+  (print-unreadable-object (focus-list stream)
+    (format stream "~a ~a" (name focus-list) (alloy:focus focus-list))))
+
+(defun check-focus-invariant (element)
+  (labels ((find-child-with (focus element)
+             (alloy:do-elements (child element)
+               (when (or (eql focus (alloy:focus child))
+                         (find-child-with focus child))
+                 (return T)))))
+    (ecase (alloy:focus element)
+      (:strong
+       (unless (eql element (alloy:focus-parent element))
+         (loop for cur = (alloy:focus-parent element) then (alloy:focus-parent cur)
+               do (assert (eql :weak (alloy:focus cur)) ()
+                          "Invariant violated: not all ancestors of a ~a are weakly focused."
+                          element)
+               until (eql cur (alloy:focus-parent cur)))))
+      (:weak
+       (assert (or (eql :strong (alloy:focus (alloy:focus-parent element)))
+                   (find-child-with :strong element)) ()
+                   "Invariant violated: neither direct parent nor any successor of a ~a are strongly focused."
+                   element))
+      ((NIL)))))
+
+(defun check-tree-invariant (tree)
+  (labels ((recurse (element)
+             (check-focus-invariant element)
+             (alloy:do-elements (child element)
+               (recurse child))))
+    (recurse (alloy:root tree))))
+
+(defun print-focus-tree (tree)
+  (labels ((recurse (element depth)
+             (format T "~&~v{  ~}- ~a~%" depth 0 (alloy:focus element))
+             (alloy:do-elements (child element)
+               (recurse child (1+ depth)))))
+    (recurse tree 0)))
+
+(defun compose-tree (structure)
+  (let* ((tree (make-instance 'alloy:focus-tree))
+         (root (make-instance 'named-focus-list :name 'root :focus-parent tree))
+         (els ()))
+    (labels ((mk (parent name)
+               (push (make-instance 'named-focus-list :name name :parent parent) els))
+             (build (parent children)
+               (loop for child in children
+                     do (if (listp child)
+                            (build (mk parent (first child)) (rest child))
+                            (mk parent child)))))
+      (mk root structure)
+      (values tree els))))
+
+(defun random-tree ()
+  (let* ((tree (make-instance 'alloy:focus-tree))
+         (root (make-instance 'named-focus-list :name 'root :focus-parent tree))
+         (els (list root)))
+    (loop for i from 1 to 10
+          for parent = (alexandria:random-elt els)
+          for child = (make-instance 'named-focus-list :focus-parent parent :name
+                                     (format NIL "~a-~a" (name parent) i))
+          do (push child els))
+    (values tree els)))
+
 (define-test focus-tree
   :parent alloy)
 
@@ -63,24 +130,30 @@
     (is eq NIL (alloy:focus e2))
     (is eq NIL (alloy:focus e3))
     (is eq NIL (alloy:focused list))
+    (alloy:activate list)
+    (is eq :strong (alloy:focus list))
     (group (weak-focus-cycling)
       (is eq e1 (alloy:focus-next list))
       (is eq e1 (alloy:focused list))
+      (is eq :strong (alloy:focus list))
       (is eq :weak (alloy:focus e1))
       (is eq NIL (alloy:focus e2))
       (is eq NIL (alloy:focus e3))
       (is eq e2 (alloy:focus-next list))
       (is eq e2 (alloy:focused list))
       (is eq NIL (alloy:focus e1))
+      (is eq :strong (alloy:focus list))
       (is eq :weak (alloy:focus e2))
       (is eq NIL (alloy:focus e3))
       (is eq e3 (alloy:focus-next list))
       (is eq e3 (alloy:focused list))
       (is eq NIL (alloy:focus e1))
       (is eq NIL (alloy:focus e2))
+      (is eq :strong (alloy:focus list))
       (is eq :weak (alloy:focus e3))
       (is eq e1 (alloy:focus-next list))
       (is eq e1 (alloy:focused list))
+      (is eq :strong (alloy:focus list))
       (is eq :weak (alloy:focus e1))
       (is eq NIL (alloy:focus e2))
       (is eq NIL (alloy:focus e3))
@@ -177,9 +250,9 @@
         (is eq e2e2 (alloy:focused tree))
         (is eq e2e2 (alloy:focused e2))
         (is eq e2 (alloy:focused root))
-        (is eq :strong (alloy:focus e2))
+        (is eq :weak (alloy:focus e2))
         (is eq NIL (alloy:focus e2e1))
-        (is eq :weak (alloy:focus e2e2))))
+        (is eq :strong (alloy:focus e2e2))))
     (group (deep-focus-stealing)
       (is eq e3e1e1 (alloy:activate e3e1e1))
       (is eq e3e1e1 (alloy:focused tree))
@@ -262,6 +335,15 @@
       (is eq NIL (alloy:focus e1e1))
       (is eq :strong (alloy:focus e1))
       (is eq e1 (alloy:focused tree)))))
+
+(define-test tree-invariant
+  :parent focus-list
+  :depends-on (multi-level-tree-updates)
+  (multiple-value-bind (tree els) (random-tree)
+    (loop for name in (loop repeat 100 collect (name (alexandria:random-elt els)))
+          for random = (find name els :key #'name)
+          do (alloy:activate random)
+             (finish (check-tree-invariant tree)))))
 
 ;; TODO: Write a randomised test suite that checks invariants such as:
 ;;       - The focus-tree must be the same across the entire tree
