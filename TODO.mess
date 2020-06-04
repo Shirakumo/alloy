@@ -1,0 +1,66 @@
+# Alloy Todo
+It is highly recommended to use a tool like the "magit-todos"(https://github.com/alphapapa/magit-todos) package to track comments in the code base that mark problems in the implementation. These are typically comments starting with ``KLUDGE``, ``TODO``, or ``FIXME``.
+
+Bigger tasks that do not fit onto a specific location in the code are described in individual sections here. The tasks are roughly divided up according to estimated amount of effort/time investment required.
+
+**If you begin working on one of these tasks, please do so on a separate branch named after the task, create a dummy commit, and //open a PR immediately// to track progress and allow discussion of the issue.** You should do this even if you are not yet entirely clear on how to tackle the task. The PR can be used to get help and discuss potential forms of attack. Once you fully resolve one of these tasks, please remove it from this document. If you partially resolve or otherwise affect a task, similarly please update its status here.
+
+## Low Effort Tasks
+### UBOs for the OpenGL Backend
+Using Uniform Buffer Objects would allow us to avoid having to re-set common uniform parameters for every draw call, increasing performance.
+
+### Gradients in the OpenGL Backend
+Currently gradients only exist as a protocol, but are not actually implemented. A gradient should create a vertex buffer with the correct geometry (2D verts + colors). This geometry only needs to be created once per gradient, and can then be scaled and transformed to fit sizes.
+
+## Medium Effort Tasks
+### Using Cluffer for Text Buffers
+The "Cluffer"(https://github.com/robert-strandh/Cluffer) library implements a protocol suited for text editor buffers. We should make use of it to implement our text editor components instead of rolling our own ad-hoc buffer system.
+
+### Animation System
+Currently the simple-presentations protocol does not support a way to dynamically change properties over time. This is not terribly important for most applications, but the presence of tweens between different states can massively improve the look and feel of an application, and is especially important for certain domains like games.
+
+In order to do this the first step would be to design an abstract protocol that extends the simple-presentations protocol to allow declaring and managing animation states, as well as a protocol to actually advance animations over time, as currently Alloy is completely unaware of time progression. A protocol design here means a set of classes and generic functions that would facilitate the functionality represented by this extension.
+
+Do //not// start implementing this system before the protocol has been designed and discussed.
+
+### Query System DPI Information
+Currently we rely on the user to supply actual DPI information about the real system we are running on. It would be great if there was an Alloy extension that allowed querying the DPI information from the system. Several challenges exist here:
+
+- The DPI information is highly display system specific, meaning we would need implementations for Win32, Cocoa, X11, and Wayland in the least.
+- The DPI information can change depending on where the window is on screen. To make this independent of the backend used, the DPI query protocol should allow passing an ``extent`` in screen coordinates for which the DPI is returned. If no such extent is passed, the DPI of the primary monitor should be returned.
+- A window may potentially exist on two separate monitors with different DPI values at once. In this case the system should offer some kind of conflict resolution.
+- Ideally this would be integrated into the alloy-windowing protocol to automatically track and update the DPI of a window.
+
+### Grid-Bag Layout
+A grid-bag layout is like a grid layout, but allows certain elements to span multiple rows and columns at once.
+
+## High Effort Tasks
+### Cocoa Backend
+This would be done in two steps:
+
+1. Implement a backend similar to the opengl backend that implements the drawing primitives of the Simple protocol and the input primitives of base Alloy. This would allow rendering to and interacting with Alloy UI from a native Cocoa window.
+2. Implement a backend that translates standard components to Cocoa native components instead. Whether doing such a translation is feasible is currently unexplored.
+
+### GTK Backend
+This would be done in two steps:
+
+1. Implement a backend similar to the opengl backend that implements the drawing primitives of the Simple protocol and the input primitives of base Alloy. This would allow rendering to and interacting with Alloy UI from a native GTK window.
+2. Implement a backend that translates standard components to GTK native components instead. Whether doing such a translation is feasible is currently unexplored.
+
+### Qt Backend
+This would be done in two steps:
+
+1. Implement a backend similar to the opengl backend that implements the drawing primitives of the Simple protocol and the input primitives of base Alloy. This would allow rendering to and interacting with Alloy UI from a native Qt window.
+2. Implement a backend that translates standard components to Qt native components instead. Whether doing such a translation is feasible is currently unexplored.
+
+### Wayland Backend
+Implement a backend similar to the opengl backend that implements the drawing primitives of the Simple protocol and the input primitives of base Alloy. This would allow rendering to and interacting with Alloy UI from a native Wayland window.
+
+### Win32 Backend
+This would be done in two steps:
+
+1. Implement a backend similar to the opengl backend that implements the drawing primitives of the Simple protocol and the input primitives of base Alloy. This would allow rendering to and interacting with Alloy UI from a native Win32 window.
+2. Implement a backend that translates standard components to Win32/WPF native components instead. Whether doing such a translation is feasible is currently unexplored.
+
+### X11 Backend
+Implement a backend similar to the opengl backend that implements the drawing primitives of the Simple protocol and the input primitives of base Alloy. This would allow rendering to and interacting with Alloy UI from a native X11 window.
