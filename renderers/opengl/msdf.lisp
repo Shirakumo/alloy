@@ -20,6 +20,8 @@
    #:font
    #:file
    #:cached-font
+   #:fontcache
+   #:atlas
    #:text
    #:cursor
    #:selection))
