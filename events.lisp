@@ -47,6 +47,9 @@
 (defclass paste-event (direct-event)
   ((content :initarg :content :initform (arg! :content) :reader content)))
 
+(defclass drop-event (direct-event)
+  ((paths :initarg :paths :initform (arg! :paths) :reader paths)))
+
 (defclass text-event (direct-event)
   ((text :initarg :text :initform (arg! :text) :reader text)))
 

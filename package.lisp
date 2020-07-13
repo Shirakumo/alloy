@@ -191,8 +191,11 @@
    #:dx
    #:dy
    #:direct-event
+   #:copy-event
    #:paste-event
    #:content
+   #:drop-event
+   #:paths
    #:text-event
    #:text
    #:key-event

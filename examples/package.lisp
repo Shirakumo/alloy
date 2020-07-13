@@ -9,6 +9,7 @@
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
    (#:glfw #:org.shirakumo.alloy.renderers.glfw)
+   (#:simple #:org.shirakumo.alloy.renderers.simple)
    (#:windowing #:org.shirakumo.alloy.windowing)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:export
