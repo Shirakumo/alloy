@@ -14,5 +14,6 @@
   :serial T
   :components ((:file "package")
                (:file "toolkit")
-               (:file "windows"))
+               (:file "windows")
+               (:file "drop"))
   :depends-on (:alloy-glfw))
