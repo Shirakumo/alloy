@@ -156,6 +156,7 @@
     (%glfw:set-scroll-callback pointer (cffi:callback scroll-callback))
     (%glfw:set-key-callback pointer (cffi:callback key-callback))
     (%glfw:set-char-callback pointer (cffi:callback char-callback))
+    (%glfw::set-drop-callback pointer (cffi:callback drop-callback))
     (alloy:allocate window)
     (alloy:render screen window)
     window))
@@ -404,3 +405,8 @@
 (define-callback window-position-callback (window (x :int) (y :int))
   (let ((bounds (alloy:bounds window)))
     (setf (alloy:bounds window) (alloy:px-extent x y (alloy:pxw bounds) (alloy:pxh bounds)))))
+
+(define-callback drop-callback (window (count :int) (paths :pointer))
+  (let ((paths (loop for i from 0 below count
+                     collect (cffi:mem-aref paths :string i))))
+    (handle (make-instance 'alloy:drop-event :paths paths))))

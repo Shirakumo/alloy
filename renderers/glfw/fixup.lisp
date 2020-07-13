@@ -59,5 +59,9 @@
   (window :pointer)
   (fun :pointer))
 
+(cffi:defcfun (%glfw::set-drop-callback "glfwSetDropCallback") :pointer
+  (window :pointer)
+  (fun :pointer))
+
 (cffi:defcfun (%glfw::wait-events-timeout "glfwWaitEventsTimeout") :void
   (timeout :double))
