@@ -32,7 +32,7 @@
 (defgeneric list-windows (screen))
 (defgeneric size (monitor/screen))
 
-(defclass window (alloy:layout-element alloy:focus-element alloy:renderable)
+(defclass window (alloy:layout-element alloy:focus-element alloy:renderable alloy:observable)
   ((layout-element :initform NIL :accessor layout-element)
    (focus-element :initform NIL :accessor focus-element)))
 
