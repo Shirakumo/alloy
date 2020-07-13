@@ -120,15 +120,16 @@
                                                     (bounds window:*default-window-bounds*)
                                                     (decorated-p T) (state :normal)
                                                     (background-color colors:black)
+                                                    (class 'window)
                                                     min-size max-size always-on-top-p
                                                     &allow-other-keys)
-  (let* ((window (make-instance 'window :parent screen
-                                        :focus-parent (alloy:root (alloy:focus-tree screen))
-                                        :layout-parent (alloy:root (alloy:layout-tree screen))
-                                        :title title
-                                        :size bounds
-                                        :decorated-p decorated-p
-                                        :background-color background-color))
+  (let* ((window (make-instance class :parent screen
+                                      :focus-parent (alloy:root (alloy:focus-tree screen))
+                                      :layout-parent (alloy:root (alloy:layout-tree screen))
+                                      :title title
+                                      :size bounds
+                                      :decorated-p decorated-p
+                                      :background-color background-color))
          (pointer (pointer window)))
     (when (typep bounds 'alloy:extent)
       (%glfw:set-window-position pointer (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
