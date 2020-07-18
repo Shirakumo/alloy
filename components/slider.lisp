@@ -32,10 +32,10 @@
         (max 0 (min 1 (/ (- (value slider) min) (- max min)))))))
 
 (defmethod (setf value) :around (value (slider slider))
-  (let ((value (if (< 0 (grid slider))
-                   (* (round (/ value (grid slider))) (grid slider))
-                   value)))
-    (destructuring-bind (min . max) (range slider)
+  (destructuring-bind (min . max) (range slider)
+    (let ((value (if (< 0 (grid slider))
+                     (+ min (* (round (- value min) (grid slider)) (grid slider)))
+                     value)))
       (call-next-method (max min (min max value)) slider))))
 
 (defmethod (setf value) :after (value (slider slider))
