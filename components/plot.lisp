@@ -19,6 +19,11 @@
 (defmethod suggest-bounds (extent (plot plot))
   (extent (x extent) (y extent) (w extent) (umax (un 400) (h extent))))
 
+(defmethod render :around ((renderer renderer) (component plot))
+  ;; Ensures that a plotted line doesn't leave the bounds of the plot
+  (with-constrained-visibility ((bounds component) renderer)
+    (call-next-method)))
+
 (defmethod plot-points ((plot plot))
   (let ((x-range (x-range plot))
         (y-range (y-range plot))
