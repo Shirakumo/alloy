@@ -21,7 +21,7 @@
 
 (defmethod render :around ((renderer renderer) (component plot))
   ;; Ensures that a plotted line doesn't leave the bounds of the plot
-  (with-constrained-visibility ((ensure-extent (bounds component)) renderer)
+  (with-constrained-visibility ((bounds component) renderer)
     (call-next-method)))
 
 (defmethod plot-points ((plot plot))
