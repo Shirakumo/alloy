@@ -324,6 +324,9 @@
    #:stretch
    #:row
    #:col)
+  ;; grid-bag
+  (:export
+   #:grid-bag-layout)
   ;; layouts/linear.lisp
   (:export
    #:linear-layout
