@@ -412,6 +412,8 @@
    #:resolution-scale
    #:base-scale
    #:smooth-scaling-ui
+   #:fixed-scaling-ui
+   #:scales
    #:lock-step-scaling-ui
    #:scale-step
    #:scale-direction)

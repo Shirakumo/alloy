@@ -66,6 +66,18 @@
     (setf (resolution-scale ui) (min wr hr)))
   (call-next-method))
 
+(defclass fixed-scaling-ui (ui)
+  ((scales :initform '((T T 1.0)) :initarg :scales :accessor scales)))
+
+(defmethod suggest-bounds (extent (ui fixed-scaling-ui))
+  (setf (resolution-scale ui)
+        (loop for (w h scale) in (scales ui)
+              do (when (and (or (eql T w) (<= w (pxw extent)))
+                            (or (eql T h) (<= h (pxh extent))))
+                   (return scale))
+              finally (return 1.0)))
+  (call-next-method))
+
 (defclass lock-step-scaling-ui (ui)
   ((scale-step :initform 0.5 :initarg :scale-step :accessor scale-step)
    (scale-direction :initform :down :initarg :scale-direction :accessor scale-direction)))
