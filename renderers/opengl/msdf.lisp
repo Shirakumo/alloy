@@ -12,7 +12,8 @@
    (#:opengl #:org.shirakumo.alloy.renderers.opengl)
    (#:font-discovery #:org.shirakumo.font-discovery)
    (#:colored #:org.shirakumo.alloy.colored)
-   (#:colors #:org.shirakumo.alloy.colored.colors))
+   (#:colors #:org.shirakumo.alloy.colored.colors)
+   (#:uax-14 #:org.shirakumo.alloy.uax-14))
   (:export
    #:fontcache-default-directory
    #:renderer
@@ -143,20 +144,66 @@ void main(){
 (defmethod simple:request-font ((renderer renderer) (default (eql :default)) &key)
   (simple:request-font renderer "Arial"))
 
-(defun compute-text (font text s)
-  (let ((array (make-array (* 6 4 (length text)) :element-type 'single-float))
-        (i 0) (minx 0) (miny 0) (maxx 0) (maxy 0))
+(defun map-glyphs (font function string bounds s)
+  (let ((x 0) (y 0)
+        (breaker (uax-14:make-breaker string))
+        (max-width (alloy:pxw (alloy:ensure-extent bounds)))
+        (line-start 0)
+        (next-break 0)
+        (next-mandatory NIL)
+        (last-break 0)
+        (line (3b-bmfont:line-height font))
+        (space (3b-bmfont::space-size font)))
+    (labels ((thunk (x- y- x+ y+ u- v- u+ v+)
+               (funcall function (* s x-) (* s (+ y y-)) (* s x+) (* s (+ y y+)) u- v- u+ v+))
+             (insert-break (at)
+               (3b-bmfont:map-glyphs font #'thunk string :model-y-up T :start line-start :end at)
+               (setf x 0)
+               (decf y line)
+               (setf line-start at)))
+      ;; This first loops through, only computing the width. Then, when a line break
+      ;; is encountered or the line is full, it calls 3b-bmfont:map-glyphs to emit
+      ;; the complete line before starting on the next line.
+      ;;
+      ;; FIXME: This model inherently assumes a LTR system and will not deal with
+      ;;        RTL, TTB, BTT orientations correctly. We also don't use UAX-9 yet.
+      (loop for p = nil then c
+            for i from 0 below (length string)
+            for c = (aref string i)
+            for char = (3b-bmfont::char-data c font)
+            for k = (gethash (cons p c) (3b-bmfont:kernings font) 0)
+            do (when (and next-mandatory (= next-break i))
+                 (insert-break i))
+               (case c
+                 (#\newline)
+                 (#\space
+                  (incf x space))
+                 (#\tab
+                  (incf x (* 8 space)))
+                 (t
+                  (incf x k)
+                  (let ((x+ (* s (+ x (getf char :xoffset) (getf char :width)))))
+                    (cond ((< x+ (- max-width 100)))
+                          ((< line-start last-break)
+                           (insert-break last-break))
+                          ((< line-start i)
+                           (insert-break (1- i)))))
+                  (incf x (getf char :xadvance))))
+               (when (<= next-break i)
+                 (multiple-value-bind (pos mandatory) (uax-14:next-break breaker)
+                   (setf next-mandatory mandatory)
+                   (shiftf last-break next-break (or pos (1+ (length string))))))
+            finally (insert-break (length string))))))
+
+(defun compute-text (font text bounds s)
+  (let ((array (make-array (* 6 4 (length text)) :element-type 'single-float :adjustable T :fill-pointer T))
+        (minx 0) (miny 0) (maxx 0) (maxy 0))
     (labels ((vertex (x y u v)
-               (setf (aref array (+ i 0)) x)
-               (setf (aref array (+ i 1)) y)
-               (setf (aref array (+ i 2)) u)
-               (setf (aref array (+ i 3)) v)
-               (incf i 4))
+               (vector-push-extend (float x) array)
+               (vector-push-extend (float y) array)
+               (vector-push-extend (float u) array)
+               (vector-push-extend (float v) array))
              (thunk (x- y- x+ y+ u- v- u+ v+)
-               (setf x- (* s x-))
-               (setf y- (* s y-))
-               (setf x+ (* s x+))
-               (setf y+ (* s y+))
                (setf minx (min minx x-))
                (setf miny (min miny y-))
                (setf maxx (max maxx x+))
@@ -167,7 +214,7 @@ void main(){
                (vertex x+ y+ u+ (- 1 v-))
                (vertex x- y- u- (- 1 v+))
                (vertex x+ y- u+ (- 1 v+))))
-      (3b-bmfont:map-glyphs (data font) #'thunk text :model-y-up T))
+      (map-glyphs (data font) #'thunk text bounds s))
     (values array minx miny maxx maxy)))
 
 (defclass text (simple:text)
@@ -180,13 +227,12 @@ void main(){
 (defmethod shared-initialize :after ((text text) slots &key)
   (alloy:allocate (simple:font text))
   (let ((s (scale text)))
-    (multiple-value-bind (array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) s)
-      (declare (ignore y- y+))
+    (multiple-value-bind (array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) (simple:bounds text) s)
       (let* ((h (* s (3b-bmfont:line-height (data (simple:font text)))))
              (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
                                           (alloy:px-size (- x+ x-) h))))
         (setf (vertex-data text) array)
-        (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (alloy:pxy p) (- x+ x-) h))))))
+        (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (alloy:pxy p) (- x+ x-) (- y- y+)))))))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
   (apply #'make-instance 'text :text string :bounds bounds :font (or font (simple:request-font renderer :default)) args))

@@ -15,6 +15,7 @@
   :components ((:file "msdf"))
   :depends-on (:alloy-opengl
                :font-discovery
+               :uax-14
                :sdf/bmfont
                :3b-bmfont
                :3b-bmfont/json)
