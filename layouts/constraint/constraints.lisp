@@ -65,17 +65,23 @@
 (define-expression-transform :center-y ()
   `(= (/ :rh 2) (- :b (/ :h 2))))
 
-(define-expression-transform :left ()
-  `(= :l 0))
+(define-expression-transform :left (&optional (un 0))
+  `(= :l ,un))
 
-(define-expression-transform :right ()
-  `(= :r 0))
+(define-expression-transform :right (&optional (un 0))
+  `(= :r ,un))
 
-(define-expression-transform :top ()
-  `(= :u 0))
+(define-expression-transform :top (&optional (un 0))
+  `(= :u ,un))
 
-(define-expression-transform :bottom ()
-  `(= :b 0))
+(define-expression-transform :bottom (&optional (un 0))
+  `(= :b ,un))
+
+(define-expression-transform :width (un)
+  `(= :w ,un))
+
+(define-expression-transform :height (un)
+  `(= :h ,un))
 
 (define-expression-transform :square ()
   `(= :w :h))
