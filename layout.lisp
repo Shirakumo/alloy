@@ -31,6 +31,9 @@
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a" (bounds element))))
 
+(defmethod ui ((element layout-element))
+  (ui (layout-tree element)))
+
 (defmethod x ((element layout-element)) (extent-x (bounds element)))
 (defmethod y ((element layout-element)) (extent-y (bounds element)))
 (defmethod w ((element layout-element)) (extent-w (bounds element)))
