@@ -37,7 +37,7 @@
        (< y1 (+ y2 h2))
        (< y2 (+ y1 h1)))))
 
-(defclass grid-bag-layout (layout vector-container)
+(defclass grid-bag-layout (vector-container layout)
   ((element-extents
     :initform (make-hash-table :test 'eq)
     :accessor element-extents)
@@ -95,7 +95,7 @@
   (loop for e across (elements layout)
      do (print e) (print (gethash e (element-extents layout)))))  
 
-(defmethod enter :before ((element layout-element) (layout grid-bag-layout) &key row col (width 1) (height 1))
+(defmethod enter :before ((element layout-element) (layout grid-bag-layout) &key row col width height)
   (when (and row col) ;; we'll assume that row and col and width and height are inside the bounds
     (when
         (some
@@ -106,8 +106,8 @@
       (error 'place-already-occupied
              :element element :place (list row col width height) :layout layout))))
 
-(defmethod enter :after ((element layout-element) (layout grid-bag-layout) &key row col (width 1) (height 1))
-  (print "Cheer")
+(defmethod enter ((element layout-element) (layout grid-bag-layout) &key row col width height)
+  (call-next-method)
   (setf (gethash element (element-extents layout)) (make-grid-extent col row width height)))
 
 (defmethod (setf row-sizes) ((value sequence) (layout grid-layout))
@@ -141,14 +141,3 @@
      0
      (cdr (aref acc-widths (1- (length acc-widths))))
      (cdr (aref acc-heights (1- (length acc-heights)))))))
-
-(let* ((layout (make-instance 'grid-bag-layout
-                              :col-sizes (make-array 3 :initial-contents '(50 100 50))
-                              :row-sizes (make-array 3 :initial-contents '(50 100 50))))
-       (but1 (represent "One" 'button))
-       (but2 (represent "Two" 'button))
-       (but3 (represent "Three" 'button)))
-  (enter but1 layout :col 0 :row 0 :width 3)
-  (enter but2 layout :col 0 :row 1 :height 2)
-  (enter but3 layout :col 1 :row 1 :width 2 :height 2)
-  (print (look-up-extent-size but2 layout)))
