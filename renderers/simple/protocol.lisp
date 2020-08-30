@@ -24,7 +24,7 @@
 (defgeneric ellipse (renderer bounds &key pattern line-width &allow-other-keys))
 (defgeneric polygon (renderer points &key pattern &allow-other-keys))
 (defgeneric icon (renderer bounds image &key size halign valign &allow-other-keys))
-(defgeneric text (renderer bounds string &key pattern font size halign valign direction &allow-other-keys))
+(defgeneric text (renderer bounds string &key pattern font size halign valign direction wrap &allow-other-keys))
 (defgeneric cursor (renderer text position &key pattern &allow-other-keys))
 (defgeneric selection (renderer text start end &key pattern &allow-other-keys))
 (defgeneric ideal-bounds (text))

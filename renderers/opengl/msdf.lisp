@@ -144,7 +144,7 @@ void main(){
 (defmethod simple:request-font ((renderer renderer) (default (eql :default)) &key)
   (simple:request-font renderer "Arial"))
 
-(defun map-glyphs (font function string bounds s)
+(defun map-glyphs (font function string bounds s wrap)
   (let ((x 0) (y 0)
         (breaker (uax-14:make-breaker string))
         (max-width (alloy:pxw (alloy:ensure-extent bounds)))
@@ -167,35 +167,36 @@ void main(){
       ;;
       ;; FIXME: This model inherently assumes a LTR system and will not deal with
       ;;        RTL, TTB, BTT orientations correctly. We also don't use UAX-9 yet.
-      (loop for p = nil then c
-            for i from 0 below (length string)
-            for c = (aref string i)
-            for char = (3b-bmfont::char-data c font)
-            for k = (gethash (cons p c) (3b-bmfont:kernings font) 0)
-            do (when (and next-mandatory (= next-break i))
-                 (insert-break i))
-               (case c
-                 (#\newline)
-                 (#\space
-                  (incf x space))
-                 (#\tab
-                  (incf x (* 8 space)))
-                 (t
-                  (incf x k)
-                  (let ((x+ (* s (+ x (getf char :xoffset) (getf char :width)))))
-                    (cond ((< x+ (- max-width 100)))
-                          ((< line-start last-break)
-                           (insert-break last-break))
-                          ((< line-start i)
-                           (insert-break (1- i)))))
-                  (incf x (getf char :xadvance))))
-               (when (<= next-break i)
-                 (multiple-value-bind (pos mandatory) (uax-14:next-break breaker)
-                   (setf next-mandatory mandatory)
-                   (shiftf last-break next-break (or pos (1+ (length string))))))
-            finally (insert-break (length string))))))
+      (when wrap
+        (loop for p = nil then c
+              for i from 0 below (length string)
+              for c = (aref string i)
+              for char = (3b-bmfont::char-data c font)
+              for k = (gethash (cons p c) (3b-bmfont:kernings font) 0)
+              do (when (and next-mandatory (= next-break i))
+                   (insert-break i))
+                 (case c
+                   (#\newline)
+                   (#\space
+                    (incf x space))
+                   (#\tab
+                    (incf x (* 8 space)))
+                   (t
+                    (incf x k)
+                    (let ((x+ (* s (+ x (getf char :xoffset) (getf char :width)))))
+                      (cond ((< x+ (- max-width 100)))
+                            ((< line-start last-break)
+                             (insert-break last-break))
+                            ((< line-start i)
+                             (insert-break (1- i)))))
+                    (incf x (getf char :xadvance))))
+                 (when (<= next-break i)
+                   (multiple-value-bind (pos mandatory) (uax-14:next-break breaker)
+                     (setf next-mandatory mandatory)
+                     (shiftf last-break next-break (or pos (1+ (length string))))))))
+      (insert-break (length string)))))
 
-(defun compute-text (font text bounds s)
+(defun compute-text (font text bounds s wrap)
   (let ((array (make-array (* 6 4 (length text)) :element-type 'single-float :adjustable T :fill-pointer T))
         (minx 0) (miny 0) (maxx 0) (maxy 0))
     (labels ((vertex (x y u v)
@@ -214,7 +215,7 @@ void main(){
                (vertex x+ y+ u+ (- 1 v-))
                (vertex x- y- u- (- 1 v+))
                (vertex x+ y- u+ (- 1 v+))))
-      (map-glyphs (data font) #'thunk text bounds s))
+      (map-glyphs (data font) #'thunk text bounds s wrap))
     (values array minx miny maxx maxy)))
 
 (defclass text (simple:text)
@@ -227,7 +228,7 @@ void main(){
 (defmethod shared-initialize :after ((text text) slots &key)
   (alloy:allocate (simple:font text))
   (let ((s (scale text)))
-    (multiple-value-bind (array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) (simple:bounds text) s)
+    (multiple-value-bind (array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) (simple:bounds text) s (simple:wrap text))
       (let* ((h (* s (3b-bmfont:line-height (data (simple:font text)))))
              (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
                                           (alloy:px-size (- x+ x-) h))))

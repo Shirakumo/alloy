@@ -55,6 +55,7 @@
    #:valign
    #:halign
    #:direction
+   #:wrap
    #:icon
    #:shift
    #:image

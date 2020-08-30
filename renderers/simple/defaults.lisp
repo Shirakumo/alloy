@@ -98,7 +98,8 @@
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
    (valign :initarg :valign :initform :bottom :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)
-   (direction :initarg :direction :initform :right :accessor direction)))
+   (direction :initarg :direction :initform :right :accessor direction)
+   (wrap :initarg :wrap :initform NIL :accessor wrap)))
 
 (defmethod text ((renderer renderer) bounds (string string) &rest initargs)
   (apply #'make-instance 'text :text string :bounds bounds :font (or (getf initargs :font) (request-font renderer :default)) initargs))
