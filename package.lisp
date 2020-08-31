@@ -330,6 +330,7 @@
    #:min-size
    #:stretch
    #:align
+   #:cell-margins
    #:vertical-linear-layout
    #:horizontal-linear-layout)
   ;; popup.lisp
