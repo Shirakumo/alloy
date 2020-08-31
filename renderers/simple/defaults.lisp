@@ -102,7 +102,14 @@
    (wrap :initarg :wrap :initform NIL :accessor wrap)))
 
 (defmethod text ((renderer renderer) bounds (string string) &rest initargs)
-  (apply #'make-instance 'text :text string :bounds bounds :font (or (getf initargs :font) (request-font renderer :default)) initargs))
+  (apply #'make-instance 'text :text string :bounds bounds :font (getf initargs :font) initargs))
+
+(defmethod text :around ((renderer renderer) bounds text &rest initargs &key font)
+  (let ((font (typecase font
+                (font font)
+                (null (request-font renderer :default))
+                (T (request-font renderer font)))))
+    (apply #'call-next-method renderer bounds text :font font initargs)))
 
 (defmethod alloy:render :around ((renderer renderer) (text text))
   (alloy:with-constrained-visibility ((alloy:ensure-extent (bounds text)) renderer)

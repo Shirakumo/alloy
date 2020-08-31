@@ -236,7 +236,7 @@ void main(){
         (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (alloy:pxy p) (- x+ x-) (- y- y+)))))))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
-  (apply #'make-instance 'text :text string :bounds bounds :font (or font (simple:request-font renderer :default)) args))
+  (apply #'make-instance 'text :text string :bounds bounds :font font args))
 
 (defmethod alloy:render ((renderer renderer) (shape text))
   (opengl:bind (atlas (simple:font shape)))
