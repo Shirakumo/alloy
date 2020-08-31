@@ -97,17 +97,17 @@
   `(<= 0 :u)
   `(<= 0 :b))
 
-(define-expression-transform :left-to (other)
-  `(= :r (:l ,other)))
+(define-expression-transform :left-to (other &optional (gap 0))
+  `(= :r (+ (:l ,other) ,gap)))
 
-(define-expression-transform :right-to (other)
-  `(= :l (:r ,other)))
+(define-expression-transform :right-to (other &optional (gap 0))
+  `(= :l (+ (:r ,other) ,gap)))
 
-(define-expression-transform :above (other)
-  `(<= (+ (:y ,other) (:h ,other)) :y))
+(define-expression-transform :above (other &optional (gap 0))
+  `(<= (+ (:y ,other) (:h ,other) ,gap) :y))
 
-(define-expression-transform :below (other)
-  `(<= (+ :y :h) (:y ,other)))
+(define-expression-transform :below (other &optional (gap 0))
+  `(<= (+ :y :h) (:y ,other) ,gap))
 
 (define-expression-transform :aspect-ratio (ratio)
   `(= :h (* :w ,ratio)))
