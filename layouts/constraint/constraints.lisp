@@ -13,6 +13,11 @@
          (lambda ,args
            (list ,@expressions))))
 
+(defmacro with-vars ((x y w h layout) element &body body)
+  `(destructuring-bind (,x ,y ,w ,h)
+       (gethash ,element (variables ,layout))
+     ,@body))
+
 (defun rewrite-variable (var element layout)
   (with-vars (rx ry rw rh layout) layout
     (with-vars (x y w h layout) element

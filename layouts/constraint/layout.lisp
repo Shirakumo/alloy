@@ -21,11 +21,6 @@
   (setf (gethash layout (variables layout))
         (make-variables layout (solver layout) :strength :strong)))
 
-(defmacro with-vars ((x y w h layout) element &body body)
-  `(destructuring-bind (,x ,y ,w ,h)
-       (gethash ,element (variables ,layout))
-     ,@body))
-
 (defun suggest (layout element extent)
   (with-vars (x y w h layout) element
     (cass:suggest x (alloy:to-un (alloy:extent-x extent)))
