@@ -88,6 +88,10 @@
 (define-expression-transform :height (un)
   `(= :h ,un))
 
+(define-expression-transform :size (w &optional (h w))
+  `(= :w ,w)
+  `(= :h ,h))
+
 (define-expression-transform :square ()
   `(= :w :h))
 
