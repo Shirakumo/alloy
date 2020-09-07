@@ -34,7 +34,13 @@
   ((element-extents :initform (make-hash-table :test 'eq) :accessor element-extents)
    (cell-margins :initarg :cell-margins :initform (margins 5) :accessor cell-margins)
    (row-sizes :initarg :row-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader row-sizes)
-   (col-sizes :initarg :col-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader col-sizes)))
+   (col-sizes :initarg :col-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader col-sizes)
+   (aggr-heights :accessor aggr-heights)
+   (aggr-widths :accessor aggr-widths)))
+
+(defmethod initialize-instance :after ((layout grid-bag-layout) &key)
+  (setf (aggr-widths layout) (aggregate-with-padding (col-sizes layout) 2 3))
+  (setf (aggr-heights layout) (aggregate-with-padding (row-sizes layout) 2 3)))
 
 ;; useless, maybe, but in the end these methods don't hurt
 (defmethod num-cols ((layout grid-bag-layout))
@@ -43,35 +49,24 @@
 (defmethod num-rows ((layout grid-bag-layout))
   (length (row-sizes layout)))
 
-;; this is basically the same as accumulate-heights
-;; these values also shouldn't be recalculated all the time
-(defmethod accumulate-widths ((layout grid-bag-layout))
-  (loop with result = (make-array (num-cols layout))
+(defun aggregate-with-padding (array pad1 pad2)
+  (loop with result = (make-array (length array))
      with total = 0
-     for x across (col-sizes layout)
+     for x across array
      for i = 0 then (1+ i)
      do (setf (aref result i) (cons total (incf total x)))
-       (incf total 5) ;; will end up being the padding when i figure out the unit system
-     finally (return result)))
-
-(defmethod accumulate-heights ((layout grid-bag-layout))
-  (loop with result = (make-array (num-rows layout))
-     with total = 0
-     for x across (row-sizes layout)
-     for i = 0 then (1+ i)
-     do (setf (aref result i) (cons total (incf total x)))
-       (incf total 5) ;; same here
+       (incf total (+ pad1 pad2))
      finally (return result)))
 
 ;; might be a redundant function
 (defmethod look-up-extent-size ((element layout-element) (layout grid-bag-layout))
   (let* ((rect (gethash element (element-extents layout)))
-         (acc-widths (accumulate-heights layout))
-         (acc-heights (accumulate-heights layout)))
-    (px-extent (car (aref acc-widths (col rect)))
-               (car (aref acc-heights (row rect)))
-               (cdr (aref acc-widths (+ (col rect) (width rect) -1)))
-               (cdr (aref acc-heights (+ (row rect) (height rect) -1))))))
+         (aggr-widths (aggr-widths layout))
+         (aggr-heights (aggr-heights layout)))
+    (px-extent (car (aref aggr-widths (col rect)))
+               (car (aref aggr-heights (row rect)))
+               (cdr (aref aggr-widths (+ (col rect) (width rect) -1)))
+               (cdr (aref aggr-heights (+ (row rect) (height rect) -1))))))
 
 ;; eh
 (defmethod grid-bag-debug ((layout grid-bag-layout))
@@ -80,17 +75,13 @@
 
 (defmethod enter :before ((element layout-element) (layout grid-bag-layout) &key col row (width 1) (height 1))
   (when (and row col) ;; we'll assume that row and col and width and height are inside the bounds
-    (when
-        (some
-         (lambda (el) (grid-overlapping-p
-                       (gethash el (element-extents layout))
-                       (make-grid-extent col row width height)))
-         (elements layout))
+    (when (some (lambda (el)
+                  (grid-overlapping-p
+                   (gethash el (element-extents layout))
+                   (make-grid-extent col row width height)))
+                (elements layout))
       (error 'place-already-occupied
              :element element :place (list row col width height) :layout layout))))
-
-(defmethod enter :before ((element layout-element) (layout grid-bag-layout) &key col row (width 1) (height 1))
-  (when (and row
 
 (defmethod enter ((element layout-element) (layout grid-bag-layout) &key col row (width 1) (height 1))
   (call-next-method)
@@ -120,10 +111,10 @@
              (look-up-extent-size element layout))))
 
 (defmethod suggest-bounds (extent (layout grid-layout))
-  (let* ((acc-widths (accumulate-widths layout))
-         (acc-heights (accumulate-heights layout)))
+  (let* ((aggr-widths (aggr-widths layout))
+         (aggr-heights (aggr-heights layout)))
     (px-extent
      0
      0
-     (cdr (aref acc-widths (1- (length acc-widths))))
-     (cdr (aref acc-heights (1- (length acc-heights)))))))
+     (cdr (aref aggr-widths (1- (length aggr-widths))))
+     (cdr (aref aggr-heights (1- (length aggr-heights)))))))
