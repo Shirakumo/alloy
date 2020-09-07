@@ -34,3 +34,18 @@
     (alloy:enter combo focus)
     (alloy:enter slider focus)
     (alloy:enter button focus)))
+
+(define-example bag-grid (screen)
+  (let* ((window (windowing:make-window screen))
+         (focus (make-instance 'alloy:focus-list :focus-parent window))
+         (layout (make-instance 'alloy:grid-bag-layout
+                                :layout-parent window
+                                :col-sizes (make-array 3 :initial-contents '(50 100 50))
+                                :row-sizes (make-array 3 :initial-contents '(50 100 50))))
+         (but1 (alloy:represent "One" 'alloy:button :focus-parent focus))
+         (but2 (alloy:represent "Two" 'alloy:button :focus-parent focus))
+         (but3 (alloy:represent "Three" 'alloy:button :focus-parent focus)))
+    (alloy:enter but1 layout :col 0 :row 0 :width 3 :height 1)
+    (alloy:enter but2 layout :col 0 :row 1 :height 2 :width 1)
+    (alloy:enter but3 layout :col 1 :row 1 :width 2 :height 2)))
+
