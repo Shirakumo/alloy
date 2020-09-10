@@ -8,10 +8,10 @@
 
 (defvar *expression-transforms* (make-hash-table :test 'eq))
 
-(defmacro define-expression-transform (name args &body expressions)
+(defmacro define-expression-transform (name args &body body)
   `(setf (gethash ',name *expression-transforms*)
          (lambda ,args
-           (list ,@expressions))))
+           ,@body)))
 
 (defmacro with-vars ((x y w h layout) element &body body)
   `(destructuring-bind (,x ,y ,w ,h)
@@ -65,81 +65,90 @@
            (list expression))))))
 
 (define-expression-transform :center-x ()
-  `(= (/ :rw 2) (- :l (/ :w 2))))
+  (list `(= (/ :rw 2) (- :l (/ :w 2)))))
 
 (define-expression-transform :center-y ()
-  `(= (/ :rh 2) (- :b (/ :h 2))))
+  (list `(= (/ :rh 2) (- :b (/ :h 2)))))
 
 (define-expression-transform :left (&optional (un 0))
-  `(= :l ,un))
+  (list `(= :l ,un)))
 
 (define-expression-transform :right (&optional (un 0))
-  `(= :r ,un))
+  (list `(= :r ,un)))
 
 (define-expression-transform :top (&optional (un 0))
-  `(= :u ,un))
+  (list `(= :u ,un)))
 
 (define-expression-transform :bottom (&optional (un 0))
-  `(= :b ,un))
+  (list `(= :b ,un)))
 
 (define-expression-transform :width (un)
-  `(= :w ,un))
+  (list `(= :w ,un)))
 
 (define-expression-transform :height (un)
-  `(= :h ,un))
+  (list `(= :h ,un)))
 
 (define-expression-transform :size (w &optional (h w))
-  `(= :w ,w)
-  `(= :h ,h))
+  (list `(= :w ,w)
+        `(= :h ,h)))
 
 (define-expression-transform :square ()
-  `(= :w :h))
+  (list `(= :w :h)))
 
 (define-expression-transform :contained ()
-  `(<= 0 :l)
-  `(<= 0 :r)
-  `(<= 0 :u)
-  `(<= 0 :b))
+  (list `(<= 0 :l)
+        `(<= 0 :r)
+        `(<= 0 :u)
+        `(<= 0 :b)))
+
+(define-expression-transform :margin (&optional (l 0) u r b)
+  (let ((b (or b u l))
+        (r (or r l))
+        (u (or u l)))
+    (list `(= ,l :l)
+          `(= ,r :r)
+          `(= ,u :u)
+          `(= ,b :b))))
 
 (define-expression-transform :left-to (other &optional (gap 0))
-  `(= :r (+ (:l ,other) ,gap)))
+  (list `(= :r (+ (:l ,other) ,gap))))
 
 (define-expression-transform :right-to (other &optional (gap 0))
-  `(= :l (+ (:r ,other) ,gap)))
+  (list `(= :l (+ (:r ,other) ,gap))))
 
 (define-expression-transform :above (other &optional (gap 0))
-  `(<= (+ (:y ,other) (:h ,other) ,gap) :y))
+  (list `(<= (+ (:y ,other) (:h ,other) ,gap) :y)))
 
 (define-expression-transform :below (other &optional (gap 0))
-  `(<= (+ :y :h) (:y ,other) ,gap))
+  (list `(<= (+ :y :h) (:y ,other) ,gap)))
 
 (define-expression-transform :aspect-ratio (ratio)
-  `(= :h (* :w ,ratio)))
+  (list `(= :h (* :w ,ratio))))
 
 (define-expression-transform :min-width (width)
-  `(<= ,width :w))
+  (list `(<= ,width :w)))
 
 (define-expression-transform :min-height (height)
-  `(<= ,height :h))
+  (list `(<= ,height :h)))
 
 (define-expression-transform :min-size (width height)
-  `(<= ,width :w)
-  `(<= ,height :h))
+  (list `(<= ,width :w)
+        `(<= ,height :h)))
 
 (define-expression-transform :max-width (width)
-  `(<= :w ,width))
+  (list `(<= :w ,width)))
 
 (define-expression-transform :max-height (height)
-  `(<= :h ,height))
+  (list `(<= :h ,height)))
 
 (define-expression-transform :max-size (width height)
-  `(<= ,width :w)
-  `(<= ,height :h))
+  (list `(<= ,width :w)
+        `(<= ,height :h)))
 
 (define-expression-transform :between-x (left right)
-  `(<= (:x ,left) :x)
-  `(<= (+ :x :w) (:x ,right)))
+  (list `(<= (:x ,left) :x)
+        `(<= (+ :x :w) (:x ,right))))
 
 (define-expression-transform :between-y (left right)
-  `(<= (:y ,left) :y)
-  `(<= (+ :y :h) (:y ,right)))
+  (list `(<= (:y ,left) :y)
+        `(<= (+ :y :h) (:y ,right))))
