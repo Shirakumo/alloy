@@ -19,20 +19,20 @@
   (leave dialog T))
 
 (defmethod initialize-instance :after ((dialog dialog) &key (accept "Ok") (reject "Cancel"))
-  (let ((layout (make-instance 'horizontal-linear-layout :align :end :cell-margins (margins 5 0)))
-        (accept (represent accept 'button))
-        (reject (represent reject 'button)))
-    (on activate (accept)
-      (accept dialog))
-    (on activate (reject)
-      (reject dialog))
-    (when reject
-      (enter reject layout))
+  (let ((layout (make-instance 'horizontal-linear-layout :align :end :cell-margins (margins 5 0))))
     (when accept
-      (enter accept layout))
-    (enter layout (layout-element dialog) :place :south)
-    (enter accept (focus-element dialog) :layer 2)
-    (enter reject (focus-element dialog) :layer 2)))
+      (let ((accept (represent accept 'button)))
+        (on activate (accept)
+          (accept dialog))
+        (enter accept layout)
+        (enter accept (focus-element dialog) :layer 2)))
+    (when reject
+      (let ((reject (represent reject 'button)))
+        (on activate (reject)
+          (reject dialog))
+        (enter reject layout)
+        (enter reject (focus-element dialog) :layer 2)))
+    (enter layout (layout-element dialog) :place :south)))
 
 (defclass dialog* (dialog)
   ((on-accept :initarg :on-accept :initform #'identity :accessor on-accept)
