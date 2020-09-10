@@ -149,6 +149,10 @@
   (:label
    :text alloy:text))
 
+(define-update (default-look-and-feel alloy:input-box)
+  (:label
+   :wrap T))
+
 (define-realization (default-look-and-feel alloy:validated-text-input T)
   ((:invalid-marker simple:rectangle)
    (alloy:extent 0 -2 (alloy:pw 1) 2)
