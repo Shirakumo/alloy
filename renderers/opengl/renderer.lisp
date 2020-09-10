@@ -249,55 +249,55 @@ void main(){
 (defmethod (setf simple:composite-mode) :before (mode (renderer renderer))
   (ecase mode
     (:source-over
-     (gl:blend-func :src-alpha :one-minus-src-alpha)
+     (gl:blend-func-separate :src-alpha :one-minus-src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:destination-over
-     (gl:blend-func :one-minus-dst-alpha :one)
+     (gl:blend-func-separate :one-minus-dst-alpha :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:clear
-     (gl:blend-func :zero :zero)
+     (gl:blend-func-separate :zero :zero :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:source
-     (gl:blend-func :one :zero)
+     (gl:blend-func-separate :one :zero :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:destination
-     (gl:blend-func :zero :one)
+     (gl:blend-func-separate :zero :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:source-in
-     (gl:blend-func :dst-alpha :zero)
+     (gl:blend-func-separate :dst-alpha :zero :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:destination-in
-     (gl:blend-func :zero :src-alpha)
+     (gl:blend-func-separate :zero :src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:source-out
-     (gl:blend-func :one-minus-dst-alpha :zero)
+     (gl:blend-func-separate :one-minus-dst-alpha :zero :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:destination-out
-     (gl:blend-func :zero :one-minus-src-alpha)
+     (gl:blend-func-separate :zero :one-minus-src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:destination-atop
-     (gl:blend-func :one-minus-dst-alpha :src-alpha)
+     (gl:blend-func-separate :one-minus-dst-alpha :src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:xor
-     (gl:blend-func :one-minus-dst-alpha :one-minus-src-alpha)
+     (gl:blend-func-separate :one-minus-dst-alpha :one-minus-src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:add
-     (gl:blend-func :one :one)
+     (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:multiply
-     (gl:blend-func :dst-color :one-minus-src-alpha)
+     (gl:blend-func-separate :dst-color :one-minus-src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:screen
-     (gl:blend-func :one :one-minus-src-color)
+     (gl:blend-func-separate :one :one-minus-src-color :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:darken
-     (gl:blend-func :one :one)
+     (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-max))
     (:difference
-     (gl:blend-func :one :one)
+     (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-subtract))
     (:invert
-     (gl:blend-func :one :one)
+     (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-reverse-subtract))))
 
 (defclass line-strip (simple:line-strip)
