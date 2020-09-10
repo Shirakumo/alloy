@@ -34,7 +34,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "clip-view")
                              (:file "swap")
                              (:file "flow")
-                             (:file "popup")))
+                             (:file "popup")
+                             (:file "fullscreen")))
                (:module "components"
                 :components ((:file "base")
                              (:file "button")

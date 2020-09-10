@@ -333,7 +333,7 @@
    #:cell-margins
    #:vertical-linear-layout
    #:horizontal-linear-layout)
-  ;; popup.lisp
+  ;; layouts/popup.lisp
   (:export
    #:popup)
   ;; layouts/swap.lisp
@@ -341,6 +341,9 @@
    #:swap-layout
    #:index
    #:current)
+  ;; layouts/fullscreen.lisp
+  (:export
+   #:fullscreen-layout)
   ;; observable.lisp
   (:export
    #:observable
