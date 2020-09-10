@@ -341,5 +341,6 @@
 
 (defmethod handle ((event event) (tree focus-tree))
   (or (handle event (popups tree))
-      (handle event (focused tree))
+      (when (focused tree)
+        (handle event (focused tree)))
       (decline)))
