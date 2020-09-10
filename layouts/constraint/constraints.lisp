@@ -120,7 +120,7 @@
   (list `(<= (+ (:y ,other) (:h ,other) ,gap) :y)))
 
 (define-expression-transform :below (other &optional (gap 0))
-  (list `(<= (+ :y :h) (:y ,other) ,gap)))
+  (list `(<= (+ :y :h ,gap) (:y ,other))))
 
 (define-expression-transform :aspect-ratio (ratio)
   (list `(= :h (* :w ,ratio))))
