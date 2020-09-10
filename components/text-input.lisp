@@ -360,7 +360,11 @@
 
 (defmethod handle ((event key-up) (component input-box))
   (case (key event)
-    (:return
-      (insert-text (string #\Linefeed) component))
+    ((:enter :return)
+      (if (find :control (modifiers event))
+          (accept component)
+          (insert-text (string #\Linefeed) component)))
+    (:escape
+     (reject component))
     (T
      (call-next-method))))
