@@ -94,6 +94,7 @@
    #:text
    #:insert-mode
    #:cursor
+   #:placeholder
    #:pos
    #:anchor
    #:insert-text

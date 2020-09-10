@@ -76,6 +76,7 @@
 
 (defclass text-input-component (value-component)
   ((insert-mode :initform :add :initarg :insert-mode :accessor insert-mode)
+   (placeholder :initform "" :initarg :placeholder :accessor placeholder)
    (cursor :reader cursor)))
 
 (defmethod initialize-instance :after ((component text-input-component) &key)
