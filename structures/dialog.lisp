@@ -32,7 +32,7 @@
           (reject dialog))
         (enter reject layout)
         (enter reject (focus-element dialog) :layer 2)))
-    (enter layout (layout-element dialog) :place :south)))
+    (enter layout (layout-element dialog) :place :south :size (un 20))))
 
 (defclass dialog* (dialog)
   ((on-accept :initarg :on-accept :initform #'identity :accessor on-accept)
