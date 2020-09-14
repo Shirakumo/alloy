@@ -24,7 +24,7 @@
 
 (defmethod enter ((element layout-element) (layout border-layout) &key (place :center) size)
   (let ((slot (border-place-slot place)))
-    (when (slot-value layout slot)
+    (when (and (slot-value layout slot) (not (eq element (first (slot-value layout slot)))))
       (cerror "Replace the element" 'place-already-occupied
               :bad-element element :place place :layout layout :existing (slot-value layout slot)))
     (setf (slot-value layout slot) (list element size))))
@@ -38,7 +38,7 @@
 
 (defmethod update ((element layout-element) (layout border-layout) &key place size)
   (let ((slot (border-place-slot place)))
-    (when (slot-value layout slot)
+    (when (and (slot-value layout slot) (not (eq element (first (slot-value layout slot)))))
       (cerror "Replace the element" 'place-already-occupied
               :bad-element element :place place :layout layout :existing (slot-value layout slot)))
     (flet ((test (slot)
