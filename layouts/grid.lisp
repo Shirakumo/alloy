@@ -91,11 +91,8 @@
           do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout))))
   element)
 
-(defmethod call-with-elements (function (layout grid-layout) &key start end)
-  (loop with elements = (elements layout)
-        for i from (or start 0) below (or end (length elements))
-        for el = (aref elements i)
-        do (when el (funcall function el))))
+(defmethod call-with-elements (function (layout grid-layout) &rest args)
+  (apply #'call-next-method (lambda (el) (when el (funcall function el))) layout args))
 
 (defmethod clear ((layout grid-layout))
   (loop for i downfrom (1- (length (elements layout))) to 0

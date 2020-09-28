@@ -19,15 +19,15 @@
 (defgeneric elements (container))
 (defgeneric element-index (element container))
 (defgeneric index-element (index container))
-(defgeneric call-with-elements (function container &key start end))
+(defgeneric call-with-elements (function container &key start end from-end))
 (defgeneric clear (container))
 
-(defmacro do-elements ((element container &key start end result) &body body)
+(defmacro do-elements ((element container &key start end result from-end) &body body)
   (let ((thunk (gensym "THUNK")))
     `(block NIL
        (flet ((,thunk (,element)
                 ,@body))
-         (call-with-elements #',thunk ,container :start ,start :end ,end)
+         (call-with-elements #',thunk ,container :start ,start :end ,end :from-end ,from-end)
          ,result))))
 
 (defmethod shared-initialize :around ((container container) slots &key (elements NIL c-p))
@@ -81,11 +81,15 @@
       (array-utils:vector-push-extend-position element (elements container) index)))
   element)
 
-(defmethod call-with-elements (function (container vector-container) &key start end)
-  (loop with elements = (elements container)
-        for i from (or start 0) below (or end (length elements))
-        for element = (aref elements i)
-        do (funcall function element)))
+(defmethod call-with-elements (function (container vector-container) &key start end from-end)
+  (let* ((elements (elements container))
+         (start (or start 0))
+         (end (or end (length elements))))
+    (if from-end
+        (loop for i downfrom (1- end) to start
+              do (funcall function (aref elements i)))
+        (loop for i from start below end
+              do (funcall function (aref elements i))))))
 
 (defmethod element-index ((element element) (container vector-container))
   (position element (elements container)))
@@ -156,16 +160,18 @@
       (error 'index-out-of-range :index (cdr index) :range (list 0 (1- (length layer)))))
     (aref layer (cdr index))))
 
-(defmethod call-with-elements (function (container stack-container) &key start end)
+(defmethod call-with-elements (function (container stack-container) &key start end from-end)
   (let ((start (or start 0)))
-    (loop with i = 0
-          for layer across (layers container)
-          while (or (not end) (<= end i))
-          do (loop for element across layer
-                   while (or (not end) (<= end i))
-                   do (when (<= start i)
-                        (funcall function element))
-                      (incf i)))))
+    (if from-end
+        (error "FIXME: implement.")
+        (loop with i = 0
+              for layer across (layers container)
+              while (or (not end) (<= end i))
+              do (loop for element across layer
+                       while (or (not end) (<= end i))
+                       do (when (<= start i)
+                            (funcall function element))
+                          (incf i))))))
 
 (defmethod clear ((container stack-container))
   (loop for layer across (layers container)
@@ -186,8 +192,8 @@
 (defmethod leave ((element element) (container single-container))
   (setf (inner container) NIL))
 
-(defmethod call-with-elements (function (container single-container) &key start end)
-  (declare (ignore start end))
+(defmethod call-with-elements (function (container single-container) &key start end from-end)
+  (declare (ignore start end from-end))
   (when (inner container)
     (funcall function (inner container))))
 
