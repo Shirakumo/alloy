@@ -75,12 +75,14 @@
     (:south (car (slot-value layout 'b)))
     (:center (car (slot-value layout 'c)))))
 
-(defmethod call-with-elements (function (layout border-layout) &key start end)
+(defmethod call-with-elements (function (layout border-layout) &key start end from-end)
   (declare (ignore start end))
   (flet ((test (slot)
            (when (slot-value layout slot)
              (funcall function (car (slot-value layout slot))))))
-    (mapc #'test '(l u r b c))))
+    (if from-end
+        (mapc #'test '(c b r u l))
+        (mapc #'test '(l u r b c)))))
 
 (defmethod clear ((layout border-layout))
   (flet ((test (slot) (setf (slot-value layout slot) NIL)))
