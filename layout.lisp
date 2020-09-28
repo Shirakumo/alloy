@@ -122,7 +122,9 @@
     (maybe-render renderer element)))
 
 (defmethod handle ((event pointer-event) (layout layout))
-  (do-elements (element layout :result (decline))
+  ;; Need to process in reverse order to ensure overlapping elements come first,
+  ;; since elements drawn last overlap previous elements.
+  (do-elements (element layout :result (decline) :from-end T)
     (when (contained-p (location event) (bounds element))
       (if (handle event element)
           (return)
