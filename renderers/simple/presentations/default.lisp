@@ -127,8 +127,8 @@
   ((:cursor simple:cursor)
    (find-shape :label alloy:renderable)
    0
-   :composite-mode :invert
-   :pattern colors:white)
+   :composite-mode :source-over
+   :pattern colors:black)
   ((:selection simple:selection)
    (find-shape :label alloy:renderable)
    0 0))
