@@ -58,7 +58,9 @@
   ;; Init font cache
   (dolist (path (directory (make-pathname :name :wild :type "json" :defaults (fontcache-directory renderer))))
     (setf (gethash (pathname-name path) (fontcache renderer))
-          (make-instance 'font :family (pathname-name path) :file path :renderer renderer))))
+          (make-instance 'font :family (pathname-name path) :file path :renderer renderer))
+    (setf (gethash (pathname-name path) (font-name-cache renderer))
+          path)))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (setf (opengl:resource 'text-vbo renderer)
@@ -135,7 +137,8 @@ void main(){
 (defmethod simple:request-font ((renderer renderer) (family string) &rest args)
   (let ((font (or (gethash family (font-name-cache renderer))
                   (setf (gethash family (font-name-cache renderer))
-                        (font-discovery:file (apply #'font-discovery:find-font :family family args))))))
+                        (font-discovery:file (or (apply #'font-discovery:find-font :family family args)
+                                                 (error "No font named ~s found." family)))))))
     (cached-font renderer font family)))
 
 (defmethod simple:request-font ((renderer renderer) (file pathname) &key)
