@@ -110,17 +110,25 @@
           `(= ,u :u)
           `(= ,b :b))))
 
-(define-expression-transform :left-to (other &optional (gap 0))
-  (list `(= :r (+ (:l ,other) ,gap))))
+(define-expression-transform :left-to (other &optional gap)
+  (list (if gap
+            `(= :r (+ (:l ,other) ,gap))
+            `(<= :r (:l ,other)))))
 
-(define-expression-transform :right-to (other &optional (gap 0))
-  (list `(= :l (+ (:r ,other) ,gap))))
+(define-expression-transform :right-to (other &optional gap)
+  (list (if gap
+            `(= :l (+ (:r ,other) ,gap))
+            `(<= :l (:r ,other)))))
 
-(define-expression-transform :above (other &optional (gap 0))
-  (list `(<= (+ (:y ,other) (:h ,other) ,gap) :y)))
+(define-expression-transform :above (other &optional gap)
+  (list (if gap
+            `(= (+ (:y ,other) (:h ,other) ,gap) :y)
+            `(<= (+ (:y ,other) (:h ,other)) :y))))
 
-(define-expression-transform :below (other &optional (gap 0))
-  (list `(<= (+ :y :h ,gap) (:y ,other))))
+(define-expression-transform :below (other &optional gap)
+  (list (if gap
+            `(= (+ :y :h ,gap) (:y ,other))
+            `(<= (+ :y :h) (:y ,other)))))
 
 (define-expression-transform :inside (other &key (halign :center) (valign :center) (margin 0))
   (list
