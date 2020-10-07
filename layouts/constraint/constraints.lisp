@@ -122,6 +122,23 @@
 (define-expression-transform :below (other &optional (gap 0))
   (list `(<= (+ :y :h ,gap) (:y ,other))))
 
+(define-expression-transform :inside (other &key (halign :center) (valign :center) (margin 0))
+  (list
+   (ecase halign
+     (:center
+      `(= (- :x (/ :w 2)) (- (:x ,other) (/ (:w ,other) 2))))
+     ((:left :start)
+      `(= :x (+ (:x ,other) ,margin)))
+     ((:right :end)
+      `(= (+ :x :w ,margin) (+ (:x ,other) (:w ,other)))))
+   (ecase valign
+     (:center
+      `(= (- :y (/ :h 2)) (- (:y ,other) (/ (:h ,other) 2))))
+     ((:bottom :start)
+      `(= :y (+ (:y ,other) ,margin)))
+     ((:top :end)
+      `(= (+ :y :h ,margin) (+ (:y ,other) (:h ,other)))))))
+
 (define-expression-transform :aspect-ratio (ratio)
   (list `(= :h (* :w ,ratio))))
 
