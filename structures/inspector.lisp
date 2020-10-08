@@ -14,6 +14,14 @@
 (defun find-slot (name class)
   (find name (c2mop:class-slots class) :key #'c2mop:slot-definition-name))
 
+(defgeneric find-canonical-class (type))
+
+(defmethod find-canonical-class ((type symbol))
+  (find-class type))
+
+(defmethod find-canonical-class ((type (eql 'boolean)))
+  (find-class 'bool))
+
 (defun update-inspector-slots (inspector)
   (let* ((layout (layout-element inspector))
          (focus (focus-element inspector))
@@ -37,9 +45,9 @@
                (let ((slot-type (c2mop:slot-definition-type (find-slot name class))))
                  (when (and (symbolp slot-type) (not (eql T slot-type)) (not (eql NIL slot-type)))
                    ;; FIXME: We can do better here if we analyse compound types
-                   (setf type (find-class slot-type)))))
+                   (setf type (find-canonical-class slot-type)))))
               (symbol
-               (setf type (find-class type))))
+               (setf type (find-canonical-class type))))
             (when type
               (let ((component (apply #'represent-with
                                       (component-class-for-object (c2mop:class-prototype type))
