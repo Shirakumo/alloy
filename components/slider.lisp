@@ -84,6 +84,7 @@
      (call-next-method))))
 
 (defmethod handle ((event pointer-down) (slider slider))
+  (activate slider)
   (call-next-method)
   (setf (state slider) :dragging))
 
