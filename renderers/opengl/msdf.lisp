@@ -131,6 +131,9 @@ void main(){
       (let ((file (merge-pathnames (getf (aref (3b-bmfont:pages (data font)) 0) :file) (file font))))
         (setf (atlas font) (simple:request-image renderer file :filtering :linear))))))
 
+(defmethod alloy:allocated-p ((font font))
+  (slot-boundp font 'atlas))
+
 (defmethod alloy:deallocate ((font font))
   (slot-makunbound font 'atlas))
 
