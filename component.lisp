@@ -18,6 +18,11 @@
   (or (ideal-bounds component) extent))
 
 (defmethod handle ((event pointer-down) (component component))
+  (unless (and (slot-boundp component 'focus-parent)
+               (contained-p (location event) (bounds component)))
+    (call-next-method)))
+
+(defmethod handle ((event pointer-up) (component component))
   (if (and (slot-boundp component 'focus-parent)
            (contained-p (location event) (bounds component)))
       (activate component)
@@ -25,9 +30,9 @@
 
 (defmethod handle ((event pointer-move) (component component))
   (if (and (slot-boundp component 'focus-parent)
-           (eql NIL (focus component))
            (contained-p (location event) (bounds component)))
-      (setf (focus component) :weak)
+      (when (eql NIL (focus component))
+        (setf (focus component) :weak))
       (call-next-method)))
 
 (defmethod maybe-render ((renderer renderer) (component component)))

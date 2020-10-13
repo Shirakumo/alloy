@@ -150,6 +150,11 @@
                    component)))
   (insert-text (text event) component))
 
+;;; We capture all key-up/down events, as they either are command events
+;;; or correspond to text input that we handle in TEXT-EVENT, in which
+;;; case we should pretend to have handle them as well.
+(defmethod handle ((event key-down) (component text-input-component)))
+
 (defmethod handle ((event key-up) (component text-input-component))
   (let ((cursor (cursor component)))
     (flet ((move (target)
@@ -191,9 +196,13 @@
                  (:replace :add)
                  (:add :replace))))
         (:escape
-         (exit component))
-        (T
-         (call-next-method))))))
+         (exit component))))))
+
+(defmethod handle ((event pointer-up) (component text-input-component))
+  ;; TODO: Implement cursor movement via pointer (set cursor, select).
+  )
+
+(defmethod handle ((event pointer-down) (component text-input-component)))
 
 ;;; TODO: Implement virtual keyboard as a pre-made structure
 ;;;       with capability to select layout for char mapping

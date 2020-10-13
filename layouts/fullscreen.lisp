@@ -35,5 +35,6 @@
 (defmethod handle ((event pointer-event) (layout fullscreen-layout))
   (loop for i downfrom (1- (length (elements layout))) to 0
         for element = (aref (elements layout) i)
-        until (handle event element)
+        do (when (handle event element)
+             (return))
         finally (decline)))
