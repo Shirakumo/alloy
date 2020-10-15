@@ -70,13 +70,14 @@
               (x (+ l x)))
           (do-elements (element layout :result (px-extent x oy w (- oy y)))
             (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x y mw mh) element)
-              (setf (bounds element)
-                    (px-extent x
-                               (ecase (align layout)
-                                 (:start (prog1 y (incf y (+ eh u b))))
-                                 (:end (decf y (+ eh u b))))
-                               (if (stretch layout) (- w l r) (min (- w l r) ew))
-                               eh)))))))))
+              (let ((eh (max mh eh)))
+                (setf (bounds element)
+                      (px-extent x
+                                 (ecase (align layout)
+                                   (:start (prog1 y (incf y (+ eh u b))))
+                                   (:end (decf y (+ eh u b))))
+                                 (max mw (if (stretch layout) (- w l r) (min (- w l r) ew)))
+                                 eh))))))))))
 
 (defclass horizontal-linear-layout (linear-layout)
   ())
@@ -110,10 +111,11 @@
               (y (+ y b)))
           (do-elements (element layout :result (px-extent ox y (- x ox) h))
             (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x y mw mh) element)
-              (setf (bounds element)
-                    (px-extent (ecase (align layout)
-                                 (:start (prog1 x (incf x (+ ew l r))))
-                                 (:end (decf x (+ ew l r))))
-                               y
-                               ew
-                               (if (stretch layout) (- h u b) (min (- h u b) eh)))))))))))
+              (let ((ew (max ew mw)))
+                (setf (bounds element)
+                      (px-extent (ecase (align layout)
+                                   (:start (prog1 x (incf x (+ ew l r))))
+                                   (:end (decf x (+ ew l r))))
+                                 y
+                                 ew
+                                 (max mh (if (stretch layout) (- h u b) (min (- h u b) eh)))))))))))))
