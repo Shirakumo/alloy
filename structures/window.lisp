@@ -18,6 +18,10 @@
   (restart-case (call-next-method)
     (decline ())))
 
+(defmethod render :around (renderer (frame frame))
+  (with-constrained-visibility ((bounds frame) renderer)
+    (call-next-method)))
+
 (defclass window-title (label* draggable)
   ())
 
@@ -70,8 +74,8 @@
   (when (next-method-p) (call-next-method))
   (enter element (focus-element structure) :layer 1))
 
-(defmethod initialize-instance :after ((structure window) &key layout focus (title "Untitled") (closeable T) (minimizable T) (maximizable T) (extent (size 300 200)) (ui (arg! :ui)))
-  (let ((frame (make-instance 'frame :padding (margins 10)))
+(defmethod initialize-instance :after ((structure window) &key layout focus (title "Untitled") (closeable T) (minimizable T) (maximizable T) (resizable T) (extent (size 300 200)) (ui (arg! :ui)))
+  (let ((frame (make-instance 'frame :padding (if resizable (margins 1 10 1 1) (margins 10))))
         (header (make-instance 'grid-layout :row-sizes '(20) :col-sizes '(T  20 20 20) :cell-margins (margins 2)))
         (focus-stack (make-instance 'focus-stack))
         (title (make-instance 'window-title :value (or title ""))))
@@ -110,6 +114,11 @@
           (case (state structure)
             (:maximized (restore structure))
             (T (maximize structure))))))
+    (when resizable
+      (dolist (side '(:east :south :west))
+        (let ((south (make-instance 'resizer :side side :data frame)))
+          (enter south frame :place side :size (un 10))
+          (enter south focus-stack :layer 2))))
     (finish-structure structure frame focus-stack)
     (when layout
       (enter layout structure))
