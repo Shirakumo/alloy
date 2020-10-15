@@ -213,3 +213,7 @@
 
 (defmethod clear ((container single-container))
   (setf (inner container) 0))
+
+(defun enter-all (container &rest elements)
+  (dolist (element elements container)
+    (enter element container)))

@@ -155,7 +155,8 @@
    #:stack-container
    #:layers
    #:single-container
-   #:inner)
+   #:inner
+   #:enter-all)
   ;; data.lisp
   (:export
    #:data
