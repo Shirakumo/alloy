@@ -17,14 +17,15 @@
    (variables :initform (make-hash-table :test 'eq) :reader variables)
    (constraints :initform (make-hash-table :test 'eq) :reader constraints)))
 
-(defmethod initialize-instance :after ((layout layout) &key)
+(defmethod initialize-instance ((layout layout) &key)
+  (call-next-method)
   (setf (gethash layout (variables layout))
         (make-variables layout (solver layout) :strength :strong)))
 
 (defun suggest (layout element extent)
   (with-vars (x y w h layout) element
     (cass:suggest x (alloy:to-un (alloy:extent-x extent)))
-    (cass:suggest y (alloy:to-un (alloy:extent-x extent)))
+    (cass:suggest y (alloy:to-un (alloy:extent-y extent)))
     (cass:suggest w (alloy:to-un (alloy:extent-w extent)))
     (cass:suggest h (alloy:to-un (alloy:extent-h extent)))
     (cass:update-variables (solver layout))))
