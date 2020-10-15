@@ -15,5 +15,7 @@
   :components ((:file "package")
                (:file "toolkit")
                (:file "windows")
-               (:file "drop"))
-  :depends-on (:alloy-glfw))
+               (:file "drop")
+               (:file "constraint"))
+  :depends-on (:alloy-glfw
+               :alloy-constraint))
