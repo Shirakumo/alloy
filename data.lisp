@@ -47,9 +47,15 @@
 
 (defmethod expand-compound-place-data ((place symbol) args)
   (let ((value (gensym "VALUE")))
-    `(make-instance 'place-data
-                    :getter (lambda () (,place ,@args))
-                    :setter (lambda (,value) (setf (,place ,@args) ,value)))))
+    (if (and (fboundp place)
+             (fboundp `(setf ,place))
+             (null (rest args)))
+        `(make-instance 'accessor-data
+                        :object ,(first args)
+                        :accessor ',place)
+        `(make-instance 'place-data
+                        :getter (lambda () (,place ,@args))
+                        :setter (lambda (,value) (setf (,place ,@args) ,value))))))
 
 (defmethod expand-place-data ((place symbol))
   (let ((value (gensym "VALUE")))
@@ -57,12 +63,28 @@
                     :getter (lambda () ,place)
                     :setter (lambda (,value) (setf ,place ,value)))))
 
+(defclass accessor-data (value-data)
+  ((object :initarg :object :initform (arg! :object) :accessor object)
+   (accessor :initarg :accessor :initform (arg! :accessor) :accessor accessor)))
+
+(defmethod initialize-instance :after ((data accessor-data) &key)
+  (when (typep (object data) 'observable)
+    (observe `(setf ,(accessor data)) (object data)
+             (lambda (value object)
+               (notify-observers '(setf value) data value object)))))
+
+(defmethod value ((data accessor-data))
+  (funcall (accessor data) (object data)))
+
+(defmethod (setf value) (new-value (data accessor-data))
+  (funcall (fdefinition `(setf ,(accessor data))) new-value (object data)))
+
 (defclass slot-data (value-data)
   ((object :initarg :object :initform (arg! :object) :accessor object)
    (slot :initarg :slot :initform (arg! :slot) :accessor slot)))
 
 (defmethod initialize-instance :after ((data slot-data) &key)
-  (when (typep (object data) 'observable-object)
+  (when (typep (object data) 'observable)
     (observe (slot data) (object data) (lambda (value object)
                                          (notify-observers '(setf value) data value object)))))
 

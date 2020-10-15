@@ -48,6 +48,7 @@
    #:label*
    #:icon
    #:value-component
+   #:value-changed
    #:direct-value-component
    #:progress)
   ;; components/button.lisp
@@ -168,6 +169,9 @@
    #:place-data
    #:getter
    #:setter
+   #:accessor-data
+   #:object
+   #:accessor
    #:slot-data
    #:object
    #:slot
