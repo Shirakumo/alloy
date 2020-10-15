@@ -64,12 +64,6 @@
            (apply function (rest expression))
            (list expression))))))
 
-(define-expression-transform :center-x ()
-  (list `(= (/ :rw 2) (- :l (/ :w 2)))))
-
-(define-expression-transform :center-y ()
-  (list `(= (/ :rh 2) (- :b (/ :h 2)))))
-
 (define-expression-transform :left (&optional (un 0))
   (list `(= :l ,un)))
 
@@ -110,27 +104,32 @@
           `(= ,u :u)
           `(= ,b :b))))
 
-(define-expression-transform :left-to (other &optional gap)
+(define-expression-transform :left-of (other &optional gap)
+  (check-type other alloy:layout-element)
   (list (if gap
-            `(= :r (+ (:l ,other) ,gap))
-            `(<= :r (:l ,other)))))
+            `(= (+ :x :w ,gap) (:x ,other))
+            `(<= (+ :x :w) (:x ,other)))))
 
-(define-expression-transform :right-to (other &optional gap)
+(define-expression-transform :right-of (other &optional gap)
+  (check-type other alloy:layout-element)
   (list (if gap
-            `(= :l (+ (:r ,other) ,gap))
-            `(<= :l (:r ,other)))))
+            `(= (+ (:x ,other) (:w ,other) ,gap) :x)
+            `(<= (+ (:x ,other) (:w ,other)) :x))))
 
 (define-expression-transform :above (other &optional gap)
+  (check-type other alloy:layout-element)
   (list (if gap
             `(= (+ (:y ,other) (:h ,other) ,gap) :y)
             `(<= (+ (:y ,other) (:h ,other)) :y))))
 
 (define-expression-transform :below (other &optional gap)
+  (check-type other alloy:layout-element)
   (list (if gap
             `(= (+ :y :h ,gap) (:y ,other))
             `(<= (+ :y :h) (:y ,other)))))
 
 (define-expression-transform :inside (other &key (halign :center) (valign :center) (margin 0))
+  (check-type other alloy:layout-element)
   (list
    (ecase halign
      (:center
@@ -177,3 +176,15 @@
 (define-expression-transform :between-y (left right)
   (list `(<= (:y ,left) :y)
         `(<= (+ :y :h) (:y ,right))))
+
+(define-expression-transform :fill (&rest what)
+  (loop for item in (or what '(:w :h))
+        append (ecase item
+                 ((:x :w :width) (list `(= :l 0) `(:r 0)))
+                 ((:y :h :height) (list `(= :b 0) `(:u 0))))))
+
+(define-expression-transform :center (&rest what)
+  (loop for item in (or what '(:w :h))
+        collect (ecase item
+                  ((:x :w :width) `(= (+ :rx (/ :rw 2)) (+ :x (/ :w 2))))
+                  ((:y :h :height) `(= (+ :ry (/ :rh 2)) (+ :y (/ :h 2)))))))
