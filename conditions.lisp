@@ -43,7 +43,7 @@
 
 (define-alloy-condition element-has-different-root (hierarchy-error)
     "The element~%  ~s~%comes from the tree~%  ~s~%which is not~%  ~s"
-  bad-element (focus-tree (element c)) container)
+  bad-element (focus-tree (bad-element c)) container)
 
 (define-alloy-condition root-already-established (error)
     "Cannot set~%  ~a~%as the root of~%  ~a~%as it already has a root in~%  ~a"
@@ -58,7 +58,7 @@
 
 (define-alloy-condition element-has-different-ui (error)
     "The element~%  ~s~%cannot be used with~%  ~s~%as it is set-up with~%  ~s"
-  bad-element ui (ui (element c)))
+  bad-element ui (ui (bad-element c)))
 
 (define-alloy-condition allocation-failed (error)
     "The allocation of the renderer~%  ~s~%failed."
