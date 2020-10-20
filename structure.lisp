@@ -26,9 +26,10 @@
 
 (macrolet ((define-deferral (gf target wrapper &optional rest-p)
              `(defmethod ,gf ((structure structure) (,target ,target) ,@(when rest-p '(&rest initargs)))
-                ,(if rest-p
-                     `(apply #',gf (,wrapper structure) ,target initargs)
-                     `(,gf (,wrapper structure) ,target)))))
+                (when (,wrapper structure)
+                  ,(if rest-p
+                       `(apply #',gf (,wrapper structure) ,target initargs)
+                       `(,gf (,wrapper structure) ,target))))))
   (define-deferral enter layout-element layout-element &rest)
   (define-deferral enter layout-tree layout-element &rest)
   (define-deferral enter focus-element focus-element &rest)
@@ -44,18 +45,18 @@
 
 (defmethod enter ((source structure) (target structure) &rest initargs)
   (apply #'enter (layout-element source) target initargs)
-  (apply #'enter (focus-element source) target initargs))
+  (when (focus-element source) (apply #'enter (focus-element source) target initargs)))
 
 (defmethod update ((source structure) (target structure) &rest initargs)
   (apply #'update (layout-element source) target initargs)
-  (apply #'update (focus-element source) target initargs))
+  (when (focus-element source) (apply #'update (focus-element source) target initargs)))
 
 (defmethod leave ((source structure) (target structure))
   (leave (layout-element source) target)
-  (leave (focus-element source) target))
+  (when (focus-element source) (leave (focus-element source) target)))
 
 (defmethod leave ((structure structure) (self (eql T)))
   (when (slot-boundp (layout-element structure) 'layout-parent)
     (leave (layout-element structure) (layout-parent (layout-element structure))))
-  (when (slot-boundp (focus-element structure) 'focus-parent)
+  (when (and (focus-element structure) (slot-boundp (focus-element structure) 'focus-parent))
     (leave (focus-element structure) (focus-parent (focus-element structure)))))
