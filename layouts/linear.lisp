@@ -14,29 +14,25 @@
 
 (defgeneric fit-linear-layout-contents (layout extent))
 
-(defmethod update-linear-layout ((layout linear-layout) extent)
-  (if (and (slot-boundp layout 'layout-parent) (eq layout (layout-parent layout)))
-      (setf (bounds layout) (bounds layout))
-      (let ((updated (fit-linear-layout-contents layout extent)))
-        (unless (extent= (bounds layout) updated)
-          (setf (bounds layout) updated)
-          (when (slot-boundp layout 'layout-parent)
-            (notice-bounds layout (layout-parent layout)))))))
-
 (defmethod (setf align) :after (value (layout linear-layout))
-  (update-linear-layout layout (bounds layout)))
+  (fit-linear-layout-contents layout (bounds layout)))
 
 (defmethod (setf stretch) :after (value (layout linear-layout))
-  (update-linear-layout layout (bounds layout)))
+  (fit-linear-layout-contents layout (bounds layout)))
 
 (defmethod (setf min-size) :after (value (layout linear-layout))
-  (update-linear-layout layout (bounds layout)))
-
-(defmethod notice-bounds ((element layout-element) (layout linear-layout))
-  (update-linear-layout layout (bounds layout)))
+  (fit-linear-layout-contents layout (bounds layout)))
 
 (defmethod (setf bounds) :after (extent (layout linear-layout))
   (fit-linear-layout-contents layout extent))
+
+;; TODO: Update this code to be more efficient and only consider updating the bounds of elements
+;;       that are actively affected by the change.
+(defmethod notice-bounds ((element layout-element) (layout linear-layout))
+  (fit-linear-layout-contents layout (bounds layout)))
+
+(defmethod leave :after ((element layout-element) (layout linear-layout))
+  (fit-linear-layout-contents layout (bounds layout)))
 
 (defclass vertical-linear-layout (linear-layout)
   ((align :initform :end)))
