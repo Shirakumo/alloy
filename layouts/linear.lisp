@@ -49,10 +49,11 @@
               (x (+ l x)))
           (do-elements (element layout :result (px-extent x oy w (- (+ oy h) y)))
             (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x b mw mh) element)
-              (setf w (max w (+ ew l r)))
-              (ecase (align layout)
-                (:start (incf y (+ eh u b)))
-                (:end (decf y (+ eh u b)))))))))))
+              (let ((eh (max mh eh)))
+                (setf w (max w (+ ew l r)))
+                (ecase (align layout)
+                  (:start (incf y (+ eh u b)))
+                  (:end (decf y (+ eh u b))))))))))))
 
 (defmethod fit-linear-layout-contents ((layout vertical-linear-layout) extent)
   (with-unit-parent layout
