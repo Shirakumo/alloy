@@ -8,7 +8,7 @@
 
 (defclass symb (input-line filtered-text-input validated-text-input transformed-text-input)
   ((constrained-package :initform NIL :initarg :package :accessor constrained-package)
-   (allow-interning :initform NIL :initarg :allow-interning :accessor allow-interning)))
+   (allow-interning :initform T :initarg :allow-interning :accessor allow-interning)))
 
 (defmethod component-class-for-object ((symbol symbol)) (find-class 'symb))
 
@@ -44,13 +44,18 @@
             (setf package/name (process)))
           (list package package/name))))))
 
+(defun locked-package-p (package)
+  #+sbcl (sb-ext:package-locked-p package)
+  NIL)
+
 (defmethod valid-p ((symb symb) text)
   (and (call-next-method)
        (destructuring-bind (package name) (parse-symbol-designator text)
          (and (if (constrained-package symb)
                   (null package)
                   (find-package package))
-              (or (allow-interning symb)
+              (or (and (allow-interning symb)
+                       (not (locked-package-p (or (constrained-package symb) package))))
                   (find-symbol name (or (constrained-package symb) package)))))))
 
 (defmethod value->text ((symb symb) symbol)
