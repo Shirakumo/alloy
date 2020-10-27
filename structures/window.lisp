@@ -18,10 +18,6 @@
   (restart-case (call-next-method)
     (decline ())))
 
-(defmethod render :around (renderer (frame frame))
-  (with-constrained-visibility ((bounds frame) renderer)
-    (call-next-method)))
-
 (defclass window-title (label* draggable)
   ())
 
