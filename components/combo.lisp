@@ -9,9 +9,21 @@
 (defclass combo-item (button direct-value-component)
   ())
 
+(defclass combo-layout (vertical-linear-layout)
+  ())
+
+(defmethod handle ((event scroll) (layout combo-layout))
+  (let ((extent (bounds layout)))
+    ;; FIXME: constrain the scrolling to match the parent combo box.
+    (setf (bounds layout)
+          (px-extent (pxx extent)
+                     (+ (pxy extent) (* -20 (dy event)))
+                     (pxw extent)
+                     (pxh extent)))))
+
 (defclass combo (value-component focus-list)
   ((state :initform NIL :accessor state)
-   (combo-list :initform (make-instance 'vertical-linear-layout :layout-parent NIL :cell-margins (margins)) :reader combo-list)))
+   (combo-list :initform (make-instance 'combo-layout :layout-parent NIL :cell-margins (margins)) :reader combo-list)))
 
 (defgeneric combo-item (item combo))
 (defgeneric value-set (data))
@@ -63,7 +75,8 @@
   (cond ((< 0 (dy event))
          (focus-prev combo))
         ((< (dy event) 0)
-         (focus-next combo))))
+         (focus-next combo)))
+  (setf (value combo) (value (focused combo))))
 
 (defmethod (setf focus) :after (focus (combo combo))
   (when (null focus)

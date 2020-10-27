@@ -25,7 +25,7 @@
          (layout (make-instance 'alloy:vertical-linear-layout :layout-parent window))
          (selection NIL)
          (value 0f0)
-         (combo (alloy:represent selection 'alloy:combo-set :value-set '(NIL :a :b :c)))
+         (combo (alloy:represent selection 'alloy:combo-set :value-set '(NIL :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r :s :t :u :v :w :x :y :z)))
          (slider (alloy:represent value 'alloy:ranged-slider))
          (button (alloy:represent "Confirm" 'alloy:button)))
     (alloy:enter combo layout)
