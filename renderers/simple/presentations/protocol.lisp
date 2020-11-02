@@ -129,6 +129,9 @@
     (when pos
       (setf (shapes renderable) (array-utils:vector-pop-position (shapes renderable) pos)))))
 
+(defmethod (setf update-overrides) :after (overrides (renderable renderable))
+  (alloy:mark-for-render renderable))
+
 (defmethod update-shape :around ((renderer renderer) (renderable renderable) (shape shape))
   (call-next-method)
   (let ((initargs (cdr (assoc (name shape) (update-overrides renderable)))))
