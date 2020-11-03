@@ -200,7 +200,9 @@
 
 (defmethod handle ((event pointer-up) (component text-input-component))
   ;; TODO: Implement cursor movement via pointer (set cursor, select).
-  )
+  (if (contained-p (location event) (bounds component))
+      (setf (focus component) :strong)
+      (decline)))
 
 (defmethod handle ((event pointer-down) (component text-input-component)))
 
