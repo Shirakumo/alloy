@@ -32,6 +32,7 @@
           (reject dialog))
         (enter reject layout)
         (enter reject (focus-element dialog) :layer 2)))
+    (leave (index-element :south (layout-element dialog)) (layout-element dialog))
     (enter layout (layout-element dialog) :place :south :size (un 20))))
 
 (defclass dialog* (dialog)
