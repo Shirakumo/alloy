@@ -92,12 +92,14 @@
                   (%lerp (colored:y a) (colored:y b) x)
                   (%lerp (colored:k a) (colored:k b) x))))
 
+#++
 (defmethod lerp ((a colored:xyz) (b colored:xyz) x)
   (let ((x (float x 0f0)))
     (colored:xyz (%lerp (colored:x* a) (colored:x* b) x)
                  (%lerp (colored:y* a) (colored:y* b) x)
                  (%lerp (colored:z* a) (colored:z* b) x))))
 
+#++
 (defmethod lerp ((a colored:lab) (b colored:lab) x)
   (let ((x (float x 0f0)))
     (colored:lab (%lerp (colored:l* a) (colored:l* b) x)
