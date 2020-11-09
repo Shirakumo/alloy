@@ -9,7 +9,7 @@
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
    (#:simple #:org.shirakumo.alloy.renderers.simple)
-   (#:animation #:org.shirakumo.alloy.renderers.animation)
+   (#:animation #:org.shirakumo.alloy.animation)
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:import-from #:org.shirakumo.alloy #:arg!)
