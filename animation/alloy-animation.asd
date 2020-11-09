@@ -14,7 +14,9 @@
   :serial T
   :components ((:file "package")
                (:file "easing")
-               (:file "lerp"))
+               (:file "lerp")
+               (:file "animation")
+               (:file "state"))
   :depends-on (:documentation-utils
                :alloy
                :colored)

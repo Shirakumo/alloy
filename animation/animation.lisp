@@ -74,6 +74,7 @@
              (when (< (aref stops idx) clock)
                (incf idx)
                (setf (tween-idx tween) idx))
+             ;; FIXME: deactivating tweens
              (let* ((ai idx)
                     (bi (min (1+ idx) (length stops)))
                     (a (aref stops ai))
@@ -85,11 +86,20 @@
                     (val (lerp aval bval (funcall ease x))))
                (funcall setter val animated)))))
 
-(defmethod update ((element alloy:layout-element) dt))
+(defmethod update ((element alloy:layout-element) dt)
+  ;; KLUDGE: animated might be a superclass of layout-element
+  (when (next-method-p)
+    (call-next-method)))
 
 (defmethod update ((layout alloy:layout) dt)
   (alloy:do-elements (element layout)
     (update element dt)))
+
+(defmethod update ((tree alloy:layout-tree) dt)
+  (udpate (alloy:root tree) dt))
+
+(defmethod update ((ui alloy:ui) dt)
+  (update (alloy:layout-tree ui) dt))
 
 (defmethod apply-animation ((name symbol) (animated animated))
   (reinitialize-instance animated :tweens (funcall (animation name))))

@@ -33,7 +33,7 @@
    (pivot :initarg :pivot :initform (alloy:px-point 0 0) :accessor pivot)
    (hidden-p :initarg :hidden-p :initform NIL :accessor hidden-p)))
 
-(stealth-mixin:define-stealth-mixin renderable () alloy:renderable
+(stealth-mixin:define-stealth-mixin renderable (animation:animated) alloy:renderable
   ;; Reminder for future me: this has to be a vector for insertion order to stay correct.
   ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)
    (update-overrides :initform () :accessor update-overrides)))
@@ -150,3 +150,7 @@
     (when (= 0 (array-total-size (shapes renderable)))
       (realize-renderable renderer renderable))
     (update-shape renderer renderable T)))
+
+(defmethod animation:map-parts (func (renderable renderable))
+  (loop for shape across (shapes renderable)
+        do (funcall func shape)))

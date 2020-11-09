@@ -56,17 +56,14 @@
                            (list ,@(loop for property in properties
                                          collect `(make-property ,@property)))))))))
 
-(defclass renderable (alloy:renderable alloy:observable)
-  ())
-
-(defun update-part (renderable part observable value)
-  (let ((properties (state-properties element observable value)))
+(defun update-part (animated part observable value)
+  (let ((properties (state-properties animated observable value)))
     (when properties
       (reinitialize-instance part :tweens (compile-tweens properties part)))))
 
-(defmethod update-state ((renderable renderable) observable value)
-  (alloy:do-elements (part renderable)
-    (update-part renderable part observable value)))
+(defmethod update-state ((animated animated) observable value)
+  (map-parts (lambda (part) (update-part animated part observable value))
+             animated))
 
-(defmethod alloy:notify-observers :after ((renderable renderable) observable &rest args)
-  (update-state renderable observable (first args)))
+(defmethod alloy:notify-observers :after ((animated animated) observable &rest args)
+  (update-state animated observable (first args)))
