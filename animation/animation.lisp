@@ -1,0 +1,142 @@
+#|
+ This file is a part of Alloy
+ (c) 2019 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
+ Author: Nicolas Hafner <shinmera@tymoon.eu>
+|#
+
+(in-package #:org.shirakumo.alloy.animation)
+
+(defvar *animations* (make-hash-table :test 'eql))
+
+(defun animation (name &optional (errorp T))
+  (or (gethash name *animations*)
+      (when errorp (error "No animation named ~s" name))))
+
+(defun (setf animation) (tweens name)
+  (if tweens
+      (setf (gethash name *animations*) tweens)
+      (remhash name *animations*))
+  tweens)
+
+(defun list-animations ()
+  (loop for name being the hash-keys of *animations* collect name))
+
+(defgeneric update (animation dt))
+(defgeneric apply-animation (animation animated))
+
+;; TODO: fold tween into animation
+(defstruct (tween (:constructor make-tween (setter stops values easings)))
+  (setter NIL :type function)
+  (stops NIL :type (simple-array single-float (*)))
+  (values NIL :type simple-vector)
+  (easings NIL :type simple-vector)
+  (idx 0 :type (unsigned-byte 32))
+  (clock 0f0 :type single-float))
+
+(defun find-tween-idx (tween clock)
+  ;; TODO: could speed this up with bin search, but not sure if worth it.
+  ;;       Presumably there's not going to be a lot of stops to make it worth it.
+  (let ((stops (tween-stops tween)))
+    (loop for i from 1 below (length stops)
+          do (when (< clock (aref stops i))
+               (return (1- i)))
+          finally (return (length stops)))))
+
+(defclass animated ()
+  ((tweens :initform #() :accessor tweens)))
+
+(defmethod shared-initialize :after ((animated animated) slots &key (tweens NIL tweens-p))
+  (when tweens-p
+    (let ((old (tweens animated)))
+      (loop for i from 0 below (length tweens)
+            for tween = (aref tweens i)
+            for setter = (tween-setter tween)
+            for clock = (loop for tween across old
+                              do (when (eql setter (tween-setter tween))
+                                   (return (tween-clock tween)))
+                              finally (return 0f0))
+            do (setf (tween-idx tween) (find-tween-idx tween clock))
+               (setf (tween-clock tween) clock))
+      (setf (tweens animated) tweens))))
+
+(defmethod update ((animated animated) dt)
+  (declare (type single-float dt))
+  (loop for tween across (tweens animated)
+        for setter = (tween-setter tween)
+        for stops = (tween-stops tween)
+        for values = (tween-values tween)
+        for easings = (tween-easings tween)
+        for idx = (tween-idx tween)
+        for clock = (tween-clock tween)
+        do (when (< idx (1+ (length stops)))
+             (incf clock dt)
+             (setf (tween-clock tween) clock)
+             (when (< (aref stops idx) clock)
+               (incf idx)
+               (setf (tween-idx tween) idx))
+             (let* ((ai idx)
+                    (bi (min (1+ idx) (length stops)))
+                    (a (aref stops ai))
+                    (b (aref stops bi))
+                    (aval (aref values ai))
+                    (bval (aref values bi))
+                    (ease (aref easings idx))
+                    (x (/ (- clock a) (- b a)))
+                    (val (lerp aval bval (funcall ease x))))
+               (funcall setter val animated)))))
+
+(defmethod update ((element alloy:layout-element) dt))
+
+(defmethod update ((layout alloy:layout) dt)
+  (alloy:do-elements (element layout)
+    (update element dt)))
+
+(defmethod apply-animation ((name symbol) (animated animated))
+  (reinitialize-instance animated :tweens (funcall (animation name))))
+
+(defmethod apply-animation ((tweens array) (animated animated))
+  (reinitialize-instance animated :tweens tweens))
+
+(defun %expand-array (values &rest array-options)
+  (let ((array (gensym "ARRAY")))
+    `(let ((,array (make-array ,(length values) ,@ (loop for opt in array-options collect `',opt))))
+       ,@(loop for i from 0 below (length values)
+               for value in values
+               collect `(setf (aref ,array ,i) ,value))
+       ,array)))
+
+(defun compile-tweens (progression)
+  (let ((tweens (make-hash-table :test 'equal)))
+    (check-type (first progression) real)
+    ;; Restructure into per-place tween info
+    (loop while progression
+          for stop = (pop progression)
+          for parts = (loop until (or (null progression)
+                                      (realp (first progression)))
+                            do (check-type (first progression) cons)
+                            collect (pop progression))
+          when parts
+          do (dolist (part parts)
+               (destructuring-bind (place value &key (easing 'linear)) part
+                 (push (list stop value easing) (gethash place tweens)))))
+    ;; Compile down to constructors
+    (loop for place being the hash-keys of tweens
+          for data being the hash-values of tweens
+          for stops = (loop for (stop) in data collect (float stop 0f0))
+          for values = (loop for (_ value) in data collect value)
+          for easings = (loop for (_ __ easing) in (rest data) collect `(easing ',easing))
+          collect `(make-tween ,(etypecase place
+                                  (symbol `(fdefinition ',place))
+                                  (cons (case (first place)
+                                          (setf `(fdefinition ',place))
+                                          (T place))))
+                               ,(%expand-array stops :element-type 'single-float)
+                               ,(%expand-array values)
+                               ,(%expand-array easings)))))
+
+(defmacro define-animation (name &body progression)
+  (let ((tweens (compile-tweens progression)))
+    `(setf (animation ',name)
+           (lambda ()
+             (declare (optimize speed))
+             ,(%expand-array tweens)))))
