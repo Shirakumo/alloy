@@ -431,6 +431,7 @@
   (:export
    #:with-unit-parent
    #:unit
+   #:unit-value
    #:to-px
    #:to-un
    #:define-unit
