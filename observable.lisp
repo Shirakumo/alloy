@@ -60,6 +60,9 @@
                  (error "Cannot make ~s observable: the LAMBDA-LIST~%  ~s~%does not contain ~s"
                         function lambda-list class)))
         (lambda-list (copy-list lambda-list))
+        (observer (etypecase function
+                    (cons (second function))
+                    (symbol function)))
         (argvars ()))
     ;; Gather argvars and restructure lambda-list
     (loop for cons on lambda-list
@@ -78,14 +81,14 @@
           finally (setf argvars (nreverse argvars)))
     ;; Save the position of the observable
     (etypecase function
-      (cons (setf (get (second function) 'observable-setf-position) pos))
-      (symbol (setf (get function 'observable-position) pos)))
+      (cons (setf (get observer 'observable-setf-position) pos))
+      (symbol (setf (get observer 'observable-position) pos)))
     ;; Generate method
     ;; KLUDGE: Using the proper ADD-METHOD route would require MOP.
     (eval
      `(defmethod ,function :after ,lambda-list
         (,(if (find '&optional lambda-list) 'apply 'funcall)
-         #'notify-observers ',function ,class ,@argvars)))))
+         #'notify-observers ',observer ,class ,@argvars)))))
 
 (defmethod observe (function (observable observable) observer-function &optional name)
   (let* ((name (or name observer-function))
