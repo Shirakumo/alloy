@@ -8,6 +8,8 @@
 
 (defvar *screen*)
 
+(defclass screen (glfw:screen) ())
+
 (defmacro define-example (name args &body body)
   (let ((thunk (gensym "THUNK")))
     `(defun ,name (,@(rest args))
@@ -15,5 +17,5 @@
                 ,@body))
          (if (boundp '*screen*)
              (,thunk *screen*)
-             (glfw:with-screen (*screen*)
+             (glfw:with-screen (*screen* 'screen :base-scale 2.0)
                (,thunk *screen*)))))))

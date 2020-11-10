@@ -79,31 +79,35 @@
 (defmethod window:size ((screen screen))
   )
 
-(defun call-with-screen (function)
-  (let (screen)
+(defun call-with-screen (function &optional (screen-class 'screen) &rest initargs)
+  (let (screen
+        (start (get-internal-real-time)))
     (glfw:initialize)
     (%glfw:set-error-callback (cffi:callback glfw-error-callback))
     (unwind-protect
          (progn
-           (setf screen (make-instance 'screen))
+           (setf screen (apply #'make-instance screen-class initargs))
            (alloy:allocate screen)
            (funcall function screen)
            (loop until (glfw:window-should-close-p (pointer screen))
-                 do (%glfw::wait-events-timeout 0.1d0)
+                 do (%glfw::wait-events-timeout (float 1/30 0d0))
                     (alloy:do-elements (window (alloy:root (alloy:layout-tree screen)))
                       (when (%glfw:window-should-close-p (pointer window))
                         (alloy:deallocate window)))
                     (when (= 0 (alloy:element-count (alloy:root (alloy:layout-tree screen))))
                       (window:close screen))
+                    (let ((dt (float (/ (- (get-internal-real-time) start) INTERNAL-TIME-UNITS-PER-SECOND) 0f0)))
+                      (org.shirakumo.alloy.animation:update screen dt)
+                      (setf start (get-internal-real-time)))
                     (alloy:render screen screen)))
       (when screen (alloy:deallocate screen))
       (%glfw:terminate))))
 
-(defmacro with-screen (args &body init-body)
+(defmacro with-screen ((screen &rest args) &body init-body)
   (let ((init (gensym "INIT")))
-    `(flet ((,init ,args
+    `(flet ((,init (,screen)
               ,@init-body))
-       (call-with-screen #',init))))
+       (call-with-screen #',init ,@args))))
 
 (defclass window (window:window renderer
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
@@ -163,6 +167,9 @@
 
 (defmethod window:close ((window window))
   (%glfw:set-window-should-close (pointer window) T))
+
+(defmethod animation:update ((window window) dt)
+  (animation:update (window:layout-element window) dt))
 
 (defmethod alloy:register ((window window) (screen screen)))
 

@@ -261,6 +261,7 @@ void main(){
       (simple:translate renderer (dimensions shape))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer))
       (setf (opengl:uniform shader "color") (simple:pattern shape))
+      ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text.
       (opengl:update-vertex-buffer vbo (vertex-data shape))
       (opengl:draw-vertex-array vao :triangles (/ (length (vertex-data shape)) 4)))))
 

@@ -23,7 +23,7 @@
 ;;;         The same problem exists for renderables, though there it is arguably worse,
 ;;;         as then the user would always have to use the extra subclasses from presentations
 ;;;         to construct all their UI, rather than the standard ones from core.
-(stealth-mixin:define-stealth-mixin shape () simple:shape
+(stealth-mixin:define-stealth-mixin shape (animation:animated) simple:shape
   ((name :initarg :name :initform NIL :reader name)
    (composite-mode :initarg :composite-mode :initform :source-over :accessor composite-mode)
    (z-index :initarg :z-index :initform 0 :accessor z-index)
@@ -153,4 +153,11 @@
 
 (defmethod animation:map-parts (func (renderable renderable))
   (loop for shape across (shapes renderable)
-        do (funcall func shape)))
+        do (funcall func (cdr shape))))
+
+(defmethod animation:state-properties ((renderable renderable) (shape shape) observable value)
+  (animation:state-properties renderable (name shape) observable value))
+
+(defmethod animation:update ((renderable renderable) dt)
+  (loop for shape across (shapes renderable)
+        do (animation:update (cdr shape) dt)))
