@@ -46,7 +46,7 @@
 
 (make-observable '(setf focus) '(focus observable))
 (make-observable '(setf bounds) '(bounds observable))
-(make-observable 'handle '(event observable))
+;(make-observable 'handle '(event observable))
 (make-observable 'activate '(observable))
 (make-observable 'exit '(observable))
 
