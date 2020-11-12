@@ -39,16 +39,17 @@
 
 (defmacro on (function args &body body)
   (multiple-value-bind (declarations body) (gather-declarations body)
-    (let* ((position (or (if (listp function)
-                             (get (second function) 'observable-setf-position)
-                             (get function 'observable-position))
+    (let* ((observer (if (listp function) (second function) function))
+           (position (or (if (listp function)
+                             (get observer 'observable-setf-position)
+                             (get observer 'observable-position))
                          (error "The function~%  ~s~%is not observable." function)))
            (observable (nth position args))
            (args (copy-list args))
            (name (second (second (find 'name declarations :key #'caadr))))
            (declarations (remove 'name declarations :key #'caadr)))
       (setf (nth position args) 'observable)
-      `(observe ',function ,observable
+      `(observe ',observer ,observable
                 (lambda ,args
                   ,@declarations
                   (declare (ignorable observable))
