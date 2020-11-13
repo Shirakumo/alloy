@@ -16,7 +16,7 @@
 (define-observable (setf range) (range observable))
 
 (defmethod initialize-instance :after ((slider slider) &key)
-  (on (setf range) (range (data slider))
+  (on range (range (data slider))
     (setf (value slider) (value slider))))
 
 (defmethod minimum ((slider slider))

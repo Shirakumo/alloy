@@ -29,7 +29,7 @@
 (defmethod value ((string string)) string)
 
 (defmethod refresh ((data value-data))
-  (notify-observers '(setf value) data (value data) data))
+  (notify-observers 'value data (value data) data))
 
 (defmethod expand-place-data (atom)
   `(make-instance 'value-data :value ,atom))
@@ -69,9 +69,9 @@
 
 (defmethod initialize-instance :after ((data accessor-data) &key)
   (when (typep (object data) 'observable)
-    (observe `(setf ,(accessor data)) (object data)
+    (observe (accessor data) (object data)
              (lambda (value object)
-               (notify-observers '(setf value) data value object)))))
+               (notify-observers 'value data value object)))))
 
 (defmethod value ((data accessor-data))
   (funcall (accessor data) (object data)))
@@ -86,7 +86,7 @@
 (defmethod initialize-instance :after ((data slot-data) &key)
   (when (typep (object data) 'observable)
     (observe (slot data) (object data) (lambda (value object)
-                                         (notify-observers '(setf value) data value object)))))
+                                         (notify-observers 'value data value object)))))
 
 (defmethod value ((data slot-data))
   (slot-value (object data) (slot data)))

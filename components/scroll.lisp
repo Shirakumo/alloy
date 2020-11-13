@@ -10,7 +10,7 @@
   ((step :initform 20)))
 
 (defmethod initialize-instance :after ((scrollbar scrollbar) &key)
-  (on (setf bounds) (bounds (data scrollbar))
+  (on bounds (bounds (data scrollbar))
     (declare (ignore bounds))
     (mark-for-render scrollbar)))
 

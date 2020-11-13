@@ -37,7 +37,7 @@
 
 (defmethod initialize-instance :after ((combo combo) &key)
   (update-combo-items combo (value-set combo))
-  (on (setf value-set) (set (data combo))
+  (on value-set (set (data combo))
     (update-combo-items combo set)))
 
 (defmethod set-layout-tree :before (value (combo combo))

@@ -13,7 +13,7 @@
   ())
 
 (defmethod initialize-instance :after ((component value-component) &key)
-  (on (setf value) (value (data component))
+  (on value (value (data component))
     (declare (ignore value))
     (value-changed component)))
 

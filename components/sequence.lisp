@@ -25,7 +25,7 @@
     (setf (reordering-allowed-p component) (find :reorder allow)))
   (let ((data (data component)))
     (refresh component)
-    (on (setf element) (value data index)
+    (on element (value data index)
       (declare (ignore value))
       (refresh (index-element index component)))
     (on push-element (value data index)

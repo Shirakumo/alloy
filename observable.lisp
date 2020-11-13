@@ -14,7 +14,7 @@
   (function NIL :type function))
 
 (defclass observable ()
-  ((observers :initform (make-hash-table :test 'equal) :accessor observers)))
+  ((observers :initform (make-hash-table :test 'eql) :accessor observers)))
 
 (defgeneric observe (function observable observer &optional name))
 (defgeneric remove-observers (function observable &optional name))
@@ -39,17 +39,15 @@
 
 (defmacro on (function args &body body)
   (multiple-value-bind (declarations body) (gather-declarations body)
-    (let* ((observer (if (listp function) (second function) function))
-           (position (or (if (listp function)
-                             (get observer 'observable-setf-position)
-                             (get observer 'observable-position))
+    (check-type function symbol)
+    (let* ((position (or (get function 'observable-position)
                          (error "The function~%  ~s~%is not observable." function)))
            (observable (nth position args))
            (args (copy-list args))
            (name (second (second (find 'name declarations :key #'caadr))))
            (declarations (remove 'name declarations :key #'caadr)))
       (setf (nth position args) 'observable)
-      `(observe ',observer ,observable
+      `(observe ',function ,observable
                 (lambda ,args
                   ,@declarations
                   (declare (ignorable observable))
@@ -81,9 +79,7 @@
                 (push (car cons) argvars)))
           finally (setf argvars (nreverse argvars)))
     ;; Save the position of the observable
-    (etypecase function
-      (cons (setf (get observer 'observable-setf-position) pos))
-      (symbol (setf (get observer 'observable-position) pos)))
+    (setf (get observer 'observable-position) pos)
     ;; Generate method
     ;; KLUDGE: Using the proper ADD-METHOD route would require MOP.
     (eval
@@ -92,6 +88,7 @@
          #'notify-observers ',observer ,class ,@argvars)))))
 
 (defmethod observe (function (observable observable) observer-function &optional name)
+  (check-type function symbol)
   (let* ((name (or name observer-function))
          (observer (find name (gethash function (observers observable)) :key #'observer-name)))
     (if observer
@@ -110,6 +107,7 @@
         collect (observer-name observer)))
 
 (defmethod notify-observers (function (observable observable) &rest args)
+  (check-type function symbol)
   (loop for observer in (gethash function (observers observable))
         do (apply (observer-function observer) args)))
 
@@ -134,12 +132,12 @@
 
 (defun (setf gettable) (value key table)
   (prog1 (setf (gethash key (storage table)) value)
-    (notify-observers '(setf gettable) table value key table)))
+    (notify-observers 'gethash table value key table)))
 
 (defun remtable (key table)
   (prog1 (remhash key (storage table))
-    (notify-observers 'remtable table key table)))
+    (notify-observers 'remhash table key table)))
 
 (defun clrtable (table)
   (prog1 (clrhash (storage table))
-    (notify-observers 'clrtable table table)))
+    (notify-observers 'clrhash table table)))
