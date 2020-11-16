@@ -59,4 +59,4 @@
 (defclass diamond-gradient (gradient) ())
 
 (defmethod compute-gradient-data ((gradient diamond-gradient))
-  )
+  ) 
