@@ -18,7 +18,8 @@
 (defclass wheel (input-line filtered-text-input validated-text-input transformed-text-input)
   ((step :initarg :step :initform 1 :accessor step)
    (grid :initarg :grid :initform 0 :accessor grid)
-   (start-pos :initform NIL :accessor start-pos)))
+   (start-pos :initform NIL :accessor start-pos)
+   (start-val :initform NIL :accessor start-val)))
 
 (defmethod component-class-for-object ((real real)) (find-class 'wheel))
 
@@ -73,7 +74,8 @@
   (cond ((contained-p (location event) (bounds wheel))
          (activate wheel)
          (call-next-method)
-         (setf (start-pos wheel) (location event)))
+         (setf (start-pos wheel) (location event))
+         (setf (start-val wheel) (value wheel)))
         (T
          (decline))))
 
@@ -84,17 +86,21 @@
                (relative-y (- (pxy (location event)) (pxy (start-pos wheel))))
                (diff (/ (sqrt (+ (expt relative-x 2) (expt relative-y 2)))
                         ;; Normalise
-                        (to-px (un 100)))))
+                        (to-px (un 20)))))
           ;; dead zone
-          (when (< 1 diff)
-            (incf (value wheel) (* (- diff 1)
-                                   ;; Diagonal along 0,0 -> 1,-1 to determine whether to increase or decrease.
-                                   (if (< (- relative-x) relative-y) +1 -1))))))
+          (if (< 1 diff)
+              (setf (value wheel)
+                    (+ (start-val wheel)
+                       (* (- diff 1)
+                          ;; Diagonal along 0,0 -> 1,-1 to determine whether to increase or decrease.
+                          (if (< (- relative-x) relative-y) +1 -1))))
+              (setf (value wheel) (start-val wheel)))))
       (call-next-method)))
 
 (defmethod handle ((event pointer-up) (wheel wheel))
   (cond ((start-pos wheel)
          (handle (make-instance 'pointer-move :location (location event) :old-location (location event)) wheel)
-         (setf (start-pos wheel) NIL))
+         (setf (start-pos wheel) NIL)
+         (setf (start-val wheel) NIL))
         (T
          (call-next-method))))
