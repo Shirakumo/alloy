@@ -303,11 +303,13 @@ void main(){
   (apply #'make-instance 'selection :text text :start start :end end initargs))
 
 (defmethod shared-initialize :after ((selection selection) slots &key)
+  ;; FIXME: This.
+  #++
   (let* ((text (simple:text-object selection))
          (s (scale text))
          (d (dimensions text))
          (x (3b-bmfont:measure-glyphs (data (simple:font text)) (alloy:text text)
                                       :end (simple:start selection)))
          (w (3b-bmfont:measure-glyphs (data (simple:font text)) (alloy:text text)
-                                      :start (simple:start selection) :end (simple:end selection))))
+                                      :start (max 0 (simple:start selection)) :end (simple:end selection))))
     (setf (simple:bounds selection) (alloy:px-extent (* s x) (alloy:pxy d) (* s w) (alloy:pxh d)))))
