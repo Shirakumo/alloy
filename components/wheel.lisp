@@ -48,9 +48,10 @@
     (float (format NIL "~f" value))))
 
 (defmethod text->value ((wheel wheel) text)
-  (if (string= "" text)
-      0
-      (read-from-string text)))
+  (cond ((string= "" text) 0)
+        ((string= "-" text) -0.0)
+        ((string= "+" text) +0.0)
+        (T (read-from-string text))))
 
 (defmethod (setf step) :before (value (wheel wheel))
   (assert (< 0 value) (value)))
