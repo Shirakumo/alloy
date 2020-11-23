@@ -178,6 +178,10 @@
                              component))
                ((< (pos cursor) (length (text component)))
                 (delete-text (pos cursor) (1+ (pos cursor)) component))))
+        (:a
+         (when (find :control (print (modifiers event)))
+           (set-anchor 0 cursor)
+           (move-to :end cursor)))
         (:left
          (move :prev-char))
         (:right
