@@ -51,6 +51,7 @@
   (cond ((string= "" text) 0)
         ((string= "-" text) -0.0)
         ((string= "+" text) +0.0)
+        ((string= "." text) 0.0)
         (T (read-from-string text))))
 
 (defmethod (setf step) :before (value (wheel wheel))
