@@ -51,7 +51,9 @@
             (when type
               (let ((component (apply #'represent-with
                                       (component-class-for-object (c2mop:class-prototype type))
-                                      (make-instance 'slot-data :object object :slot name)
+                                      (if (and (fboundp name) (fboundp `(setf ,name)))
+                                          (make-instance 'accessor-data :object object :accessor name)
+                                          (make-instance 'slot-data :object object :slot name))
                                       initargs)))
                 (enter (string name) layout)
                 (enter component layout)
