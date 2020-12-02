@@ -46,7 +46,7 @@
 (defmethod text ((combo combo))
   (if (focused combo)
       (text (focused combo))
-      ""))
+      (princ-to-string (value combo))))
 
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting))
