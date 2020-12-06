@@ -217,7 +217,7 @@
   (let ((cursor (cursor component)))
     (flet ((move (target)
              (move-to target cursor)))
-      (case (key event)
+      (case (button event)
         (:x )
         (:y (accept event))
         (:b (cond ((anchor cursor)
