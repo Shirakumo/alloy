@@ -237,17 +237,36 @@
   (when (and index (focused chain))
     (setf (slot-value chain 'index) (element-index (focused chain) chain))))
 
+(defmethod handle ((event activate) (chain focus-chain))
+  (if (< 0 (element-count chain))
+      (activate chain)
+      (decline)))
+
+(defmethod handle ((event exit) (chain focus-chain))
+  (if (or (< 0 (element-count chain))
+          (eql :strong (focus chain)))
+      (exit chain)
+      (decline)))
+
 (defmethod handle ((event focus-next) (chain focus-chain))
-  (focus-next chain))
+  (if (< 0 (element-count chain))
+      (focus-next chain)
+      (decline)))
 
 (defmethod handle ((event focus-prev) (chain focus-chain))
-  (focus-prev chain))
+  (if (< 0 (element-count chain))
+      (focus-prev chain)
+      (decline)))
 
 (defmethod handle ((event focus-up) (chain focus-chain))
-  (focus-up chain))
+  (if (< 0 (element-count chain))
+      (focus-up chain)
+      (decline)))
 
 (defmethod handle ((event focus-down) (chain focus-chain))
-  (focus-down chain))
+  (if (< 0 (element-count chain))
+      (focus-down chain)
+      (decline)))
 
 (defclass focus-list (focus-chain vector-container)
   ())
