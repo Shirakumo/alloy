@@ -34,7 +34,7 @@
   (unless (eql value :strong)
     (setf (pressed button) NIL)))
 
-(defclass button* (button)
+(defclass button* (direct-value-component button)
   ((on-activate :initarg :on-activate :initform (arg! :on-activate) :accessor on-activate)))
 
 (defmethod activate ((button button*))
