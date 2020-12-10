@@ -33,3 +33,9 @@
 (defmethod (setf focus) :after (value (button button))
   (unless (eql value :strong)
     (setf (pressed button) NIL)))
+
+(defclass button* (button)
+  ((on-activate :initarg :on-activate :initform (arg! :on-activate) :accessor on-activate)))
+
+(defmethod activate ((button button*))
+  (funcall (on-activate button)))

@@ -54,7 +54,8 @@
   ;; components/button.lisp
   (:export
    #:button
-   #:pressed)
+   #:pressed
+   #:button*)
   ;; components/combo.lisp
   (:export
    #:combo-item
