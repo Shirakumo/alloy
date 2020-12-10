@@ -79,7 +79,8 @@
 (defmethod exit ((element focus-element))
   (unless (eql NIL (focus element))
     (setf (focus element) NIL)
-    (setf (focus (focus-parent element)) :strong)
+    (unless (eql (focus-parent element) element)
+      (setf (focus (focus-parent element)) :strong))
     (focus-parent element)))
 
 (defmethod handle :around ((event event) (element focus-element))
