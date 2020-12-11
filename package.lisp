@@ -243,6 +243,7 @@
    #:focus-chain
    #:focus-list
    #:focus-grid
+   #:focus-stack
    #:focus-tree
    #:popups)
   ;; geometry.lisp
