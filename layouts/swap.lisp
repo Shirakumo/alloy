@@ -6,12 +6,14 @@
 
 (in-package #:org.shirakumo.alloy)
 
-(defclass swap-layout (layout vector-container)
+(defclass swap-layout (layout observable vector-container)
   ((index :initform 0 :accessor index)))
+
+(define-observable (setf index) (value observable))
 
 (defmethod current ((layout swap-layout))
   (when (< 0 (length (elements layout)))
-    (aref (elements layout) (index layout))))
+    (aref (elements layout) (min (length (elements layout)) (index layout)))))
 
 (defmethod (setf current) :before ((current layout-element) (layout swap-layout))
   (unless (eq layout (layout-parent current))
