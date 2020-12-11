@@ -33,6 +33,7 @@
 (defun unit (unit-ish)
   (etypecase unit-ish
     (unit unit-ish)
+    ((eql 0) #.(%un 0f0))
     (real (%un (float unit-ish 0f0)))))
 
 (define-compiler-macro unit (unit-ish &environment env)

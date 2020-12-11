@@ -63,15 +63,15 @@
   (declare (ignore env))
   (list '%size (size-w size) (size-h size)))
 
-(defun size (&optional (w 0) h)
-  (if h
-      (%size (unit w) (unit h))
-      (%size (unit w) (unit w))))
+(defun size (&optional w h)
+  (cond (h (%size (unit w) (unit h)))
+        (w (%size (unit w) (unit w)))
+        (T #.(%size (unit 0) (unit 0)))))
 
-(defun px-size (&optional (w 0) h)
-  (if h
-      (%size (px w) (px h))
-      (%size (px w) (px h))))
+(defun px-size (&optional w h)
+  (cond (h (%size (px w) (px h)))
+        (w (%size (px w) (px h)))
+        (T #.(%size (px 0) (px 0)))))
 
 (defmethod w ((size size)) (size-w size))
 (defmethod h ((size size)) (size-h size))
@@ -94,17 +94,19 @@
   (declare (ignore env))
   (list '%margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins)))
 
-(defun margins (&optional (l 0) u r b)
+(defun margins (&optional l u r b)
   (cond (b (%margins (unit l) (unit u) (unit r) (unit b)))
         (r (%margins (unit l) (unit u) (unit r) (unit 0)))
         (u (%margins (unit l) (unit u) (unit l) (unit u)))
-        (l (%margins (unit l) (unit l) (unit l) (unit l)))))
+        (l (%margins (unit l) (unit l) (unit l) (unit l)))
+        (T #.(%margins (unit 0) (unit 0) (unit 0) (unit 0)))))
 
-(defun px-margins (&optional (l 0) u r b)
+(defun px-margins (&optional l u r b)
   (cond (b (%margins (px l) (px u) (px r) (px b)))
         (r (%margins (px l) (px u) (px r) (px 0)))
         (u (%margins (px l) (px u) (px l) (px u)))
-        (l (%margins (px l) (px l) (px l) (px l)))))
+        (l (%margins (px l) (px l) (px l) (px l)))
+        (T #.(%margins (px 0) (px 0) (px 0) (px 0)))))
 
 (defmethod l ((margins margins)) (margins-l margins))
 (defmethod u ((margins margins)) (margins-u margins))
