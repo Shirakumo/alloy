@@ -295,19 +295,19 @@
   ())
 
 (defmethod focus-up ((stack focus-stack))
-  (when (< 0 (car (index stack)))
+  (when (< 0 (or (car (index stack)) 1))
     (decf (car (index stack)))))
 
 (defmethod focus-down ((stack focus-stack))
-  (when (< (car (index stack)) (1- (length (layers stack))))
+  (when (< (or (car (index stack)) 0) (1- (length (layers stack))))
     (incf (car (index stack)))))
 
 (defmethod focus-next ((stack focus-stack))
-  (destructuring-bind (row . col) (index stack)
+  (destructuring-bind (row . col) (or (index stack) '(0 . 0))
     (setf (cdr (index stack)) (mod (1+ col) (length (aref (layers stack) row))))))
 
 (defmethod focus-prev ((stack focus-stack))
-  (destructuring-bind (row . col) (index stack)
+  (destructuring-bind (row . col) (or (index stack) '(0 . 0))
     (setf (cdr (index stack)) (mod (1- col) (length (aref (layers stack) row))))))
 
 (defclass focus-tree ()

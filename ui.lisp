@@ -56,6 +56,9 @@
 (defmethod register ((ui ui) renderer)
   (register (layout-tree ui) renderer))
 
+(defmethod (setf base-scale) :after (value (ui ui))
+  (suggest-bounds (bounds ui) ui))
+
 (defclass smooth-scaling-ui (ui)
   ())
 
