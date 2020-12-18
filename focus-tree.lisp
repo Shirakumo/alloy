@@ -303,11 +303,15 @@
     (incf (car (index stack)))))
 
 (defmethod focus-next ((stack focus-stack))
-  (destructuring-bind (row . col) (or (index stack) '(0 . 0))
+  (when (null (index stack))
+    (setf (index stack) '(0 . 0)))
+  (destructuring-bind (row . col) (index stack)
     (setf (cdr (index stack)) (mod (1+ col) (length (aref (layers stack) row))))))
 
 (defmethod focus-prev ((stack focus-stack))
-  (destructuring-bind (row . col) (or (index stack) '(0 . 0))
+  (when (null (index stack))
+    (setf (index stack) '(0 . 0)))
+  (destructuring-bind (row . col) (index stack)
     (setf (cdr (index stack)) (mod (1- col) (length (aref (layers stack) row))))))
 
 (defclass focus-tree ()
