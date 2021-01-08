@@ -138,7 +138,12 @@
 (defmethod leave :after ((element focus-element) (chain focus-chain))
   (when (eq element (focused chain))
     (setf (slot-value chain 'focused) NIL)
-    (setf (index chain) NIL)))
+    (cond ((< (index chain) (element-count chain))
+           (setf (index chain) (index chain)))
+          ((< 0 (element-count chain))
+           (setf (index chain) (1- (element-count chain))))
+          (T
+           (setf (index chain) NIL)))))
 
 (defmethod set-focus-tree :before (value (chain focus-chain))
   (do-elements (element chain)
