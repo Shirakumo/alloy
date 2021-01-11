@@ -128,6 +128,12 @@
             `(= (+ :y :h ,gap) (:y ,other))
             `(<= (+ :y :h) (:y ,other)))))
 
+(define-expression-transform :chain (other &optional gap)
+  (check-type other alloy:layout-element)
+  (list `(= :l (+ ,gap (:r ,other)))
+        `(= :u (:u ,other))
+        `(= :b (:b ,other))))
+
 (define-expression-transform :inside (other &key (halign :center) (valign :center) (margin 0))
   (check-type other alloy:layout-element)
   (list
