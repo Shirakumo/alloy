@@ -77,7 +77,8 @@
   element)
 
 (defmethod exit ((element focus-element))
-  (unless (eql NIL (focus element))
+  ;; FIXME: It's possible for the element to get NIL focus but still be the focused element.
+  (when (eql element (focused (focus-tree element)))
     (setf (focus element) NIL)
     (unless (eql (focus-parent element) element)
       (setf (focus (focus-parent element)) :strong))
