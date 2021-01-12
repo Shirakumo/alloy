@@ -50,7 +50,9 @@
                (setf type (find-canonical-class type))))
             (when type
               (let ((component (apply #'represent-with
-                                      (component-class-for-object (c2mop:class-prototype type))
+                                      (etypecase (c2mop:class-prototype type)
+                                        (string 'input-line)
+                                        (T (component-class-for-object (c2mop:class-prototype type))))
                                       (if (and (fboundp name) (fboundp `(setf ,name)))
                                           (make-instance 'accessor-data :object object :accessor name)
                                           (make-instance 'slot-data :object object :slot name))
