@@ -89,7 +89,10 @@
                     :bad-element element :container parent :parent (layout-parent element))
            (reparent ()
              :report "Leave the element from its current parent."
-             (leave element T))))))
+             (leave element T))))
+        (T
+         (error 'element-already-contained
+                :bad-element element :container parent))))
 
 (defmethod leave :before ((element layout-element) (parent layout))
   (unless (eq parent (layout-parent element))

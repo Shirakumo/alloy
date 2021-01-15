@@ -37,6 +37,10 @@
     "Cannot perform operation with~%  ~s~%on~%  ~s~%as it is a parent on~%  ~s"
   bad-element container parent)
 
+(define-alloy-condition element-already-contained (hierarchy-error)
+    "Cannot enter~%  ~s~%on~%  ~s~%as it is already contained within."
+  bad-element container)
+
 (define-alloy-condition element-not-contained (hierarchy-error)
     "The element~%  ~s~%is not a child of~%  ~s"
   bad-element container)

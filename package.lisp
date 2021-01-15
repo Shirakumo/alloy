@@ -32,6 +32,7 @@
    #:container
    #:bad-element
    #:element-has-different-parent
+   #:element-already-contained
    #:element-not-contained
    #:element-has-different-root
    #:root-already-established
