@@ -183,7 +183,7 @@
   (setf (slot-value chain 'focused) (index-element index chain)))
 
 (defmethod (setf index) :after ((index integer) (chain focus-chain))
-  (when (eql NIL (focus (focused chain)))
+  (when (and (focused chain) (eql NIL (focus (focused chain))))
     (setf (focus (focused chain)) :weak)))
 
 (defmethod (setf focus) :after ((focus (eql :strong)) (chain focus-chain))
