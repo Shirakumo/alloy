@@ -139,7 +139,8 @@
   (:export
    #:wheel
    #:step
-   #:grid)
+   #:grid
+   #:ranged-wheel)
   ;; container.lisp
   (:export
    #:element

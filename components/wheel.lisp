@@ -106,3 +106,15 @@
          (setf (start-val wheel) NIL))
         (T
          (call-next-method))))
+
+(defclass ranged-wheel (wheel)
+  ((range :initarg :range :initform '(0 . 100) :accessor range)))
+
+(defmethod (setf range) :before (value (wheel ranged-wheel))
+  (assert (< (car value) (cdr value))))
+
+(defmethod (setf value) (value (wheel ranged-wheel))
+  (destructuring-bind (min . max) (range wheel)
+    (cond ((and min (< value min)) (call-next-method min wheel))
+          ((and max (< max value)) (call-next-method max wheel))
+          (T (call-next-method value wheel)))))
