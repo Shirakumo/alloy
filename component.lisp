@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass component (observable layout-element focus-element renderable)
-  ((data :initarg :data :initform (arg! :data) :reader data)
+  ((data :initarg :data :initform (arg! :data) :accessor data)
    (ideal-bounds :initarg :ideal-bounds :initform NIL :accessor ideal-bounds)))
 
 (defmethod print-object ((element component) stream)
@@ -36,6 +36,9 @@
       (call-next-method)))
 
 (defmethod maybe-render ((renderer renderer) (component component)))
+
+(defmethod (setf data) :after (value (component component))
+  (mark-for-render component))
 
 (defmethod (setf focus) :after (value (component component))
   (when value (ensure-visible component T))
