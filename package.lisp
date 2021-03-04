@@ -392,7 +392,9 @@
    #:dialog
    #:accept
    #:reject
-   #:dialog*)
+   #:dialog*
+   #:confirm
+   #:with-confirmation)
   ;; structures/query.lisp
   (:export
    #:query)
