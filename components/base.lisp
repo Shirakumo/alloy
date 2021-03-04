@@ -45,7 +45,7 @@
   ((maximum :initarg :maximum :initform 100 :accessor maximum)))
 
 (defclass label (value-component)
-  ())
+  ((wrap :initarg :wrap :initform NIL :accessor wrap)))
 
 (defmethod component-class-for-object ((string string))
   (find-class 'label))

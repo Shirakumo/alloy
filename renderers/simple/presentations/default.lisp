@@ -28,6 +28,7 @@
    (alloy:margins)
    alloy:text
    :pattern (colored:color 1 1 1)
+   :wrap (alloy:wrap alloy:renderable)
    :halign :start :valign :middle))
 
 (define-update (default-look-and-feel alloy:label)

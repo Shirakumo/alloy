@@ -48,7 +48,7 @@
 (defun confirm (on-ok &rest initargs &key (title "Confirm") (text "") &allow-other-keys)
   (remf initargs :text)
   (apply #'make-instance 'dialog* :title title :on-accept on-ok
-                                  :layout (make-instance 'label* :value text)
+                                  :layout (make-instance 'label* :wrap T :value text)
                                   initargs))
 
 (defmacro with-confirmation ((text &rest initargs) &body body)

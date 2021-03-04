@@ -46,6 +46,7 @@
   ;; components/base.lisp
   (:export
    #:label
+   #:wrap
    #:label*
    #:icon
    #:value-component
