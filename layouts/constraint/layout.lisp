@@ -22,13 +22,35 @@
   (setf (gethash layout (variables layout))
         (make-variables layout (solver layout) :strength :strong)))
 
-(defun suggest (layout element extent)
+(defun suggest-extent (layout element extent)
   (with-vars (x y w h layout) element
     (cass:suggest x (alloy:to-un (alloy:extent-x extent)))
     (cass:suggest y (alloy:to-un (alloy:extent-y extent)))
     (cass:suggest w (alloy:to-un (alloy:extent-w extent)))
     (cass:suggest h (alloy:to-un (alloy:extent-h extent)))
     (cass:update-variables (solver layout))))
+
+(defun element-var (layout element var)
+  (with-vars (x y w h layout) element
+    (ecase var
+      (:x x)
+      (:y y)
+      (:w w)
+      (:h h))))
+
+(defun suggest (layout element var size)
+  (alloy:with-unit-parent layout
+    (cass:suggest (element-var layout element var) (alloy:to-un size))
+    (cass:update-variables (solver layout))
+    (alloy:do-elements (element layout)
+      (update layout element))))
+
+(defun constrain (layout element var value &key (strength :required))
+  (alloy:with-unit-parent layout
+    (prog1 (cass:constrain-with (solver layout) `(= ,(element-var layout element var) ,(alloy:to-un value)) :strength strength)
+      (cass:update-variables (solver layout))
+      (alloy:do-elements (element layout)
+        (update layout element)))))
 
 (defun update (layout element)
   (with-vars (x y w h layout) element
@@ -55,19 +77,20 @@
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
   (alloy:with-unit-parent layout
-    (suggest layout layout extent)
+    (suggest-extent layout layout extent)
     (alloy:do-elements (element layout)
       (update layout element))))
 
 (defmethod alloy:suggest-bounds (extent (layout layout))
   (alloy:with-unit-parent layout
-    (suggest layout layout extent)
+    (suggest-extent layout layout extent)
     (with-vars (x y w h layout) layout
       (alloy:extent (cass:value x) (cass:value y)
                     (cass:value w) (cass:value h)))))
 
 (defun apply-constraints (constraints element layout)
   (dolist (expression constraints layout)
-    (dolist (expression (transform-expression expression))
-      (push (cass:constrain-with (solver layout) (rewrite-expression expression element layout))
-            (gethash element (constraints layout))))))
+    (multiple-value-bind (expressions strength) (transform-expression expression)
+      (dolist (expression expressions)
+        (push (cass:constrain-with (solver layout) (rewrite-expression expression element layout) :strength (or strength :strong))
+              (gethash element (constraints layout)))))))

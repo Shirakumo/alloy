@@ -64,6 +64,12 @@
            (apply function (rest expression))
            (list expression))))))
 
+(define-expression-transform :strength (strength &rest expressions)
+  (values
+   (loop for expression in expressions
+         append (transform-expression expression))
+   strength))
+
 (define-expression-transform :left (&optional (un 0))
   (list `(= :l ,un)))
 
@@ -151,6 +157,19 @@
       `(= :y (+ (:y ,other) ,margin)))
      ((:top :end)
       `(= (+ :y :h ,margin) (+ (:y ,other) (:h ,other)))))))
+
+(define-expression-transform :align (edge other)
+  (check-type other alloy:layout-element)
+  (list
+   (ecase edge
+     ((:north :top)
+      `(= (+ (:y ,other) (:h ,other)) (+ :y :h)))
+     ((:east :right)
+      `(= (+ (:x ,other) (:w ,other)) (+ :x :w)))
+     ((:south :bottom)
+      `(= (:y ,other) :y))
+     ((:west :left)
+      `(= (:x ,other) :x)))))
 
 (define-expression-transform :aspect-ratio (ratio)
   (list `(= :h (* :w ,ratio))))

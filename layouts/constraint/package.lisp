@@ -10,4 +10,6 @@
    (#:alloy #:org.shirakumo.alloy)
    (#:cass #:org.shirakumo.classowary))
   (:export
-   #:layout))
+   #:layout
+   #:suggest
+   #:constrain))
