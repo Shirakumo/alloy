@@ -394,6 +394,7 @@
    #:accept
    #:reject
    #:dialog*
+   #:message
    #:confirm
    #:with-confirmation)
   ;; structures/query.lisp

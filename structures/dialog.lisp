@@ -45,15 +45,18 @@
 (defmethod reject ((dialog dialog*))
   (funcall (on-reject dialog) dialog))
 
-(defun confirm (on-ok &rest initargs &key (title "Confirm") (text "") &allow-other-keys)
-  (remf initargs :text)
+(defun confirm (text on-ok &rest initargs &key (title "Confirm") &allow-other-keys)
   (apply #'make-instance 'dialog* :title title :on-accept on-ok
                                   :layout (make-instance 'label* :wrap T :value text)
                                   initargs))
 
+(defun message (text &rest initargs &key (title "Message") &allow-other-keys)
+  (apply #'make-instance 'dialog* :title title :reject NIL :layout (make-instance 'label* :wrap T :value text) initargs))
+
 (defmacro with-confirmation ((text &rest initargs) &body body)
   (let ((dialog (gensym "DIALOG")))
-    `(confirm (lambda (,dialog)
+    `(confirm ,text
+              (lambda (,dialog)
                 (declare (ignore ,dialog))
                 ,@body)
-              :text ,text ,@initargs)))
+              ,@initargs)))
