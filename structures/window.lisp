@@ -70,13 +70,31 @@
   (when (next-method-p) (call-next-method))
   (enter element (focus-element structure) :layer 1))
 
+(defun ensure-centered-extent (thing ui)
+  (with-unit-parent (root (layout-tree ui))
+    (etypecase thing
+      (extent
+       thing)
+      (margins
+       (px-extent
+        (pxl thing) (pxb thing)
+        (- (pxw (bounds ui)) (pxr thing) (pxl thing))
+        (- (pxh (bounds ui)) (pxu thing) (pxb thing))))
+      (point
+       (px-extent (pxx thing) (pxy thing) 300 200))
+      (size
+       (px-extent (/ (- (pxw (bounds ui)) (pxw thing)) 2)
+                  (/ (- (pxh (bounds ui)) (pxh thing)) 2)
+                  (pxw thing)
+                  (pxh thing))))))
+
 (defmethod initialize-instance :after ((structure window) &key layout focus (title "Untitled") (closeable T) (minimizable T) (maximizable T) (resizable T) (extent (size 300 200)) (ui (arg! :ui)))
   (let ((frame (make-instance 'frame :padding (if resizable (margins 1 10 1 1) (margins 10))))
         (header (make-instance 'grid-layout :row-sizes '(20) :col-sizes '(T  20 20 20) :cell-margins (margins 2)))
         (focus-stack (make-instance 'focus-stack))
         (title (make-instance 'window-title :value (or title ""))))
     (enter focus-stack (popups (focus-tree ui)))
-    (enter frame (popups (layout-tree ui)) :extent (ensure-extent extent))
+    (enter frame (popups (layout-tree ui)) :extent (ensure-centered-extent extent ui))
     (enter header frame :place :north)
     (enter title focus-stack :layer 0)
     (enter title header :row 0 :col 0)
