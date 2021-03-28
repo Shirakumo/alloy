@@ -109,6 +109,10 @@
   (alloy:with-unit-parent renderable
     (call-next-method)))
 
+(defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
+  (when (slot-boundp renderable 'alloy:layout-parent)
+    (alloy:notice-bounds renderable (alloy:layout-parent renderable))))
+
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))
 
