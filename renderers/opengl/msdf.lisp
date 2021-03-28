@@ -244,20 +244,10 @@ void main(){
 
 (defmethod shared-initialize :after ((text text) slots &key)
   (alloy:allocate (simple:font text))
-  (let ((s (scale text))
-        (extent (alloy:ensure-extent (simple:bounds text))))
-    (multiple-value-bind (breaks array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) extent s (simple:wrap text))
-      (let* ((w (- x+ x-))
-             (h (- y+ y-))
-             (line (* s (+ (3b-bmfont:line-height (data (simple:font text))))))
-             (base (* s (3b-bmfont:base (data (simple:font text)))))
-             (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
-                                          (alloy:px-size w h))))
-        (setf (vertex-data text) array)
-        ;; We have to offset by the height minus the first line here since the Y axis of the text
-        ;; is aligned with the baseline of the first line, rather than the middle of the block.
-        (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (+ h base)))
-        (setf (line-breaks text) breaks)))))
+  (multiple-value-bind (bounds array breaks) (alloy:suggest-bounds (alloy:ensure-extent (simple:bounds text)) text)
+    (setf (vertex-data text) array)
+    (setf (dimensions text) bounds)
+    (setf (line-breaks text) breaks)))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
   (apply #'make-instance 'text :text string :bounds bounds :font font args))
@@ -275,6 +265,18 @@ void main(){
       ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text.
       (opengl:update-vertex-buffer vbo (vertex-data shape))
       (opengl:draw-vertex-array vao :triangles (truncate (length (vertex-data shape)) 4)))))
+
+(defmethod alloy:suggest-bounds (extent (text text))
+  (let ((s (scale text)))
+    (multiple-value-bind (breaks array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) extent s (simple:wrap text))
+      (let* ((w (- x+ x-))
+             (h (- y+ y-))
+             (line (* s (+ (3b-bmfont:line-height (data (simple:font text))))))
+             (base (* s (3b-bmfont:base (data (simple:font text)))))
+             (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
+                                          (alloy:px-size w h))))
+        (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (+ h base))
+                array breaks)))))
 
 (defmethod simple:ideal-bounds ((text text))
   (dimensions text))
