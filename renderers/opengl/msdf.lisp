@@ -248,10 +248,13 @@ void main(){
     (multiple-value-bind (breaks array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) extent s (simple:wrap text))
       (let* ((w (- x+ x-))
              (h (- y+ y-))
+             (line (* s (3b-bmfont:line-height (data (simple:font text)))))
              (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
                                           (alloy:px-size w h))))
         (setf (vertex-data text) array)
-        (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (alloy:pxy p) w h))
+        ;; We have to offset by the height minus the first line here since the Y axis of the text
+        ;; is aligned with the baseline of the first line, rather than the middle of the block.
+        (setf (dimensions text) (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w h))
         (setf (line-breaks text) breaks)))))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
