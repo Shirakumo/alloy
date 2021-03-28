@@ -152,6 +152,8 @@ void main(){
   (simple:request-font renderer "Arial"))
 
 (defun map-glyphs (font function string extent s wrap)
+  (declare (type string string))
+  (declare (type function function))
   (let ((x 0) (y 0)
         (breaker (uax-14:make-breaker string))
         (max-width (alloy:pxw extent))
@@ -207,13 +209,12 @@ void main(){
       breaks)))
 
 (defun compute-text (font text extent s wrap)
-  (let ((array (make-array (* 6 4 (length text)) :element-type 'single-float))
-        (minx 0) (miny 0) (maxx 0) (maxy 0) (i 0))
+  (declare (optimize speed))
+  (declare (type string text))
+  (let ((array (make-array (* 6 4 (the (signed-byte 32) (length text))) :element-type 'single-float))
+        (minx 0.0) (miny 0.0) (maxx 0.0) (maxy 0.0) (i 0))
+    (declare (type (unsigned-byte 32) i))
     (labels ((vertex (x y u v)
-               (when (= i (length array))
-                 (let ((new (make-array (+ 4 (length array)))))
-                   (replace array new)
-                   (setf array new)))
                (setf (aref array (+ i 0)) (float x))
                (setf (aref array (+ i 1)) (float y))
                (setf (aref array (+ i 2)) (float u))
@@ -272,7 +273,7 @@ void main(){
       (setf (opengl:uniform shader "color") (simple:pattern shape))
       ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text.
       (opengl:update-vertex-buffer vbo (vertex-data shape))
-      (opengl:draw-vertex-array vao :triangles (/ (length (vertex-data shape)) 4)))))
+      (opengl:draw-vertex-array vao :triangles (truncate (length (vertex-data shape)) 4)))))
 
 (defmethod simple:ideal-bounds ((text text))
   (dimensions text))
