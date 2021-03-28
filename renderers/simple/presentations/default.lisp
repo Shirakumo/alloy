@@ -339,22 +339,22 @@
   (:background
    :pattern (colored:color 0.1 0.1 0.1)))
 
-
 ;; KLUDGE: Bad, spilling protocol
+;; FIXME: The widen is also /wrong/. We should properly consider the actual shape size instead...
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
+        (alloy:widen (alloy:suggest-bounds extent shape) (alloy:margins 2))
         extent)))
 
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:button))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
+        (alloy:widen (alloy:suggest-bounds extent shape) (alloy:margins 2))
         extent)))
 
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:label))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:widen (simple:ideal-bounds shape) (alloy:margins 2))
+        (alloy:widen (alloy:suggest-bounds extent shape) (alloy:margins 2))
         extent)))
