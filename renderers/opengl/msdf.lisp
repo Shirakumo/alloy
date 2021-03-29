@@ -275,7 +275,7 @@ void main(){
              (base (* s (3b-bmfont:base (data (simple:font text)))))
              (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
                                           (alloy:px-size w h))))
-        (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (+ h base))
+        (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (if (<= (length breaks) 1) h (+ h base)))
                 array breaks)))))
 
 (defmethod simple:ideal-bounds ((text text))
