@@ -74,6 +74,7 @@
 
 (defmethod text->value ((symb symb) text)
   (destructuring-bind (package name) (parse-symbol-designator text)
-    (if (allow-interning symb)
+    (if (and (allow-interning symb)
+             #+sbcl (not (sb-ext:package-locked-p package)))
         (intern name (or (constrained-package symb) package))
         (find-symbol name (or (constrained-package symb) package)))))
