@@ -116,6 +116,9 @@
 (defmethod (setf index) ((list list) (data aref-data))
   (setf (index data) (apply #'array-row-major-index (object data) list)))
 
+(defmethod (setf index) :after (index (data aref-data))
+  (refresh data))
+
 ;;; TODO: This is kinda... not too great.
 (defclass computed-data (value-data)
   ((closure :initarg :closure :accessor closure)))
