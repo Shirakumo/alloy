@@ -36,6 +36,7 @@
 (stealth-mixin:define-stealth-mixin renderable (animation:animated) alloy:renderable
   ;; Reminder for future me: this has to be a vector for insertion order to stay correct.
   ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)
+   (realized-p :initform NIL :accessor realized-p)
    (update-overrides :initform () :accessor update-overrides)))
 
 (defgeneric realize-renderable (renderer renderable))
@@ -82,7 +83,7 @@
 (defmethod alloy:register :around ((renderable renderable) (renderer renderer))
   ;; Needs to be :AROUND to allow the subclass ALLOY:RENDERER to set the fields.
   (call-next-method)
-  (when (= 0 (length (shapes renderable)))
+  (unless (realized-p renderable)
     (realize-renderable renderer renderable)))
 
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
@@ -110,6 +111,7 @@
     (call-next-method)))
 
 (defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
+  (setf (realized-p renderable) T)
   (when (slot-boundp renderable 'alloy:layout-parent)
     (alloy:notice-bounds renderable (alloy:layout-parent renderable))))
 
@@ -151,7 +153,7 @@
 ;;; on tons of batch updates that would never be shown.
 (defmethod alloy:render :before ((renderer renderer) (renderable renderable))
   (when (alloy:render-needed-p renderable)
-    (when (= 0 (array-total-size (shapes renderable)))
+    (unless (realized-p renderable)
       (realize-renderable renderer renderable))
     (update-shape renderer renderable T)))
 
