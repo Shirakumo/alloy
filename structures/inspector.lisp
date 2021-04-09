@@ -22,6 +22,24 @@
 (defmethod find-canonical-class ((type (eql 'boolean)))
   (find-class 'bool))
 
+(defgeneric object-slot-component (object class slot))
+
+(defmethod object-slot-component-type (object class slot)
+  (let ((slot-type (c2mop:slot-definition-type (find-slot slot class))))
+    (when (and (symbolp slot-type) (not (eql T slot-type)) (not (eql NIL slot-type)))
+      ;; FIXME: We can do better here if we analyse compound types
+      (component-class-for-object (c2mop:class-prototype (find-canonical-class slot-type))))))
+
+(defmethod object-slot-component (object class slot)
+  (when (slot-boundp object slot)
+    (let ((type (object-slot-component-type object class slot)))
+      (when type
+        (represent-with
+         type
+         (if (and (fboundp slot) (fboundp `(setf ,slot)))
+             (make-instance 'accessor-data :object object :accessor slot)
+             (make-instance 'slot-data :object object :slot slot)))))))
+
 (defun update-inspector-slots (inspector)
   (let* ((layout (layout-element inspector))
          (focus (focus-element inspector))
@@ -37,29 +55,11 @@
        (setf slots (mapcar #'c2mop:slot-definition-name (c2mop:class-direct-slots class)))))
     (dolist (slot slots)
       (with-simple-restart (continue "Ignore the slot ~a" slot)
-        (destructuring-bind (name &optional type &rest initargs) (if (listp slot) slot (list slot))
-          (when (slot-boundp object name)
-            (etypecase type
-              (class)
-              (null
-               (let ((slot-type (c2mop:slot-definition-type (find-slot name class))))
-                 (when (and (symbolp slot-type) (not (eql T slot-type)) (not (eql NIL slot-type)))
-                   ;; FIXME: We can do better here if we analyse compound types
-                   (setf type (find-canonical-class slot-type)))))
-              (symbol
-               (setf type (find-canonical-class type))))
-            (when type
-              (let ((component (apply #'represent-with
-                                      (etypecase (c2mop:class-prototype type)
-                                        (string 'input-line)
-                                        (T (component-class-for-object (c2mop:class-prototype type))))
-                                      (if (and (fboundp name) (fboundp `(setf ,name)))
-                                          (make-instance 'accessor-data :object object :accessor name)
-                                          (make-instance 'slot-data :object object :slot name))
-                                      initargs)))
-                (enter (string name) layout)
-                (enter component layout)
-                (enter component focus)))))))))
+        (let ((component (object-slot-component object class slot)))
+          (when component
+            (enter (string slot) layout)
+            (enter component layout)
+            (enter component focus)))))))
 
 (defmethod initialize-instance :after ((structure inspector) &key focus-parent layout-parent)
   (let ((layout (make-instance 'grid-layout :col-sizes '(100 T) :row-sizes '(30) :layout-parent layout-parent))
