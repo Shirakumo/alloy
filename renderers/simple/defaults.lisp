@@ -124,7 +124,7 @@
    (halign :initarg :halign :initform :left :accessor halign)))
 
 (defmethod icon ((renderer renderer) bounds (image image) &rest initargs)
-  (apply #'make-instance 'icon :image image initargs))
+  (apply #'make-instance 'icon :image image :bounds bounds initargs))
 
 (defclass cursor (filled-rectangle)
   ((text-object :initarg :text :accessor text-object)
