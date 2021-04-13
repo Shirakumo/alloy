@@ -211,5 +211,5 @@
 (define-expression-transform :center (&rest what)
   (loop for item in (or what '(:w :h))
         collect (ecase item
-                  ((:x :w :width) `(= (+ :rx (/ :rw 2)) (+ :x (/ :w 2))))
-                  ((:y :h :height) `(= (+ :ry (/ :rh 2)) (+ :y (/ :h 2)))))))
+                  ((:x :w :width) `(= :x (- (+ :rx (/ :rw 2)) (/ :w 2))))
+                  ((:y :h :height) `(= :y (- (+ :ry (/ :rh 2)) (/ :h 2)))))))
