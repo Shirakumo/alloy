@@ -179,7 +179,7 @@ void main(){
       ;;
       ;; FIXME: This model inherently assumes a LTR system and will not deal with
       ;;        RTL, TTB, BTT orientations correctly. We also don't use UAX-9 yet.
-      (when wrap
+      (when (and wrap (< 0 (length string)))
         (loop for p = nil then c
               for c = (aref string i)
               for char = (3b-bmfont::char-data c font)
