@@ -95,9 +95,31 @@
            (let ((sa (pop a)) (ea (pop a))
                  (sb (pop b)) (eb (pop b)))
              (if (= sa sb)
-                 (< ea eb)
+                 (< eb ea)
                  (< sa sb)))))
     (sort markup #'sorter)))
+
+(defun flatten-markup (markup)
+  (let ((results ())
+        (styles ()))
+    (loop for i from 0
+          while markup
+          do (when (and styles (= i (caar styles)))
+               (pop styles)
+               (push (list* i (mapcar #'cdr styles)) results))
+             (when (= i (caar markup))
+               (loop while (and markup (= i (caar markup)))
+                     do (destructuring-bind (s e style) (pop markup)
+                          (declare (ignore s))
+                          (push (cons e style) styles)))
+               (push (list* i (mapcar #'cdr styles)) results)))
+    (loop for style = (pop styles)
+          while style
+          do (push (list* (car style) (mapcar #'cdr styles)) results))
+    (let ((rresults ()))
+      (dolist (result results rresults)
+        (when (rest result)
+          (push result rresults))))))
 
 (defclass text (shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
