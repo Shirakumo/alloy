@@ -90,6 +90,15 @@
 ;;       Might be too much for a simple interface though. Maybe could be
 ;;       done by a layouter -- splitting text into contiguous segments.
 ;;       would be difficult to manage with line wraps and bidi.
+(defun sort-markup (markup)
+  (flet ((sorter (a b)
+           (let ((sa (pop a)) (ea (pop a))
+                 (sb (pop b)) (eb (pop b)))
+             (if (= sa sb)
+                 (< ea eb)
+                 (< sa sb)))))
+    (sort markup #'sorter)))
+
 (defclass text (shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
@@ -99,10 +108,11 @@
    (valign :initarg :valign :initform :bottom :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)
    (direction :initarg :direction :initform :right :accessor direction)
-   (wrap :initarg :wrap :initform NIL :accessor wrap)))
+   (wrap :initarg :wrap :initform NIL :accessor wrap)
+   (markup :initarg :markup :initform NIL :accessor markup)))
 
 (defmethod text ((renderer renderer) bounds (string string) &rest initargs)
-  (apply #'make-instance 'text :text string :bounds bounds :font (getf initargs :font) initargs))
+  (apply #'make-instance 'text :text string :bounds bounds :markup (sort-markup (getf initargs :markup)) initargs))
 
 (defmethod text :around ((renderer renderer) bounds text &rest initargs &key font)
   (let ((font (typecase font
@@ -110,6 +120,9 @@
                 (null (request-font renderer :default))
                 (T (request-font renderer font)))))
     (apply #'call-next-method renderer bounds text :font font initargs)))
+
+(defmethod (setf markup) :around ((markup cons) (text text))
+  (call-next-method (sort-markup markup) text))
 
 (defmethod alloy:render :around ((renderer renderer) (text text))
   (alloy:with-constrained-visibility ((alloy:ensure-extent (bounds text)) renderer)

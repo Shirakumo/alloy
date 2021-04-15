@@ -56,6 +56,7 @@
    #:halign
    #:direction
    #:wrap
+   #:markup
    #:icon
    #:shift
    #:image
