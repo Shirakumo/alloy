@@ -65,7 +65,8 @@
    #:start
    #:selection
    #:end
-   #:resolve-alignment)
+   #:resolve-alignment
+   #:resolve-scale)
   ;; protocol.lisp
   (:export
    #:call-with-pushed-transforms

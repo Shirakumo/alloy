@@ -439,14 +439,13 @@ void main(){
   (let ((shader (resource 'image-shader renderer)))
     (simple:with-pushed-transforms (renderer)
       (let* ((bounds (alloy:ensure-extent (simple:bounds shape)))
-             (size (alloy:ensure-extent (simple:size shape)))
-             (isize (simple:size (simple:image shape)))
+             (isize (simple:resolve-scale bounds (simple:size (simple:image shape)) :contain))
              (off (simple:resolve-alignment bounds :middle :middle isize)))
         (simple:clip renderer bounds)
-        ;; FIXME: alignment and fitting to bounds
+        ;; FIXME: Dunno that alignment and sizing should be done here...
         (bind shader)
         (bind (simple:image shape))
-        (setf (uniform shader "uv_scale") size)
+        (setf (uniform shader "uv_scale") (alloy:ensure-extent (simple:size shape)))
         (setf (uniform shader "uv_offset") (simple:shift shape))
         (simple:translate renderer off)
         (simple:scale renderer isize))

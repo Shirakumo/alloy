@@ -192,3 +192,22 @@
           (:bottom 0)
           (:middle (/ (- (alloy:pxh extent) (alloy:pxh size)) 2))
           (:top (- (alloy:pxh extent) (alloy:pxh size))))))))
+
+(defun resolve-scale (extent size kind)
+  (let ((ow (alloy:pxw extent))
+        (oh (alloy:pxh extent))
+        (iw (alloy:pxw size))
+        (ih (alloy:pxh size)))
+    (ecase kind
+      (:fit
+       extent)
+      (:fit-width
+       (alloy:px-size ow (* (/ ow iw) ih)))
+      (:fit-height
+       (alloy:px-size (* (/ oh ih) iw) oh))
+      (:contain
+       (let ((s (min (/ ow iw) (/ oh ih))))
+         (alloy:px-size (* s iw) (* s ih))))
+      (:cover
+       (let ((s (max (/ ow iw) (/ oh ih))))
+         (alloy:px-size (* s iw) (* s ih)))))))
