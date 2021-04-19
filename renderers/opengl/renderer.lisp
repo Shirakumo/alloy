@@ -438,16 +438,18 @@ void main(){
 (defmethod alloy:render ((renderer renderer) (shape simple:icon))
   (let ((shader (resource 'image-shader renderer)))
     (simple:with-pushed-transforms (renderer)
-      (let ((bounds (alloy:ensure-extent (simple:bounds shape)))
-            (size (alloy:ensure-extent (simple:size shape))))
+      (let* ((bounds (alloy:ensure-extent (simple:bounds shape)))
+             (size (alloy:ensure-extent (simple:size shape)))
+             (isize (simple:size (simple:image shape)))
+             (off (simple:resolve-alignment bounds :middle :middle isize)))
         (simple:clip renderer bounds)
-        ;; FIXME: alignment
+        ;; FIXME: alignment and fitting to bounds
         (bind shader)
         (bind (simple:image shape))
         (setf (uniform shader "uv_scale") size)
         (setf (uniform shader "uv_offset") (simple:shift shape))
-        (simple:translate renderer bounds)
-        (simple:scale renderer bounds))
+        (simple:translate renderer off)
+        (simple:scale renderer isize))
       (setf (uniform shader "transform") (simple:transform-matrix renderer))
       (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6))))
 
