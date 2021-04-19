@@ -56,7 +56,7 @@
 (define-realization (default-look-and-feel alloy:icon)
   ((:icon simple:icon)
    (alloy:margins)
-   (alloy:data alloy:renderable)))
+   alloy:value))
 
 (define-realization (default-look-and-feel alloy:button)
   ((:background simple:rectangle)
