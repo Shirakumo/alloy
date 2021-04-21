@@ -272,7 +272,7 @@ void main(){
                (setf miny (min miny y-))
                (setf maxx (max maxx x+))
                (setf maxy (max maxy y+))
-               (let ((tx (if (member :italic styles) (* s (/ (- y+ y-) base) 20) 0))
+               (let ((tx (if (member :italic styles) (* (/ (- y+ y-) base) 15) 0))
                      (s (if (member :bold styles) (* s 5) 0)))
                  (vertex (- (+ tx x-) s) (+ y+ s) u- (- 1 v-))
                  (vertex (- x- s) (- y- s) u- (- 1 v+))
