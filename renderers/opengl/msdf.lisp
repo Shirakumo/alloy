@@ -104,18 +104,21 @@ void main(){
   (loop for font being the hash-values of (fontcache renderer)
         do (alloy:deallocate font)))
 
-(defmethod cached-font ((renderer renderer) file &optional family)
-  (unless (probe-file file)
-    (error "Specified font file does not exist or is not accessible.~%  ~a" file))
-  (let ((cache (if family
-                   (make-pathname :name family :type "json" :defaults (fontcache-directory renderer))
-                   (fontcache-file file (fontcache-directory renderer)))))
-    (unless (probe-file cache)
-      (ensure-directories-exist cache)
-      (sdf-bmfont:create-bmfont file cache :size 32))
-    (or (gethash cache (fontcache renderer))
-        (setf (gethash cache (fontcache renderer))
-              (make-instance 'font :family family :file cache :renderer renderer)))))
+(defun cached-font (renderer file &optional family)
+  (let* ((cache-file (if family
+                         (make-pathname :name family :type "json" :defaults (fontcache-directory renderer))
+                         (fontcache-file file (fontcache-directory renderer))))
+         (cache (gethash cache-file (fontcache renderer))))
+    (cond (cache
+           cache)
+          (T
+           (unless (probe-file cache-file)
+             (unless (probe-file file)
+               (error "Specified font file does not exist or is not accessible.~%  ~a" file))
+             (ensure-directories-exist cache-file)
+             (sdf-bmfont:create-bmfont file cache-file :size 32))
+           (setf (gethash cache-file (fontcache renderer))
+                 (make-instance 'font :family family :file cache-file :renderer renderer))))))
 
 (defclass font (simple:font)
   ((renderer :initarg :renderer :accessor renderer)
