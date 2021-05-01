@@ -15,11 +15,11 @@
 (defgeneric (setf focus) (focus-state focus-element))
 (defgeneric exit (focus-element))
 (defgeneric activate (focus-element))
-(defgeneric notice-focus (focused parent))
 
 (cl:declaim (ftype (function (T) focus) focus))
 (cl:declaim (ftype (function (focus T) focus) (setf focus)))
 
+(defgeneric notice-focus (focus-element focus-chain))
 (defgeneric index (focus-chain))
 (defgeneric (setf index) (index focus-chain))
 (defgeneric focused (focus-chain))
@@ -62,15 +62,19 @@
       (call-next-method)))
 
 (defmethod (setf focus) :before (focus (element focus-element))
-  (check-type focus (member NIL :weak :strong)))
+  (check-type focus focus))
 
 (defmethod (setf focus) ((focus (eql :strong)) (element focus-element))
   (setf (focused (focus-tree element)) element)
-  (call-next-method))
-
-(defmethod (setf focus) :after (focus (element focus-element))
+  (call-next-method)
   (unless (eq element (focus-parent element))
-    (notice-focus element (focus-parent element))))
+    (loop for child = element then cur
+          for cur = (focus-parent element) then (focus-parent cur)
+          do (setf (focus cur) :weak)
+             (if (eq cur child)
+                 (return)
+                 (notice-focus child cur))))
+  focus)
 
 (defmethod activate ((element focus-element))
   (unless (eql :strong (focus element))
@@ -78,9 +82,7 @@
   element)
 
 (defmethod exit ((element focus-element))
-  ;; FIXME: It's possible for the element to get NIL focus but still be the focused element.
   (when (eql element (focused (focus-tree element)))
-    (setf (focus element) NIL)
     (unless (eql (focus-parent element) element)
       (setf (focus (focus-parent element)) :strong))
     (focus-parent element)))
@@ -195,36 +197,17 @@
   (when (focused chain)
     (setf (focus (focused chain)) NIL)))
 
+(defmethod notice-focus ((element focus-element) (chain focus-chain))
+  (when (and (focused chain)
+             (not (eq element (focused chain))))
+    (setf (focus (focused chain)) NIL))
+  (setf (slot-value chain 'focused) element)
+  (setf (slot-value chain 'index) (element-index element chain)))
+
 (defmethod element-index :before ((element focus-element) (chain focus-chain))
   (unless (eq chain (focus-parent element))
     (error 'element-not-contained
            :bad-element element :container chain)))
-
-(defmethod notice-focus ((element focus-element) (chain focus-chain))
-  (case (focus element)
-    (:strong
-     (unless (eq element (focused chain))
-       (setf (focused chain) element))
-     (loop do (setf (focus chain) :weak)
-              (setf chain (focus-parent chain))
-           until (eq chain (focus-parent chain))))
-    (:weak
-     ;; Our current element is strong, so steal focus back to us
-     (when (and (focused chain) (eq :strong (focus (focused chain))))
-       (setf (focus chain) :strong))
-     ;; If we have a new element, update our focused pointer.
-     (unless (eq element (focused chain))
-       (setf (focused chain) element))
-     ;; Unless we're strong already, update our focus
-     (unless (eql :strong (focus chain))
-       (setf (focus chain) :strong)
-       ;; Bubble weak focus down.
-       (loop do (setf chain (focus-parent chain))
-                (setf (focus chain) :weak)
-             until (eq chain (focus-parent chain)))))
-    ((NIL)
-     (unless (eql :strong (focus chain))
-       (setf (focus chain) NIL)))))
 
 (defmethod focus-next ((chain focus-chain))
   (unless (= 0 (element-count chain))
@@ -401,12 +384,11 @@
   (unless (eq (focus-tree element) tree)
     (error 'element-has-different-root
            :bad-element element :container tree))
+  ;; First unwind all focus from current back to root...
   (when (focused tree)
-    (setf (focus (focused tree))
-          (loop with cur = element
-                do (cond ((eq cur (focused tree)) (return :weak))
-                         ((eq cur (focus-parent cur)) (return NIL))
-                         (T (setf cur (focus-parent cur))))))))
+    (loop for cur = (focused tree) then (focus-parent cur)
+          until (eq cur (focus-parent cur))
+          do (setf (focus cur) NIL))))
 
 (defmethod (setf focused) :after ((element focus-element) (tree focus-tree))
   (unless (eq :strong (focus element))
