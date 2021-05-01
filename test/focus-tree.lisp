@@ -13,40 +13,49 @@
   (print-unreadable-object (focus-list stream)
     (format stream "~a ~a" (name focus-list) (alloy:focus focus-list))))
 
-(defun check-focus-invariant (element)
-  (labels ((find-child-with (focus element)
-             (alloy:do-elements (child element)
-               (when (or (eql focus (alloy:focus child))
-                         (find-child-with focus child))
-                 (return T)))))
-    (ecase (alloy:focus element)
-      (:strong
-       (unless (eql element (alloy:focus-parent element))
-         (loop for cur = (alloy:focus-parent element) then (alloy:focus-parent cur)
-               do (assert (eql :weak (alloy:focus cur)) ()
-                          "Invariant violated: not all ancestors of a ~a are weakly focused."
-                          element)
-               until (eql cur (alloy:focus-parent cur)))))
-      (:weak
-       (assert (or (eql :strong (alloy:focus (alloy:focus-parent element)))
-                   (find-child-with :strong element)) ()
-                   "Invariant violated: neither direct parent nor any successor of a ~a are strongly focused."
-                   element))
-      ((NIL)))))
+(defun find-child-with (focus element)
+  (if (eql focus (alloy:focus element))
+      element
+      (alloy:do-elements (child element)
+        (let ((found (find-child-with focus child)))
+          (when found (return found))))))
+
+(defun check-focus-invariant (tree element)
+  (ecase (alloy:focus element)
+    (:strong
+     (unless (eql element (alloy:focus-parent element))
+       (loop for cur = (alloy:focus-parent element) then (alloy:focus-parent cur)
+             do (assert (eql :weak (alloy:focus cur)) ()
+                        "Invariant violated: not all ancestors of a ~a are weakly focused.~%~a"
+                        element
+                        (with-output-to-string (out) (print-focus-tree tree out)))
+             until (eql cur (alloy:focus-parent cur)))))
+    (:weak
+     (assert (or (eql :strong (alloy:focus (alloy:focus-parent element)))
+                 (find-child-with :strong element)) ()
+                 "Invariant violated: neither direct parent nor any successor of a ~a are strongly focused.~%~a"
+                 element
+                 (with-output-to-string (out) (print-focus-tree tree out))))
+    ((NIL))))
 
 (defun check-tree-invariant (tree)
+  (assert (eq :strong (alloy:focus (alloy:focused tree))) ()
+          "Invariant violated: root points to ~a which is not strongly focused, while ~a is.~%~a"
+          (alloy:focused tree)
+          (or (find-child-with :strong (alloy:root tree)) "no element")
+          (with-output-to-string (out) (print-focus-tree tree out)))
   (labels ((recurse (element)
-             (check-focus-invariant element)
+             (check-focus-invariant tree element)
              (alloy:do-elements (child element)
                (recurse child))))
     (recurse (alloy:root tree))))
 
-(defun print-focus-tree (tree)
+(defun print-focus-tree (tree &optional (stream *standard-output*))
   (labels ((recurse (element depth)
-             (format T "~&~v{  ~}- ~a~%" depth 0 (alloy:focus element))
+             (format stream "~&~v{  ~}- ~a ~a~@[ ^~]~%" depth 0 (name element) (alloy:focus element) (eq element (alloy:focused tree)))
              (alloy:do-elements (child element)
                (recurse child (1+ depth)))))
-    (recurse tree 0)))
+    (recurse (alloy:root tree) 0)))
 
 (defun compose-tree (structure)
   (let* ((tree (make-instance 'alloy:focus-tree))
@@ -339,11 +348,12 @@
 (define-test tree-invariant
   :parent focus-list
   :depends-on (multi-level-tree-updates)
-  (multiple-value-bind (tree els) (random-tree)
-    (loop for name in (loop repeat 100 collect (name (alexandria:random-elt els)))
-          for random = (find name els :key #'name)
-          do (alloy:activate random)
-             (finish (check-tree-invariant tree)))))
+  (loop repeat 10
+        do (multiple-value-bind (tree els) (random-tree)
+             (loop for name in (loop repeat 100 collect (name (alexandria:random-elt els)))
+                   for random = (find name els :key #'name)
+                   do (alloy:activate random)
+                      (finish (check-tree-invariant tree))))))
 
 ;; TODO: Write a randomised test suite that checks invariants such as:
 ;;       - The focus-tree must be the same across the entire tree
