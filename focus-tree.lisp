@@ -209,13 +209,17 @@
               (setf (focus chain) :weak)
            until (eq chain (focus-parent chain))))
     (:weak
-     ;; Our current element is strong, so
+     ;; Our current element is strong, so steal focus back to us
      (when (and (focused chain) (eq :strong (focus (focused chain))))
        (setf (focus chain) :strong))
+     ;; If we have a new element, update our focused pointer.
      (unless (eq element (focused chain))
        (setf (focused chain) element))
+     ;; Unless we're strong already, update our focus
      (unless (eql :strong (focus chain))
-       (setf (focus chain) :weak)
+       (setf (focus chain) (case (focus element)
+                             (:strong :weak)
+                             (T :strong)))
        ;; Bubble weak focus down.
        (loop do (setf chain (focus-parent chain))
                 (setf (focus chain) :weak)
