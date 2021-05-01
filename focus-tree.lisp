@@ -57,8 +57,9 @@
       (setf (focused (focus-tree element)) NIL))))
 
 (defmethod (setf focus) :around (focus (element focus-element))
-  (unless (eq focus (focus element))
-    (call-next-method)))
+  (if (eq focus (focus element))
+      focus
+      (call-next-method)))
 
 (defmethod (setf focus) :before (focus (element focus-element))
   (check-type focus (member NIL :weak :strong)))
@@ -204,9 +205,8 @@
     (:strong
      (unless (eq element (focused chain))
        (setf (focused chain) element))
-     (setf (focus chain) :weak)
-     (loop do (setf chain (focus-parent chain))
-              (setf (focus chain) :weak)
+     (loop do (setf (focus chain) :weak)
+              (setf chain (focus-parent chain))
            until (eq chain (focus-parent chain))))
     (:weak
      ;; Our current element is strong, so steal focus back to us
@@ -217,9 +217,7 @@
        (setf (focused chain) element))
      ;; Unless we're strong already, update our focus
      (unless (eql :strong (focus chain))
-       (setf (focus chain) (case (focus element)
-                             (:strong :weak)
-                             (T :strong)))
+       (setf (focus chain) :strong)
        ;; Bubble weak focus down.
        (loop do (setf chain (focus-parent chain))
                 (setf (focus chain) :weak)
@@ -395,8 +393,9 @@
   (setf (focused tree) element))
 
 (defmethod (setf focused) :around ((element focus-element) (tree focus-tree))
-  (unless (eq element (focused tree))
-    (call-next-method)))
+  (if (eq element (focused tree))
+      element
+      (call-next-method)))
 
 (defmethod (setf focused) :before ((element focus-element) (tree focus-tree))
   (unless (eq (focus-tree element) tree)
