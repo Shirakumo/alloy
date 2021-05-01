@@ -76,6 +76,10 @@
                  (notice-focus child cur))))
   focus)
 
+(defmethod (setf focus) :after ((focus (eql :weak)) (element focus-element))
+  (unless (eq element (focus-parent element))
+    (notice-focus element (focus-parent element))))
+
 (defmethod activate ((element focus-element))
   (unless (eql :strong (focus element))
     (setf (focus element) :strong))
