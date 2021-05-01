@@ -402,7 +402,11 @@
     (error 'element-has-different-root
            :bad-element element :container tree))
   (when (focused tree)
-    (setf (focus (focused tree)) NIL)))
+    (setf (focus (focused tree))
+          (loop with cur = element
+                do (cond ((eq cur (focused tree)) (return :weak))
+                         ((eq cur (focus-parent cur)) (return NIL))
+                         (T (setf cur (focus-parent cur))))))))
 
 (defmethod (setf focused) :after ((element focus-element) (tree focus-tree))
   (unless (eq :strong (focus element))
