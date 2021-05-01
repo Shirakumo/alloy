@@ -60,6 +60,7 @@
    #:icon
    #:shift
    #:image
+   #:sizing
    #:cursor
    #:text-object
    #:start

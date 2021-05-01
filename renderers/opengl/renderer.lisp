@@ -439,7 +439,7 @@ void main(){
   (let ((shader (resource 'image-shader renderer)))
     (simple:with-pushed-transforms (renderer)
       (let* ((bounds (alloy:ensure-extent (simple:bounds shape)))
-             (isize (simple:resolve-scale bounds (simple:size (simple:image shape)) :contain))
+             (isize (simple:resolve-scale bounds (simple:size (simple:image shape)) (simple:sizing shape)))
              (off (simple:resolve-alignment bounds :middle :middle isize)))
         (simple:clip renderer bounds)
         ;; FIXME: Dunno that alignment and sizing should be done here...

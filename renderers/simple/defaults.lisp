@@ -155,6 +155,7 @@
    (size :initarg :size :initform (alloy:px-size 1 1) :accessor size)
    (shift :initarg :shift :initform (alloy:px-point 0 0) :accessor shift)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
+   (sizing :initarg :sizing :initform :fit :accessor sizing)
    (valign :initarg :valign :initform :middle :accessor valign)
    (halign :initarg :halign :initform :left :accessor halign)))
 
