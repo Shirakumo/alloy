@@ -32,6 +32,7 @@
   (if (and (slot-boundp component 'focus-parent)
            (contained-p (location event) (bounds component)))
       (when (eql NIL (focus component))
+        (setf (focus (focus-parent component)) :strong)
         (setf (focus component) :weak))
       (call-next-method)))
 
