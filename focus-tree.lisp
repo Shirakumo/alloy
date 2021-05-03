@@ -149,7 +149,7 @@
 (defmethod leave :after ((element focus-element) (chain focus-chain))
   (when (eq element (focused chain))
     (setf (slot-value chain 'focused) NIL)
-    (cond ((< (index chain) (element-count chain))
+    (cond ((< (or (index chain) 0) (element-count chain))
            (setf (index chain) (index chain)))
           ((< 0 (element-count chain))
            (setf (index chain) (1- (element-count chain))))
