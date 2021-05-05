@@ -42,7 +42,8 @@
   (mark-for-render component))
 
 (defmethod (setf focus) :after (value (component component))
-  (when value (ensure-visible component T))
+  (when (and value (layout-tree component))
+    (ensure-visible component T))
   (mark-for-render component))
 
 (defmethod (setf bounds) :after (value (component component))
