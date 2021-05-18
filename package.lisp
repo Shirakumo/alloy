@@ -98,6 +98,7 @@
    #:text
    #:insert-mode
    #:cursor
+   #:move-to
    #:placeholder
    #:pos
    #:anchor

@@ -9,6 +9,7 @@
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
    (#:simple #:org.shirakumo.alloy.renderers.simple)
+   (#:presentations #:org.shirakumo.alloy.renderers.simple.presentations)
    (#:opengl #:org.shirakumo.alloy.renderers.opengl)
    (#:font-discovery #:org.shirakumo.font-discovery)
    (#:colored #:org.shirakumo.alloy.colored)
@@ -333,6 +334,29 @@ void main(){
 (defmethod simple:ideal-bounds ((text text))
   (dimensions text))
 
+(defun estimate-cursor-pos (text point offset)
+  (let* ((bounds (dimensions text))
+         (font (data (simple:font text)))
+         (line-height (3b-bmfont:line-height font))
+         (breaks (line-breaks text))
+         (x (/ (- (alloy:pxx point) (+ (alloy:pxx bounds) (alloy:pxx offset))) (scale text)))
+         (line (min (length breaks) (max 0 (floor (- (+ (alloy:pxy offset) (alloy:pxy bounds)) (alloy:pxy point)) line-height)))))
+    (multiple-value-bind (start end)
+        (loop for line-start = 0 then line-end
+              for line-end across breaks
+              do (when (<= line-start line line-end) (return (values line-start line-end)))
+              finally (return (values line-start line-end)))
+      (block NIL
+        (flet ((thunk (i x- y- x+ y+ u- v- u+ v+)
+                 (declare (ignore y- y+ u- v- u+ v+))
+                 (when (< x- x x+)
+                   (return
+                     (if (< (- (alloy:pxx point) x-)
+                            (- x+ (alloy:pxx point)))
+                         i (1+ i))))))
+          (map-glyphs-line font #'thunk (alloy:text text) :start start :end end))
+        (return end)))))
+
 (defclass cursor (simple:cursor) ())
 
 (defmethod simple:cursor ((renderer renderer) (text text) (start integer) &rest initargs)
@@ -361,6 +385,12 @@ void main(){
       (incf line))
     (setf (simple:bounds cursor) (alloy:px-extent (* s x) (- (alloy:pxy d) (* s line-height line))
                                                   (* s 4) (* s line-height)))))
+
+(defmethod alloy:handle :after ((event alloy:pointer-down) (component alloy:text-input-component))
+  (let ((label (presentations:find-shape :label component)))
+    (when label
+      (alloy:with-unit-parent component
+        (alloy:move-to (estimate-cursor-pos label (alloy:location event) (alloy:bounds component)) component)))))
 
 (defclass selection (simple:selection) ())
 

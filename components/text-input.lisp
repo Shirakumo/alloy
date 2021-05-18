@@ -20,7 +20,7 @@
 (defmethod (setf anchor) ((null null) (cursor cursor))
   (set-anchor null cursor))
 
-(defmethod move-to :after (target cursor)
+(defmethod move-to :after (target (cursor cursor))
   (mark-for-render (component cursor)))
 
 (defmethod move-to ((_ (eql :start)) (cursor cursor))
@@ -82,6 +82,9 @@
 (defmethod initialize-instance :after ((component text-input-component) &key)
   (setf (slot-value component 'cursor) (make-instance 'cursor :component component))
   (set-pos (length (text component)) (cursor component)))
+
+(defmethod move-to (place (component text-input-component))
+  (move-to place (cursor component)))
 
 (defmethod text ((component text-input-component))
   (value component))
