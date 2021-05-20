@@ -6,6 +6,9 @@
 
 (in-package #:org.shirakumo.alloy)
 
+(defvar *token-stops* " !?-;.,
+")
+
 (defclass cursor ()
   ((pos :initform 0 :reader pos :writer set-pos)
    (anchor :initform NIL :reader anchor :writer set-anchor)
@@ -34,6 +37,22 @@
 
 (defmethod move-to ((_ (eql :next-char)) (cursor cursor))
   (set-pos (min (length (text (component cursor))) (1+ (pos cursor))) cursor))
+
+(defmethod move-to ((_ (eql :prev-token)) (cursor cursor))
+  (let ((string (text (component cursor))))
+    (set-pos (loop for i downfrom (1- (pos cursor)) above 0
+                   do (when (find (char string i) *token-stops*)
+                        (return i))
+                   finally (return 0))
+             cursor)))
+
+(defmethod move-to ((_ (eql :next-token)) (cursor cursor))
+  (let ((string (text (component cursor))))
+    (set-pos (loop for i from (1+ (pos cursor)) below (length string)
+                   do (when (find (char string i) *token-stops*)
+                        (return i))
+                   finally (return (length string)))
+             cursor)))
 
 (defmethod move-to ((_ (eql :prev-line)) (cursor cursor))
   (let ((pos (pos cursor)))
@@ -186,9 +205,13 @@
            (set-anchor 0 cursor)
            (move-to :end cursor)))
         (:left
-         (move :prev-char))
+         (if (find :control (modifiers event))
+             (move :prev-token)
+             (move :prev-char)))
         (:right
-         (move :next-char))
+         (if (find :control (modifiers event))
+             (move :next-token)
+             (move :next-char)))
         (:up
          (move :prev-line))
         (:down
