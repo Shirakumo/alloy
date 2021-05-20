@@ -203,6 +203,7 @@
    #:dy
    #:direct-event
    #:copy-event
+   #:cut-event
    #:paste-event
    #:content
    #:drop-event

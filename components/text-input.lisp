@@ -250,6 +250,15 @@
               (subseq (text component) (min pos anchor) (max pos anchor))
               (text component)))))
 
+(defmethod handle ((event cut-event) (component text-input-component))
+  (let* ((cursor (cursor component))
+         (pos (pos cursor))
+         (anchor (anchor cursor)))
+    (when anchor
+      (setf (clipboard (ui (layout-tree component)))
+            (subseq (text component) (min pos anchor) (max pos anchor)))
+      (delete-text (min anchor pos) (max anchor pos) component))))
+
 (defmethod handle ((event paste-event) (component text-input-component))
   (let ((content (content event)))
     (typecase content
