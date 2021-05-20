@@ -170,12 +170,12 @@
 (defmethod cursor ((renderer renderer) (text text) (start integer) &rest initargs)
   (apply #'make-instance 'cursor :text text :start start initargs))
 
-(defclass selection (filled-rectangle)
+(defclass selection (polygon)
   ((text-object :initarg :text :accessor text-object)
    (start :initarg :start :accessor start)
    (end :initarg :end :accessor end)
    (pattern :initform (colored:color 0 0 1 0.5))
-   (bounds :initform NIL)))
+   (points :initform NIL)))
 
 (defmethod selection ((renderer renderer) (text text) (start integer) (end integer) &rest initargs)
   (apply #'make-instance 'selection :text text :start start :end end initargs))
