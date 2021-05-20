@@ -414,14 +414,14 @@ void main(){
 (defclass polygon (simple:polygon)
   ((data :accessor data)))
 
-(defmethod shared-initialize :after ((shape polygon) slots &key (points NIL points-p))
-  (when points-p
-    (let ((data (make-array (* 3 (length points)) :element-type 'single-float)))
-      (loop with i = -1
-            for point in points
-            do (setf (aref data (incf i)) (alloy:pxx point))
-               (setf (aref data (incf i)) (alloy:pxy point)))
-      (setf (data shape) data))))
+(defmethod shared-initialize :after ((shape polygon) slots &key)
+  (let* ((points (simple:points shape))
+         (data (make-array (* 2 (length points)) :element-type 'single-float)))
+    (loop for i from 0 by 2
+          for point in points
+          do (setf (aref data (+ 0 i)) (alloy:pxx point))
+             (setf (aref data (+ 1 i)) (alloy:pxy point)))
+    (setf (data shape) data)))
 
 (defmethod simple:polygon ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'polygon :points points initargs))

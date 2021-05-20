@@ -362,29 +362,31 @@ void main(){
 (defmethod simple:cursor ((renderer renderer) (text text) (start integer) &rest initargs)
   (apply #'make-instance 'cursor :text text :start start initargs))
 
-(defmethod shared-initialize :after ((cursor cursor) slots &key)
-  (let* ((text (simple:text-object cursor))
-         (line (loop for prev = 0 then next
+(defun compute-cursor-location (text point)
+  (let* ((line (loop for prev = 0 then next
                      for next across (line-breaks text)
                      for i from 0
-                     do (when (and (<= prev (simple:start cursor))
-                                   (< (simple:start cursor) next))
+                     do (when (and (<= prev point)
+                                   (< point next))
                           (return i))
                      finally (return (1- (length (line-breaks text))))))
          (font (data (simple:font text)))
          (line-height (3b-bmfont:line-height font))
          (x (3b-bmfont:measure-glyphs font (alloy:text text)
                                       :start (if (= 0 line) 0 (aref (line-breaks text) (1- line)))
-                                      :end (simple:start cursor)))
+                                      :end point))
          (s (scale text))
          (d (dimensions text)))
     ;; KLUDGE: Dunno how I could do this cleanly.
-    (when (and (= (length (alloy:text text)) (simple:start cursor))
-               (< 0 (simple:start cursor))
-               (char= #\Linefeed (char (alloy:text text) (1- (simple:start cursor)))))
+    (when (and (= (length (alloy:text text)) point)
+               (< 0 point)
+               (char= #\Linefeed (char (alloy:text text) (1- point))))
       (incf line))
-    (setf (simple:bounds cursor) (alloy:px-extent (* s x) (- (alloy:pxy d) (* s line-height line))
-                                                  (* s 4) (* s line-height)))))
+    (alloy:px-extent (* s x) (- (alloy:pxy d) (* s line-height line))
+                     (* s 4) (* s line-height))))
+
+(defmethod shared-initialize :after ((cursor cursor) slots &key)
+  (setf (simple:bounds cursor) (compute-cursor-location (simple:text-object cursor) (simple:start cursor))))
 
 (defmethod alloy:handle :after ((event alloy:pointer-down) (component alloy:text-input-component))
   (let ((label (presentations:find-shape :label component)))
@@ -392,19 +394,19 @@ void main(){
       (alloy:with-unit-parent component
         (alloy:move-to (estimate-cursor-pos label (alloy:location event) (alloy:bounds component)) component)))))
 
-(defclass selection (simple:selection) ())
+(defclass selection (opengl::polygon simple:selection) ())
 
 (defmethod simple:selection ((renderer renderer) (text text) (start integer) (end integer) &rest initargs)
   (apply #'make-instance 'selection :text text :start start :end end initargs))
 
-(defmethod shared-initialize :after ((selection selection) slots &key)
-  ;; FIXME: This.
-  #++
-  (let* ((text (simple:text-object selection))
-         (s (scale text))
-         (d (dimensions text))
-         (x (3b-bmfont:measure-glyphs (data (simple:font text)) (alloy:text text)
-                                      :end (simple:start selection)))
-         (w (3b-bmfont:measure-glyphs (data (simple:font text)) (alloy:text text)
-                                      :start (max 0 (simple:start selection)) :end (simple:end selection))))
-    (setf (simple:bounds selection) (alloy:px-extent (* s x) (alloy:pxy d) (* s w) (alloy:pxh d)))))
+(defmethod shared-initialize ((selection selection) slots &key)
+  (call-next-method)
+  (if (/= (simple:start selection) (simple:end selection))
+      (let ((start (compute-cursor-location (simple:text-object selection) (simple:start selection)))
+            (end (compute-cursor-location (simple:text-object selection) (simple:end selection))))
+        (setf (simple:points selection)
+              (list (alloy:px-point (alloy:pxx start) (alloy:pxy start))
+                    (alloy:px-point (alloy:pxx end) (alloy:pxy end))
+                    (alloy:px-point (alloy:pxx end) (+ (alloy:pxy end) (alloy:pxh end)))
+                    (alloy:px-point (alloy:pxx start) (+ (alloy:pxy end) (alloy:pxh end))))))
+      (setf (simple:points selection) ())))
