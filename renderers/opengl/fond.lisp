@@ -128,6 +128,13 @@ void main(){
 (defmethod simple:request-font ((renderer renderer) (default (eql :default)) &key)
   (simple:request-font renderer "Arial"))
 
+(defmethod alloy:suggest-bounds (extent (text simple:text))
+  (let ((ideal (simple:ideal-bounds text)))
+    (alloy:px-extent (+ (alloy:pxx extent) (alloy:pxx ideal))
+                     (+ (alloy:pxy extent) (alloy:pxy ideal))
+                     (alloy:pxw ideal)
+                     (alloy:pxh ideal))))
+
 (defun text-point (text scale)
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
     (declare (ignore gap))

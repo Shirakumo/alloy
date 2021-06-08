@@ -339,6 +339,33 @@
   (:background
    :pattern (colored:color 0.1 0.1 0.1)))
 
+(define-realization (default-look-and-feel alloy:menubar)
+  ((:background simple:rectangle)
+   (alloy:margins)
+   :pattern (colored:color 0.1 0.1 0.1)))
+
+(define-realization (default-look-and-feel alloy:submenu)
+  ((:background simple:rectangle)
+   (alloy:margins)
+   :pattern (colored:color 0.1 0.1 0.1)))
+
+(define-realization (default-look-and-feel alloy:menu-item)
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:label simple:text)
+   (alloy:margins) alloy:text
+   :halign :start :valign :middle))
+
+(define-update (default-look-and-feel alloy:menu-item)
+  (:background
+   :pattern (case alloy:focus
+              (:strong (colored:color 0.5 0.5 0.5))
+              (:weak (colored:color 0.3 0.3 0.3))
+              (T colors:transparent)))
+  (:label
+   :text alloy:text
+   :pattern colors:white))
+
 ;; KLUDGE: Bad, spilling protocol
 ;; FIXME: The widen is also /wrong/. We should properly consider the actual shape size instead...
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))

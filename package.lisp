@@ -399,6 +399,13 @@
    #:message
    #:confirm
    #:with-confirmation)
+  ;; structures/menu.lisp
+  (:export
+   #:menubar
+   #:submenu
+   #:menu-item
+   #:menu
+   #:with-menu)
   ;; structures/query.lisp
   (:export
    #:query)

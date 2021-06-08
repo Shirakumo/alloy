@@ -17,6 +17,7 @@
                (:file "windows")
                (:file "drop")
                (:file "constraint")
-               (:file "animation"))
+               (:file "animation")
+               (:file "menu"))
   :depends-on (:alloy-glfw
                :alloy-constraint))
