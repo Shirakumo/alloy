@@ -60,6 +60,8 @@
                (loop for (label contents) in items
                      for button = (make-instance 'menu-item :value label)
                      do (etypecase contents
+                          (layout-element
+                           (enter contents (inner button)))
                           (list
                            (recurse contents (make-instance 'submenu :layout-parent button)))
                           ((or symbol function)
@@ -74,10 +76,16 @@
                `(list ,name
                       ,(cond ((null items)
                               '(constantly T))
-                             ((and (listp (car items)) (stringp (caar items)))
+                             ((null (cdr items))
+                              (let ((item (car items)))
+                                (cond ((not (listp item))
+                                       item)
+                                      ((symbolp (car item))
+                                       item)
+                                      ((stringp (car item))
+                                       `(list ,(compile-item item))))))
+                             ((stringp (caar items))
                               `(list ,@(mapcar #'compile-item items)))
-                             ((and (listp (car items)) (eql 'function (car items)))
-                              (first items))
                              (T
                               `(lambda () ,@items)))))))
     `(make-instance 'menu :tree (list ,@(mapcar #'compile-item items)))))
