@@ -342,6 +342,10 @@
 (define-realization (default-look-and-feel alloy:menubar)
   ((:background simple:rectangle)
    (alloy:margins)
+   :pattern (colored:color 0.05 0.05 0.05)))
+
+(define-update (default-look-and-feel alloy:menubar)
+  ((:background simple:rectangle)
    :pattern (colored:color 0.1 0.1 0.1)))
 
 (define-realization (default-look-and-feel alloy:submenu)
@@ -353,7 +357,7 @@
   ((:background simple:rectangle)
    (alloy:margins))
   ((:label simple:text)
-   (alloy:margins) alloy:text
+   (alloy:margins 2 1) alloy:text
    :halign :start :valign :middle))
 
 (define-update (default-look-and-feel alloy:menu-item)
@@ -365,6 +369,11 @@
   (:label
    :text alloy:text
    :pattern colors:white))
+
+(define-realization (default-look-and-feel alloy:separator)
+  ((:line simple:rectangle)
+   (alloy:extent 0 (alloy:ph 0.5) (alloy:pw) 1)
+   :pattern (colored:color 0.2 0.2 0.2)))
 
 ;; KLUDGE: Bad, spilling protocol
 ;; FIXME: The widen is also /wrong/. We should properly consider the actual shape size instead...

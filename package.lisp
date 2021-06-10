@@ -401,6 +401,7 @@
    #:with-confirmation)
   ;; structures/menu.lisp
   (:export
+   #:separator
    #:menubar
    #:submenu
    #:menu-item
