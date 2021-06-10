@@ -375,6 +375,13 @@
    (alloy:extent 0 (alloy:ph 0.5) (alloy:pw) 1)
    :pattern (colored:color 0.2 0.2 0.2)))
 
+(define-realization (default-look-and-feel alloy:resizer)
+  ((:line simple:rectangle)
+   (ecase (alloy:side alloy:renderable)
+     ((:north :south) (alloy:extent 0 (alloy:ph 0.5) (alloy:pw) 1))
+     ((:east :west) (alloy:extent (alloy:pw 0.5) 0 1 (alloy:ph))))
+   :pattern (colored:color 0.2 0.2 0.2)))
+
 ;; KLUDGE: Bad, spilling protocol
 ;; FIXME: The widen is also /wrong/. We should properly consider the actual shape size instead...
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:tab-button))
