@@ -183,7 +183,7 @@ in vec2 uv;
 out vec4 out_color;
 
 void main(){
-  out_color = texture(image, (uv+uv_offset)/uv_scale);
+  out_color = texture(image, (uv/uv_scale)+uv_offset);
 }")))
 
 (defmethod alloy:allocate ((renderer renderer))
