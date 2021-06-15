@@ -39,12 +39,14 @@
     (on activate (button)
       (setf (current structure) tab))))
 
-(defmethod initialize-instance :after ((structure tab-view) &key tabs focus-parent layout-parent)
+(defmethod initialize-instance :after ((structure tab-view) &key tabs focus-parent layout-parent (side :north))
   (let ((layout (make-instance 'border-layout :layout-parent layout-parent))
         (focus (make-instance 'focus-stack :focus-parent focus-parent))
-        (tablist (make-instance 'horizontal-linear-layout :min-size (size 40 20)))
+        (tablist (make-instance (ecase side
+                                  ((:north :south) 'horizontal-linear-layout)
+                                  ((:east :west) 'vertical-linear-layout)) :min-size (size 40 20)))
         (stack (make-instance 'swap-layout)))
-    (enter tablist layout :place :north)
+    (enter tablist layout :place side)
     (enter stack layout :place :center)
     (finish-structure structure layout focus)
     (when tabs
