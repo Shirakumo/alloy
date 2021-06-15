@@ -19,18 +19,18 @@
 
 (defmethod handle ((event pointer-down) (component component))
   (unless (and (slot-boundp component 'focus-parent)
-               (contained-p (location event) (bounds component)))
+               (contained-p (location event) component))
     (call-next-method)))
 
 (defmethod handle ((event pointer-up) (component component))
   (if (and (slot-boundp component 'focus-parent)
-           (contained-p (location event) (bounds component)))
+           (contained-p (location event) component))
       (activate component)
       (call-next-method)))
 
 (defmethod handle ((event pointer-move) (component component))
   (if (and (slot-boundp component 'focus-parent)
-           (contained-p (location event) (bounds component)))
+           (contained-p (location event) component))
       (when (eql NIL (focus component))
         (setf (focus (focus-parent component)) :strong)
         (setf (focus component) :weak))

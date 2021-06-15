@@ -73,7 +73,7 @@
      (call-next-method))))
 
 (defmethod handle ((event pointer-down) (wheel wheel))
-  (cond ((contained-p (location event) (bounds wheel))
+  (cond ((contained-p (location event) wheel)
          (activate wheel)
          (call-next-method)
          (setf (start-pos wheel) (location event))

@@ -65,5 +65,6 @@
   (call-next-method))
 
 (defmethod handle ((event pointer-event) (layout swap-layout))
-  (when (contained-p (location event) (bounds (current layout)))
+  (when (and (current layout)
+             (contained-p (location event) (current layout)))
     (handle event (current layout))))

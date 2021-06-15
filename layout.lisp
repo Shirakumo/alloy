@@ -39,6 +39,9 @@
 (defmethod w ((element layout-element)) (extent-w (bounds element)))
 (defmethod h ((element layout-element)) (extent-h (bounds element)))
 
+(defmethod contained-p (thing (element layout-element))
+  (contained-p thing (bounds element)))
+
 (defmethod set-layout-tree :before (tree (element layout-element))
   (when (and (layout-tree element) tree (not (eq tree (layout-tree element))))
     (error 'element-has-different-root
@@ -128,7 +131,7 @@
   ;; Need to process in reverse order to ensure overlapping elements come first,
   ;; since elements drawn last overlap previous elements.
   (do-elements (element layout :result (decline) :from-end T)
-    (when (contained-p (location event) (bounds element))
+    (when (contained-p (location event) element)
       (if (handle event element)
           (return)
           (decline)))))
