@@ -12,7 +12,7 @@
 (define-observable (setf index) (value observable))
 
 (defmethod current ((layout swap-layout))
-  (when (< 0 (length (elements layout)))
+  (when (<= 0 (index layout) (1- (length (elements layout))))
     (aref (elements layout) (min (length (elements layout)) (index layout)))))
 
 (defmethod (setf current) :before ((current layout-element) (layout swap-layout))
@@ -22,6 +22,9 @@
 
 (defmethod (setf current) ((current layout-element) (layout swap-layout))
   (setf (index layout) (element-index current layout)))
+
+(defmethod (setf current) ((null null) (layout swap-layout))
+  (setf (index layout) -1))
 
 (defmethod (setf index) :before (index (layout swap-layout))
   (unless (<= 0 index (1- (length (elements layout))))
