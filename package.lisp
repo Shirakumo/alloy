@@ -57,7 +57,8 @@
   (:export
    #:button
    #:pressed
-   #:button*)
+   #:button*
+   #:on-activate)
   ;; components/combo.lisp
   (:export
    #:combo-item
@@ -231,6 +232,7 @@
   ;; focus-tree.lisp
   (:export
    #:focus-element
+   #:set-focus-tree
    #:focus-tree
    #:focus-parent
    #:focus
@@ -305,6 +307,7 @@
   ;; layout.lisp
   (:export
    #:layout-tree
+   #:set-layout-tree
    #:bounds
    #:layout-element
    #:layout-parent
