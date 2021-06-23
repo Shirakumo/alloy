@@ -10,7 +10,7 @@
   ())
 
 (defclass combo-layout (vertical-linear-layout)
-  ())
+  ((parent :initarg :parent :accessor parent)))
 
 (defmethod handle ((event scroll) (layout combo-layout))
   (let ((extent (bounds layout)))
@@ -23,7 +23,11 @@
 
 (defclass combo (value-component focus-list)
   ((state :initform NIL :accessor state)
-   (combo-list :initform (make-instance 'combo-layout :layout-parent NIL :cell-margins (margins)) :reader combo-list)))
+   (combo-list :reader combo-list)))
+
+(defmethod initialize-instance ((combo combo) &key)
+  (call-next-method)
+  (setf (slot-value combo 'combo-list) (make-instance 'combo-layout :layout-parent NIL :cell-margins (margins) :parent combo)))
 
 (defgeneric combo-item (item combo))
 (defgeneric value-set (data))
@@ -42,6 +46,16 @@
 
 (defmethod set-layout-tree :before (value (combo combo))
   (set-layout-tree value (combo-list combo)))
+
+(defmethod (setf index) :after (index (combo combo))
+  (let ((ib (bounds (focused combo)))
+        (lb (bounds (combo-list combo)))
+        (fb (bounds combo)))
+    (setf (bounds (combo-list combo))
+          (px-extent (pxx lb)
+                     (- (pxy fb) (- (pxy ib) (pxy lb)))
+                     (pxw lb)
+                     (pxh lb)))))
 
 (defmethod text ((combo combo))
   (if (focused combo)
