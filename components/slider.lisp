@@ -63,6 +63,12 @@
     (T
      (call-next-method))))
 
+(defmethod handle ((event focus-next) (slider slider))
+  (incf (value slider) (step slider)))
+
+(defmethod handle ((event focus-prev) (slider slider))
+  (decf (value slider) (step slider)))
+
 (defmethod handle ((event pointer-move) (slider slider))
   (case (state slider)
     (:dragging
