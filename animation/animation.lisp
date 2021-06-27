@@ -120,7 +120,7 @@
                collect `(setf (aref ,array ,i) ,value))
        ,array)))
 
-(defun compile-tweens (progression)
+(defun compile-progression (progression)
   (let ((tweens (make-hash-table :test 'equal)))
     (check-type (first progression) real)
     ;; Restructure into per-place tween info
@@ -150,7 +150,7 @@
                                ,(%expand-array easings)))))
 
 (defmacro define-animation (name &body progression)
-  (let ((tweens (compile-tweens progression)))
+  (let ((tweens (compile-progression progression)))
     `(setf (animation ',name)
            (lambda ()
              (declare (optimize speed))

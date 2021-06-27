@@ -73,9 +73,9 @@
 (define-update (default-look-and-feel alloy:button)
   (:background
    :pattern (case alloy:focus
-                 (:strong (colored:color 0.9 0.9 0.9))
-                 (:weak (colored:color 0.7 0.7 0.7))
-                 (T (colored:color 0.25 0.2 0.8))))
+              (:strong (colored:color 0.9 0.9 0.9))
+              (:weak (colored:color 0.7 0.7 0.7))
+              (T (colored:color 0.25 0.2 0.8))))
   (:label
    :text alloy:text))
 

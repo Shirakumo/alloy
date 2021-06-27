@@ -35,4 +35,6 @@
    #:clear-shapes
    #:find-shape
    #:define-realization
-   #:define-update))
+   #:define-update
+   #:tracked-shapes
+   #:define-animated-shapes))

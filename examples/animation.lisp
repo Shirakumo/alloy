@@ -8,15 +8,9 @@
 
 (defclass animated-button (alloy:button) ())
 
-(defmethod presentations:update-shape :around ((ui screen) (button animated-button) (shape presentations::shape)))
-
-(animation:define-state (animated-button alloy:focus :weak)
+(presentations:define-animated-shapes animated-button
   (:background
-   (simple:pattern (colored:color 0 1 0 1.0))))
-
-(animation:define-state (animated-button alloy:focus NIL)
-  (:background
-   (simple:pattern (colored:color 1 0 0 1.0))))
+   (simple:pattern :duration 1.0)))
 
 (define-example animation (screen)
   (let* ((window (windowing:make-window screen))

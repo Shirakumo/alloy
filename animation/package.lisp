@@ -55,9 +55,6 @@
   ;; lerp.lisp
   (:export
    #:lerp)
-  ;; state.lisp
+  ;; change.lisp
   (:export
-   #:state-properties
-   #:update-state
-   #:map-parts
-   #:define-state))
+   #:compile-change-tracker))

@@ -16,7 +16,7 @@
                (:file "easing")
                (:file "lerp")
                (:file "animation")
-               (:file "state"))
+               (:file "change"))
   :depends-on (:documentation-utils
                :alloy
                :colored)

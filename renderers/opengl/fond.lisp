@@ -170,6 +170,9 @@ void main(){
     (let ((s (* (/ (alloy:to-px (simple:size text)) (cl-fond:size (atlas (simple:font text)))))))
       (alloy:px-extent (* l s) (* u s) (* s (+ l r)) (* s (+ u b))))))
 
+(defmethod alloy:suggest-bounds (bounds (text simple:text))
+  (simple:ideal-bounds text))
+
 (defclass cursor (simple:filled-rectangle)
   ((text :initarg :text :accessor text)
    (simple:bounds :initform NIL)))

@@ -157,13 +157,35 @@
       (realize-renderable renderer renderable))
     (update-shape renderer renderable T)))
 
-(defmethod animation:map-parts (func (renderable renderable))
-  (loop for shape across (shapes renderable)
-        do (funcall func (cdr shape))))
-
-(defmethod animation:state-properties ((renderable renderable) (shape shape) observable value)
-  (animation:state-properties renderable (name shape) observable value))
-
 (defmethod animation:update ((renderable renderable) dt)
   (loop for shape across (shapes renderable)
         do (animation:update (cdr shape) dt)))
+
+(defgeneric tracked-shapes (animated)
+  (:method-combination append :most-specific-first))
+
+(defmethod tracked-shapes append ((renderable renderable))
+  ())
+
+(defgeneric call-with-tracked-changes (renderable shape next-method))
+
+(defmethod call-with-tracked-changes ((renderable renderable) shape next-method)
+  (funcall next-method))
+
+(defmethod update-shape :around ((renderer renderer) (renderable renderable) (shape shape))
+  (call-with-tracked-changes renderable shape #'call-next-method))
+
+(defun cache-shape-tracker (class)
+  (let* ((class (c2mop:ensure-finalized (find-class class)))
+         (trackers (tracked-shapes (c2mop:class-prototype class))))
+    (eval (print `(defmethod call-with-tracked-changes ((animated ,(class-name class)) shape next-method)
+                    (case (name shape)
+                      ,@(loop for (name . tracking) in trackers
+                              collect `(,name ,(animation::compile-change-tracker 'shape tracking 'next-method)))
+                      (T (funcall next-method))))))))
+
+(defmacro define-animated-shapes (class &body shapes)
+  `(progn
+     (defmethod tracked-shapes append ((animated ,class))
+       '(,@shapes))
+     (cache-shape-tracker ',class)))
