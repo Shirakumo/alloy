@@ -69,7 +69,7 @@
         for idx = (tween-idx tween)
         for clock = (tween-clock tween)
         for max = (1- (length stops))
-        do (when (< idx (length stops))
+        do (when (<= idx max)
              (incf clock dt)
              (setf (tween-clock tween) clock)
              (when (< (aref stops (min max (1+ idx))) clock)
@@ -109,12 +109,12 @@
 (defmethod apply-animation ((name symbol) (animated animated))
   (reinitialize-instance animated :tweens (funcall (animation name))))
 
-(defmethod apply-animation ((tweens array) (animated animated))
+(defmethod apply-animation ((tweens vector) (animated animated))
   (reinitialize-instance animated :tweens tweens))
 
 (defun %expand-array (values &rest array-options)
   (let ((array (gensym "ARRAY")))
-    `(let ((,array (make-array ,(length values) ,@ (loop for opt in array-options collect `',opt))))
+    `(let ((,array (make-array ,(length values) ,@(loop for opt in array-options collect `',opt))))
        ,@(loop for i from 0 below (length values)
                for value in values
                collect `(setf (aref ,array ,i) ,value))
