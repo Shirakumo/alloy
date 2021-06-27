@@ -36,4 +36,5 @@
                             (unless (,comparator new ,extractor)
                               (vector-push ,(compile-tween extractor extractor 'new tween-info) animations))))
          (when (< 0 (fill-pointer animations))
-           (apply-animation animations ,animated))))))
+           (apply-animation animations ,animated)
+           (update ,animated 0.0))))))
