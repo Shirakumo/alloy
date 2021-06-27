@@ -18,7 +18,7 @@
   (%lerp (float a 0f0) (float b 0f0) (float x 0f0)))
 
 (defmethod lerp ((a alloy:unit) (b alloy:unit) x)
-  (alloy:px (%lerp (alloy:to-px a) (alloy:to-px b) (fleat x 0f0))))
+  (alloy:px (%lerp (alloy:to-px a) (alloy:to-px b) (float x 0f0))))
 
 (defmethod lerp ((a alloy:px) (b alloy:px) x)
   (alloy:px (%lerp (alloy:unit-value a) (alloy:unit-value b) (float x 0f0))))

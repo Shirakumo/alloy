@@ -94,7 +94,8 @@
 (defmethod update ((element alloy:layout-element) dt)
   ;; KLUDGE: animated might be a superclass of layout-element
   (when (next-method-p)
-    (call-next-method)))
+    (alloy:with-unit-parent element
+      (call-next-method))))
 
 (defmethod update ((layout alloy:layout) dt)
   (alloy:do-elements (element layout)
