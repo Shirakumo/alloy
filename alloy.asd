@@ -49,6 +49,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                              (:file "drag")
                              (:file "wheel")
                              (:file "symbol")
+                             (:file "printable")
                              (:file "sequence")))
                (:module "structures"
                 :components ((:file "query")

@@ -6,6 +6,8 @@
 
 (in-package #:org.shirakumo.alloy)
 
+(deftype any () T)
+
 (defclass inspector (structure)
   ((object :initarg :object :initform NIL)
    (class :initarg :class)
@@ -26,9 +28,13 @@
 
 (defmethod object-slot-component-type (object class slot)
   (let ((slot-type (c2mop:slot-definition-type (find-slot slot class))))
-    (when (and (symbolp slot-type) (not (eql T slot-type)) (not (eql NIL slot-type)))
-      ;; FIXME: We can do better here if we analyse compound types
-      (component-class-for-object (c2mop:class-prototype (find-canonical-class slot-type))))))
+    ;; FIXME: We can do better here if we analyse compound types
+    (typecase slot-type
+      ((eql any)
+       'printable)
+      ((eql T))
+      ((and symbol (not null))
+       (component-class-for-object (c2mop:class-prototype (find-canonical-class slot-type)))))))
 
 (defmethod object-slot-component (object class slot)
   (when (slot-boundp object slot)
