@@ -178,11 +178,11 @@
 (defun cache-shape-tracker (class)
   (let* ((class (c2mop:ensure-finalized (find-class class)))
          (trackers (tracked-shapes (c2mop:class-prototype class))))
-    (eval (print `(defmethod call-with-tracked-changes ((animated ,(class-name class)) shape next-method)
-                    (case (name shape)
-                      ,@(loop for (name . tracking) in trackers
-                              collect `(,name ,(animation::compile-change-tracker 'shape tracking 'next-method)))
-                      (T (funcall next-method))))))))
+    (eval `(defmethod call-with-tracked-changes ((animated ,(class-name class)) shape next-method)
+             (case (name shape)
+               ,@(loop for (name . tracking) in trackers
+                       collect `(,name ,(animation::compile-change-tracker 'shape tracking 'next-method)))
+               (T (funcall next-method)))))))
 
 (defmacro define-animated-shapes (class &body shapes)
   `(progn
