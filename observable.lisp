@@ -83,7 +83,7 @@
     ;; Generate method
     ;; KLUDGE: Using the proper ADD-METHOD route would require MOP.
     (eval
-     `(defmethod ,function :before ,lambda-list
+     `(defmethod ,function :after ,lambda-list
         (,(if (find '&optional lambda-list) 'apply 'funcall)
          #'notify-observers ',observer ,class ,@argvars)))))
 
@@ -114,7 +114,7 @@
 (defclass observable-object (observable)
   ())
 
-(defmethod (setf c2mop:slot-value-using-class) :before (value class (object observable-object) slot)
+(defmethod (setf c2mop:slot-value-using-class) :after (value class (object observable-object) slot)
   (when (slot-boundp object 'observers)
     (notify-observers (c2mop:slot-definition-name slot) object value object)))
 
