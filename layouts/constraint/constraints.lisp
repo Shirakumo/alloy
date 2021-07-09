@@ -158,18 +158,18 @@
      ((:top :end)
       `(= (+ :y :h ,margin) (+ (:y ,other) (:h ,other)))))))
 
-(define-expression-transform :align (edge other)
+(define-expression-transform :align (edge other &optional (margin 0))
   (check-type other alloy:layout-element)
   (list
    (ecase edge
      ((:north :top)
-      `(= (+ (:y ,other) (:h ,other)) (+ :y :h)))
+      `(= (+ (:y ,other) (:h ,other)) (+ :y :h ,margin)))
      ((:east :right)
-      `(= (+ (:x ,other) (:w ,other)) (+ :x :w)))
+      `(= (+ (:x ,other) (:w ,other)) (+ :x :w ,margin)))
      ((:south :bottom)
-      `(= (:y ,other) :y))
+      `(= (:y ,other) (- :y ,margin)))
      ((:west :left)
-      `(= (:x ,other) :x)))))
+      `(= (:x ,other) (- :x ,margin))))))
 
 (define-expression-transform :aspect-ratio (ratio)
   (list `(= :h (* :w ,ratio))))
