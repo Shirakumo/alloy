@@ -102,7 +102,8 @@
     (update element dt)))
 
 (defmethod update ((tree alloy:layout-tree) dt)
-  (update (alloy:root tree) dt))
+  (update (alloy:root tree) dt)
+  (update (alloy:popups tree) dt))
 
 (defmethod update ((ui alloy:ui) dt)
   (update (alloy:layout-tree ui) dt))
