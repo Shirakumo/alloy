@@ -68,26 +68,26 @@
         (opengl:make-vertex-buffer renderer (make-array 0 :element-type 'single-float)
                                    :data-usage :dynamic-draw))
   (setf (opengl:resource 'text-vao renderer)
-        (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 28 :offset 0)
-                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 28 :offset 8)
-                                             (,(opengl:resource 'text-vbo renderer) :size 3 :stride 28 :offset 16))))
+        (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 32 :offset 0)
+                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 32 :offset 8)
+                                             (,(opengl:resource 'text-vbo renderer) :size 4 :stride 32 :offset 16))))
   (setf (opengl:resource 'text-shader renderer)
         (opengl:make-shader renderer :vertex-shader "#version 330 core
 layout (location=0) in vec2 pos;
 layout (location=1) in vec2 in_uv;
-layout (location=2) in vec3 in_col;
+layout (location=2) in vec4 in_vert_color;
 uniform mat3 transform;
 out vec2 uv;
-out vec3 col;
+out vec4 vert_color;
 
 void main(){
   gl_Position = vec4(transform*vec3(pos, 1), 1);
   uv = in_uv;
-  col = in_col;
+  vert_color = in_vert_color;
 }"
                                      :fragment-shader "#version 330 core
 in vec2 uv;
-in vec3 col;
+in vec4 vert_color;
 uniform sampler2D image;
 uniform float pxRange = 4;
 uniform vec4 color = vec4(0, 0, 0, 1);
@@ -103,7 +103,8 @@ void main(){
   float sigDist = median(msdfData.r, msdfData.g, msdfData.b) - 0.5;
   sigDist *= dot(msdfUnit, 0.5/fwidth(uv));
   float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
-  out_color = vec4(color.rgb*col, color.a*opacity);
+  vec4 frag_col = mix(color, vert_color, vert_color.a);
+  out_color = vec4(frag_col.rgb, frag_col.a*opacity);
 }")))
 
 (defmethod alloy:deallocate ((renderer renderer))
@@ -179,7 +180,6 @@ void main(){
              (#\space
               (incf x space))
              (#\tab
-              ;; todo: make this configurable, add tab stop option?
               (incf x (* 8 space)))
              (t
               (incf x k)
@@ -262,28 +262,26 @@ void main(){
 (defun compute-text (font text extent s wrap markup)
   (declare (optimize speed))
   (declare (type string text))
-  (let ((array (make-array (* 6 7 (the (signed-byte 32) (length text))) :element-type 'single-float))
+  (let ((array (make-array (* 6 8 (the (signed-byte 32) (length text))) :element-type 'single-float))
         (minx 0.0) (miny 0.0) (maxx 0.0) (maxy 0.0) (i 0)
-        (markup (simple::flatten-markup markup))
         (base (3b-bmfont:base (data font)))
         (styles ()))
     (declare (type (unsigned-byte 32) i))
     (declare (type single-float minx miny maxx maxy s))
     (labels ((prop (prop styles)
                (loop for style in styles
-                     do (when (or (eq style prop)
-                                  (and (listp style) (eq (car style) prop)))
+                     do (when (eq (car style) prop)
                           (return (rest style)))))
              (vertex (x y u v c)
                (setf (aref array (+ i 0)) (float x))
                (setf (aref array (+ i 1)) (float y))
                (setf (aref array (+ i 2)) (float u))
                (setf (aref array (+ i 3)) (float v))
-               (destructuring-bind (r g b) c
-                 (setf (aref array (+ i 4)) (float r))
-                 (setf (aref array (+ i 5)) (float g))
-                 (setf (aref array (+ i 6)) (float b)))
-               (incf i 7))
+               (setf (aref array (+ i 4)) (colored:r c))
+               (setf (aref array (+ i 5)) (colored:g c))
+               (setf (aref array (+ i 6)) (colored:b c))
+               (setf (aref array (+ i 7)) (colored:a c))
+               (incf i 8))
              (thunk (c x- y- x+ y+ u- v- u+ v+)
                (declare (type single-float x- y- x+ y+ u- v- u+ v+))
                (when (<= (or (caar markup) most-positive-fixnum) c)
@@ -294,14 +292,18 @@ void main(){
                (setf maxy (max maxy y+))
                (let ((tx (if (prop :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
                      (s (if (prop :bold styles) (* s 5.0) 0.0))
-                     (c (let ((c (prop :color styles)))
-                          (if c (first c) '(1.0 1.0 1.0)))))
-                 (vertex (- (+ tx x-) s) (+ y+ s) u- (- 1 v-) c)
-                 (vertex (- x- s) (- y- s) u- (- 1 v+) c)
-                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) c)
-                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) c)
-                 (vertex (- x- s) (- y- s) u- (- 1 v+) c)
-                 (vertex (+ x+ s) (- y- s) u+ (- 1 v+) c))))
+                     (color NIL))
+                 (let ((prop (prop :color styles)))
+                   (when prop (setf color (first prop))))
+                 (let ((prop (prop :rainbow styles)))
+                   (when prop (setf color (colored:convert (colored:hsv (* 10 c) 1 1) 'colored:rgb))))
+                 (unless color (setf color (colored:rgb 0 0 0 0)))
+                 (vertex (- (+ tx x-) s) (+ y+ s) u- (- 1 v-) color)
+                 (vertex (- x- s) (- y- s) u- (- 1 v+) color)
+                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) color)
+                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) color)
+                 (vertex (- x- s) (- y- s) u- (- 1 v+) color)
+                 (vertex (+ x+ s) (- y- s) u+ (- 1 v+) color))))
       (values (map-glyphs (data font) #'thunk text extent s wrap)
               array minx miny maxx maxy))))
 
@@ -309,17 +311,46 @@ void main(){
   ((vertex-data :accessor vertex-data)
    (dimensions :accessor dimensions)
    (line-breaks :accessor line-breaks)
-   (vertex-count :initform NIL :accessor vertex-count)))
+   (vertex-count :initform NIL :accessor vertex-count)
+   (markup :initform () :accessor markup)
+   (clock :initform 0f0 :accessor clock)))
+
+(defmethod org.shirakumo.alloy.animation:update ((text text) dt)
+  (let* ((markup (markup text))
+         (data (vertex-data text))
+         (style ())
+         (clock (clock text))
+         (string (alloy:text text)))
+    (when markup
+      (incf clock dt)
+      (setf (clock text) (mod clock 36.0))
+      (flet ((prop (prop style)
+               (loop for thing in style
+                     do (when (eq prop (car thing))
+                          (return (rest thing))))))
+        (loop with i = 0
+              for c from 0 below (length string)
+              do (when (<= (or (caar markup) (length data)) c)
+                   (setf style (pop markup)))
+                 (when (prop :rainbow (rest style))
+                   (let ((color (colored:convert (colored:hsv (mod (+ (* 10 i) (* 200 clock)) 360.0) 1 1) 'colored:rgb)))
+                     (loop for j from 0 below 6
+                           do (setf (aref data (+ 4 (* 8 (+ j (* 6 i))))) (colored:r color))
+                              (setf (aref data (+ 5 (* 8 (+ j (* 6 i))))) (colored:g color))
+                              (setf (aref data (+ 6 (* 8 (+ j (* 6 i))))) (colored:b color)))))
+                 (unless (find (char string c) '(#\Linefeed #\Tab #\Space))
+                   (incf i)))))))
 
 (defmethod scale ((text text))
   (/ (alloy:to-px (simple:size text)) (3b-bmfont:base (data (simple:font text)))))
 
 (defmethod shared-initialize :after ((text text) slots &key)
   (alloy:allocate (simple:font text))
-  (multiple-value-bind (bounds array breaks) (alloy:suggest-bounds (alloy:ensure-extent (simple:bounds text)) text)
+  (multiple-value-bind (bounds array breaks markup) (alloy:suggest-bounds (alloy:ensure-extent (simple:bounds text)) text)
     (setf (vertex-data text) array)
     (setf (dimensions text) bounds)
-    (setf (line-breaks text) breaks)))
+    (setf (line-breaks text) breaks)
+    (setf (markup text) markup)))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
   (apply #'make-instance 'text :text string :bounds bounds :font font args))
@@ -340,8 +371,9 @@ void main(){
       (opengl:draw-vertex-array vao :triangles (or (vertex-count shape) (truncate (length data) 7))))))
 
 (defmethod alloy:suggest-bounds (extent (text text))
-  (let ((s (scale text)))
-    (multiple-value-bind (breaks array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) extent s (simple:wrap text) (simple:markup text))
+  (let ((s (scale text))
+        (markup (simple::flatten-markup (simple:markup text))))
+    (multiple-value-bind (breaks array x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) extent s (simple:wrap text) markup)
       (let* ((w (- x+ x-))
              (h (- y+ y-))
              (line (* s (+ (3b-bmfont:line-height (data (simple:font text))))))
@@ -349,7 +381,7 @@ void main(){
              (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
                                           (alloy:px-size w h))))
         (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (if (<= (length breaks) 1) h (+ h base)))
-                array breaks)))))
+                array breaks markup)))))
 
 (defmethod simple:ideal-bounds ((text text))
   (dimensions text))
