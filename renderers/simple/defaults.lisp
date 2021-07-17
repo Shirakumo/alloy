@@ -102,6 +102,13 @@
 (defun flatten-markup (markup)
   (let ((results ())
         (styles ()))
+    ;; We do a dual-stack approach: the markup has to be sorted in sequence
+    ;; without overlaps. We then scan through this sequence by iterating an
+    ;; index and matching against possible starting markups (second WHEN).
+    ;; If we match we push the end indices of matching styles to STYLES as
+    ;; well as a singular matching index for the start of the matching
+    ;; STYLE. As we iterate and appear at the matching indices of the STYLES
+    ;; stack we can then actually push them onto the results list.
     (loop for i from 0
           while markup
           do (when (and styles (= i (caar styles)))
@@ -113,13 +120,11 @@
                           (declare (ignore s))
                           (push (cons e style) styles)))
                (push (list* i (mapcar #'cdr styles)) results)))
+    ;; Finally we process any remaining dangling styles.
     (loop for style = (pop styles)
           while style
           do (push (list* (car style) (mapcar #'cdr styles)) results))
-    (let ((rresults ()))
-      (dolist (result results rresults)
-        (when (rest result)
-          (push result rresults))))))
+    (nreverse results)))
 
 (defclass text (shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
