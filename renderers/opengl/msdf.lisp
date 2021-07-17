@@ -308,7 +308,8 @@ void main(){
 (defclass text (simple:text)
   ((vertex-data :accessor vertex-data)
    (dimensions :accessor dimensions)
-   (line-breaks :accessor line-breaks)))
+   (line-breaks :accessor line-breaks)
+   (triangle-count :accessor triangle-count)))
 
 (defmethod scale ((text text))
   (/ (alloy:to-px (simple:size text)) (3b-bmfont:base (data (simple:font text)))))
@@ -318,7 +319,8 @@ void main(){
   (multiple-value-bind (bounds array breaks) (alloy:suggest-bounds (alloy:ensure-extent (simple:bounds text)) text)
     (setf (vertex-data text) array)
     (setf (dimensions text) bounds)
-    (setf (line-breaks text) breaks)))
+    (setf (line-breaks text) breaks)
+    (setf (triangle-count text) (truncate (length array) 4))))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
   (apply #'make-instance 'text :text string :bounds bounds :font font args))
@@ -335,7 +337,7 @@ void main(){
       (setf (opengl:uniform shader "color") (simple:pattern shape))
       ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text.
       (opengl:update-vertex-buffer vbo (vertex-data shape))
-      (opengl:draw-vertex-array vao :triangles (truncate (length (vertex-data shape)) 4)))))
+      (opengl:draw-vertex-array vao :triangles (triangle-count shape)))))
 
 (defmethod alloy:suggest-bounds (extent (text text))
   (let ((s (scale text)))
