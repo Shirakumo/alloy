@@ -68,20 +68,22 @@
         (opengl:make-vertex-buffer renderer (make-array 0 :element-type 'single-float)
                                    :data-usage :dynamic-draw))
   (setf (opengl:resource 'text-vao renderer)
-        (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 32 :offset 0)
-                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 32 :offset 8)
-                                             (,(opengl:resource 'text-vbo renderer) :size 4 :stride 32 :offset 16))))
+        (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 0)
+                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 8)
+                                             (,(opengl:resource 'text-vbo renderer) :size 4 :stride 40 :offset 16)
+                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 32))))
   (setf (opengl:resource 'text-shader renderer)
         (opengl:make-shader renderer :vertex-shader "#version 330 core
 layout (location=0) in vec2 pos;
 layout (location=1) in vec2 in_uv;
 layout (location=2) in vec4 in_vert_color;
+layout (location=3) in vec2 offset;
 uniform mat3 transform;
 out vec2 uv;
 out vec4 vert_color;
 
 void main(){
-  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  gl_Position = vec4(transform*vec3(pos+offset, 1), 1);
   uv = in_uv;
   vert_color = in_vert_color;
 }"
@@ -262,7 +264,7 @@ void main(){
 (defun compute-text (font text extent s wrap markup)
   (declare (optimize speed))
   (declare (type string text))
-  (let ((array (make-array (* 6 8 (the (signed-byte 32) (length text))) :element-type 'single-float))
+  (let ((array (make-array (* 6 10 (the (signed-byte 32) (length text))) :element-type 'single-float))
         (minx 0.0) (miny 0.0) (maxx 0.0) (maxy 0.0) (i 0)
         (base (3b-bmfont:base (data font)))
         (styles ()))
@@ -281,7 +283,9 @@ void main(){
                (setf (aref array (+ i 5)) (colored:g c))
                (setf (aref array (+ i 6)) (colored:b c))
                (setf (aref array (+ i 7)) (colored:a c))
-               (incf i 8))
+               (setf (aref array (+ i 8)) 0.0)
+               (setf (aref array (+ i 9)) 0.0)
+               (incf i 10))
              (thunk (c x- y- x+ y+ u- v- u+ v+)
                (declare (type single-float x- y- x+ y+ u- v- u+ v+))
                (when (<= (or (caar markup) most-positive-fixnum) c)
@@ -291,19 +295,21 @@ void main(){
                (setf maxx (max maxx x+))
                (setf maxy (max maxy y+))
                (let ((tx (if (prop :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
-                     (s (if (prop :bold styles) (* s 5.0) 0.0))
+                     (off (if (prop :bold styles) (* s 5.0) 0.0))
                      (color NIL))
                  (let ((prop (prop :color styles)))
-                   (when prop (setf color (first prop))))
+                   (when prop
+                     (setf color (first prop))))
                  (let ((prop (prop :rainbow styles)))
-                   (when prop (setf color (colored:convert (colored:hsv (* 10 c) 1 1) 'colored:rgb))))
+                   (when prop
+                     (setf color (colored:convert (colored:hsv (* 10 c) 1 1) 'colored:rgb))))
                  (unless color (setf color (colored:rgb 0 0 0 0)))
-                 (vertex (- (+ tx x-) s) (+ y+ s) u- (- 1 v-) color)
-                 (vertex (- x- s) (- y- s) u- (- 1 v+) color)
-                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) color)
-                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) color)
-                 (vertex (- x- s) (- y- s) u- (- 1 v+) color)
-                 (vertex (+ x+ s) (- y- s) u+ (- 1 v+) color))))
+                 (vertex (- (+ tx x-) off) (+ y+ off) u- (- 1 v-) color)
+                 (vertex (- x- off) (- y- off) u- (- 1 v+) color)
+                 (vertex (+ tx x+ off) (+ y+ off) u+ (- 1 v-) color)
+                 (vertex (+ tx x+ off) (+ y+ off) u+ (- 1 v-) color)
+                 (vertex (- x- off) (- y- off) u- (- 1 v+) color)
+                 (vertex (+ x+ off) (- y- off) u+ (- 1 v+) color))))
       (values (map-glyphs (data font) #'thunk text extent s wrap)
               array minx miny maxx maxy))))
 
@@ -333,11 +339,21 @@ void main(){
               do (when (<= (or (caar markup) (length data)) c)
                    (setf style (pop markup)))
                  (when (prop :rainbow (rest style))
-                   (let ((color (colored:convert (colored:hsv (mod (+ (* 10 i) (* 200 clock)) 360.0) 1 1) 'colored:rgb)))
+                   (let ((color (colored:convert (colored:hsv (mod (+ (* 10 c) (* 200 clock)) 360.0) 1 1) 'colored:rgb)))
                      (loop for j from 0 below 6
-                           do (setf (aref data (+ 4 (* 8 (+ j (* 6 i))))) (colored:r color))
-                              (setf (aref data (+ 5 (* 8 (+ j (* 6 i))))) (colored:g color))
-                              (setf (aref data (+ 6 (* 8 (+ j (* 6 i))))) (colored:b color)))))
+                           do (setf (aref data (+ 4 (* 10 (+ j (* 6 i))))) (colored:r color))
+                              (setf (aref data (+ 5 (* 10 (+ j (* 6 i))))) (colored:g color))
+                              (setf (aref data (+ 6 (* 10 (+ j (* 6 i))))) (colored:b color))
+                              (setf (aref data (+ 7 (* 10 (+ j (* 6 i))))) 1.0))))
+                 (when (prop :wave (rest style))
+                   (let* ((s (scale text))
+                          (off (* s 10 (sin (+ (* 0.5 c) (* 10 clock))))))
+                     (setf (aref data (+ 9 (* 10 (+ 0 (* 6 i))))) off)
+                     (setf (aref data (+ 9 (* 10 (+ 1 (* 6 i))))) off)
+                     (setf (aref data (+ 9 (* 10 (+ 2 (* 6 i))))) off)
+                     (setf (aref data (+ 9 (* 10 (+ 3 (* 6 i))))) off)
+                     (setf (aref data (+ 9 (* 10 (+ 4 (* 6 i))))) off)
+                     (setf (aref data (+ 9 (* 10 (+ 5 (* 6 i))))) off)))
                  (unless (find (char string c) '(#\Linefeed #\Tab #\Space))
                    (incf i)))))))
 
