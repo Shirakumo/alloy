@@ -119,14 +119,14 @@
 (define-expression-transform :right-of (other &optional gap)
   (check-type other alloy:layout-element)
   (list (if gap
-            `(= (+ (:x ,other) (:w ,other) ,gap) :x)
-            `(<= (+ (:x ,other) (:w ,other)) :x))))
+            `(= :x (+ (:x ,other) (:w ,other) ,gap))
+            `(>= :x (+ (:x ,other) (:w ,other))))))
 
 (define-expression-transform :above (other &optional gap)
   (check-type other alloy:layout-element)
   (list (if gap
-            `(= (+ (:y ,other) (:h ,other) ,gap) :y)
-            `(<= (+ (:y ,other) (:h ,other)) :y))))
+            `(= :y (+ (:y ,other) (:h ,other) ,gap))
+            `(>= :y (+ (:y ,other) (:h ,other))))))
 
 (define-expression-transform :below (other &optional gap)
   (check-type other alloy:layout-element)
