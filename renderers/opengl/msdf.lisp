@@ -348,12 +348,16 @@ void main(){
                  (when (prop :wave (rest style))
                    (let* ((s (scale text))
                           (off (* s 10 (sin (+ (* 0.5 c) (* 10 clock))))))
-                     (setf (aref data (+ 9 (* 10 (+ 0 (* 6 i))))) off)
-                     (setf (aref data (+ 9 (* 10 (+ 1 (* 6 i))))) off)
-                     (setf (aref data (+ 9 (* 10 (+ 2 (* 6 i))))) off)
-                     (setf (aref data (+ 9 (* 10 (+ 3 (* 6 i))))) off)
-                     (setf (aref data (+ 9 (* 10 (+ 4 (* 6 i))))) off)
-                     (setf (aref data (+ 9 (* 10 (+ 5 (* 6 i))))) off)))
+                     (loop for j from 0 below 6
+                           do (setf (aref data (+ 9 (* 10 (+ j (* 6 i))))) off))))
+                 (when (prop :shake (rest style))
+                   (let* ((s (* 0.02 (scale text)))
+                          (time (mod (floor (* clock 50)) 1000))
+                          (xoff (* s (logand #xFF (sxhash (+ (* 97 c) time)))))
+                          (yoff (* s (logand #xFF (sxhash (+ (* 11 c) time))))))
+                     (loop for j from 0 below 6
+                           do (setf (aref data (+ 8 (* 10 (+ j (* 6 i))))) xoff)
+                              (setf (aref data (+ 9 (* 10 (+ j (* 6 i))))) yoff))))
                  (unless (find (char string c) '(#\Linefeed #\Tab #\Space))
                    (incf i)))))))
 
