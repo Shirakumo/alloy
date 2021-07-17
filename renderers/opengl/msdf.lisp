@@ -68,21 +68,26 @@
         (opengl:make-vertex-buffer renderer (make-array 0 :element-type 'single-float)
                                    :data-usage :dynamic-draw))
   (setf (opengl:resource 'text-vao renderer)
-        (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 16 :offset 0)
-                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 16 :offset 8))))
+        (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 28 :offset 0)
+                                             (,(opengl:resource 'text-vbo renderer) :size 2 :stride 28 :offset 8)
+                                             (,(opengl:resource 'text-vbo renderer) :size 3 :stride 28 :offset 16))))
   (setf (opengl:resource 'text-shader renderer)
         (opengl:make-shader renderer :vertex-shader "#version 330 core
 layout (location=0) in vec2 pos;
 layout (location=1) in vec2 in_uv;
+layout (location=2) in vec3 in_col;
 uniform mat3 transform;
 out vec2 uv;
+out vec3 col;
 
 void main(){
   gl_Position = vec4(transform*vec3(pos, 1), 1);
   uv = in_uv;
+  col = in_col;
 }"
                                      :fragment-shader "#version 330 core
 in vec2 uv;
+in vec3 col;
 uniform sampler2D image;
 uniform float pxRange = 4;
 uniform vec4 color = vec4(0, 0, 0, 1);
@@ -98,7 +103,7 @@ void main(){
   float sigDist = median(msdfData.r, msdfData.g, msdfData.b) - 0.5;
   sigDist *= dot(msdfUnit, 0.5/fwidth(uv));
   float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
-  out_color = vec4(color.rgb, color.a*opacity);
+  out_color = vec4(color.rgb*col, color.a*opacity);
 }")))
 
 (defmethod alloy:deallocate ((renderer renderer))
@@ -257,33 +262,46 @@ void main(){
 (defun compute-text (font text extent s wrap markup)
   (declare (optimize speed))
   (declare (type string text))
-  (let ((array (make-array (* 6 4 (the (signed-byte 32) (length text))) :element-type 'single-float))
+  (let ((array (make-array (* 6 7 (the (signed-byte 32) (length text))) :element-type 'single-float))
         (minx 0.0) (miny 0.0) (maxx 0.0) (maxy 0.0) (i 0)
         (markup (simple::flatten-markup markup))
         (base (3b-bmfont:base (data font)))
         (styles ()))
     (declare (type (unsigned-byte 32) i))
-    (labels ((vertex (x y u v)
+    (declare (type single-float minx miny maxx maxy s))
+    (labels ((prop (prop styles)
+               (loop for style in styles
+                     do (when (or (eq style prop)
+                                  (and (listp style) (eq (car style) prop)))
+                          (return (rest style)))))
+             (vertex (x y u v c)
                (setf (aref array (+ i 0)) (float x))
                (setf (aref array (+ i 1)) (float y))
                (setf (aref array (+ i 2)) (float u))
                (setf (aref array (+ i 3)) (float v))
-               (incf i 4))
+               (destructuring-bind (r g b) c
+                 (setf (aref array (+ i 4)) (float r))
+                 (setf (aref array (+ i 5)) (float g))
+                 (setf (aref array (+ i 6)) (float b)))
+               (incf i 7))
              (thunk (c x- y- x+ y+ u- v- u+ v+)
+               (declare (type single-float x- y- x+ y+ u- v- u+ v+))
                (when (<= (or (caar markup) most-positive-fixnum) c)
                  (setf styles (cdr (pop markup))))
                (setf minx (min minx x-))
                (setf miny (min miny y-))
                (setf maxx (max maxx x+))
                (setf maxy (max maxy y+))
-               (let ((tx (if (member :italic styles) (* (/ (- y+ y-) base) 15) 0))
-                     (s (if (member :bold styles) (* s 5) 0)))
-                 (vertex (- (+ tx x-) s) (+ y+ s) u- (- 1 v-))
-                 (vertex (- x- s) (- y- s) u- (- 1 v+))
-                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-))
-                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-))
-                 (vertex (- x- s) (- y- s) u- (- 1 v+))
-                 (vertex (+ x+ s) (- y- s) u+ (- 1 v+)))))
+               (let ((tx (if (prop :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
+                     (s (if (prop :bold styles) (* s 5.0) 0.0))
+                     (c (let ((c (prop :color styles)))
+                          (if c (first c) '(1.0 1.0 1.0)))))
+                 (vertex (- (+ tx x-) s) (+ y+ s) u- (- 1 v-) c)
+                 (vertex (- x- s) (- y- s) u- (- 1 v+) c)
+                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) c)
+                 (vertex (+ tx x+ s) (+ y+ s) u+ (- 1 v-) c)
+                 (vertex (- x- s) (- y- s) u- (- 1 v+) c)
+                 (vertex (+ x+ s) (- y- s) u+ (- 1 v+) c))))
       (values (map-glyphs (data font) #'thunk text extent s wrap)
               array minx miny maxx maxy))))
 
