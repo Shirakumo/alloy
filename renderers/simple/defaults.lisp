@@ -120,11 +120,18 @@
                           (declare (ignore s))
                           (push (cons e style) styles)))
                (push (list* i (mapcar #'cdr styles)) results)))
-    ;; Finally we process any remaining dangling styles.
+    ;; Now we process any remaining dangling styles.
     (loop for style = (pop styles)
           while style
           do (push (list* (car style) (mapcar #'cdr styles)) results))
-    (nreverse results)))
+    ;; Finally we need to ignore successive styles that begin with the
+    ;; same index and only use the first (ultimately last) one, as it
+    ;; would override all others anyway.
+    (when results
+      (let ((rresults (list (pop results))))
+        (dolist (style results rresults)
+          (unless (= (car style) (caar rresults))
+            (push style rresults)))))))
 
 (defclass text (shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
