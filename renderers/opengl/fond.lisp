@@ -129,7 +129,7 @@ void main(){
   (simple:request-font renderer "Arial"))
 
 (defmethod alloy:suggest-bounds (extent (text simple:text))
-  (let ((ideal (simple:ideal-bounds text)))
+  (let ((ideal (alloy:ideal-bounds text)))
     (alloy:px-extent (+ (alloy:pxx extent) (alloy:pxx ideal))
                      (+ (alloy:pxy extent) (alloy:pxy ideal))
                      (alloy:pxw ideal)
@@ -163,7 +163,7 @@ void main(){
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
 
 ;; FIXME: bad
-(defmethod simple:ideal-bounds ((text simple:text))
+(defmethod alloy:ideal-bounds ((text simple:text))
   (alloy:allocate (simple:font text))
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
     (declare (ignore gap))
@@ -171,7 +171,7 @@ void main(){
       (alloy:px-extent (* l s) (* u s) (* s (+ l r)) (* s (+ u b))))))
 
 (defmethod alloy:suggest-bounds (bounds (text simple:text))
-  (simple:ideal-bounds text))
+  (alloy:ideal-bounds text))
 
 (defclass cursor (simple:filled-rectangle)
   ((text :initarg :text :accessor text)

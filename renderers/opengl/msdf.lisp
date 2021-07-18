@@ -403,7 +403,7 @@ void main(){
         (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (if (<= (length breaks) 1) h (+ h base)))
                 array breaks markup)))))
 
-(defmethod simple:ideal-bounds ((text text))
+(defmethod alloy:ideal-bounds ((text text))
   (dimensions text))
 
 (defun estimate-cursor-pos (text point offset)

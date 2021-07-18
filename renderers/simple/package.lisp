@@ -87,7 +87,6 @@
    #:text
    #:cursor
    #:selection
-   #:ideal-bounds
    #:request-font
    #:request-image
    #:request-gradient

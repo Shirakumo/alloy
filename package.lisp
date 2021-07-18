@@ -17,7 +17,8 @@
    #:component
    #:component-class-for-object
    #:represent-with
-   #:represent)
+   #:represent
+   #:ideal-bounds)
   ;; conditions.lisp
   (:export
    #:alloy-condition
