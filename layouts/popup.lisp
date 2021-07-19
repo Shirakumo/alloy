@@ -28,13 +28,16 @@
   (leave popup (popups tree)))
 
 (defmethod enter ((popup popup) (ui ui) &rest args)
-  (apply #'enter popup (focus-tree ui) args)
+  (when (typep popup 'focus-element)
+    (apply #'enter popup (focus-tree ui) args))
   (apply #'enter popup (layout-tree ui) args))
 
 (defmethod update ((popup popup) (ui ui) &rest args)
-  (apply #'update popup (focus-tree ui) args)
+  (when (typep popup 'focus-element)
+    (apply #'update popup (focus-tree ui) args))
   (apply #'update popup (layout-tree ui) args))
 
 (defmethod leave ((popup popup) (ui ui))
-  (leave popup (focus-tree ui))
+  (when (typep popup 'focus-element)
+    (leave popup (focus-tree ui)))
   (leave popup (layout-tree ui)))
