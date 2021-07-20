@@ -388,7 +388,7 @@ void main(){
       (setf (opengl:uniform shader "color") (simple:pattern shape))
       ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text.
       (opengl:update-vertex-buffer vbo data)
-      (opengl:draw-vertex-array vao :triangles (or (vertex-count shape) (truncate (length data) 7))))))
+      (opengl:draw-vertex-array vao :triangles (or (vertex-count shape) (truncate (length data) 10))))))
 
 (defmethod alloy:suggest-bounds (extent (text text))
   (let ((s (scale text))
