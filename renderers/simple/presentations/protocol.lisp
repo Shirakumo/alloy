@@ -158,7 +158,7 @@
     (update-shape renderer renderable T)))
 
 ;;; Animation stuff
-(defmethod animation:update ((renderable renderable) dt)
+(defmethod animation:update :after ((renderable renderable) dt)
   (loop for shape across (shapes renderable)
         do (animation:update (cdr shape) dt)))
 
