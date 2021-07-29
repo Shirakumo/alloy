@@ -98,6 +98,8 @@
       (call-next-method))))
 
 (defmethod update ((layout alloy:layout) dt)
+  (when (next-method-p)
+    (call-next-method))
   (alloy:do-elements (element layout)
     (update element dt)))
 
