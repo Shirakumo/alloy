@@ -136,6 +136,9 @@
           do (dolist (part parts)
                (destructuring-bind (place value &key (easing 'linear)) part
                  (push (list stop value easing) (gethash place tweens)))))
+    (loop for place being the hash-keys of tweens
+          for data being the hash-values of tweens
+          do (setf (gethash place tweens) (nreverse data)))
     ;; Compile down to constructors
     (loop for place being the hash-keys of tweens
           for data being the hash-values of tweens
