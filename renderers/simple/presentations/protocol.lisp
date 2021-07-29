@@ -139,7 +139,7 @@
   (alloy:mark-for-render renderable))
 
 (defmethod update-shape :around ((renderer renderer) (renderable renderable) (shape shape))
-  (call-next-method)
+  (call-with-tracked-changes renderable shape #'call-next-method)
   (let ((initargs (cdr (assoc (name shape) (update-overrides renderable)))))
     (when initargs ;; FIXME: What if the initargs should be dynamic?
       (apply #'reinitialize-instance shape initargs))))
@@ -172,9 +172,6 @@
 
 (defmethod call-with-tracked-changes ((renderable renderable) shape next-method)
   (funcall next-method))
-
-(defmethod update-shape :around ((renderer renderer) (renderable renderable) (shape shape))
-  (call-with-tracked-changes renderable shape #'call-next-method))
 
 (defun cache-shape-tracker (class)
   (let* ((class (c2mop:ensure-finalized (find-class class)))
