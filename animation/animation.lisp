@@ -91,11 +91,10 @@
   (setf (tweens animated) (remove-if (lambda (tween) (<= (length (tween-stops tween)) (tween-idx tween)))
                                      (tweens animated))))
 
-(defmethod update ((element alloy:layout-element) dt)
+(defmethod update :around ((element alloy:layout-element) dt)
   ;; KLUDGE: animated might be a superclass of layout-element
-  (when (next-method-p)
-    (alloy:with-unit-parent element
-      (call-next-method))))
+  (alloy:with-unit-parent element
+    (call-next-method)))
 
 (defmethod update ((layout alloy:layout) dt)
   (when (next-method-p)

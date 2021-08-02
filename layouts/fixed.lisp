@@ -33,12 +33,13 @@
 (defmethod enter ((element layout-element) (layout fixed-layout) &key x y w h extent)
   (call-next-method)
   (let ((e (bounds element)))
-    (with-unit-parent layout
-      (setf (bounds element)
-            (px-extent (or x (when extent (extent-x extent)) (extent-x e))
-                       (or y (when extent (extent-y extent)) (extent-y e))
-                       (or w (when extent (extent-w extent)) (extent-w e))
-                       (or h (when extent (extent-h extent)) (extent-h e)))))
+    (when (layout-tree layout)
+      (with-unit-parent layout
+        (setf (bounds element)
+              (px-extent (or x (when extent (extent-x extent)) (extent-x e))
+                         (or y (when extent (extent-y extent)) (extent-y e))
+                         (or w (when extent (extent-w extent)) (extent-w e))
+                         (or h (when extent (extent-h extent)) (extent-h e))))))
     element))
 
 (defmethod leave :after ((element layout-element) (layout fixed-layout))
