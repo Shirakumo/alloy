@@ -277,7 +277,7 @@
       (focus-down chain)
       (decline)))
 
-(defclass focus-list (focus-chain vector-container)
+(defclass focus-list (observable focus-chain vector-container)
   ())
 
 (defmethod (setf focus) :after ((focus (eql :strong)) (list focus-list))
