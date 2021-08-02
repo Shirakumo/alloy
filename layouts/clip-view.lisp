@@ -58,8 +58,8 @@
   (restart-case (call-next-method)
     (decline ()
       (let ((off (offset layout)))
-        (setf (offset layout) (px-point (+ (* 4 (dx event)) (pxx off))
-                                        (+ (* 4 (dy event)) (pxy off))))))))
+        (setf (offset layout) (px-point (+ (* (pxw layout) 0.1 (dx event)) (pxx off))
+                                        (+ (* (pxh layout) 0.1 (dy event)) (pxy off))))))))
 
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)
