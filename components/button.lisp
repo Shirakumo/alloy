@@ -13,12 +13,13 @@
   (mark-for-render button))
 
 (defmethod handle ((event pointer-down) (button button))
-  (setf (pressed button) T)
-  (activate button))
+  (setf (pressed button) T))
 
 (defmethod handle ((event pointer-up) (button button))
-  (setf (pressed button) NIL)
-  (exit button))
+  (if (pressed button)
+      (activate button)
+      (exit button))
+  (setf (pressed button) NIL))
 
 (defmethod handle ((event button-down) (button button))
   (case (button event)
