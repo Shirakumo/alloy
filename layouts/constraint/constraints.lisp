@@ -134,7 +134,7 @@
             `(= (+ :y :h ,gap) (:y ,other))
             `(<= (+ :y :h) (:y ,other)))))
 
-(define-expression-transform :chain (other &optional gap)
+(define-expression-transform :chain (other &optional (gap 0))
   (check-type other alloy:layout-element)
   (list `(= :l (+ ,gap (:r ,other)))
         `(= :u (:u ,other))
