@@ -81,6 +81,11 @@
         (T
          (decline))))
 
+(defmethod activate ((wheel wheel))
+  (if (eq :strong (focus wheel))
+      (accept wheel)
+      (call-next-method)))
+
 (defmethod handle ((event pointer-move) (wheel wheel))
   (if (start-pos wheel)
       (with-unit-parent wheel
