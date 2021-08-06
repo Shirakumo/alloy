@@ -41,14 +41,15 @@
                (let* ((ux (- (- (alloy:pxy b) (alloy:pxy a))))
                       (uy (- (alloy:pxx b) (alloy:pxx a)))
                       (len (sqrt (+ (* ux ux) (* uy uy)))))
-                 (setf ux (/ ux len))
-                 (setf uy (/ uy len))
-                 (vertex a (- ux) (- uy))
-                 (vertex b (- ux) (- uy))
-                 (vertex a (+ ux) (+ uy))
-                 (vertex b (- ux) (- uy))
-                 (vertex b (+ ux) (+ uy))
-                 (vertex a (+ ux) (+ uy)))))
+                 (when (< 0 len)
+                   (setf ux (/ ux len))
+                   (setf uy (/ uy len))
+                   (vertex a (- ux) (- uy))
+                   (vertex b (- ux) (- uy))
+                   (vertex a (+ ux) (+ uy))
+                   (vertex b (- ux) (- uy))
+                   (vertex b (+ ux) (+ uy))
+                   (vertex a (+ ux) (+ uy))))))
       (etypecase points
         (list
          (loop for (a b) on points
