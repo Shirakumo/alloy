@@ -65,9 +65,11 @@
   (flet ((arr (&rest data)
            (make-array (length data) :element-type 'single-float :initial-contents data))
          (make-geometry (vbo vao content &key (data-usage :static-draw) (bindings `((:size 2 :offset 0 :stride 8))))
-           (setf (resource vbo renderer) (make-vertex-buffer renderer content :data-usage data-usage))
-           (setf (resource vao renderer) (make-vertex-array renderer (loop for binding in bindings
-                                                                           collect (list* (resource vbo renderer) binding))))))
+           (unless (resource vbo renderer NIL)
+             (setf (resource vbo renderer) (make-vertex-buffer renderer content :data-usage data-usage)))
+           (unless (resource vao renderer NIL)
+             (setf (resource vao renderer) (make-vertex-array renderer (loop for binding in bindings
+                                                                             collect (list* (resource vbo renderer) binding)))))))
     ;; lines
     (make-geometry 'rect-line-vbo 'rect-line-vao
                    (make-line-array (list (alloy:px-point 0f0 0f0)
@@ -104,7 +106,8 @@
 
   ;; Allocate the necessary shaders.
   (flet ((make-shader (name vert frag)
-           (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag))))
+           (unless (resource name renderer NIL)
+             (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag)))))
     (make-shader 'line-shader
                  "#version 330 core
 layout(location = 0) in vec2 position;
