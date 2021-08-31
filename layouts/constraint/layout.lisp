@@ -62,9 +62,15 @@
   (call-next-method)
   (setf (gethash element (variables layout))
         (make-variables element (solver layout)))
-  (apply-constraints constraints element layout))
+  (apply-constraints constraints element layout)
+  (when (alloy:layout-tree layout)
+    (alloy:with-unit-parent layout
+      (suggest-extent layout layout (alloy:bounds layout))
+      (update layout element))))
 
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
+  (dolist (constraint (gethash element (constraints layout)))
+    (cass:delete-constraint constraint))
   (remhash element (variables layout)))
 
 (defmethod alloy:update ((element alloy:layout-element) (layout layout) &key constraints clear)
