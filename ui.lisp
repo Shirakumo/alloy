@@ -17,14 +17,15 @@
    (dots-per-cm :initform 38 :reader dots-per-cm)
    (target-resolution :initarg :target-resolution :initform (px-size 1920 1080) :accessor target-resolution)
    (resolution-scale :initform 1.0 :accessor resolution-scale)
-   (base-scale :initarg :base-scale :initform 1.0 :accessor base-scale))
+   (base-scale :initform 1.0 :accessor base-scale))
   (:default-initargs
    :layout-tree (make-instance 'layout-tree)
    :focus-tree (make-instance 'focus-tree)))
 
-(defmethod shared-initialize :after ((ui ui) slots &key)
+(defmethod shared-initialize :after ((ui ui) slots &key base-scale)
   (unless (slot-boundp (layout-tree ui) 'ui)
-    (setf (slot-value (layout-tree ui) 'ui) ui)))
+    (setf (slot-value (layout-tree ui) 'ui) ui))
+  (when base-scale (setf (slot-value ui 'base-scale) (float base-scale 0f0))))
 
 (defmethod focused ((ui ui))
   (focused (focus-tree ui)))
