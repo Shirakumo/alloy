@@ -100,7 +100,7 @@
 (cl:declaim (ftype (function (T) single-float) pxx pxy pxw pxh pxl pxu pxr pxb))
 
 (define-unit px (px)
-  px
+  (float px 0f0)
   px)
 
 (define-unit vw (vw)
