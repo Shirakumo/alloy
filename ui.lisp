@@ -56,6 +56,12 @@
 (defmethod register ((ui ui) renderer)
   (register (layout-tree ui) renderer))
 
+(defmethod (setf base-scale) (value (ui ui))
+  (setf (slot-value ui 'base-scale) (float value 0f0)))
+
+(defmethod (setf resolution-scale) (value (ui ui))
+  (setf (slot-value ui 'resolution-scale) (float value 0f0)))
+
 (defmethod (setf base-scale) :after (value (ui ui))
   (suggest-bounds (bounds ui) ui))
 
