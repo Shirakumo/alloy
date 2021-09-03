@@ -71,7 +71,7 @@
 
 (defun px-size (&optional w h)
   (cond (h (%size (px w) (px h)))
-        (w (%size (px w) (px h)))
+        (w (%size (px w) (px w)))
         (T #.(%size (px 0) (px 0)))))
 
 (defmethod w ((size size)) (size-w size))
