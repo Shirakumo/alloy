@@ -322,7 +322,7 @@ void main(){
    (markup :initform () :accessor markup)
    (clock :initform 0f0 :accessor clock)))
 
-(defmethod org.shirakumo.alloy.animation:update ((text text) dt)
+(defmethod org.shirakumo.alloy.animation:update :after ((text text) dt)
   (let* ((markup (markup text))
          (data (vertex-data text))
          (style ())
