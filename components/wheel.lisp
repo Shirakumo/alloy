@@ -24,7 +24,7 @@
 (defmethod component-class-for-object ((real real)) (find-class 'wheel))
 
 (defmethod (setf value) :around (value (wheel wheel))
-  (let ((value (if (= 0 (rem (grid wheel) 1))
+  (let ((value (if (and (< 0 (grid wheel)) (= 0 (rem (grid wheel) 1)))
                    (* (round (/ value (grid wheel))) (grid wheel))
                    value)))
     (call-next-method (make-number-like (value wheel) value) wheel)))
