@@ -65,8 +65,9 @@
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (unless (opengl:resource 'text-vbo renderer NIL)
+    ;; KLUDGE: pre-allocate a pretty big array to sidestep a driver issue on Windows/nVidia/OpenGL causing segfaults on repeat size changes.
     (setf (opengl:resource 'text-vbo renderer)
-          (opengl:make-vertex-buffer renderer (make-array 0 :element-type 'single-float)
+          (opengl:make-vertex-buffer renderer (* 10 1024 24)
                                      :data-usage :dynamic-draw))
     (setf (opengl:resource 'text-vao renderer)
           (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 0)
