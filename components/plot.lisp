@@ -47,12 +47,18 @@
            (length (max (- xmax xmin)))
            (points (plot-points plot)))
       (when (/= length (length points))
-        (setf (plot-points plot) (setf points (make-array length))))
+        (let ((new (make-array length)))
+          (replace new points)
+          (loop for i from (length points) below (length new)
+                do (setf (aref new i) (px-point 0 0)))
+          (setf (plot-points plot) (setf points new))))
       (loop for i from 0 below (length points)
             for x from (/ x-scale 2) by x-scale
             for p = (aref data (+ i xmin))
             for y = (* (- p ymin -0.5) y-scale)
-            do (setf (aref points i) (px-point x y))))))
+            for point = (aref points i)
+            do (setf (slot-value (x point) 'value) x)
+               (setf (slot-value (y point) 'value) y)))))
 
 (defmethod render :around ((renderer renderer) (component plot))
   ;; Ensures that a plotted line doesn't leave the bounds of the plot
