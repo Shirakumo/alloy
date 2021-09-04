@@ -155,7 +155,8 @@
   (when (alloy:render-needed-p renderable)
     (unless (realized-p renderable)
       (realize-renderable renderer renderable))
-    (update-shape renderer renderable T)))
+    (alloy:with-unit-parent renderable
+      (update-shape renderer renderable T))))
 
 ;;; Animation stuff
 (defmethod animation:update :after ((renderable renderable) dt)
