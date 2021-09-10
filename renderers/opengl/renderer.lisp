@@ -24,7 +24,8 @@
 
 (defmethod alloy:render :around ((renderer renderer) (ui alloy:ui))
   (let ((*clip-depth* 0))
-    (call-next-method)))
+    (call-next-method)
+    (setf (simple:composite-mode renderer) :source-over)))
 
 (defmethod (setf resource) (value name (renderer renderer))
   (setf (gethash name (resources renderer)) value))
