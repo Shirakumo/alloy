@@ -297,7 +297,7 @@ void main(){
      (gl:blend-equation :func-add))
     (:darken
      (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
-     (gl:blend-equation :func-max))
+     (gl:blend-equation :max))
     (:difference
      (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-subtract))
