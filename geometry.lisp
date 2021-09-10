@@ -205,16 +205,26 @@
           (u+ (w extent) (l margins) (r margins))
           (u+ (h extent) (b margins) (u margins))))
 
-(defun ensure-extent (extent-ish)
+(defun ensure-extent (extent-ish &optional base)
   (etypecase extent-ish
     (extent
      extent-ish)
     (margins
-     (px-extent
-      (pxl extent-ish) (pxb extent-ish)
-      (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish))
-      (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish))))
+     (if base
+         (px-extent
+          (+ (pxx base) (pxl extent-ish))
+          (+ (pxy base) (pxb extent-ish))
+          (- (pxw base) (pxr extent-ish) (pxl extent-ish))
+          (- (pxh base) (pxu extent-ish) (pxb extent-ish)))
+         (px-extent
+          (pxl extent-ish) (pxb extent-ish)
+          (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish))
+          (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish)))))
     (size
-     (extent 0 0 (w extent-ish) (h extent-ish)))
+     (if base
+         (extent (x base) (y base) (w extent-ish) (h extent-ish))
+         (extent 0 0 (w extent-ish) (h extent-ish))))
     (point
-     (extent (x extent-ish) (y extent-ish) 0 0))))
+     (if base
+         (extent (x extent-ish) (y extent-ish) (w base) (h base))
+         (extent (x extent-ish) (y extent-ish) 0 0)))))
