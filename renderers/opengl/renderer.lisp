@@ -306,7 +306,8 @@ void main(){
      (gl:blend-equation :func-reverse-subtract))))
 
 (defclass line-strip (simple:line-strip)
-  ((data :accessor data)))
+  ((data :accessor data)
+   (size :initform NIL :accessor size)))
 
 (defmethod shared-initialize :after ((shape line-strip) slots &key (points NIL points-p))
   (when points-p
@@ -324,7 +325,7 @@ void main(){
     (setf (uniform shader "color") (simple:pattern shape))
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'line-vao renderer) :triangles (/ (length data) 4))))
+    (draw-vertex-array (resource 'line-vao renderer) :triangles (min (/ (length data) 4) (* (or (size shape) 1000000) 6)))))
 
 (defclass curve (line-strip)
   ())
