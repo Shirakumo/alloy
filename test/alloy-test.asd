@@ -17,5 +17,6 @@
                (:file "focus-tree")
                (:file "geometry"))
   :depends-on (:alloy
+               :alexandria
                :parachute)
   :perform (asdf:test-op (op c) (uiop:symbol-call :parachute :test :org.shirakumo.alloy.test)))
