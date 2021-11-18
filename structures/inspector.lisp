@@ -29,22 +29,28 @@
 (defmethod object-slot-component-type (object class slot)
   (let ((slot-type (c2mop:slot-definition-type (find-slot slot class))))
     ;; FIXME: We can do better here if we analyse compound types
+    ;; FIXME: slot types are often simplified by the implementation... sigh.
     (typecase slot-type
       ((eql any)
        'printable)
       ((eql T))
       ((and symbol (not null))
-       (component-class-for-object (c2mop:class-prototype (find-canonical-class slot-type)))))))
+       (component-class-for-object (c2mop:class-prototype (find-canonical-class slot-type))))
+      (cons
+       (case (first slot-type)
+         (member
+          (values 'combo-set (list :value-set (rest slot-type)))))))))
 
 (defmethod object-slot-component (object class slot)
   (when (slot-boundp object slot)
-    (let ((type (object-slot-component-type object class slot)))
+    (multiple-value-bind (type initargs) (object-slot-component-type object class slot)
       (when type
-        (represent-with
-         type
-         (if (and (fboundp slot) (fboundp `(setf ,slot)))
-             (make-instance 'accessor-data :object object :accessor slot)
-             (make-instance 'slot-data :object object :slot slot)))))))
+        (apply #'represent-with
+               type
+               (if (and (fboundp slot) (fboundp `(setf ,slot)))
+                   (make-instance 'accessor-data :object object :accessor slot)
+                   (make-instance 'slot-data :object object :slot slot))
+               initargs)))))
 
 (defun update-inspector-slots (inspector)
   (let* ((layout (layout-element inspector))
