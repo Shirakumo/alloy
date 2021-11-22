@@ -129,9 +129,11 @@
       (setf old (make-array (length old) :element-type 'character :adjustable T :fill-pointer T :initial-contents old)))
     (ecase (insert-mode component)
       (:add
-       (maybe-enlarge old (+ (length old) (length text)))
-       (loop for i downfrom (1- (fill-pointer old)) above cursor
-             do (setf (aref old i) (aref old (- i (length text)))))
+       (let ((to-copy (- (length old) cursor)))
+         (maybe-enlarge old (+ (length old) (length text)))
+         (loop for i downfrom (1- (fill-pointer old))
+               repeat to-copy
+               do (setf (aref old i) (aref old (- i (length text))))))
        (replace old text :start1 cursor))
       (:replace
        (maybe-enlarge old (max (length old) (+ cursor (length text))))
