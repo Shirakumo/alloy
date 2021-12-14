@@ -63,7 +63,7 @@
 (defmethod handle ((event scroll) (wheel wheel))
   (incf (value wheel) (* (dy event) (step wheel))))
 
-(defmethod handle ((event key-up) (wheel wheel))
+(defmethod handle ((event key-down) (wheel wheel))
   (case (key event)
     ((:down)
      (decf (value wheel) (step wheel)))

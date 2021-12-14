@@ -65,7 +65,7 @@
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting))
 
-(defmethod handle ((event key-up) (combo combo))
+(defmethod handle ((event key-down) (combo combo))
   (case (key event)
     (:up
      (focus-prev combo))

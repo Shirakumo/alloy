@@ -50,7 +50,7 @@
 (defmethod handle ((event scroll) (slider slider))
   (incf (value slider) (* (dy event) (step slider))))
 
-(defmethod handle ((event key-up) (slider slider))
+(defmethod handle ((event key-down) (slider slider))
   (case (key event)
     ((:down :left)
      (decf (value slider) (step slider)))

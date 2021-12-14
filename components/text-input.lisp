@@ -177,9 +177,7 @@
 ;;; We capture all key-up/down events, as they either are command events
 ;;; or correspond to text input that we handle in TEXT-EVENT, in which
 ;;; case we should pretend to have handle them as well.
-(defmethod handle ((event key-down) (component text-input-component)))
-
-(defmethod handle ((event key-up) (component text-input-component))
+(defmethod handle ((event key-down) (component text-input-component))
   (let ((cursor (cursor component)))
     (flet ((move (target)
              (cond ((find :shift (modifiers event))
@@ -229,6 +227,8 @@
                  (:add :replace))))
         (:escape
          (exit component))))))
+
+(defmethod handle ((event key-up) (component text-input-component)))
 
 (defmethod handle ((event pointer-up) (component text-input-component))
   ;; TODO: Implement cursor movement via pointer (set cursor, select).
@@ -389,7 +389,7 @@
 (defclass input-line (text-input-component)
   ())
 
-(defmethod handle ((event key-up) (component input-line))
+(defmethod handle ((event key-down) (component input-line))
   (case (key event)
     ((:enter :return)
      (accept component))
@@ -410,7 +410,7 @@
 (defclass input-box (text-input-component)
   ())
 
-(defmethod handle ((event key-up) (component input-box))
+(defmethod handle ((event key-down) (component input-box))
   (case (key event)
     ((:enter :return)
       (if (find :control (modifiers event))

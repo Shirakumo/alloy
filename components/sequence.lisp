@@ -46,7 +46,7 @@
 
 (defgeneric make-new-element (list-view))
 
-(defmethod handle ((event key-up) (component list-view))
+(defmethod handle ((event key-down) (component list-view))
   (case (key event)
     (:delete
      (if (deletion-allowed-p component)
