@@ -6,7 +6,6 @@
 
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
-(defparameter *circ-polycount* 36)
 (defvar *clip-depth*)
 (defvar *clip-region*)
 
@@ -79,11 +78,6 @@
                                           (alloy:px-point 1f0 0f0)
                                           (alloy:px-point 0f0 0f0)))
                    :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
-    (make-geometry 'circ-line-vbo 'circ-line-vao
-                   (make-line-array (loop for i from 0 to *circ-polycount*
-                                          for tt = (* i (/ *circ-polycount*) 2 PI)
-                                          collect (alloy:px-point (float (cos tt) 0f0) (float (sin tt) 0f0))))
-                   :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
     (make-geometry 'line-vbo 'line-vao (arr)
                    :data-usage :stream-draw
                    :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
@@ -91,14 +85,6 @@
     (make-geometry 'rect-fill-vbo 'rect-fill-vao
                    (arr 0f0 0f0  1f0 1f0  0f0 1f0
                         0f0 0f0  1f0 0f0  1f0 1f0))
-    (make-geometry 'circ-fill-vbo 'circ-fill-vao
-                   (coerce
-                    (list* 0f0 0f0
-                           (loop for i from 0 to *circ-polycount*
-                                 for tt = (* i (/ *circ-polycount*) 2 PI)
-                                 collect (float (cos tt) 0f0)
-                                 collect (float (sin tt) 0f0)))
-                    '(vector single-float)))
     (make-geometry 'stream-vbo 'stream-vao (arr)
                    :data-usage :stream-draw)
     (make-geometry 'gradient-vbo 'gradient-vao (arr)
@@ -135,6 +121,49 @@ out vec4 out_color;
 void main(){
    float strength = 1-length(line_normal);
    out_color = color * clamp(strength*feather+feather, 0, 1);
+}")
+    (make-shader 'circle-fill-shader
+                 "#version 330 core
+layout (location=0) in vec2 pos;
+uniform mat3 transform;
+out vec2 uv;
+
+void main(){
+  uv = pos-0.5;
+  gl_Position = vec4(transform*vec3(pos, 1), 1);
+}"
+                 "#version 330 core
+uniform vec4 color;
+in vec2 uv;
+out vec4 out_color;
+
+void main(){
+  float sdf = length(uv)-0.5;
+  float dsdf = fwidth(sdf)*0.5;
+  sdf = smoothstep(dsdf, -dsdf, sdf);
+  out_color = vec4(color.rgb, color.a*sdf);
+}")
+    (make-shader 'circle-line-shader
+                 "#version 330 core
+layout (location=0) in vec2 pos;
+uniform mat3 transform;
+out vec2 uv;
+
+void main(){
+  uv = pos-0.5;
+  gl_Position = vec4(transform*vec3(pos, 1), 1);
+}"
+                 "#version 330 core
+uniform vec4 color;
+uniform float line_width = 3.0;
+in vec2 uv;
+out vec4 out_color;
+
+void main(){
+  float sdf = max(length(uv)-0.5, (0.5-line_width)-length(uv));
+  float dsdf = fwidth(sdf)*0.5;
+  sdf = smoothstep(dsdf, -dsdf, sdf);
+  out_color = vec4(color.rgb, color.a*sdf);
 }")
     (make-shader 'gradient-shader
                  "#version 330 core
@@ -387,35 +416,33 @@ void main(){
     (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 24)))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:filled-ellipse))
-  (let ((shader (resource 'basic-shader renderer))
+  (let ((shader (resource 'circle-fill-shader renderer))
         (extent (alloy:ensure-extent (simple:bounds shape))))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
-      (let ((w (/ (alloy:pxw extent) 2))
-            (h (/ (alloy:pxh extent) 2)))
-        (simple:translate renderer (alloy:px-point (+ (alloy:pxx extent) w)
-                                                   (+ (alloy:pxy extent) h)))
+      (let ((w (alloy:pxw extent))
+            (h (alloy:pxh extent)))
         (simple:scale renderer (alloy:px-size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") (simple:pattern shape))
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'circ-fill-vao renderer) :triangle-fan (+ *circ-polycount* 2))))
+    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:outlined-ellipse))
-  (let ((shader (resource 'line-shader renderer))
-        (extent (alloy:ensure-extent (simple:bounds shape))))
+  (let* ((shader (resource 'circle-line-shader renderer))
+         (extent (alloy:ensure-extent (simple:bounds shape)))
+         (w (alloy:pxw extent))
+         (h (alloy:pxh extent)))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
-      (let ((w (/ (alloy:pxw extent) 2))
-            (h (/ (alloy:pxh extent) 2)))
-        (simple:translate renderer (alloy:px-point (+ (alloy:pxx extent) w)
-                                                   (+ (alloy:pxy extent) h)))
-        (simple:scale renderer (alloy:px-size w h)))
+      (simple:scale renderer (alloy:px-size w h))
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") (simple:pattern shape))
-    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
+    ;; KLUDGE: I don't think this is quite right yet but whatever.
+    (setf (uniform shader "line_width") (/ (alloy:to-px (simple:line-width shape))
+                                           (max w h)))
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'circ-line-vao renderer) :triangles (* *circ-polycount* 6))))
+    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
 (defclass polygon (simple:polygon)
   ((data :accessor data)))
