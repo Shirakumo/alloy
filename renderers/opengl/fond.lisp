@@ -42,7 +42,7 @@
                                              ,(opengl:resource 'text-ebo renderer))))
   (setf (opengl:resource 'text-shader renderer)
         (opengl:make-shader renderer
-                            :vertex-shader "#version 330 core
+                            :vertex-shader "
 layout (location=0) in vec2 pos;
 layout (location=1) in vec2 in_uv;
 uniform mat3 transform;
@@ -52,7 +52,7 @@ void main(){
   gl_Position = vec4(transform*vec3(pos, 1), 1);
   uv = in_uv;
 }"
-                            :fragment-shader "#version 330 core
+                            :fragment-shader "
 uniform sampler2D image;
 uniform vec4 color;
 in vec2 uv;

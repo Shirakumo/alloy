@@ -96,7 +96,7 @@
            (unless (resource name renderer NIL)
              (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag)))))
     (make-shader 'line-shader
-                 "#version 330 core
+                 "
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 normal;
 
@@ -112,7 +112,7 @@ void main(){
   gl_Position = vec4(pos + delta, 1);
   line_normal = normal;
 }"
-                 "#version 330 core
+                 "
 in vec2 line_normal;
 uniform float feather = 0.66;
 uniform vec4 color;
@@ -123,7 +123,7 @@ void main(){
    out_color = color * clamp(strength*feather+feather, 0, 1);
 }")
     (make-shader 'circle-fill-shader
-                 "#version 330 core
+                 "
 layout (location=0) in vec2 pos;
 uniform mat3 transform;
 out vec2 uv;
@@ -132,7 +132,7 @@ void main(){
   uv = pos-0.5;
   gl_Position = vec4(transform*vec3(pos, 1), 1);
 }"
-                 "#version 330 core
+                 "
 uniform vec4 color;
 in vec2 uv;
 out vec4 out_color;
@@ -144,7 +144,7 @@ void main(){
   out_color = vec4(color.rgb, color.a*sdf);
 }")
     (make-shader 'circle-line-shader
-                 "#version 330 core
+                 "
 layout (location=0) in vec2 pos;
 uniform mat3 transform;
 out vec2 uv;
@@ -153,7 +153,7 @@ void main(){
   uv = pos-0.5;
   gl_Position = vec4(transform*vec3(pos, 1), 1);
 }"
-                 "#version 330 core
+                 "
 uniform vec4 color;
 uniform float line_width = 3.0;
 in vec2 uv;
@@ -166,7 +166,7 @@ void main(){
   out_color = vec4(color.rgb, color.a*sdf);
 }")
     (make-shader 'gradient-shader
-                 "#version 330 core
+                 "
 layout (location=0) in vec2 pos;
 layout (location=1) in vec4 vertex_color;
 
@@ -177,7 +177,7 @@ void main(){
   gl_Position = vec4(transform*vec3(pos, 1), 1);
   color = vertex_color;
 }"
-                 "#version 330 core
+                 "
 in vec4 color;
 out vec4 out_color;
 
@@ -185,14 +185,14 @@ void main(){
   out_color = color;
 }")
     (make-shader 'basic-shader
-                 "#version 330 core
+                 "
 layout (location=0) in vec2 pos;
 uniform mat3 transform;
 
 void main(){
   gl_Position = vec4(transform*vec3(pos, 1), 1);
 }"
-                 "#version 330 core
+                 "
 uniform vec4 color;
 out vec4 out_color;
 
@@ -200,7 +200,7 @@ void main(){
   out_color = color;
 }")
     (make-shader 'image-shader
-                 "#version 330 core
+                 "
 layout (location=0) in vec2 pos;
 uniform mat3 transform;
 out vec2 uv;
@@ -209,7 +209,7 @@ void main(){
   gl_Position = vec4(transform*vec3(pos, 1), 1);
   uv = pos;
 }"
-                 "#version 330 core
+                 "
 uniform sampler2D image;
 uniform vec2 uv_offset = vec2(0,0);
 uniform vec2 uv_scale = vec2(1,1);

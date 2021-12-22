@@ -38,7 +38,7 @@
         (frag (gl:create-shader :fragment-shader))
         (prog (gl:create-program)))
     (flet ((make (name source)
-             (gl:shader-source name source)
+             (gl:shader-source name (format NIL "#version 330 core~%~a" source))
              (gl:compile-shader name)
              (unless (gl:get-shader name :compile-status)
                (error "Failed to compile: ~%~a~%Shader source:~%~a"

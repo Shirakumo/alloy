@@ -75,7 +75,7 @@
                                                (,(opengl:resource 'text-vbo renderer) :size 4 :stride 40 :offset 16)
                                                (,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 32))))
     (setf (opengl:resource 'text-shader renderer)
-          (opengl:make-shader renderer :vertex-shader "#version 330 core
+          (opengl:make-shader renderer :vertex-shader "
 layout (location=0) in vec2 pos;
 layout (location=1) in vec2 in_uv;
 layout (location=2) in vec4 in_vert_color;
@@ -89,7 +89,7 @@ void main(){
   uv = in_uv;
   vert_color = in_vert_color;
 }"
-                                       :fragment-shader "#version 330 core
+                                       :fragment-shader "
 in vec2 uv;
 in vec4 vert_color;
 uniform sampler2D image;
