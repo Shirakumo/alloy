@@ -106,10 +106,10 @@ uniform mat3 transform;
 uniform vec2 view_size;
 
 void main(){
-  vec3 delta = vec3(normal * line_width, 0);
+  vec3 delta = vec3(normal * line_width, 0.0);
   delta.xy /= view_size;
-  vec3 pos = transform*vec3(position, 1);
-  gl_Position = vec4(pos + delta, 1);
+  vec3 pos = transform*vec3(position, 1.0);
+  gl_Position = vec4(pos + delta, 1.0);
   line_normal = normal;
 }"
                  "
@@ -119,8 +119,8 @@ uniform vec4 color;
 out vec4 out_color;
 
 void main(){
-   float strength = 1-length(line_normal);
-   out_color = color * clamp(strength*feather+feather, 0, 1);
+   float strength = 1.0-length(line_normal);
+   out_color = color * clamp(strength*feather+feather, 0.0, 1.0);
 }")
     (make-shader 'circle-fill-shader
                  "
@@ -130,7 +130,7 @@ out vec2 uv;
 
 void main(){
   uv = pos-0.5;
-  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
 }"
                  "
 uniform vec4 color;
@@ -151,7 +151,7 @@ out vec2 uv;
 
 void main(){
   uv = pos-0.5;
-  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
 }"
                  "
 uniform vec4 color;
@@ -174,7 +174,7 @@ out vec4 color;
 uniform mat3 transform;
 
 void main(){
-  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
   color = vertex_color;
 }"
                  "
@@ -190,7 +190,7 @@ layout (location=0) in vec2 pos;
 uniform mat3 transform;
 
 void main(){
-  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
 }"
                  "
 uniform vec4 color;
@@ -206,7 +206,7 @@ uniform mat3 transform;
 out vec2 uv;
 
 void main(){
-  gl_Position = vec4(transform*vec3(pos, 1), 1);
+  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
   uv = pos;
 }"
                  "

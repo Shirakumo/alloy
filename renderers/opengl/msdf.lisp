@@ -85,7 +85,7 @@ out vec2 uv;
 out vec4 vert_color;
 
 void main(){
-  gl_Position = vec4(transform*vec3(pos+offset, 1), 1);
+  gl_Position = vec4(transform*vec3(pos+offset, 1.0), 1.0);
   uv = in_uv;
   vert_color = in_vert_color;
 }"
