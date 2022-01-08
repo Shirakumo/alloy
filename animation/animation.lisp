@@ -85,7 +85,7 @@
                              (aval (aref values ai))
                              (bval (aref values bi))
                              (ease (aref easings idx))
-                             (x (/ (- clock a) (- b a)))
+                             (x (max 0.0 (/ (- clock a) (- b a))))
                              (val (lerp aval bval (funcall ease x))))
                         (funcall setter val animated)))
                      (T
