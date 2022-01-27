@@ -70,6 +70,30 @@
          append (transform-expression expression))
    strength))
 
+(define-expression-transform :weak (&rest expressions)
+  (values
+   (loop for expression in expressions
+         append (transform-expression expression))
+   :required))
+
+(define-expression-transform :medium (&rest expressions)
+  (values
+   (loop for expression in expressions
+         append (transform-expression expression))
+   :medium))
+
+(define-expression-transform :strong (&rest expressions)
+  (values
+   (loop for expression in expressions
+         append (transform-expression expression))
+   :medium))
+
+(define-expression-transform :required (&rest expressions)
+  (values
+   (loop for expression in expressions
+         append (transform-expression expression))
+   :required))
+
 (define-expression-transform :left (&optional (un 0))
   (list `(= :l ,un)))
 
