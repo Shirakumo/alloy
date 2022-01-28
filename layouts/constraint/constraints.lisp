@@ -74,7 +74,7 @@
   (values
    (loop for expression in expressions
          append (transform-expression expression))
-   :required))
+   :weak))
 
 (define-expression-transform :medium (&rest expressions)
   (values
@@ -158,11 +158,25 @@
             `(= (+ :y :h ,gap) (:y ,other))
             `(<= (+ :y :h) (:y ,other)))))
 
-(define-expression-transform :chain (other &optional (gap 0))
+(define-expression-transform :chain (dir other &optional (gap 0))
   (check-type other alloy:layout-element)
-  (list `(= :l (+ ,gap (:r ,other)))
-        `(= :u (:u ,other))
-        `(= :b (:b ,other))))
+  (ecase dir
+    (:right
+     (list `(= :l (+ ,gap (:r ,other)))
+           `(= :u (:u ,other))
+           `(= :b (:b ,other))))
+    (:left
+     (list `(= :r (+ ,gap (:l ,other)))
+           `(= :u (:u ,other))
+           `(= :b (:b ,other))))
+    ((:down :below)
+     (list `(= :l (:l ,other))
+           `(= :r (:r ,other))
+           `(= :y (- (:b ,other) ,gap))))
+    ((:up :above)
+     (list `(= :l (:l ,other))
+           `(= :r (:r ,other))
+           `(= :b (+ ,gap (:u ,other)))))))
 
 (define-expression-transform :inside (other &key (halign :center) (valign :center) (margin 0))
   (check-type other alloy:layout-element)
