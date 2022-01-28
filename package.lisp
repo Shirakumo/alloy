@@ -249,6 +249,7 @@
    #:root
    #:focus-element
    #:focus-chain
+   #:wrap-focus
    #:focus-list
    #:focus-grid
    #:focus-stack

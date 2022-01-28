@@ -144,7 +144,8 @@
 
 (defclass focus-chain (focus-element container)
   ((index :initform NIL :accessor index)
-   (focused :initform NIL :accessor focused)))
+   (focused :initform NIL :accessor focused)
+   (wrap-focus :initform T :initarg :wrap-focus :accessor wrap-focus)))
 
 (defmethod leave :after ((element focus-element) (chain focus-chain))
   (when (eq element (focused chain))
@@ -215,12 +216,16 @@
 
 (defmethod focus-next ((chain focus-chain))
   (unless (= 0 (element-count chain))
-    (setf (index chain) (mod (1+ (or (index chain) -1)) (element-count chain)))
+    (setf (index chain) (if (wrap-focus chain)
+                            (mod (1+ (or (index chain) -1)) (element-count chain))
+                            (min (1+ (or (index chain) -1)) (1- (element-count chain)))))
     (focused chain)))
 
 (defmethod focus-prev ((chain focus-chain))
   (unless (= 0 (element-count chain))
-    (setf (index chain) (mod (1- (or (index chain) 0)) (element-count chain)))
+    (setf (index chain) (if (wrap-focus chain)
+                            (mod (1- (or (index chain) 0)) (element-count chain))
+                            (max (1- (or (index chain) 0)) 0)))
     (focused chain)))
 
 (defmethod focus-up ((chain focus-chain))
