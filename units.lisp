@@ -16,7 +16,7 @@
             (:constructor %unit (value))
             (:copier NIL)
             (:predicate NIL))
-  (value NIL :type single-float :read-only T))
+  (value NIL :type single-float))
 
 (defmethod print-object ((unit unit) stream)
   (if *print-readably*
