@@ -243,8 +243,8 @@
 (define-expression-transform :fill (&rest what)
   (loop for item in (or what '(:w :h))
         append (ecase item
-                 ((:x :w :width) (list `(= :l 0) `(:r 0)))
-                 ((:y :h :height) (list `(= :b 0) `(:u 0))))))
+                 ((:x :w :width) (list `(= :l 0) `(= :r 0)))
+                 ((:y :h :height) (list `(= :b 0) `(= :u 0))))))
 
 (define-expression-transform :center (&rest what)
   (loop for item in (or what '(:w :h))

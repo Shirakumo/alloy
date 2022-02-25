@@ -468,6 +468,7 @@ void main(){
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (setf (uniform shader "color") (simple:pattern shape))
+    ;; FIXME: This does not work with quite a few non-convex polygons
     (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (/ (length data) 2))))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:icon))
