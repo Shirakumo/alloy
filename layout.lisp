@@ -51,7 +51,8 @@
   (decline))
 
 (defmethod render :around ((renderer renderer) (element layout-element))
-  (when (extent-visible-p (bounds element) renderer)
+  (when (and (extent-visible-p (bounds element) renderer)
+             (layout-tree element))
     (with-unit-parent element
       (call-next-method))))
 

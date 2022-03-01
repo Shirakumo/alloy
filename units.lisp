@@ -61,8 +61,8 @@
 
 (defun to-un (thing)
   (/ (%to-px thing)
-     (resolution-scale (ui *unit-parent*))
-     (base-scale (ui *unit-parent*))))
+     (resolution-scale (ui (layout-tree *unit-parent*)))
+     (base-scale (ui (layout-tree *unit-parent*)))))
 
 (defmacro define-unit (name (value) &body conversion)
   (destructuring-bind (to-px from-px) conversion
