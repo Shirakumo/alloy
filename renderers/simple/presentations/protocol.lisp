@@ -145,8 +145,9 @@
       (apply #'reinitialize-instance shape initargs))))
 
 (defmethod update-shape progn ((renderer renderer) (renderable renderable) (all (eql T)))
-  (loop for (name . shape) across (shapes renderable)
-        do (update-shape renderer renderable shape)))
+  (alloy:with-unit-parent renderable
+    (loop for (name . shape) across (shapes renderable)
+          do (update-shape renderer renderable shape))))
 
 ;;; Defer updating the shapes until we have a dirty render.
 ;;; Might cause hiccups during render if there's many updates, but we save
@@ -155,8 +156,7 @@
   (when (alloy:render-needed-p renderable)
     (unless (realized-p renderable)
       (realize-renderable renderer renderable))
-    (alloy:with-unit-parent renderable
-      (update-shape renderer renderable T))))
+    (update-shape renderer renderable T)))
 
 ;;; Animation stuff
 (defmethod animation:update :after ((renderable renderable) dt)
