@@ -22,8 +22,7 @@
          (activate button)
          (setf (pressed button) NIL))
         (T
-         (exit button)
-         (call-next-method))))
+         (exit button))))
 
 (defmethod handle ((event button-down) (button button))
   (case (button event)
