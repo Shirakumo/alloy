@@ -15,7 +15,7 @@
 (defmethod simple:request-gradient ((renderer renderer) type start stop stops &key)
   (make-instance (find-symbol (string type) #.*package*) :start start :stop stop :stops stops))
 
-(defmethod alloy:render ((renderer renderer) (shape gradient))
+(defmethod render-direct ((shape gradient) renderer color)
   (let ((shader (resource 'gradient-shader renderer))
         (data (data shape)))
     (update-vertex-buffer (resource 'gradient-vbo renderer) data)
@@ -29,33 +29,11 @@
       (colored:color
        (call-next-method))
       (simple:image
-       )
+       ;; FIXME: do this
+       (simple:clip renderer shape))
       (gradient
-       ;; KLUDGE: we stub out the shape with an opaque colour to do the clipping
-       ;;         then set it back. Not the nicest to modify the shape during render.
-       (setf (simple:pattern shape) colors:black)
-       (gl:stencil-op :keep :incr :incr)
-       (gl:color-mask NIL NIL NIL NIL)
-       (gl:depth-mask NIL)
-       (call-next-method)
-       (let ((*clip-depth* (1+ *clip-depth*)))
-         (gl:stencil-op :keep :keep :keep)
-         (gl:stencil-func :lequal *clip-depth* #xFF)
-         (gl:color-mask T T T T)
-         (gl:depth-mask T)
-         
-         (setf (simple:pattern shape) pattern)
-         (alloy:render renderer pattern)
-
-         (setf (simple:pattern shape) colors:black)
-         (gl:stencil-op :keep :decr :decr)
-         (gl:color-mask NIL NIL NIL NIL)
-         (gl:depth-mask NIL)
-         (call-next-method)
-         (gl:stencil-op :keep :keep :keep))
-       (gl:stencil-func :lequal *clip-depth* #xFF)
-       (gl:color-mask T T T T)
-       (gl:depth-mask T)))))
+       (simple:clip renderer shape)
+       (render-direct pattern renderer colors:black)))))
 
 (defgeneric compute-gradient-data (gradient))
 
@@ -93,10 +71,14 @@
                  (vertex (+ tcx ex) (+ tcy ey) tcolor)
                  (vertex (+ fcx ex) (+ fcy ey) tcolor)
                  (vertex (- fcx ex) (- fcy ey) tcolor))))
+      (destructuring-bind (tt color) (aref stops 0)
+        (stop -1000.0 color tt color))
       (loop for i from 1 below (length stops)
             for (ft fcolor) = (aref stops (1- i))
             for (tt tcolor) = (aref stops i)
             do (stop ft fcolor tt tcolor))
+      (destructuring-bind (tt color) (aref stops (1- (length stops)))
+        (stop tt color +1000.0 color))
       array)))
 
 (defclass radial-gradient (gradient)

@@ -12,6 +12,8 @@
 ;; TODO: With a UBO we could avoid having to re-set uniforms at ever draw
 ;;       and instead change them when the style is set.
 
+(defgeneric render-direct (shape renderer color))
+
 (defclass renderer (simple:transformed-renderer)
   ((resources :initform (make-hash-table :test 'equal) :reader resources)))
 
@@ -231,6 +233,9 @@ void main(){
              (alloy:deallocate resource)))
   (clrhash (resources renderer)))
 
+(defmethod alloy:render ((renderer renderer) (shape simple:shape))
+  (render-direct shape renderer (simple:pattern shape)))
+
 (defmethod alloy:register (renderable (renderer renderer)))
 
 (defmethod simple:z-index ((renderer renderer))
@@ -245,7 +250,7 @@ void main(){
   (gl:stencil-op :keep :incr :incr)
   (gl:color-mask NIL NIL NIL NIL)
   (gl:depth-mask NIL)
-  (alloy:render renderer shape)
+  (render-direct shape renderer colors:black)
   (incf *clip-depth* 1)
   (setf *clip-region* shape)
   (gl:stencil-op :keep :keep :keep)
@@ -266,7 +271,7 @@ void main(){
       (gl:stencil-op :keep :decr :decr)
       (gl:color-mask NIL NIL NIL NIL)
       (gl:depth-mask NIL)
-      (alloy:render renderer *clip-region*)
+      (render-direct *clip-region* renderer colors:black)
       (gl:stencil-op :keep :keep :keep)
       (gl:stencil-func :lequal *clip-depth* #xFF)
       (gl:color-mask T T T T)
@@ -345,13 +350,13 @@ void main(){
 (defmethod simple:line-strip ((renderer renderer) (points vector) &rest initargs)
   (apply #'make-instance 'line-strip :points points initargs))
 
-(defmethod alloy:render ((renderer renderer) (shape line-strip))
+(defmethod render-direct ((shape line-strip) renderer color)
   (let ((shader (resource 'line-shader renderer))
         (data (data shape)))
     (update-vertex-buffer (resource 'line-vbo renderer) data)
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
-    (setf (uniform shader "color") (simple:pattern shape))
+    (setf (uniform shader "color") color)
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'line-vao renderer) :triangles (min (/ (length data) 4) (* (or (size shape) 1000000) 6)))))
@@ -392,30 +397,30 @@ void main(){
 (defmethod simple:curve ((renderer renderer) (points cons) &rest initargs)
   (apply #'make-instance 'curve :points points initargs))
 
-(defmethod alloy:render ((renderer renderer) (shape simple:filled-rectangle))
+(defmethod render-direct ((shape simple:filled-rectangle) renderer color)
   (let ((shader (resource 'basic-shader renderer)))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer (simple:bounds shape))
       (simple:scale renderer (simple:bounds shape))
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
-    (setf (uniform shader "color") (simple:pattern shape))
+    (setf (uniform shader "color") color)
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
-(defmethod alloy:render ((renderer renderer) (shape simple:outlined-rectangle))
+(defmethod render-direct ((shape simple:outlined-rectangle) renderer color)
   (let ((shader (resource 'line-shader renderer)))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
       (simple:translate renderer (simple:bounds shape))
       (simple:scale renderer (simple:bounds shape))
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
-    (setf (uniform shader "color") (simple:pattern shape))
+    (setf (uniform shader "color") color)
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 24)))
 
-(defmethod alloy:render ((renderer renderer) (shape simple:filled-ellipse))
+(defmethod render-direct ((shape simple:filled-ellipse) renderer color)
   (let ((shader (resource 'circle-fill-shader renderer))
         (extent (alloy:ensure-extent (simple:bounds shape))))
     (bind shader)
@@ -425,11 +430,11 @@ void main(){
         (simple:translate renderer (simple:bounds shape))
         (simple:scale renderer (alloy:px-size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
-    (setf (uniform shader "color") (simple:pattern shape))
+    (setf (uniform shader "color") color)
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
 
-(defmethod alloy:render ((renderer renderer) (shape simple:outlined-ellipse))
+(defmethod render-direct ((shape simple:outlined-ellipse) (renderer renderer) color)
   (let* ((shader (resource 'circle-line-shader renderer))
          (extent (alloy:ensure-extent (simple:bounds shape)))
          (w (alloy:pxw extent))
@@ -439,7 +444,7 @@ void main(){
       (simple:translate renderer (simple:bounds shape))
       (simple:scale renderer (alloy:px-size w h))
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
-    (setf (uniform shader "color") (simple:pattern shape))
+    (setf (uniform shader "color") color)
     ;; KLUDGE: I don't think this is quite right yet but whatever.
     (setf (uniform shader "line_width") (/ (alloy:to-px (simple:line-width shape))
                                            (max w h)))
@@ -461,17 +466,17 @@ void main(){
 (defmethod simple:polygon ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'polygon :points points initargs))
 
-(defmethod alloy:render ((renderer renderer) (shape polygon))
+(defmethod render-direct ((shape polygon) renderer color)
   (let ((shader (resource 'basic-shader renderer))
         (data (data shape)))
     (update-vertex-buffer (resource 'stream-vbo renderer) data)
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
-    (setf (uniform shader "color") (simple:pattern shape))
+    (setf (uniform shader "color") color)
     ;; FIXME: This does not work with quite a few non-convex polygons
     (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (/ (length data) 2))))
 
-(defmethod alloy:render ((renderer renderer) (shape simple:icon))
+(defmethod render-direct ((shape simple:icon) renderer color)
   (let ((shader (resource 'image-shader renderer)))
     (simple:with-pushed-transforms (renderer)
       (let* ((bounds (alloy:ensure-extent (simple:bounds shape)))
