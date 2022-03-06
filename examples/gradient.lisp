@@ -10,7 +10,7 @@
   (let* ((window (windowing:make-window screen))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (layout (make-instance 'alloy:vertical-linear-layout :layout-parent window))
-         (linear (simple:request-gradient screen 'simple:linear-gradient (alloy:px-point 0 0) (alloy:px-point 100 100)
+         (linear (simple:request-gradient screen 'simple:linear-gradient (alloy:point 0 0) (alloy:point (alloy:pw 1) 0)
                                           #((0.5 #.colors:white)
                                             (1.0 #.colors:black)))))
     (alloy:enter (make-instance 'alloy:component :shapes (list (simple:rectangle screen (alloy:margins) :pattern linear))
