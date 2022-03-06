@@ -188,3 +188,8 @@
      (defmethod tracked-shapes append ((animated ,class))
        '(,@shapes))
      (cache-shape-tracker ',class)))
+
+;; FIXME: lerp gradients
+#++
+(defmethod animation:lerp ((a simple:gradient) (b simple:gradient) x)
+  )
