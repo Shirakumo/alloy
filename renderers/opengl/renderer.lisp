@@ -233,8 +233,11 @@ void main(){
              (alloy:deallocate resource)))
   (clrhash (resources renderer)))
 
-(defmethod alloy:render ((renderer renderer) (shape simple:shape))
+(defmethod alloy:render ((renderer renderer) (shape simple:patterned-shape))
   (render-direct shape renderer (simple:pattern shape)))
+
+(defmethod alloy:render ((renderer renderer) (shape simple:shape))
+  (render-direct shape renderer colors:black))
 
 (defmethod alloy:register (renderable (renderer renderer)))
 
