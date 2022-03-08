@@ -101,12 +101,36 @@ float median(float r, float g, float b){
   return max(min(r, g), min(max(r, g), b));
 }
 
+vec2 safeNormalize(in vec2 v){
+  float len = length(v);
+  len = (len > 0.0)? 1.0 / len : 0.0;
+  return v * len;
+}
+
 void main(){
-  vec2 msdfUnit = pxRange/vec2(textureSize(image, 0));
-  vec3 msdfData = texture(image, uv).rgb;
-  float sigDist = median(msdfData.r, msdfData.g, msdfData.b) - 0.5;
-  sigDist *= dot(msdfUnit, 0.5/fwidth(uv));
-  float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
+vec3 sample = texture(image, uv).rgb;
+float sigDist = median( sample.r, sample.g, sample.b ) - 0.5;
+
+#if 1
+ivec2 sz = textureSize( image, 0 );
+float dx = dFdx( uv.x ) * sz.x;
+float dy = dFdy( uv.y ) * sz.y;
+float toPixels = 8.0 * inversesqrt( dx * dx + dy * dy );
+float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
+
+#else
+
+vec2 tuv = uv * textureSize(image, 0);
+vec2 Jdx = dFdx(tuv);
+vec2 Jdy = dFdx(tuv);
+vec2 gradDist = safeNormalize(vec2(dFdx(sigDist), dFdy(sigDist)));
+vec2 grad = vec2(gradDist.x * Jdx.x + gradDist.y * Jdy.x, gradDist.x * Jdx.y + gradDist.y * Jdy.y);
+const float thickness = 0.125;
+const float normalization = thickness * 0.5 * sqrt(2.0);
+float afwidth = min(normalization * length(grad), 0.5);
+float opacity = smoothstep(0.0 - afwidth, 0.0 + afwidth, sigDist);
+#endif
+
   vec4 frag_col = mix(color, vert_color, vert_color.a);
   out_color = vec4(frag_col.rgb, frag_col.a*opacity);
 }"))))
