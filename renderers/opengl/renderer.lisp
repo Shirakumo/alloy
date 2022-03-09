@@ -261,9 +261,10 @@ void main(){
   (gl:color-mask T T T T)
   (gl:depth-mask T))
 
-(defmethod simple:clip ((renderer renderer) (extent alloy:extent))
-  ;; KLUDGE: avoid allocation of rectangle
-  (simple:clip renderer (simple:rectangle renderer extent)))
+(let ((rect (make-instance 'simple:filled-rectangle :bounds (alloy:extent))))
+  (defmethod simple:clip ((renderer renderer) (extent alloy:extent))
+    (setf (simple:bounds rect) extent)
+    (simple:clip renderer rect)))
 
 (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
   (let ((*clip-depth* *clip-depth*)
