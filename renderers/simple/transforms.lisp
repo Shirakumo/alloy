@@ -10,6 +10,14 @@
   (let ((matrix (make-array 9 :element-type 'single-float)))
     (map-into matrix (lambda (x) (float x 0f0)) values)))
 
+(defmacro with-matrix ((mat &rest els) &body body)
+  `(let ((,mat (make-array 9 :element-type 'single-float)))
+     (declare (dynamic-extent ,mat))
+     ,@(loop for el in els
+             for i from 0
+             collect `(setf (aref ,mat ,i) (float ,el 0f0)))
+     ,@body))
+
 (defun matrix-identity ()
   (matrix 1 0 0
           0 1 0
@@ -49,8 +57,12 @@
   ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)))
 
 (defmethod call-with-pushed-transforms (function (renderer transformed-renderer))
-  (let ((current (transform-matrix renderer)))
-    (setf (transform-matrix renderer) (copy-seq current))
+  (let ((current (transform-matrix renderer))
+        (new (make-array 9 :element-type 'single-float)))
+    (declare (dynamic-extent new))
+    (declare (type (simple-array single-float (9)) current new))
+    (dotimes (i 9) (setf (aref new i) (aref current i)))
+    (setf (transform-matrix renderer) new)
     (unwind-protect
          (funcall function)
       (setf (transform-matrix renderer) current))))
@@ -60,32 +72,37 @@
     (setf (transform-matrix renderer) (mat* ex ex new))))
 
 (defmethod translate ((renderer transformed-renderer) (point alloy:point))
-  (add-matrix renderer (matrix 1 0 (alloy:pxx point)
-                               0 1 (alloy:pxy point)
-                               0 0 1)))
+  (with-matrix (mat 1 0 (alloy:pxx point)
+                    0 1 (alloy:pxy point)
+                    0 0 1)
+    (add-matrix renderer mat)))
 
 (defmethod translate ((renderer transformed-renderer) (extent alloy:extent))
-  (add-matrix renderer (matrix 1 0 (alloy:pxx extent)
-                               0 1 (alloy:pxy extent)
-                               0 0 1)))
+  (with-matrix (mat 1 0 (alloy:pxx extent)
+                    0 1 (alloy:pxy extent)
+                    0 0 1)
+    (add-matrix renderer mat)))
 
 (defmethod translate ((renderer transformed-renderer) (margins alloy:margins))
-  (add-matrix renderer (matrix 1 0 (alloy:pxl margins)
-                               0 1 (alloy:pxb margins)
-                               0 0 1)))
+  (with-matrix (mat 1 0 (alloy:pxl margins)
+                    0 1 (alloy:pxb margins)
+                    0 0 1)
+    (add-matrix renderer mat)))
 
 (defmethod scale ((renderer transformed-renderer) (size alloy:size))
-  (add-matrix renderer (matrix (alloy:pxw size) 0 0
-                               0 (alloy:pxh size) 0
-                               0 0 1)))
+  (with-matrix (mat (alloy:pxw size) 0 0
+                    0 (alloy:pxh size) 0
+                    0 0 1)
+    (add-matrix renderer mat)))
 
 (defmethod scale ((renderer transformed-renderer) (margins alloy:margins))
   (scale renderer (alloy:ensure-extent margins)))
 
 (defmethod rotate ((renderer transformed-renderer) (phi float))
-  (add-matrix renderer (matrix (cos phi) (- (sin phi)) 0
-                               (sin phi) (cos phi) 0
-                               0 0 1)))
+  (with-matrix (mat (cos phi) (- (sin phi)) 0
+                    (sin phi) (cos phi) 0
+                    0 0 1)
+    (add-matrix renderer mat)))
 
 (defmethod z-index ((renderer transformed-renderer))
   (aref (transform-matrix renderer) 8))
