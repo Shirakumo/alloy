@@ -28,23 +28,22 @@
                  collect `(setf (aref ,matrix ,i) ,(fold value)))
          ,matrix))))
 
-(defun mat* (a b)
-  (declare (type (simple-array single-float (9)) a b))
+(defun mat* (r a b)
+  (declare (type (simple-array single-float (9)) r a b))
   (declare (optimize speed (safety 1)))
-  (let ((r (make-array 9 :element-type 'single-float)))
-    (macrolet ((thunk ()
-                 (labels ((a (r c) `(aref a (+ ,c (* ,r 3))))
-                          (b (r c) `(aref b (+ ,c (* ,r 3))))
-                          (r (r c) `(aref r (+ ,c (* ,r 3))))
-                          (cell (r c)
-                            `(setf ,(r r c) (+ ,@(loop for rb from 0 below 3
-                                                       collect `(* ,(a r rb) ,(b rb c)))))))
-                   (list* 'progn
-                          (loop for r from 0 below 3
-                                append (loop for c from 0 below 3
-                                             collect (cell r c)))))))
-      (thunk)
-      r)))
+  (macrolet ((thunk ()
+               (labels ((a (r c) `(aref a (+ ,c (* ,r 3))))
+                        (b (r c) `(aref b (+ ,c (* ,r 3))))
+                        (r (r c) `(aref r (+ ,c (* ,r 3))))
+                        (cell (r c)
+                          `(setf ,(r r c) (+ ,@(loop for rb from 0 below 3
+                                                     collect `(* ,(a r rb) ,(b rb c)))))))
+                 (list* 'progn
+                        (loop for r from 0 below 3
+                              append (loop for c from 0 below 3
+                                           collect (cell r c)))))))
+    (thunk)
+    r))
 
 (defclass transformed-renderer (renderer)
   ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)))
@@ -57,7 +56,8 @@
       (setf (transform-matrix renderer) current))))
 
 (defmethod add-matrix ((renderer transformed-renderer) new)
-  (setf (transform-matrix renderer) (mat* (transform-matrix renderer) new)))
+  (let ((ex (transform-matrix renderer)))
+    (setf (transform-matrix renderer) (mat* ex ex new))))
 
 (defmethod translate ((renderer transformed-renderer) (point alloy:point))
   (add-matrix renderer (matrix 1 0 (alloy:pxx point)
