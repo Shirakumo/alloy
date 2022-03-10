@@ -190,7 +190,7 @@
              (w (- (min r1 r2) x))
              (h (- (min u1 u2) y)))
         (cond ((and (<= w 0) (<= h 0))
-               #.(px-extent 0 0 0 0))
+               (load-time-value (px-extent 0 0 0 0)))
               ((and (= x x1) (= y y1) (= w w1) (= h h1))
                a)
               ((and (= x x2) (= y y2) (= w w2) (= h h2))
