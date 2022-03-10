@@ -189,9 +189,14 @@
              (y (max y1 y2))
              (w (- (min r1 r2) x))
              (h (- (min u1 u2) y)))
-        (if (and (< 0 w) (< 0 h))
-            (px-extent x y w h)
-            (px-extent 0 0 0 0))))))
+        (cond ((and (<= w 0) (<= h 0))
+               #.(px-extent 0 0 0 0))
+              ((and (= x x1) (= y y1) (= w w1) (= h h1))
+               a)
+              ((and (= x x2) (= y y2) (= w w2) (= h h2))
+               b)
+              (T
+               (px-extent x y w h)))))))
 
 (defun overlapping-p (a b)
   (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a
