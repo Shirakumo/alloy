@@ -229,10 +229,10 @@
     (focused chain)))
 
 (defmethod focus-up ((chain focus-chain))
-  (focus-next chain))
+  (focus-prev chain))
 
 (defmethod focus-down ((chain focus-chain))
-  (focus-prev chain))
+  (focus-next chain))
 
 (defmethod activate :around ((chain focus-chain))
   (if (and (eql :strong (focus chain))
@@ -282,6 +282,18 @@
       (focus-down chain)
       (decline)))
 
+(defmethod handle ((event focus-left) (chain focus-chain))
+  (if (and (< 0 (element-count chain))
+           (eql :strong (focus chain)))
+      (focus-prev chain)
+      (decline)))
+
+(defmethod handle ((event focus-right) (chain focus-chain))
+  (if (and (< 0 (element-count chain))
+           (eql :strong (focus chain)))
+      (focus-next chain)
+      (decline)))
+
 (defclass focus-list (observable focus-chain vector-container)
   ())
 
@@ -290,6 +302,24 @@
              (null (focused list)))
     (setf (index list) 0)))
 
+(defclass vertical-focus-list (focus-list)
+  ())
+
+(defmethod handle ((event focus-left) (list vertical-focus-list))
+  (decline))
+
+(defmethod handle ((event focus-right) (list vertical-focus-list))
+  (decline))
+
+(defclass horizontal-focus-list (focus-list)
+  ())
+
+(defmethod handle ((event focus-up) (list horizontal-focus-list))
+  (decline))
+
+(defmethod handle ((event focus-down) (list horizontal-focus-list))
+  (decline))
+
 ;; FIXME: visually represent which focus chain we're going through by associating it with a layout.
 ;;        This is a problem because we don't know the focus for a layout. Maybe we should make those
 ;;        another combined subclass? Would be annoying, though.
@@ -297,13 +327,13 @@
 (defclass focus-grid (focus-list)
   ((width :initarg :width :initform (arg! :width) :accessor width)))
 
-(defmethod focus-up ((chain focus-chain))
+(defmethod focus-up ((chain focus-grid))
   (let* ((idx (or (index chain) 0))
          (col (mod idx (width chain)))
          (row (1- (floor idx (width chain)))))
     (setf (index chain) (+ col (* row (width chain))))))
 
-(defmethod focus-down ((chain focus-chain))
+(defmethod focus-down ((chain focus-grid))
   (let* ((idx (or (index chain) 0))
          (col (mod idx (width chain)))
          (row (1+ (floor idx (width chain)))))

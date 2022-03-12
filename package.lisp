@@ -228,6 +228,8 @@
    #:focus-prev
    #:focus-up
    #:focus-down
+   #:focus-left
+   #:focus-right
    #:activate
    #:exit)
   ;; focus-tree.lisp
@@ -251,6 +253,8 @@
    #:focus-chain
    #:wrap-focus
    #:focus-list
+   #:horizontal-focus-list
+   #:vertical-focus-list
    #:focus-grid
    #:focus-stack
    #:focus-tree

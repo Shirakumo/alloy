@@ -95,6 +95,12 @@
 (defclass focus-down (focus-event)
   ())
 
+(defclass focus-left (focus-event)
+  ())
+
+(defclass focus-right (focus-event)
+  ())
+
 (defclass activate (focus-event)
   ())
 
