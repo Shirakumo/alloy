@@ -360,9 +360,15 @@
     (setf (index stack) (cons row (mod (1- col) (length (aref (layers stack) row)))))
     (focused stack)))
 
+(defclass popup-focus-list (focus-list)
+  ())
+
+(defmethod handle ((ev exit) (list popup-focus-list))
+  (decline))
+
 (defclass focus-tree ()
   ((root :initform NIL :accessor root)
-   (popups :initform (make-instance 'focus-list) :reader popups)
+   (popups :initform (make-instance 'popup-focus-list) :reader popups)
    (focused :initform NIL :accessor focused)))
 
 (defmethod initialize-instance :after ((tree focus-tree) &key)
