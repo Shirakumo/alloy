@@ -500,3 +500,15 @@ void main(){
 (defmethod simple:request-image ((renderer renderer) data &key size)
   (make-texture renderer (alloy:pxw size) (alloy:pxh size) data))
 
+(defmethod render-direct ((image simple:image) renderer color)
+  (let ((shader (resource 'image-shader renderer)))
+    (simple:with-pushed-transforms (renderer)
+      (bind shader)
+      (bind image)
+      (setf (uniform shader "uv_scale") (alloy:size 1 1))
+      (setf (uniform shader "uv_offset") (alloy:point 0 0))
+      (setf (uniform shader "transform") (load-time-value (make-array 9 :element-type 'single-float
+                                                                        :initial-contents '(2.0 0.0 -1.0
+                                                                                            0.0 2.0 -1.0
+                                                                                            0.0 0.0  1.0))))
+      (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6))))

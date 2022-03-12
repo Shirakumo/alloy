@@ -32,8 +32,8 @@
       (colored:color
        (call-next-method))
       (simple:image
-       ;; FIXME: do this
-       (simple:clip renderer shape))
+       (simple:clip renderer shape)
+       (render-direct pattern renderer NIL))
       (gradient
        (simple:clip renderer shape)
        (render-direct pattern renderer colors:black)))))
