@@ -43,6 +43,15 @@
 (defmethod request-gradient ((renderer renderer) type start stop stops &rest initargs)
   (apply #'make-instance type :start start :stop stop :stops stops initargs))
 
+(defclass image-pattern ()
+  ((image :initarg :image :initform (arg! :image) :reader image)
+   (scaling :initarg :scaling :initform (alloy:size 1 1) :reader scaling)
+   (offset :initarg :offset :initform (alloy:point 0 0) :reader offset)
+   (mode :initarg :mode :initform :repeat :reader mode)))
+
+(defmethod image-pattern ((renderer renderer) image &rest initargs)
+  (apply #'make-instance 'image-pattern :image image initargs))
+
 (defclass shape () ())
 (defclass patterned-shape (shape)
   ((pattern :initarg :pattern :initform colors:black :accessor pattern)))
@@ -206,7 +215,7 @@
           (:middle (/ (- (alloy:pxh extent) (alloy:pxh size)) 2))
           (:top (- (alloy:pxh extent) (alloy:pxh size))))))))
 
-(defun resolve-scale (extent size kind)
+(defun resolve-scaling (extent size kind)
   (let ((ow (alloy:pxw extent))
         (oh (alloy:pxh extent))
         (iw (alloy:pxw size))

@@ -26,12 +26,24 @@
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (draw-vertex-array (resource 'gradient-vao renderer) :triangle-strip (/ (length data) 6))))
 
+(defmethod render-direct ((image simple:image-pattern) renderer color)
+  (let ((shader (resource 'image-shader renderer)))
+    (bind shader)
+    (bind (simple:image image))
+    (setf (uniform shader "uv_scale") (simple:scaling image))
+    (setf (uniform shader "uv_offset") (simple:offset image))
+    (setf (uniform shader "transform") (load-time-value (make-array 9 :element-type 'single-float
+                                                                      :initial-contents '(2.0 0.0 -1.0
+                                                                                          0.0 2.0 -1.0
+                                                                                          0.0 0.0  1.0))))
+    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
+
 (defmethod alloy:render :around ((renderer renderer) (shape simple:patterned-shape))
   (let ((pattern (simple:pattern shape)))
     (etypecase pattern
       (colored:color
        (call-next-method))
-      (simple:image
+      (simple:image-pattern
        (simple:clip renderer shape)
        (render-direct pattern renderer NIL))
       (gradient

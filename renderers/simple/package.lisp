@@ -31,6 +31,10 @@
    #:radial-gradient
    #:angle-gradient
    #:diamond-gradient
+   #:image-pattern
+   #:scaling
+   #:offset
+   #:mode
    #:shape
    #:patterned-shape
    #:pattern
@@ -87,6 +91,7 @@
    #:text
    #:cursor
    #:selection
+   #:image-pattern
    #:request-font
    #:request-image
    #:request-gradient

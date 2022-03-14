@@ -28,6 +28,7 @@
 (defgeneric cursor (renderer text position &key pattern &allow-other-keys))
 (defgeneric selection (renderer text start end &key pattern &allow-other-keys))
 
+(defgeneric image-pattern (renderer image &key scaling offset mode &allow-other-keys))
 (defgeneric request-font (renderer family &key slant spacing weight stretch &allow-other-keys))
 (defgeneric request-image (renderer data &key size channels &allow-other-keys))
 (defgeneric request-gradient (renderer type start stop stops &key &allow-other-keys))
