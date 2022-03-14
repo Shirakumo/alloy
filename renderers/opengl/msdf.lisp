@@ -93,7 +93,7 @@ void main(){
 in vec2 uv;
 in vec4 vert_color;
 uniform sampler2D image;
-uniform float pxRange = 4;
+uniform float pxRange = 32.0;
 uniform vec4 color = vec4(0, 0, 0, 1);
 out vec4 out_color;
 
@@ -108,28 +108,14 @@ vec2 safeNormalize(in vec2 v){
 }
 
 void main(){
-vec3 sample = texture(image, uv).rgb;
+vec4 sample = texture(image, uv);
 float sigDist = median( sample.r, sample.g, sample.b ) - 0.5;
 
-#if 1
 ivec2 sz = textureSize( image, 0 );
 float dx = dFdx( uv.x ) * sz.x;
 float dy = dFdy( uv.y ) * sz.y;
-float toPixels = 8.0 * inversesqrt( dx * dx + dy * dy );
+float toPixels = pxRange * inversesqrt( dx * dx + dy * dy );
 float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
-
-#else
-
-vec2 tuv = uv * textureSize(image, 0);
-vec2 Jdx = dFdx(tuv);
-vec2 Jdy = dFdx(tuv);
-vec2 gradDist = safeNormalize(vec2(dFdx(sigDist), dFdy(sigDist)));
-vec2 grad = vec2(gradDist.x * Jdx.x + gradDist.y * Jdy.x, gradDist.x * Jdx.y + gradDist.y * Jdy.y);
-const float thickness = 0.125;
-const float normalization = thickness * 0.5 * sqrt(2.0);
-float afwidth = min(normalization * length(grad), 0.5);
-float opacity = smoothstep(0.0 - afwidth, 0.0 + afwidth, sigDist);
-#endif
 
   vec4 frag_col = mix(color, vert_color, vert_color.a);
   out_color = vec4(frag_col.rgb, frag_col.a*opacity);
