@@ -215,7 +215,7 @@
           (:middle (/ (- (alloy:pxh extent) (alloy:pxh size)) 2))
           (:top (- (alloy:pxh extent) (alloy:pxh size))))))))
 
-(defun resolve-scaling (extent size kind)
+(defun resolve-scale (extent size kind)
   (let ((ow (alloy:pxw extent))
         (oh (alloy:pxh extent))
         (iw (alloy:pxw size))
