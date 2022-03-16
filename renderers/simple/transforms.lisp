@@ -39,18 +39,35 @@
 (defun mat* (r a b)
   (declare (type (simple-array single-float (9)) r a b))
   (declare (optimize speed (safety 1)))
-  (macrolet ((thunk ()
-               (labels ((a (r c) `(aref a (+ ,c (* ,r 3))))
-                        (b (r c) `(aref b (+ ,c (* ,r 3))))
-                        (r (r c) `(aref r (+ ,c (* ,r 3))))
-                        (cell (r c)
-                          `(setf ,(r r c) (+ ,@(loop for rb from 0 below 3
-                                                     collect `(* ,(a r rb) ,(b rb c)))))))
-                 (list* 'progn
-                        (loop for r from 0 below 3
-                              append (loop for c from 0 below 3
-                                           collect (cell r c)))))))
-    (thunk)
+  (let ((a00 (aref a 0))
+        (a10 (aref a 1))
+        (a20 (aref a 2))
+        (a01 (aref a 3))
+        (a11 (aref a 4))
+        (a21 (aref a 5))
+        (a02 (aref a 6))
+        (a12 (aref a 7))
+        (a22 (aref a 8))
+        (b00 (aref b 0))
+        (b10 (aref b 1))
+        (b20 (aref b 2))
+        (b01 (aref b 3))
+        (b11 (aref b 4))
+        (b21 (aref b 5))
+        (b02 (aref b 6))
+        (b12 (aref b 7))
+        (b22 (aref b 8)))
+    (setf (aref r 0) (+ (* a00 b00) (* a10 b01) (* a20 b02)))
+    (setf (aref r 1) (+ (* a00 b10) (* a10 b11) (* a20 b12)))
+    (setf (aref r 2) (+ (* a00 b20) (* a10 b21) (* a20 b22)))
+    
+    (setf (aref r 3) (+ (* a01 b00) (* a11 b01) (* a21 b02)))
+    (setf (aref r 4) (+ (* a01 b10) (* a11 b11) (* a21 b12)))
+    (setf (aref r 5) (+ (* a01 b20) (* a11 b21) (* a21 b22)))
+
+    (setf (aref r 6) (+ (* a02 b00) (* a12 b01) (* a22 b02)))
+    (setf (aref r 7) (+ (* a02 b10) (* a12 b11) (* a22 b12)))
+    (setf (aref r 8) (+ (* a02 b20) (* a12 b21) (* a22 b22)))
     r))
 
 (defclass transformed-renderer (renderer)
@@ -99,10 +116,12 @@
   (scale renderer (alloy:ensure-extent margins)))
 
 (defmethod rotate ((renderer transformed-renderer) (phi float))
-  (with-matrix (mat (cos phi) (- (sin phi)) 0
-                    (sin phi) (cos phi) 0
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (let ((cos (float (cos phi) 0f0))
+        (sin (float (sin phi) 0f0)))
+    (with-matrix (mat cos (- sin) 0
+                      sin cos 0
+                      0 0 1)
+      (add-matrix renderer mat))))
 
 (defmethod z-index ((renderer transformed-renderer))
   (aref (transform-matrix renderer) 8))
