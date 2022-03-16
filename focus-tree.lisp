@@ -334,7 +334,9 @@
          (idx (+ col (* row (width chain)))))
     (when (< idx 0)
       (setf idx (+ col (* (floor (element-count chain) (width chain))
-                          (width chain)))))
+                          (width chain))))
+      (loop until (< idx (element-count chain))
+            do (decf idx (width chain))))
     (setf (index chain) idx)))
 
 (defmethod focus-down ((chain focus-grid))
