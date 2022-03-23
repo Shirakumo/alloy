@@ -104,11 +104,11 @@
     (gl:bind-vertex-array 0)
     (make-vao name type)))
 
-(defmethod draw-vertex-array ((array vao) primitive-type count)
+(defmethod draw-vertex-array ((array vao) primitive-type offset count)
   (gl:bind-vertex-array (gl-resource-name array))
   (ecase (vao-type array)
-    (:arrays (%gl:draw-arrays primitive-type 0 count))
-    (:elements (%gl:draw-elements primitive-type count :unsigned-int 0)))
+    (:arrays (%gl:draw-arrays primitive-type offset count))
+    (:elements (%gl:draw-elements primitive-type count :unsigned-int offset)))
   (gl:bind-vertex-array 0)
   array)
 

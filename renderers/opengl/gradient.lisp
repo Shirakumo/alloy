@@ -24,7 +24,7 @@
     (update-vertex-buffer (resource 'gradient-vbo renderer) data)
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
-    (draw-vertex-array (resource 'gradient-vao renderer) :triangle-strip (/ (length data) 6))))
+    (draw-vertex-array (resource 'gradient-vao renderer) :triangle-strip 0 (/ (length data) 6))))
 
 (defmethod render-direct ((image simple:image-pattern) renderer color)
   (let ((shader (resource 'image-shader renderer)))
@@ -36,7 +36,7 @@
                                                                       :initial-contents '(2.0 0.0 -1.0
                                                                                           0.0 2.0 -1.0
                                                                                           0.0 0.0  1.0))))
-    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
+    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
 
 (defmethod alloy:render :around ((renderer renderer) (shape simple:patterned-shape))
   (let ((pattern (simple:pattern shape)))

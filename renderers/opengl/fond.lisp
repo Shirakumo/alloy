@@ -160,7 +160,7 @@ void main(){
     (let ((count (cl-fond:update-text atlas (alloy:text shape)
                                       (opengl:gl-name (opengl:resource 'text-vbo renderer))
                                       (opengl:gl-name (opengl:resource 'text-ebo renderer)))))
-      (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles count))))
+      (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles 0 count))))
 
 ;; FIXME: bad
 (defmethod alloy:ideal-bounds ((text simple:text))

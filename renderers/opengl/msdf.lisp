@@ -328,6 +328,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
 
 (defclass text (simple:text)
   ((vertex-data :accessor vertex-data)
+   (font-chain :initform (make-array 1) :accessor font-chain)
    (dimensions :accessor dimensions)
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
@@ -383,26 +384,33 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
     (setf (vertex-data text) array)
     (setf (dimensions text) bounds)
     (setf (line-breaks text) breaks)
-    (setf (markup text) markup)))
+    (setf (markup text) markup)
+    (setf (aref (font-chain text) 0) (cons
+                                      (truncate (length array) 10)
+                                      (atlas (simple:font text))))))
 
 (defmethod simple:text ((renderer renderer) bounds string &rest args &key font)
   (apply #'make-instance 'text :text string :bounds bounds :font font args))
 
 (defmethod alloy:render ((renderer renderer) (shape text))
-  (opengl:bind (atlas (simple:font shape)))
   (let ((shader (opengl:resource 'text-shader renderer))
         (vbo (opengl:resource 'text-vbo renderer))
         (vao (opengl:resource 'text-vao renderer))
-        (data (vertex-data shape)))
+        (data (vertex-data shape))
+        (count (or (vertex-count shape) most-positive-fixnum)))
     (simple:with-pushed-transforms (renderer)
       (opengl:bind shader)
       (simple:translate renderer (dimensions shape))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer))
       (setf (opengl:uniform shader "color") (simple:pattern shape))
-      ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text.
+      ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text...
       (opengl:update-vertex-buffer vbo data)
-      (opengl:draw-vertex-array vao :triangles (min (or (vertex-count shape) most-positive-fixnum)
-                                                    (truncate (length data) 10))))))
+      (loop for start = 0 then end
+            for (end . atlas) across (font-chain shape)
+            do (when (<= count start)
+                 (return))
+               (opengl:bind atlas)
+               (opengl:draw-vertex-array vao :triangles start (- (min count end) start))))))
 
 (defmethod alloy:suggest-bounds (extent (text text))
   (let ((s (scale text))

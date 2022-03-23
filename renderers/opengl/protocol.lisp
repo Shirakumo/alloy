@@ -39,6 +39,6 @@
 (defgeneric update-vertex-buffer (buffer contents))
 
 (defgeneric make-vertex-array (renderer bindings))
-(defgeneric draw-vertex-array (array primitive-type count))
+(defgeneric draw-vertex-array (array primitive-type offset count))
 
 (defgeneric make-texture (renderer width height data &key channels filtering))

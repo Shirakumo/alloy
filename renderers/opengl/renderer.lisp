@@ -363,7 +363,7 @@ void main(){
     (setf (uniform shader "color") color)
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'line-vao renderer) :triangles (min (/ (length data) 4) (* (or (size shape) 1000000) 6)))))
+    (draw-vertex-array (resource 'line-vao renderer) :triangles 0 (min (/ (length data) 4) (* (or (size shape) 1000000) 6)))))
 
 (defclass curve (line-strip)
   ())
@@ -410,7 +410,7 @@ void main(){
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") color)
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
+    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
 
 (defmethod render-direct ((shape simple:outlined-rectangle) renderer color)
   (let ((shader (resource 'line-shader renderer)))
@@ -422,7 +422,7 @@ void main(){
     (setf (uniform shader "color") color)
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 24)))
+    (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 0 24)))
 
 (defmethod render-direct ((shape simple:filled-ellipse) renderer color)
   (let ((shader (resource 'circle-fill-shader renderer))
@@ -436,7 +436,7 @@ void main(){
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
     (setf (uniform shader "color") color)
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
+    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
 
 (defmethod render-direct ((shape simple:outlined-ellipse) (renderer renderer) color)
   (let* ((shader (resource 'circle-line-shader renderer))
@@ -453,7 +453,7 @@ void main(){
     (setf (uniform shader "line_width") (/ (alloy:to-px (simple:line-width shape))
                                            (max w h)))
     (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6)))
+    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
 
 (defclass polygon (simple:polygon)
   ((data :accessor data)))
@@ -478,7 +478,7 @@ void main(){
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (setf (uniform shader "color") color)
     ;; FIXME: This does not work with quite a few non-convex polygons
-    (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan (/ (length data) 2))))
+    (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan 0 (/ (length data) 2))))
 
 (defmethod render-direct ((shape simple:icon) renderer color)
   (let ((shader (resource 'image-shader renderer)))
@@ -495,7 +495,7 @@ void main(){
         (simple:translate renderer off)
         (simple:scale renderer isize))
       (setf (uniform shader "transform") (simple:transform-matrix renderer))
-      (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 6))))
+      (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6))))
 
 (defmethod simple:request-image ((renderer renderer) data &key size)
   (make-texture renderer (alloy:pxw size) (alloy:pxh size) data))
