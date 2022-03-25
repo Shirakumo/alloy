@@ -16,6 +16,10 @@
 (defmethod request-font ((renderer renderer) (family string) &rest initargs)
   (apply #'make-instance 'font :family family initargs))
 
+(defmethod print-object ((font font) stream)
+  (print-unreadable-object (font stream :type T)
+    (format stream "~a" (family font))))
+
 (defclass image ()
   ((size :initarg :size :reader size)
    (data :initarg :data :reader data)

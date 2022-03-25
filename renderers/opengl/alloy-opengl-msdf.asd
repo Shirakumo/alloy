@@ -14,6 +14,7 @@
   :serial T
   :components ((:file "msdf"))
   :depends-on (:alloy-opengl
+               :alloy-simple-presentations
                :alloy-animation
                :font-discovery
                :uax-14
