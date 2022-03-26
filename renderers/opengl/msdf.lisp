@@ -59,10 +59,16 @@
   ;; Init font cache
   (dolist (path (directory (make-pathname :name :wild :type "json" :defaults (fontcache-directory renderer))))
     (setf (gethash (pathname-name path) (fontcache renderer))
-          (make-instance 'font :family (pathname-name path) :file path :renderer renderer
-                               :fallback-chain '("nicokaku_v1" "hline" "Arial")))
+          (make-instance 'font :family (pathname-name path) :file path :renderer renderer))
     (setf (gethash (pathname-name path) (font-name-cache renderer))
           path)))
+
+(defmethod compute-fallback-chain ((renderer renderer))
+  (let ((chain (make-array (hash-table-count (fontcache renderer)))))
+    (loop for font being the hash-values of (fontcache renderer)
+          for i from 0
+          do (setf (aref chain i) font))
+    chain))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (unless (opengl:resource 'text-vbo renderer NIL)
@@ -140,26 +146,21 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
              (ensure-directories-exist cache-file)
              (sdf-bmfont:create-bmfont file cache-file :size 32 :type :msdf+a))
            (setf (gethash cache-file (fontcache renderer))
-                 (make-instance 'font :family family :file cache-file :renderer renderer
-                                      :fallback-chain '("nicokaku_v1" "hline" "Arial")))))))
+                 (make-instance 'font :family family :file cache-file :renderer renderer))))))
 
 (defclass font (simple:font)
   ((renderer :initarg :renderer :accessor renderer)
-   (fallback-chain :initarg :fallback-chain :accessor fallback-chain)
+   (fallback-chain :accessor fallback-chain)
    (file :initarg :file :accessor file)
    (px-range :initform 4.0 :accessor px-range)
    (data :accessor data)
    (atlas :accessor atlas)))
 
-(defmethod initialize-instance :after ((font font) &key fallback-chain)
-  (let* ((candidates (remove (simple:family font) (remove-duplicates fallback-chain :test #'string-equal)
-                             :test #'string-equal))
-         (chain (make-array (1+ (length candidates)))))
-    (setf (aref chain 0) font)
-    (loop for i from 1
-          for fallback in candidates
-          do (setf (aref chain i) fallback))
-    (setf (fallback-chain font) chain)))
+(defmethod compute-fallback-chain ((font font))
+  (let* ((chain (compute-fallback-chain (renderer font)))
+         (pos (position font chain)))
+    (rotatef (aref chain 0) (aref chain pos))
+    chain))
 
 (defmethod alloy:allocate ((font font))
   (let ((renderer (renderer font)))
@@ -170,11 +171,12 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
     (unless (slot-boundp font 'atlas)
       (let ((file (merge-pathnames (getf (aref (3b-bmfont:pages (data font)) 0) :file) (file font))))
         (setf (atlas font) (simple:request-image renderer file :filtering :linear))))
-    (let ((chain (fallback-chain font)))
-      (loop for i from 0 below (length chain)
-            for fallback = (aref chain i)
-            do (unless (typep fallback 'font)
-                 (setf (aref chain i) (simple:request-font (renderer font) fallback)))))))
+    (unless (slot-boundp font 'fallback-chain)
+      (flet ((ensure-font (font-ish)
+               (typecase font-ish
+                 (font font-ish)
+                 (T (simple:request-font (renderer font) font-ish)))))
+        (setf (fallback-chain font) (map 'vector #'ensure-font (compute-fallback-chain font)))))))
 
 (defmethod alloy:allocated-p ((font font))
   (slot-boundp font 'atlas))
