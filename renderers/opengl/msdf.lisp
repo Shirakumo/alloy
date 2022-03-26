@@ -273,7 +273,8 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                      do (find-font i)
                         (case c
                           (#\space
-                           (incf x space))
+                           (incf x space)
+                           (funcall function i 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0))
                           (t
                            (destructuring-bind (&key xoffset yoffset width height ((:x cx)) ((:y cy)) xadvance
                                                      &allow-other-keys)
@@ -286,7 +287,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                                    (v- (* cy h))
                                    (u+ (* (+ cx width) w))
                                    (v+ (* (+ cy height) h)))
-                               (thunk i x- y- x+ y+ u- v- u+ v+))
+                               (funcall function i x- y- x+ y+ u- v- u+ v+))
                              (incf x (* scale (+ (kerning p c) xadvance))))))))
              (insert-break (at)
                (vector-push-extend at breaks)
@@ -470,11 +471,9 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
       (let ((sequence (font-sequence shape)))
         (loop for i from 0 below (1- (length sequence))
               for (start . font) = (aref sequence i)
+              for (end) = (aref sequence (1+ i))
               do (let ((start (* 6 start))
-                       (end (min (if (< (1+ i) (length sequence))
-                                     (* 6 (car (aref sequence (1+ i))))
-                                     count)
-                                 count)))
+                       (end (min (* 6 end) count)))
                    (setf (opengl:uniform shader "pxRange") (px-range font))
                    (opengl:bind (atlas font))
                    (opengl:draw-vertex-array vao :triangles start (- end start))
