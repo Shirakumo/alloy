@@ -29,6 +29,9 @@
    #:selection))
 (in-package #:org.shirakumo.alloy.renderers.opengl.msdf)
 
+(defvar +default-char+
+  '(:xoffset 0 :yoffset 0 :x 0 :y 0 :width 0 :height 0 :xadvance 0))
+
 (defun fontcache-default-directory ()
   ;; KLUDGE: Would be better to use the LOCALAPPDATA envvar, but that requires portable getenv.
   #+win32 (merge-pathnames "AppData/Local/alloy/msdf/" (user-homedir-pathname))
@@ -208,13 +211,18 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
     (declare (type simple-vector font-fallback-chain))
     (loop for i from (or start 0) below end
           for c = (aref string i)
-          do (unless (eql c #\Space) ;; Special provision for space to avoid frequent switching.
-               (loop for font across font-fallback-chain
-                     do (when (gethash c (3b-bmfont::chars (data font)))
-                          (unless (eq font previous)
-                            (vector-push-extend (cons i font) result)
-                            (setf previous font))
-                          (return)))))
+          do (flet ((try-add (font)
+                      (unless (eq font previous)
+                        (vector-push-extend (cons i font) result)
+                        (setf previous font))))
+               (unless (eql c #\Space) ;; Special provision for space to avoid frequent switching.
+                 (loop for font across font-fallback-chain
+                       do (unless (alloy:allocated-p font)
+                            (alloy:allocate font))
+                          (when (gethash c (3b-bmfont::chars (data font)))
+                            (try-add font)
+                            (return))
+                       finally (try-add (aref font-fallback-chain 0))))))
     (vector-push-extend (cons end (aref font-fallback-chain 0)) result)
     result))
 
@@ -242,7 +250,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
             do (loop while (<= (car (aref font-sequence si)) i)
                      do (select-font (cdr (aref font-sequence si)))
                         (incf si))
-               (let ((char (gethash c chars))
+               (let ((char (gethash c chars +default-char+))
                      (k (kerning p c)))
                  (case c
                    (#\newline)
@@ -314,7 +322,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                           (incf si))
                  (when (and next-mandatory (= next-break i))
                    (insert-break i))
-                 (let ((char (gethash c chars))
+                 (let ((char (gethash c chars +default-char+))
                        (k (kerning p c)))
                    (case c
                      (#\newline)
