@@ -18,6 +18,7 @@
                (:file "drop")
                (:file "constraint")
                (:file "animation")
-               (:file "menu"))
+               (:file "menu")
+               (:file "font-mixing"))
   :depends-on (:alloy-glfw
                :alloy-constraint))
