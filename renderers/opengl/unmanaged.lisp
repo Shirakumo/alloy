@@ -71,11 +71,18 @@
        (%gl:uniform-2f location (alloy:pxw value) (alloy:pxh value)))))
   value)
 
-(defmethod make-vertex-buffer ((renderer renderer) contents &key (buffer-type :array-buffer) data-usage)
+(defmethod make-vertex-buffer ((renderer renderer) (contents vector) &key (buffer-type :array-buffer) data-usage)
   (let ((name (gl:gen-buffer)))
     (gl:bind-buffer buffer-type name)
     (cffi:with-pointer-to-vector-data (data contents)
       (%gl:buffer-data buffer-type (* (length contents) 4) data data-usage))
+    (gl:bind-buffer buffer-type 0)
+    (make-vbo name buffer-type)))
+
+(defmethod make-vertex-buffer ((renderer renderer) (size integer) &key (buffer-type :array-buffer) data-usage)
+  (let ((name (gl:gen-buffer)))
+    (gl:bind-buffer buffer-type name)
+    (%gl:buffer-data buffer-type (* size 4) (cffi:null-pointer) data-usage)
     (gl:bind-buffer buffer-type 0)
     (make-vbo name buffer-type)))
 
