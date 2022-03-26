@@ -21,7 +21,8 @@
                :alloy-simple
                :alloy-simple-presentations
                :alloy-opengl
-               :alloy-opengl-fond
+               :alloy-opengl-msdf
+               :alloy-opengl-png
                :alloy-windowing
                :cl-opengl
                :cl-glfw3

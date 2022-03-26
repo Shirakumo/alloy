@@ -11,7 +11,8 @@
 (defclass icon (window:icon simple:image)
   ())
 
-(defclass renderer (org.shirakumo.alloy.renderers.opengl.fond:renderer)
+(defclass renderer (org.shirakumo.alloy.renderers.opengl.msdf:renderer
+                    org.shirakumo.alloy.renderers.opengl.png:renderer)
   ((parent :initarg :parent :accessor parent)
    (pointer :accessor pointer)))
 
