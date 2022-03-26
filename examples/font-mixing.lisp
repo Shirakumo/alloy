@@ -18,7 +18,7 @@
 
 (define-example font-mixing (screen)
   (let* ((window (windowing:make-window screen))
-         (layout (make-instance 'alloy:grid-layout :col-sizes '(200 T) :row-sizes '(T) :layout-parent window))
+         (layout (make-instance 'alloy:grid-layout :col-sizes '(150 T) :row-sizes '(T) :layout-parent window))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (data (make-instance 'alloy:value-data :value (first *language-lispum*)))
          (buttons (make-instance 'alloy:grid-layout :col-sizes '(30 T) :row-sizes '(30) :layout-parent layout))
