@@ -439,7 +439,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                      (loop for j from 0 below 6
                            do (setf (aref data (+ 8 (* 10 (+ j (* 6 i))))) xoff)
                               (setf (aref data (+ 9 (* 10 (+ j (* 6 i))))) yoff))))
-                 (unless (find (char string c) '(#\Linefeed #\Tab #\Space))
+                 (unless (find (char string c) '(#\Linefeed))
                    (incf i)))))))
 
 (defmethod scale ((text text))
