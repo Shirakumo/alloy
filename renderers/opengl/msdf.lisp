@@ -223,6 +223,9 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                             (try-add font)
                             (return))
                        finally (try-add (aref font-fallback-chain 0))))))
+    (if (= 0 (length result))
+        (vector-push-extend (cons 0 (aref font-fallback-chain 0)) result)
+        (setf (car (aref result 0)) 0))
     (vector-push-extend (cons end (aref font-fallback-chain 0)) result)
     result))
 
