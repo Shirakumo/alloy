@@ -247,7 +247,7 @@
              (move-to target cursor)))
       (case (button event)
         (:x )
-        (:y (accept event))
+        (:y (accept component))
         (:b (cond ((anchor cursor)
                    (delete-text (min (anchor cursor) (pos cursor))
                                 (max (anchor cursor) (pos cursor))
