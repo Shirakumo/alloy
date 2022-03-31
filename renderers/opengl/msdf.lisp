@@ -275,6 +275,9 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                      for c = (aref string i)
                      do (find-font i)
                         (case c
+                          (#\newline
+                           (setf x 0.0)
+                           (decf y line))
                           (#\space
                            (incf x space)
                            (funcall function i 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0))
