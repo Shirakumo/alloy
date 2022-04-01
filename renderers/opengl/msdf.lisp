@@ -481,7 +481,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
               for (end) = (aref sequence (1+ i))
               do (let ((start (* 6 start))
                        (end (min (* 6 end) count)))
-                   (setf (opengl:uniform shader "pxRange") (px-range font))
+                   (setf (opengl:uniform shader "pxRange") (* (sqrt 2.0) (px-range font)))
                    (opengl:bind (atlas font))
                    (opengl:draw-vertex-array vao :triangles start (- end start))
                    (when (<= count end)
