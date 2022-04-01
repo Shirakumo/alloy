@@ -275,7 +275,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                      for c = (aref string i)
                      do (find-font i)
                         (case c
-                          (#\newline
+                          (#\linefeed
                            (setf x 0.0)
                            (decf y line))
                           (#\space
@@ -298,8 +298,9 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
              (insert-break (at)
                (vector-push-extend at breaks)
                (map-line line-start at)
-               (setf x 0.0)
-               (decf y line)
+               (unless (= x 0.0)
+                 (setf x 0.0)
+                 (decf y line))
                (setf line-start at)))
       ;; This first loops through, only computing the width. Then, when a line break
       ;; is encountered or the line is full, it calls 3b-bmfont:map-glyphs to emit
@@ -317,7 +318,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                  (when (and next-mandatory (= next-break i))
                    (insert-break i))
                  (case c
-                   (#\newline)
+                   (#\linefeed)
                    (#\space
                     (incf x space))
                    (t
