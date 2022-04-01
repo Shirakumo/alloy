@@ -26,3 +26,6 @@
 
 (defclass checkbox (switch)
   ())
+
+(defclass labelled-switch (switch)
+  ((text :initarg :text :initform "" :accessor text)))

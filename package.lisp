@@ -91,7 +91,8 @@
    #:switch
    #:off-value
    #:on-value
-   #:checkbox)
+   #:checkbox
+   #:labelled-switch)
   ;; components/text-input.lisp
   (:export
    #:text-input-component

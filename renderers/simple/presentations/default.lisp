@@ -97,6 +97,17 @@
                  (:strong colors:white)
                  (T (colored:color 0.25 0.2 0.8)))))
 
+(define-realization (default-look-and-feel alloy:labelled-switch T)
+  ((:label simple:text)
+   (alloy:margins)
+   alloy:text
+   :halign :middle
+   :valign :middle))
+
+(define-update (default-look-and-feel alloy:labelled-switch)
+  (:label
+   :text alloy:text))
+
 (define-realization (default-look-and-feel alloy:checkbox)
   ((:background simple:rectangle)
    (alloy:margins))
