@@ -69,6 +69,22 @@
 (defmethod handle ((event focus-prev) (slider slider))
   (decf (value slider) (step slider)))
 
+(defmethod handle ((event focus-up) (slider slider))
+  (when (eql (orientation slider) :vertical)
+    (incf (value slider) (step slider))))
+
+(defmethod handle ((event focus-down) (slider slider))
+  (when (eql (orientation slider) :vertical)
+    (decf (value slider) (step slider))))
+
+(defmethod handle ((event focus-right) (slider slider))
+  (when (eql (orientation slider) :horizontal)
+    (incf (value slider) (step slider))))
+
+(defmethod handle ((event focus-left) (slider slider))
+  (when (eql (orientation slider) :horizontal)
+    (decf (value slider) (step slider))))
+
 (defmethod handle ((event pointer-move) (slider slider))
   (case (state slider)
     (:dragging
