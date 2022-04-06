@@ -146,6 +146,10 @@
   (set-layout-tree tree (popups tree))
   (setf (slot-value (popups tree) 'layout-parent) (popups tree)))
 
+(defmethod clear ((tree layout-tree))
+  (setf (root tree) NIL)
+  (clear (popups tree)))
+
 (defmethod enter ((element layout-element) (tree layout-tree) &key force)
   (when (next-method-p) (call-next-method))
   (when force (setf (root tree) NIL))

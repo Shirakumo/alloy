@@ -414,6 +414,10 @@
   (set-focus-tree tree (popups tree))
   (setf (slot-value (popups tree) 'focus-parent) (popups tree)))
 
+(defmethod clear ((tree focus-tree))
+  (setf (root tree) NIL)
+  (clear (popups tree)))
+
 (defmethod enter ((element focus-element) (tree focus-tree) &key force)
   (when (next-method-p) (call-next-method))
   (when force (setf (root tree) NIL))

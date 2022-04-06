@@ -27,6 +27,10 @@
     (setf (slot-value (layout-tree ui) 'ui) ui))
   (when base-scale (setf (slot-value ui 'base-scale) (float base-scale 0f0))))
 
+(defmethod clear ((ui ui))
+  (clear (layout-tree ui))
+  (clear (focus-tree ui)))
+
 (defmethod focused ((ui ui))
   (focused (focus-tree ui)))
 
