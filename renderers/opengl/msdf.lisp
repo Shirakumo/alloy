@@ -147,7 +147,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
              (unless (probe-file file)
                (error "Specified font file does not exist or is not accessible.~%  ~a" file))
              (ensure-directories-exist cache-file)
-             (sdf-bmfont:create-bmfont file cache-file :size 32 :type :msdf+a))
+             (sdf-bmfont:create-bmfont file cache-file :size 32 :mode :msdf+a :type :json :spread 8))
            (setf (gethash cache-file (fontcache renderer))
                  (make-instance 'font :family family :file cache-file :renderer renderer))))))
 
