@@ -131,8 +131,8 @@
     (error 'element-has-different-parent
            :bad-element element :container parent :parent (focus-parent element)))
   ;; Make sure we delegate focus to the parent first if we are currently strongly focused
-  (when (eq (focused (focus-tree element)) element)
-    (exit element)))
+  (when (eq :strong (focus element))
+    (setf (focus parent) :strong)))
 
 (defmethod leave :after ((element focus-element) (parent focus-element))
   (set-focus-tree NIL element)
