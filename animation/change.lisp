@@ -21,7 +21,7 @@
     `(make-tween #'(setf ,extractor)
                  ,(%expand-array (list 0.0 duration) :element-type 'single-float)
                  ,(%expand-array (list old-val new-val))
-                 ,(%expand-array (list (easing easing))))))
+                 ,(%expand-array (list `(load-time-value (easing ',easing)))))))
 
 (defun compile-change-tracker (animated tracked next-method)
   (destructuring-bind (extractors comparators tween-infos) (compile-trackers tracked)
