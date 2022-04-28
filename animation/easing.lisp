@@ -26,11 +26,12 @@
       `(funcall (the (function (single-float) single-float) (easing ,by)) (float ,x 0f0))))
 
 (defmacro define-easing (name (x) &body body)
-  `(setf (easing ',name)
-         (lambda (,x)
-           (declare (type (single-float 0f0) ,x))
-           (declare (optimize speed))
-           ,@body)))
+  `(progn (setf (easing ',name)
+                (lambda (,x)
+                  (declare (type (single-float 0f0) ,x))
+                  (declare (optimize speed))
+                  ,@body))
+          (setf (easing ',(intern (string name) "KEYWORD")) (easing ',name))))
 
 (define-easing linear (x)
   x)
