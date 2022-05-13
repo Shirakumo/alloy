@@ -70,7 +70,8 @@
     (ensure-visible element (layout-parent element))))
 
 (defmethod leave ((element layout-element) (parent (eql T)))
-  (leave element (layout-parent element)))
+  (when (slot-boundp element 'layout-parent)
+    (leave element (layout-parent element))))
 
 (defclass layout (layout-element container renderable)
   ())

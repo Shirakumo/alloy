@@ -140,7 +140,8 @@
   (setf (slot-value element 'focus) NIL))
 
 (defmethod leave ((element focus-element) (parent (eql T)))
-  (leave element (focus-parent element)))
+  (when (slot-boundp element 'focus-parent)
+    (leave element (focus-parent element))))
 
 (defclass focus-chain (focus-element container)
   ((index :initform NIL :accessor index)
