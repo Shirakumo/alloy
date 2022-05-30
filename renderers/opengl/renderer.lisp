@@ -363,6 +363,9 @@ void main(){
 (defmethod simple:line-strip ((renderer renderer) (points vector) &rest initargs)
   (apply #'make-instance 'line-strip :points points initargs))
 
+(defmethod simple:line-strip ((renderer renderer) (points cons) &rest initargs)
+  (apply #'make-instance 'line-strip :points points initargs))
+
 (defmethod render-direct ((shape line-strip) renderer color)
   (let ((shader (resource 'line-shader renderer))
         (data (data shape)))
