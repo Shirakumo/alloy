@@ -553,6 +553,8 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                (< 0 point)
                (char= #\Linefeed (char (alloy:text text) (1- point))))
       (incf line))
+    (when (= (length (alloy:text text)) 0)
+      (setf line -0.5))
     (alloy:px-extent (* s x) (- (alloy:pxy d) (* s line-height line))
                      (* s 4) (* s line-height))))
 
