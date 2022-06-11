@@ -32,7 +32,7 @@
   (easings NIL :type simple-vector)
   (idx 0 :type (unsigned-byte 32))
   (clock 0f0 :type single-float)
-  (loop NIL :type boolean))
+  (loop NIL :type T))
 
 (defun find-tween-idx (tween clock)
   ;; TODO: could speed this up with bin search, but not sure if worth it.
@@ -90,9 +90,18 @@
                         (funcall setter val animated)))
                      (T
                       (funcall setter (aref values max) animated)
-                      (when (tween-loop tween)
-                        (setf (tween-idx tween) 0)
-                        (setf (tween-clock tween) (- clock max-time))))))))
+                      (etypecase (tween-loop tween)
+                        ((eql T)
+                         (setf (tween-idx tween) idx)
+                         (setf (tween-clock tween) (- clock max-time)))
+                        (real
+                         (setf clock (+ (tween-loop tween) (- clock max-time)))
+                         (setf (tween-idx tween) (loop for i from 0 below max
+                                                       do (when (<= (aref stops i) clock)
+                                                            (return i))
+                                                       finally (return 0)))
+                         (setf (tween-clock tween) clock))
+                        (null)))))))
   ;; KLUDGE: trim expired tweens
   (setf (tweens animated) (remove-if (lambda (tween) (<= (length (tween-stops tween)) (tween-idx tween)))
                                      (tweens animated))))
