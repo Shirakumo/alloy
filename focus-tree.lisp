@@ -246,6 +246,12 @@
   (when (and index (focused chain))
     (setf (slot-value chain 'index) (element-index (focused chain) chain))))
 
+(defmethod handle ((event input-event) (chain focus-chain))
+  (if (and (focused chain)
+           (eql :strong (focus chain)))
+      (handle event (focused chain))
+      (decline)))
+
 (defmethod handle ((event activate) (chain focus-chain))
   (if (and (< 0 (element-count chain))
            (eql :strong (focus chain)))
