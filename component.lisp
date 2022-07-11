@@ -24,7 +24,8 @@
 
 (defmethod handle ((event pointer-up) (component component))
   (if (and (slot-boundp component 'focus-parent)
-           (contained-p (location event) component))
+           (contained-p (location event) component)
+           (eql :left (kind event)))
       (activate component)
       (call-next-method)))
 
