@@ -22,7 +22,10 @@
       :report (lambda (s) (format s "Decline handling ~a" event))
       NIL)))
 
-(defclass pointer-event (event)
+(defclass input-event (event)
+  ())
+
+(defclass pointer-event (input-event)
   ((location :initarg :location :initform (arg! :location) :reader location)))
 
 (defclass pointer-move (pointer-event)
@@ -57,7 +60,7 @@
 (defclass text-event (direct-event)
   ((text :initarg :text :initform (arg! :text) :reader text)))
 
-(defclass key-event (direct-event)
+(defclass key-event (input-event direct-event)
   ((key :initarg :key :initform (arg! :key) :reader key)
    (code :initarg :code :initform (arg! :code) :reader code)
    (modifiers :initarg :modifiers :initform () :reader modifiers)))
@@ -68,7 +71,7 @@
 (defclass key-up (key-event)
   ())
 
-(defclass button-event (direct-event)
+(defclass button-event (input-event direct-event)
   ((button :initarg :button :initform (arg! :button) :reader button)
    (device :initarg :device :initform (arg! :device) :reader device)))
 

@@ -193,6 +193,7 @@
    #:handle
    #:event
    #:decline
+   #:input-event
    #:pointer-event
    #:location
    #:pointer-move
