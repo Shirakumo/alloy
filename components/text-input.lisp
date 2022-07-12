@@ -226,9 +226,15 @@
                  (:replace :add)
                  (:add :replace))))
         (:escape
-         (exit component))))))
+         (exit component))
+        (T
+         (unless (eql :strong (focus component))
+           (decline)))))))
 
-(defmethod handle ((event key-up) (component text-input-component)))
+(defmethod handle ((event key-up) (component text-input-component))
+  ;; FIXME: This is not quite correct as we *do* eat corresponding text inputs...
+  (unless (eql :strong (focus component))
+    (decline)))
 
 (defmethod handle ((event pointer-up) (component text-input-component))
   ;; TODO: Implement cursor movement via pointer (set cursor, select).
