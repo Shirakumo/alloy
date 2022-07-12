@@ -249,7 +249,8 @@
 (defmethod handle ((event input-event) (chain focus-chain))
   (if (and (focused chain)
            (eql :strong (focus chain)))
-      (handle event (focused chain))
+      (unless (handle event (focused chain))
+        (decline))
       (decline)))
 
 (defmethod handle ((event activate) (chain focus-chain))
