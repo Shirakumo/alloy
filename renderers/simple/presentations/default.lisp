@@ -362,14 +362,17 @@
 (define-realization (default-look-and-feel alloy:submenu)
   ((:background simple:rectangle)
    (alloy:margins)
-   :pattern (colored:color 0.1 0.1 0.1)))
+   :pattern (colored:color 0.1 0.1 0.1)
+   :z-index 1000))
 
 (define-realization (default-look-and-feel alloy:menu-item)
   ((:background simple:rectangle)
-   (alloy:margins))
+   (alloy:margins)
+   :z-index 1000)
   ((:label simple:text)
    (alloy:margins 2 1) alloy:text
-   :halign :start :valign :middle))
+   :halign :start :valign :middle
+   :z-index 1000))
 
 (define-update (default-look-and-feel alloy:menu-item)
   (:background
@@ -384,7 +387,8 @@
 (define-realization (default-look-and-feel alloy:separator)
   ((:line simple:rectangle)
    (alloy:extent 0 (alloy:ph 0.5) (alloy:pw) 1)
-   :pattern (colored:color 0.2 0.2 0.2)))
+   :pattern (colored:color 0.2 0.2 0.2)
+   :z-index 1000))
 
 (define-realization (default-look-and-feel alloy:resizer)
   ((:line simple:rectangle)
