@@ -13,11 +13,13 @@
   ((parent :initarg :parent :accessor parent)))
 
 (defmethod handle ((event scroll) (layout combo-layout))
-  (let ((extent (bounds layout)))
-    ;; FIXME: constrain the scrolling to match the parent combo box.
+  (let ((extent (bounds layout))
+        (pextent (bounds (parent layout))))
     (setf (bounds layout)
           (px-extent (pxx extent)
-                     (+ (pxy extent) (* -20 (dy event)))
+                     (min (max (+ (pxy extent) (* -20 (dy event)))
+                               (- (pxy pextent) (pxh extent) (- (pxh pextent))))
+                          (pxy pextent))
                      (pxw extent)
                      (pxh extent)))))
 
