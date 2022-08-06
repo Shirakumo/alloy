@@ -115,6 +115,10 @@
   (with-global-bounds (bounds element)
     (contained-p thing bounds)))
 
+(defmethod call-with-constrained-visibility (function (element layout-element) (renderer renderer))
+  (with-global-bounds (bounds element)
+    (call-with-constrained-visibility function bounds renderer)))
+
 (defmethod set-layout-tree :before (tree (element layout-element))
   (when (and (layout-tree element) tree (not (eq tree (layout-tree element))))
     (error 'element-has-different-root
