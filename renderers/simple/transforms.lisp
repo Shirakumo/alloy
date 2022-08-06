@@ -18,6 +18,7 @@
              collect `(setf (aref ,mat ,i) (float ,el 0f0)))
      ,@body))
 
+(declaim (ftype (function () (simple-array single-float (9))) matrix-identity))
 (defun matrix-identity ()
   (matrix 1 0 0
           0 1 0
@@ -73,15 +74,18 @@
 (defclass transformed-renderer (renderer)
   ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)))
 
-(defmethod call-with-pushed-transforms (function (renderer transformed-renderer))
+(defmethod call-with-pushed-transforms (function (renderer transformed-renderer) &key clear)
   (let ((current (transform-matrix renderer))
         (new (make-array 9 :element-type 'single-float)))
     (declare (dynamic-extent new))
     (declare (type (simple-array single-float (9)) current new))
-    (dotimes (i 9) (setf (aref new i) (aref current i)))
+    (declare (optimize speed))
+    (if clear
+        (dotimes (i 9) (setf (aref new i) (aref (load-time-value (matrix-identity)) i)))
+        (dotimes (i 9) (setf (aref new i) (aref current i))))
     (setf (transform-matrix renderer) new)
     (unwind-protect
-         (funcall function)
+         (funcall (the function function))
       (setf (transform-matrix renderer) current))))
 
 (defmethod add-matrix ((renderer transformed-renderer) new)
