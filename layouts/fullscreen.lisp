@@ -13,14 +13,17 @@
   (setf (bounds element) (bounds layout)))
 
 (defmethod suggest-size (size (layout fullscreen-layout))
-  ;; FIXME: LAYOUT
-  (loop for element across (elements layout)
-        do (suggest-size size element))
-  extent)
+  (let ((w (w size))
+        (h (h size)))
+    (loop for element across (elements layout)
+          for new = (suggest-size size element)
+          do (setf w (umax w (w new)))
+             (setf h (umax h (h new))))
+    (size w h)))
 
 (defmethod (setf bounds) :after (extent (layout fullscreen-layout))
   (loop for element across (elements layout)
-        do (setf (bounds element) extent)))
+        do (resize element (w layout) (h layout))))
 
 (defmethod render ((renderer renderer) (layout fullscreen-layout))
   (loop for element across (elements layout)
