@@ -29,6 +29,10 @@
          (funcall function)
       (setf (visible-bounds renderer) old))))
 
+;; TODO: this sucks
+(defmethod call-with-constrained-visibility (function (size size) (renderer renderer))
+  (call-with-constrained-visibility function (extent 0 0 (size-w size) (size-h size)) renderer))
+
 (defmacro with-constrained-visibility ((extent renderer) &body body)
   `(call-with-constrained-visibility (lambda () ,@body) ,extent ,renderer))
 

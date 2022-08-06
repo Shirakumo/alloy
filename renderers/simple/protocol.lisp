@@ -39,7 +39,7 @@
 (defmacro with-pushed-transforms ((renderer) &body body)
   `(call-with-pushed-transforms (lambda () ,@body) ,renderer))
 
-(defmethod alloy:call-with-constrained-visibility (function (extent alloy:extent) (renderer renderer))
+(defmethod alloy:call-with-constrained-visibility (function (extent alloy:size) (renderer renderer))
   (with-pushed-transforms (renderer)
     (clip renderer extent)
     (call-next-method)))

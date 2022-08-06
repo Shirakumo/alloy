@@ -269,6 +269,11 @@ void main(){
     (setf (simple:bounds rect) extent)
     (simple:clip renderer rect))
 
+  (defmethod simple:clip ((renderer renderer) (extent alloy:size))
+    ;; TODO: make this not cons
+    (setf (simple:bounds rect) (alloy:extent 0 0 (alloy:size-w extent) (alloy:size-h extent)))
+    (simple:clip renderer rect))
+
   (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer))
     (let* ((*clip-depth* *clip-depth*)
            (arr (make-array 9 :element-type 'single-float))
