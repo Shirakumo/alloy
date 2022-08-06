@@ -107,4 +107,6 @@
    #:transform-matrix
    #:add-matrix
    #:transformed-renderer
+   #:translate-by
+   #:scale-by
    #:make-default-transform))

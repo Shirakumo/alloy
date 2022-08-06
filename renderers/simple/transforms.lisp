@@ -86,31 +86,40 @@
 
 (defmethod add-matrix ((renderer transformed-renderer) new)
   (let ((ex (transform-matrix renderer)))
-    (setf (transform-matrix renderer) (mat* ex ex new))))
+    (setf (transform-matrix renderer) (mat* ex ex new))
+    renderer))
+
+(defun translate-by (renderer pxx pxy)
+  (let* ((matrix (transform-matrix renderer)))
+    (incf (aref matrix 2) (+ (* (aref matrix 0) pxx)
+                             (* (aref matrix 1) pxy)))
+    (incf (aref matrix 5) (+ (* (aref matrix 3) pxx)
+                             (* (aref matrix 4) pxy)))
+    (incf (aref matrix 8) (+ (* (aref matrix 6) pxx)
+                             (* (aref matrix 7) pxy)))
+    renderer))
+
+(defun scale-by (renderer pxw pxh)
+  (let* ((matrix (transform-matrix renderer)))
+    (setf (aref matrix 0) (* (aref matrix 0) pxw))
+    (setf (aref matrix 1) (* (aref matrix 1) pxh))
+    (setf (aref matrix 4) (* (aref matrix 4) pxw))
+    (setf (aref matrix 5) (* (aref matrix 5) pxh))
+    (setf (aref matrix 7) (* (aref matrix 7) pxw))
+    (setf (aref matrix 8) (* (aref matrix 8) pxh))
+    renderer))
 
 (defmethod translate ((renderer transformed-renderer) (point alloy:point))
-  (with-matrix (mat 1 0 (alloy:pxx point)
-                    0 1 (alloy:pxy point)
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (translate-by renderer (alloy:pxx point) (alloy:pxy point)))
 
 (defmethod translate ((renderer transformed-renderer) (extent alloy:extent))
-  (with-matrix (mat 1 0 (alloy:pxx extent)
-                    0 1 (alloy:pxy extent)
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (translate-by renderer (alloy:pxx extent) (alloy:pxy extent)))
 
 (defmethod translate ((renderer transformed-renderer) (margins alloy:margins))
-  (with-matrix (mat 1 0 (alloy:pxl margins)
-                    0 1 (alloy:pxb margins)
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (translate-by renderer (alloy:pxl margins) (alloy:pxb margins)))
 
 (defmethod scale ((renderer transformed-renderer) (size alloy:size))
-  (with-matrix (mat (alloy:pxw size) 0 0
-                    0 (alloy:pxh size) 0
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (scale-by renderer (alloy:pxw size) (alloy:pxh size)))
 
 (defmethod scale ((renderer transformed-renderer) (margins alloy:margins))
   (scale renderer (alloy:ensure-extent margins)))
