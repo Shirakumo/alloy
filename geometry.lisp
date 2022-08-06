@@ -39,6 +39,11 @@
 (defun point (&optional (x 0) (y 0))
   (%point (unit x) (unit y)))
 
+(define-compiler-macro point (&whole whole &optional (x 0) (y 0) &environment env)
+  (if (and (constantp x env) (constantp y env))
+      `(load-time-value (%point (unit ,x) (unit ,y)))
+      whole))
+
 (defun px-point (&optional (x 0) (y 0))
   (%point (px x) (px y)))
 
@@ -68,6 +73,18 @@
   (cond (h (%size (unit w) (unit h)))
         (w (%size (unit w) (unit w)))
         (T #.(%size (unit 0) (unit 0)))))
+
+(define-compiler-macro size (&whole whole &optional (w 0 w-p) (h 0 h-p) &environment env)
+  (cond (h-p
+         (if (and (constantp w env) (constantp h env))
+             `(load-time-value (%size (unit ,w) (unit ,h)))
+             whole))
+        (w-p
+         (if (constantp w env)
+             `(load-time-value (%size (unit ,w) (unit ,w)))
+             whole))
+        (T
+         `(load-time-value (%size (unit 0) (unit 0))))))
 
 (defun px-size (&optional w h)
   (cond (h (%size (px w) (px h)))
@@ -102,6 +119,26 @@
         (u (%margins (unit l) (unit u) (unit l) (unit u)))
         (l (%margins (unit l) (unit l) (unit l) (unit l)))
         (T #.(%margins (unit 0) (unit 0) (unit 0) (unit 0)))))
+
+(define-compiler-macro margins (&whole whole &optional (l 0 l-p) (u 0 u-p) (r 0 r-p) (b 0 b-p) &environment env)
+  (cond (b-p
+         (if (and (constantp l env) (constantp u env) (constantp r env) (constantp b env))
+             `(load-time-value (%margins (unit ,l) (unit ,u) (unit ,r) (unit ,b)))
+             whole))
+        (r-p
+         (if (and (constantp l env) (constantp u env) (constantp r env))
+             `(load-time-value (%margins (unit ,l) (unit ,u) (unit ,r) (unit 0)))
+             whole))
+        (u-p
+         (if (and (constantp l env) (constantp u env))
+             `(load-time-value (%margins (unit ,l) (unit ,u) (unit ,l) (unit ,u)))
+             whole))
+        (l-p
+         (if (and (constantp l env))
+             `(load-time-value (%margins (unit ,l) (unit ,l) (unit ,l) (unit ,l)))
+             whole))
+        (T
+         `(load-time-value (%margins (unit 0) (unit 0) (unit 0) (unit 0))))))
 
 (defun px-margins (&optional l u r b)
   (cond (b (%margins (px l) (px u) (px r) (px b)))
@@ -145,6 +182,11 @@
 
 (defun extent (&optional (x 0) (y 0) (w 0) (h 0))
   (%extent (unit x) (unit y) (unit w) (unit h)))
+
+(define-compiler-macro extent (&whole whole &optional (x 0) (y 0) (w 0) (h 0) &environment env)
+  (if (and (constantp x env) (constantp y env) (constantp w env) (constantp h env))
+      `(load-time-value (%extent (unit ,x) (unit ,y) (unit ,w) (unit ,h)))
+      whole))
 
 (defun px-extent (&optional (x 0) (y 0) (w 0) (h 0))
   (%extent (px x) (px y) (px w) (px h)))
