@@ -26,8 +26,8 @@
 
 (defstruct (point (:constructor %point (x y))
                   (:copier NIL))
-  (x NIL :type unit :read-only T)
-  (y NIL :type unit :read-only T))
+  (x NIL :type unit)
+  (y NIL :type unit))
 
 (defmethod print-object ((point point) stream)
   (format stream "~s" (list 'point (point-x point) (point-y point))))
@@ -54,8 +54,8 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defstruct (size (:constructor %size (w h))
                    (:copier NIL))
-    (w NIL :type unit :read-only T)
-    (h NIL :type unit :read-only T))
+    (w NIL :type unit)
+    (h NIL :type unit))
 
   (defmethod print-object ((size size) stream)
     (format stream "~s" (list 'size (size-w size) (size-h size))))
@@ -84,10 +84,10 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defstruct (margins (:constructor %margins (l u r b))
                       (:copier NIL))
-    (l NIL :type unit :read-only T)
-    (u NIL :type unit :read-only T)
-    (r NIL :type unit :read-only T)
-    (b NIL :type unit :read-only T))
+    (l NIL :type unit)
+    (u NIL :type unit)
+    (r NIL :type unit)
+    (b NIL :type unit))
 
   (defmethod print-object ((margins margins) stream)
     (format stream "~s" (list 'margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins))))
@@ -133,8 +133,8 @@
 
 (defstruct (extent (:include size)
                    (:constructor %extent (x y w h)))
-  (x NIL :type unit :read-only T)
-  (y NIL :type unit :read-only T))
+  (x NIL :type unit)
+  (y NIL :type unit))
 
 (defmethod print-object ((extent extent) stream)
   (format stream "~s" (list 'extent (extent-x extent) (extent-y extent) (extent-w extent) (extent-h extent))))
