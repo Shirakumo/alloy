@@ -100,6 +100,7 @@
     (alloy:leave (layout-element window) window))
   (setf (layout-element window) element)
   (alloy::set-layout-tree (alloy:layout-tree window) element)
+  (setf (slot-value element 'alloy:layout-parent) element)
   (when (typep element 'alloy:focus-element)
     (call-next-method)))
 
