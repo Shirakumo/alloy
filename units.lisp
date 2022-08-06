@@ -76,7 +76,7 @@
                                   (let ((px (%to-px ,name)))
                                     ,from-px))))))
       `(progn
-         (declaim (inline ,make-fun))
+         (cl:declaim (inline ,make-fun))
          (defstruct (,name
                      (:include unit)
                      (:constructor ,make-fun (value))

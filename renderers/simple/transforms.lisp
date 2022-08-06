@@ -72,7 +72,8 @@
     r))
 
 (defclass transformed-renderer (renderer)
-  ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)))
+  ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)
+   (identity-matrix :initform (matrix-identity) :accessor identity-matrix)))
 
 (defmethod call-with-pushed-transforms (function (renderer transformed-renderer) &key clear)
   (let ((current (transform-matrix renderer))
@@ -81,7 +82,7 @@
     (declare (type (simple-array single-float (9)) current new))
     (declare (optimize speed))
     (if clear
-        (dotimes (i 9) (setf (aref new i) (aref (load-time-value (matrix-identity)) i)))
+        (dotimes (i 9) (setf (aref new i) (aref (the (simple-array single-float (9)) (identity-matrix renderer)) i)))
         (dotimes (i 9) (setf (aref new i) (aref current i))))
     (setf (transform-matrix renderer) new)
     (unwind-protect

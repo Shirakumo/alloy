@@ -105,6 +105,7 @@
    #:transform
    #:clip-mask
    #:transform-matrix
+   #:identity-matrix
    #:add-matrix
    #:transformed-renderer
    #:translate-by

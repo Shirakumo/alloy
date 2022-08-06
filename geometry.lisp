@@ -24,7 +24,7 @@
 (defun pxr (geometry) (to-px (r geometry)))
 (defun pxb (geometry) (to-px (b geometry)))
 
-(declaim (inline %point))
+(cl:declaim (inline %point))
 (defstruct (point (:constructor %point (x y))
                   (:copier NIL))
   (x NIL :type unit)
@@ -57,7 +57,7 @@
   (and (u= (point-x a) (point-x b))
        (u= (point-y a) (point-y b))))
 
-(declaim (inline %size))
+(cl:declaim (inline %size))
 (defstruct (size (:constructor %size (w h))
                  (:copier NIL))
   (w NIL :type unit)
@@ -99,7 +99,7 @@
   (and (u= (size-w a) (size-w b))
        (u= (size-h a) (size-h b))))
 
-(declaim (inline %margins))
+(cl:declaim (inline %margins))
 (defstruct (margins (:constructor %margins (l u r b))
                     (:copier NIL))
   (l NIL :type unit)
@@ -169,7 +169,7 @@
                     collect `(,var (,(if to-px 'to-px 'identity) (,func ,marginsg)))))
        ,@body)))
 
-(declaim (inline %extent))
+(cl:declaim (inline %extent))
 (defstruct (extent (:include size)
                    (:constructor %extent (x y w h)))
   (x NIL :type unit)
