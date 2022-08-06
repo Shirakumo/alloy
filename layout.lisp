@@ -81,8 +81,8 @@
       (loop for current = element then parent
             for parent = (layout-parent current)
             until (eql current parent)
-            do (incf x (pxx (bounds parent)))
-               (incf y (pxy (bounds parent))))
+            do (incf x (pxx (bounds current)))
+               (incf y (pxy (bounds current))))
       (values x y))))
 
 (defmacro with-global-bounds ((bounds element) &body body)
@@ -123,11 +123,15 @@
 (defmethod handle ((event event) (element layout-element))
   (decline))
 
+(defmethod handle :around ((event event) (element layout-element))
+  (with-unit-parent element
+    (call-next-method)))
+
 (defmethod render :around ((renderer renderer) (element layout-element))
-  (with-global-bounds (bounds element)
-    (when (and (layout-tree element)
-               (extent-visible-p bounds renderer))
-      (with-unit-parent element
+  (with-unit-parent element
+    (with-global-bounds (bounds element)
+      (when (and (layout-tree element)
+                 (extent-visible-p bounds renderer))
         (call-next-method)))))
 
 (defmethod register :around ((element layout-element) (renderer renderer))
