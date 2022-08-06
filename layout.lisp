@@ -8,20 +8,22 @@
 
 (defgeneric layout-tree (layout-element))
 (defgeneric layout-parent (layout-element))
+(defgeneric notice-size (changed parent))
+(defgeneric suggest-size (size layout-element))
+(defgeneric preferred-size (layout-element))
+(defgeneric ensure-visible (element parent))
 (defgeneric bounds (layout-element))
 (defgeneric (setf bounds) (extent layout-element))
-(defgeneric notice-bounds (changed parent))
-(defgeneric suggest-bounds (extent layout-element))
-(defgeneric ensure-visible (element parent))
-
-;;; TODO: How do we resize a layout to its preferred size?
-;;;       Using a (suggest-bounds (extent) ..) will give us a minimal
-;;;       bound, not a preferred bound.
+(defgeneric resize (element w h))
+(defgeneric location (element))
+(defgeneric (setf location) (location element))
+(defgeneric global-location (layout-element))
+(defgeneric (setf global-location) (extent layout-element))
 
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree :writer set-layout-tree)
    (layout-parent :reader layout-parent)
-   (bounds :initform (extent) :accessor bounds)))
+   (bounds :initform (%extent (px 0) (px 0) (px 0) (px 0)) :reader bounds)))
 
 (defmethod initialize-instance :after ((element layout-element) &key layout-parent)
   (when layout-parent
@@ -39,8 +41,79 @@
 (defmethod w ((element layout-element)) (extent-w (bounds element)))
 (defmethod h ((element layout-element)) (extent-h (bounds element)))
 
+(defmethod (setf x) ((unit unit) (element layout-element))
+  (setf (extent-x (bounds element)) unit))
+(defmethod (setf y) ((unit unit) (element layout-element))
+  (setf (extent-y (bounds element)) unit))
+(defmethod (setf w) ((unit unit) (element layout-element))
+  (setf (extent-w (bounds element)) unit))
+(defmethod (setf h) ((unit unit) (element layout-element))
+  (setf (extent-h (bounds element)) unit))
+
+(defmethod (setf bounds) ((extent extent) (element layout-element))
+  (let ((bounds (bounds element)))
+    (setf (extent-x bounds) (extent-x extent))
+    (setf (extent-y bounds) (extent-y extent))
+    (setf (extent-w bounds) (extent-w extent))
+    (setf (extent-h bounds) (extent-h extent))
+    extent))
+
+(defmethod location ((element layout-element))
+  (point (extent-x (bounds element)) (extent-y (bounds element))))
+
+(defmethod (setf location) ((point point) (element layout-element))
+  (setf (extent-x (bounds element)) (point-x point))
+  (setf (extent-y (bounds element)) (point-y point))
+  point)
+
+(defmethod resize ((element layout-element) (w unit) (h unit))
+  (setf (extent-w (bounds element)) w)
+  (setf (extent-h (bounds element)) h)
+  point)
+
+;; Default to minimal size
+(defmethod preferred-size ((element layout-element))
+  (suggest-size (size) element))
+
+(defun compute-global-position (element)
+  (with-unit-parent element
+    (let ((x 0f0) (y 0f0))
+      (loop for current = element then parent
+            for parent = (layout-parent current)
+            until (eql current parent)
+            do (incf x (pxx (bounds parent)))
+               (incf y (pxy (bounds parent))))
+      (values x y))))
+
+(defmacro with-global-bounds ((bounds element) &body body)
+  (let ((x (gensym "X"))
+        (y (gensym "Y")))
+    `(multiple-value-bind (,x ,y) (compute-global-position element)
+       (let* ((,x (%px ,x))
+              (,y (%px ,y))
+              (,bounds (bounds ,element))
+              (,bounds (%extent ,x ,y (extent-w ,bounds) (extent-h ,bounds))))
+         (declare (dynamic-extent ,x ,y ,bounds))
+         ,@body))))
+
+(defmethod global-location ((element layout-element))
+  (multiple-value-bind (x y) (compute-global-position element)
+    (px-point x y)))
+
+(defmethod (setf global-location) ((location point) (element layout-element))
+  (with-unit-parent element
+    (multiple-value-bind (x y) (compute-global-position element)
+      (let* ((parent-x (- x (pxx element)))
+             (parent-y (- y (pyy element)))
+             (new-parent-x (- (pxx location) parent-x))
+             (new-parent-y (- (pxy location) parent-y)))
+        (setf (extent-x (bounds element)) (px new-parent-x))
+        (setf (extent-y (bounds element)) (py new-parent-y))
+        location))))
+
 (defmethod contained-p (thing (element layout-element))
-  (contained-p thing (bounds element)))
+  (with-global-bounds (bounds element)
+    (contained-p thing bounds)))
 
 (defmethod set-layout-tree :before (tree (element layout-element))
   (when (and (layout-tree element) tree (not (eq tree (layout-tree element))))
@@ -51,10 +124,11 @@
   (decline))
 
 (defmethod render :around ((renderer renderer) (element layout-element))
-  (when (and (extent-visible-p (bounds element) renderer)
-             (layout-tree element))
-    (with-unit-parent element
-      (call-next-method))))
+  (with-global-bounds (bounds element)
+    (when (and (layout-tree element)
+               (extent-visible-p bounds renderer))
+      (with-unit-parent element
+        (call-next-method)))))
 
 (defmethod register :around ((element layout-element) (renderer renderer))
   (with-unit-parent element
@@ -82,7 +156,7 @@
 
 (defmethod enter :after ((element layout-element) (layout layout) &key)
   (when (layout-tree layout)
-    (notice-bounds element layout)))
+    (notice-size element layout)))
 
 (defmethod enter :before ((element layout-element) (parent layout) &key)
   (cond ((not (slot-boundp element 'layout-parent))
@@ -110,7 +184,7 @@
 
 (defmethod update :after ((element layout-element) (layout layout) &key)
   (when (layout-tree layout)
-    (notice-bounds element layout)))
+    (notice-size element layout)))
 
 (defmethod element-index :before ((element layout-element) (layout layout))
   (unless (eq layout (layout-parent element))
@@ -186,9 +260,9 @@
       (handle event (root tree))
       (decline)))
 
-(defmethod suggest-bounds (extent (tree layout-tree))
+(defmethod suggest-size (size (tree layout-tree))
   (let ((root (root tree))
         (popups (popups tree)))
-    (suggest-bounds extent root)
-    (setf (bounds root) extent)
-    (setf (bounds popups) (bounds popups))))
+    (suggest-size size root)
+    (setf (size root) size)
+    (setf (size popups) (size popups))))
