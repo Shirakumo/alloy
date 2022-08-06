@@ -106,7 +106,7 @@
                          (- (pxy location) oy)
                          (w frame)
                          (h frame)))
-        (notice-bounds frame (layout-parent frame))))
+        (notice-size frame (layout-parent frame))))
     (when closeable
       (let ((button (represent "X" 'button)))
         (enter button header :row 0 :col 3)

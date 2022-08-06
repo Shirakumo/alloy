@@ -199,13 +199,10 @@
     (alloy:maybe-render window (window:layout-element window)))
   (%glfw:swap-buffers (pointer window)))
 
-(defmethod alloy:suggest-bounds (bounds (window window))
-  (destructuring-bind (x y) (%glfw:get-window-position (pointer window))
-    (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
-      (unless (and (= x (alloy:pxx bounds)) (= y (alloy:pxy bounds)))
-        (%glfw:set-window-position (pointer window) (round (alloy:pxx bounds)) (round (alloy:pxy bounds))))
-      (unless (and (= w (alloy:pxw bounds)) (= h (alloy:pxh bounds)))
-        (%glfw:set-window-size (pointer window) (max 1 (round (alloy:pxw bounds))) (max 1 (round (alloy:pxh bounds))))))))
+(defmethod alloy:suggest-size (size (window window))
+  (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
+    (unless (and (= w (alloy:pxw size)) (= h (alloy:pxh size)))
+      (%glfw:set-window-size (pointer window) (max 1 (round (alloy:pxw size))) (max 1 (round (alloy:pxh size)))))))
 
 (defmethod (setf alloy:bounds) :after (extent (window window))
   (let ((target (simple:transform-matrix window)))

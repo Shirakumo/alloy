@@ -452,7 +452,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
 
 (defmethod shared-initialize :after ((text text) slots &key)
   (alloy:allocate (simple:font text))
-  (multiple-value-bind (bounds array font-sequence breaks markup) (alloy:suggest-bounds (alloy:ensure-extent (simple:bounds text)) text)
+  (multiple-value-bind (bounds array font-sequence breaks markup) (alloy:suggest-size (simple:bounds text) text)
     (setf (vertex-data text) array)
     (setf (dimensions text) bounds)
     (setf (line-breaks text) breaks)
@@ -488,7 +488,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                    (when (<= count end)
                      (return))))))))
 
-(defmethod alloy:suggest-bounds (extent (text text))
+(defmethod alloy:suggest-size (size (text text))
   (let ((scale (alloy:to-px (simple:size text)))
         (markup (simple::flatten-markup (simple:markup text))))
     (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) extent scale (simple:wrap text) markup)
@@ -501,7 +501,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
         (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (if (<= (length breaks) 1) h (+ h scale)))
                 array font-sequence breaks markup)))))
 
-(defmethod alloy:ideal-bounds ((text text))
+(defmethod alloy:ideal-size ((text text))
   (dimensions text))
 
 (defun estimate-cursor-pos (text point offset)

@@ -19,8 +19,8 @@
   (mark-for-render plot)
   (recompute-plot-points plot))
 
-(defmethod suggest-bounds (extent (plot plot))
-  (extent (x extent) (y extent) (w extent) (umax (un 400) (h extent))))
+(defmethod suggest-size (size (plot plot))
+  (size (w size) (umax (un 400) (h size))))
 
 (defmethod value-changed ((plot plot))
   (call-next-method)

@@ -39,13 +39,13 @@
              (<= (length (elements layout)) (index layout)))
     (decf (index layout))))
 
-(defmethod notice-bounds ((element layout-element) (layout swap-layout))
-  (notice-bounds element (layout-parent layout)))
+(defmethod notice-size ((element layout-element) (layout swap-layout))
+  (notice-size element (layout-parent layout)))
 
-(defmethod suggest-bounds (extent (layout swap-layout))
+(defmethod suggest-size (size (layout swap-layout))
   (if (= 0 (length (elements layout)))
-      extent
-      (suggest-bounds extent (current layout))))
+      size
+      (suggest-size size (current layout))))
 
 (defmethod (setf bounds) :after (extent (layout swap-layout))
   (when (< 0 (length (elements layout)))

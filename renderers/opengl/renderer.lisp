@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
-(defvar *clip-depth*)
+(defvar *clip-depth* 0)
 (defvar *clip-region*)
 
 ;; TODO: With a UBO we could avoid having to re-set uniforms at ever draw

@@ -10,8 +10,8 @@
   ())
 
 (defmethod set-focus-tree (tree (separator separator)))
-(defmethod suggest-bounds (extent (separator separator))
-  (px-extent (pxx extent) (pxy extent) (pxw extent) (un 5)))
+(defmethod suggest-size (size (separator separator))
+  (px-size (pxw size) (un 5)))
 (defmethod focus ((separator separator)))
 (defmethod (setf focus) (focus (separator separator)))
 (defmethod handle ((ev pointer-move) (separator separator)))
@@ -35,7 +35,7 @@
     (set-layout-tree value (inner item))))
 
 (defmethod notice-focus (sub (item menu-item)))
-(defmethod notice-bounds (sub (item menu-item)))
+(defmethod notice-size (sub (item menu-item)))
 (defmethod register :after ((item menu-item) (renderer renderer))
   (when (inner item)
     (register (inner item) renderer)))
@@ -48,14 +48,12 @@
     (cond (submenu
            (with-unit-parent item
              (let* ((extent (bounds item))
-                    (bounds (suggest-bounds (px-extent (+ (pxx extent) (if (typep (layout-parent item) 'menubar)
-                                                                           0 (pxw extent)))
-                                                       (+ (pxy extent) (if (typep (layout-parent item) 'menubar)
-                                                                           0 (pxh extent)))
-                                                       (pxw extent) (pxh extent))
-                                            submenu)))
-               (setf (bounds submenu) (px-extent (pxx bounds)
-                                                 (- (pxy bounds) (pxh bounds))
+                    (size (suggest-size (px-size (pxw extent) (pxh extent)) submenu)))
+               (setf (bounds submenu) (px-extent (+ (pxx extent) (if (typep (layout-parent item) 'menubar)
+                                                                     0 (pxw extent)))
+                                                 (+ (pxy extent) (if (typep (layout-parent item) 'menubar)
+                                                                     0 (pxh extent))
+                                                    (- (pxy bounds) (pxh bounds)))
                                                  (pxw bounds) (pxh bounds)))
                (setf (focus submenu) (if (focus submenu) NIL :strong)))))
           (T

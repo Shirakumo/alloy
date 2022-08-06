@@ -79,7 +79,7 @@
       (cass:delete-constraint constraint)))
   (apply-constraints constraints element layout))
 
-(defmethod alloy:notice-bounds ((element alloy:layout-element) (layout layout)))
+(defmethod alloy:notice-size ((element alloy:layout-element) (layout layout)))
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
   (alloy:with-unit-parent layout
@@ -87,12 +87,12 @@
     (alloy:do-elements (element layout)
       (update layout element))))
 
-(defmethod alloy:suggest-bounds (extent (layout layout))
+(defmethod alloy:suggest-size (size (layout layout))
   (alloy:with-unit-parent layout
+    ;; FIXME: LAYOUT
     (suggest-extent layout layout extent)
     (with-vars (x y w h layout) layout
-      (alloy:extent (cass:value x) (cass:value y)
-                    (cass:value w) (cass:value h)))))
+      (alloy:size (cass:value w) (cass:value h)))))
 
 (defun apply-constraints (constraints element layout)
   (dolist (expression constraints layout)

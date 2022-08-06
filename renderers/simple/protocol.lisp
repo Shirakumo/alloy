@@ -43,3 +43,8 @@
   (with-pushed-transforms (renderer)
     (clip renderer extent)
     (call-next-method)))
+
+(defmethod alloy:render :around ((renderer renderer) (layout alloy:layout-element))
+  (with-pushed-transforms (renderer)
+    (translate renderer (alloy:bounds layout))
+    (call-next-method)))

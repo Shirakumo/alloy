@@ -64,8 +64,8 @@
     (setf (scene renderer) (cl-svg:make-svg-toplevel 'cl-svg:svg-1.1-toplevel
                                                      :width (alloy:w (size renderer))
                                                      :height (alloy:h (size renderer))))
-    (alloy:suggest-bounds (alloy:extent 0 0 (alloy:w (size renderer)) (alloy:h (size renderer)))
-                          (alloy:root (alloy:layout-tree renderer)))))
+    (alloy:suggest-size (alloy:size (alloy:w (size renderer)) (alloy:h (size renderer)))
+                        (alloy:root (alloy:layout-tree renderer)))))
 
 (defmethod alloy:deallocate ((renderer renderer))
   (slot-makunbound renderer 'scene))

@@ -18,7 +18,7 @@
    #:component-class-for-object
    #:represent-with
    #:represent
-   #:ideal-bounds)
+   #:ideal-size)
   ;; conditions.lisp
   (:export
    #:alloy-condition
@@ -316,13 +316,16 @@
   (:export
    #:layout-tree
    #:set-layout-tree
+   #:notice-size
+   #:suggest-size
+   #:preferred-size
+   #:ensure-visible
    #:bounds
+   #:resize
+   #:location
+   #:global-location
    #:layout-element
    #:layout-parent
-   #:notice-bounds
-   #:suggest-bounds
-   #:ensure-visible
-   #:layout-element
    #:layout
    #:layout-tree
    #:popups)

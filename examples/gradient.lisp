@@ -15,5 +15,5 @@
                                             (1.0 #.colors:black)))))
     (alloy:enter (make-instance 'alloy:component :shapes (list (simple:rectangle screen (alloy:margins) :pattern linear))
                                                  :data NIL
-                                                 :ideal-bounds (alloy:extent 0 0 100 100))
+                                                 :ideal-size (alloy:size 100 100))
                  layout)))

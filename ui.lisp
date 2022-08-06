@@ -55,8 +55,8 @@
 (defmethod bounds ((ui ui))
   (bounds (root (layout-tree ui))))
 
-(defmethod suggest-bounds (extent (ui ui))
-  (suggest-bounds extent (layout-tree ui)))
+(defmethod suggest-size (size (ui ui))
+  (suggest-size size (layout-tree ui)))
 
 (defmethod register ((ui ui) renderer)
   (register (layout-tree ui) renderer))
@@ -68,26 +68,26 @@
   (setf (slot-value ui 'resolution-scale) (float value 0f0)))
 
 (defmethod (setf base-scale) :after (value (ui ui))
-  (suggest-bounds (bounds ui) ui))
+  (suggest-size (bounds ui) ui))
 
 (defclass smooth-scaling-ui (ui)
   ())
 
-(defmethod suggest-bounds (extent (ui smooth-scaling-ui))
+(defmethod suggest-size (size (ui smooth-scaling-ui))
   (let* ((target (target-resolution ui))
-         (wr (/ (pxw extent) (pxw target)))
-         (hr (/ (pxh extent) (pxh target))))
+         (wr (/ (pxw size) (pxw target)))
+         (hr (/ (pxh size) (pxh target))))
     (setf (resolution-scale ui) (min wr hr)))
   (call-next-method))
 
 (defclass fixed-scaling-ui (ui)
   ((scales :initform '((T T 1.0)) :initarg :scales :accessor scales)))
 
-(defmethod suggest-bounds (extent (ui fixed-scaling-ui))
+(defmethod suggest-size (size (ui fixed-scaling-ui))
   (setf (resolution-scale ui)
         (loop for (w h scale) in (scales ui)
-              do (when (and (or (eql T w) (<= w (pxw extent)))
-                            (or (eql T h) (<= h (pxh extent))))
+              do (when (and (or (eql T w) (<= w (pxw size)))
+                            (or (eql T h) (<= h (pxh size))))
                    (return scale))
               finally (return 1.0)))
   (call-next-method))
@@ -96,7 +96,7 @@
   ((scale-step :initform 0.5 :initarg :scale-step :accessor scale-step)
    (scale-direction :initform :down :initarg :scale-direction :accessor scale-direction)))
 
-(defmethod suggest-bounds (extent (ui lock-step-scaling-ui))
+(defmethod suggest-size (size (ui lock-step-scaling-ui))
   (let ((target (target-resolution ui))
         (step (scale-step ui)))
     (flet ((factor (ratio)
@@ -113,7 +113,7 @@
                 (if (< step ratio)
                     (* step (ceiling ratio step))
                     (/ step (floor step ratio)))))))
-      (let ((wr (factor (/ (pxw extent) (pxw target))))
-            (hr (factor (/ (pxh extent) (pxh target)))))
+      (let ((wr (factor (/ (pxw size) (pxw target))))
+            (hr (factor (/ (pxh size) (pxh target)))))
         (setf (resolution-scale ui) (min wr hr)))))
   (call-next-method))

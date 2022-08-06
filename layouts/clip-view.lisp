@@ -11,12 +11,12 @@
    (stretch :initarg :stretch :initform T :accessor stretch)
    (limit :initarg :limit :initform NIL :accessor limit)))
 
-(defmethod suggest-bounds (extent (layout clip-view))
+(defmethod suggest-size (size (layout clip-view))
   (if (inner layout)
-      (suggest-bounds extent (inner layout))
-      extent))
+      (suggest-size size (inner layout))
+      size))
 
-(defmethod notice-bounds ((element layout-element) (layout clip-view))
+(defmethod notice-size ((element layout-element) (layout clip-view))
   (setf (bounds layout) (bounds layout)))
 
 (defun clamp-offset (offset layout)
@@ -37,13 +37,9 @@
 (defmethod (setf bounds) :after (bounds (layout clip-view))
   (when (inner layout)
     (with-unit-parent layout
-      (let ((ideal (suggest-bounds (px-extent (- (pxx bounds) (pxx (offset layout)))
-                                              (- (pxy bounds) (pxy (offset layout)))
-                                              (w bounds)
-                                              (h bounds))
-                                   (inner layout))))
-        (setf (bounds (inner layout)) (px-extent (- (max (pxx bounds) (pxx ideal)) (max 0 (- (pxw ideal) (pxw bounds))))
-                                                 (- (max (pxy bounds) (pxy ideal)) (max 0 (- (pxh ideal) (pxh bounds))))
+      (let ((ideal (suggest-size bounds (inner layout))))
+        (setf (bounds (inner layout)) (px-extent (- (pxx bounds) (max 0 (- (pxw ideal) (pxw bounds))))
+                                                 (- (pxy bounds) (max 0 (- (pxh ideal) (pxh bounds))))
                                                  (cond ((null (stretch layout)) (w ideal))
                                                        ((eq :x (limit layout)) (w bounds))
                                                        (T (max (pxw ideal) (pxw bounds))))

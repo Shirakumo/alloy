@@ -9,12 +9,13 @@
 (defclass fullscreen-layout (layout vector-container)
   ())
 
-(defmethod notice-bounds ((element layout-element) (layout fullscreen-layout))
+(defmethod notice-size ((element layout-element) (layout fullscreen-layout))
   (setf (bounds element) (bounds layout)))
 
-(defmethod suggest-bounds (extent (layout fullscreen-layout))
+(defmethod suggest-size (size (layout fullscreen-layout))
+  ;; FIXME: LAYOUT
   (loop for element across (elements layout)
-        do (suggest-bounds extent element))
+        do (suggest-size size element))
   extent)
 
 (defmethod (setf bounds) :after (extent (layout fullscreen-layout))

@@ -128,7 +128,7 @@
 (defmethod alloy:notice-focus (focused (window window))
   )
 
-(defmethod alloy:notice-bounds (changed (window window))
+(defmethod alloy:notice-size (changed (window window))
   ;; FIXME:
   )
 

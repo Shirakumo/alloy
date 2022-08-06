@@ -131,7 +131,7 @@
      (render renderer (combo-list combo)))))
 
 (defmethod (setf bounds) :after (bounds (combo combo))
-  (let ((ideal (suggest-bounds bounds (combo-list combo))))
+  (let ((ideal (suggest-size bounds (combo-list combo))))
     (setf (bounds (combo-list combo))
           (px-extent (pxx bounds)
                      (+ (- (pxy bounds) (pxh ideal)) (pxh bounds))

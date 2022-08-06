@@ -8,14 +8,18 @@
 
 (defclass component (observable layout-element focus-element renderable)
   ((data :initarg :data :initform (arg! :data) :accessor data)
-   (ideal-bounds :initarg :ideal-bounds :initform NIL :accessor ideal-bounds)))
+   (ideal-size :initarg :ideal-size :initform NIL :accessor ideal-size)))
 
 (defmethod print-object ((element component) stream)
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a ~a" (bounds element) (focus element))))
 
-(defmethod suggest-bounds (extent (component component))
-  (or (ideal-bounds component) extent))
+(defmethod suggest-size (size (component component))
+  (preferred-size component))
+
+(defmethod preferred-size ((component component))
+  (or (ideal-size component)
+      (call-next-method)))
 
 (defmethod handle ((event pointer-down) (component component))
   (unless (and (slot-boundp component 'focus-parent)

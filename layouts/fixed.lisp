@@ -13,7 +13,7 @@
   (do-elements (element layout)
     (setf (bounds element) (bounds element))))
 
-(defmethod notice-bounds ((element layout-element) (layout fixed-layout))
+(defmethod notice-size ((element layout-element) (layout fixed-layout))
   ;; Calculate max bound
   (cond ((= 1 (element-count layout))
          (setf (slot-value layout 'bounds) (bounds element)))
@@ -27,8 +27,8 @@
                (setf (slot-value layout 'bounds)
                      (px-extent l b (- r l) (- u b)))))))))
 
-(defmethod suggest-bounds (extent (layout fixed-layout))
-  extent)
+(defmethod suggest-size (size (layout fixed-layout))
+  size)
 
 (defmethod enter ((element layout-element) (layout fixed-layout) &key x y w h extent)
   (call-next-method)

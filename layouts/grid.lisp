@@ -17,7 +17,7 @@
   (when c-p (setf (col-sizes layout) col-sizes)))
 
 (defmethod (setf stretch) :after (value (layout grid-layout))
-  (suggest-bounds (bounds layout) layout))
+  (suggest-size (bounds layout) layout))
 
 (defun coerce-grid-size (v)
   (etypecase v
@@ -53,7 +53,7 @@
     ;; Update if possible
     (setf (slot-value layout 'elements) new)
     (when (slot-boundp layout 'layout-parent)
-      (suggest-bounds (bounds layout) layout))))
+      (suggest-size (bounds layout) layout))))
 
 (defmethod enter :before ((element layout-element) (layout grid-layout) &key row col)
   (when (and row col)
@@ -100,7 +100,7 @@
         do (when element (leave element layout)))
   (setf (fill-pointer (elements layout)) 0))
 
-(defmethod notice-bounds ((target layout-element) (layout grid-layout))
+(defmethod notice-size ((target layout-element) (layout grid-layout))
   ;; FIXME: This is almost 100% the same as (setf bounds) update.
   (with-unit-parent layout
     (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
@@ -120,7 +120,7 @@
                        while (< idx (fill-pointer elements))
                        do (let ((element (aref elements idx)))
                             (when (eq element target)
-                              (let ((ideal (suggest-bounds (px-extent x y (- w ml mr) (- h mb mu)) element)))
+                              (let ((ideal (suggest-size (px-size (- w ml mr) (- h mb mu)) element)))
                                 (setf (bounds element)
                                       (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
                                                  (if (stretch layout) (- w ml mr) (extent-w ideal))
@@ -155,20 +155,18 @@
                        while (< idx (fill-pointer elements))
                        do (let ((element (aref elements idx)))
                             (when element
-                              (let ((ideal (suggest-bounds (px-extent x y (- w ml mr) (- h mb mu)) element)))
+                              (let ((ideal (suggest-size (px-size (- w ml mr) (- h mb mu)) element)))
                                 (setf (bounds element)
                                       (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
                                                  (if (stretch layout) (- w ml mr) (extent-w ideal))
                                                  (if (stretch layout) (- h mb mu) (extent-h ideal)))))))))))))
 
-(defmethod suggest-bounds (extent (layout grid-layout))
+(defmethod suggest-size (size (layout grid-layout))
   (with-unit-parent layout
     (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
-      (px-extent (extent-x extent)
-                 (extent-y extent)
-                 (loop for col across (col-sizes layout)
-                       if (eql T col) sum (+ ml mr)
-                       else sum (to-px col))
-                 (loop for row across (row-sizes layout)
-                       if (eql T row) sum (+ mu mb)
-                       else sum (to-px row))))))
+      (px-size (loop for col across (col-sizes layout)
+                     if (eql T col) sum (+ ml mr)
+                     else sum (to-px col))
+               (loop for row across (row-sizes layout)
+                     if (eql T row) sum (+ mu mb)
+                     else sum (to-px row))))))
