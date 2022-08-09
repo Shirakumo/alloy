@@ -35,7 +35,7 @@
                 for element = (aref elements i)
                 do (destructure-extent (:w ew :h eh :to-px T) (suggest-bounds (px-extent x y mw rh) element)
                      (setf rh (max rh eh))
-                     (cond ((<= w (+ x ew ml mr))
+                     (cond ((<= (+ ox w) (+ x ew ml mr))
                             ;; Row overflow, flush row and retry.
                             (unless (= x (+ ml ox))
                               ;; Only retry if the element does not consume the entire row anyway.
@@ -76,7 +76,7 @@
                      (let ((ey (ecase (align layout)
                                  (:start y)
                                  (:end (- y eh)))))
-                       (cond ((<= w (+ x ew ml mr))
+                       (cond ((<= (+ ox w) (+ x ew ml mr))
                               ;; Row overflow, flush row.
                               (if (= x (+ ml ox))
                                   (setf (bounds element) (px-extent x ey (- w ml mr) eh))
