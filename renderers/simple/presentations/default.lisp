@@ -408,7 +408,7 @@
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:button))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:widen (alloy:suggest-bounds extent shape) (alloy:margins 2))
+        (alloy:widen (alloy:ideal-bounds shape) (alloy:margins 2))
         extent)))
 
 (defmethod alloy:suggest-bounds ((extent alloy:extent) (element alloy:label))
