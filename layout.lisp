@@ -107,9 +107,12 @@
     (let ((x 0f0) (y 0f0))
       (loop for current = element then parent
             for parent = (layout-parent current)
-            until (eql current parent)
             do (incf x (pxx (bounds current)))
-               (incf y (pxy (bounds current))))
+               (incf y (pxy (bounds current)))
+               (when (typep current 'clip-view)
+                 (incf x (pxx (offset current)))
+                 (incf y (pxy (offset current))))
+            until (eql current parent))
       (values x y))))
 
 (defmacro with-global-bounds ((bounds element) &body body)
