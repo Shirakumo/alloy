@@ -10,7 +10,7 @@
   ())
 
 (defmethod notice-size ((element layout-element) (layout fullscreen-layout))
-  (setf (bounds element) (bounds layout)))
+  (setf (bounds element) (extent 0 0 (w layout) (h layout))))
 
 (defmethod suggest-size (size (layout fullscreen-layout))
   (let ((w (w size))
@@ -23,7 +23,7 @@
 
 (defmethod (setf bounds) :after (extent (layout fullscreen-layout))
   (loop for element across (elements layout)
-        do (resize element (w layout) (h layout))))
+        do (setf (bounds element) (extent 0 0 (w layout) (h layout)))))
 
 (defmethod render ((renderer renderer) (layout fullscreen-layout))
   (loop for element across (elements layout)
