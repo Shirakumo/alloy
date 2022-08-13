@@ -50,6 +50,15 @@
 (defmethod (setf h) ((unit unit) (element layout-element))
   (setf (extent-h (bounds element)) unit))
 
+(defmethod (setf x) ((real real) (element layout-element))
+  (setf (extent-x (bounds element)) (px real)))
+(defmethod (setf y) ((real real) (element layout-element))
+  (setf (extent-y (bounds element)) (px real)))
+(defmethod (setf w) ((real real) (element layout-element))
+  (setf (extent-w (bounds element)) (px real)))
+(defmethod (setf h) ((real real) (element layout-element))
+  (setf (extent-h (bounds element)) (px real)))
+
 (defmethod (setf bounds) ((extent extent) (element layout-element))
   (let ((bounds (bounds element)))
     (setf (extent-x bounds) (extent-x extent))
