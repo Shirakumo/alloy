@@ -32,7 +32,8 @@
            :index index :range (list 0 (length (elements layout))))))
 
 (defmethod (setf index) :after (index (layout swap-layout))
-  (resize (current layout) (w layout) (h layout)))
+  (setf (bounds (current layout))
+        (extent 0 0 (w layout) (h layout))))
 
 (defmethod leave :after ((element layout-element) (layout swap-layout))
   (when (and (< 0 (index layout))
@@ -49,7 +50,8 @@
 
 (defmethod (setf bounds) :after (extent (layout swap-layout))
   (when (< 0 (length (elements layout)))
-    (resize (current layout) (w extent) (h extent))))
+    (setf (bounds (current layout))
+          (extent 0 0 (w layout) (h layout)))))
 
 (defmethod render ((renderer renderer) (layout swap-layout))
   (when (< 0 (length (elements layout)))
