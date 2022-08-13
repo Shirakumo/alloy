@@ -108,11 +108,11 @@
              (th (spanning-size (row-sizes layout) (extent-h extent)))
              (tw (spanning-size (col-sizes layout) (extent-w extent))))
         (loop with elements = (elements layout)
-              for y = (+ (pxy extent) (pxh extent) (- mb)) then (- y h)
+              for y = (+ (pxh extent) (- mb)) then (- y h)
               for hish across (row-sizes layout)
               for h = (if (eql T hish) th (to-px hish))
               for i from 0
-              do (loop for x = (+ (pxx extent) ml) then (+ x w)
+              do (loop for x = ml then (+ x w)
                        for wish across (col-sizes layout)
                        for w = (if (eql T wish) tw (to-px wish))
                        for j from 0
@@ -133,9 +133,9 @@
           do (etypecase size
                (unit (decf total (to-px size)))
                ((eql T) (incf count))))
-    (if (< 0 count)
-        (/ total count)
-        total)))
+    (max 0.0 (if (< 0 count)
+                 (/ total count)
+                 total))))
 
 (defmethod (setf bounds) :after (extent (layout grid-layout))
   (with-unit-parent layout
@@ -143,11 +143,11 @@
       (let ((th (spanning-size (row-sizes layout) (extent-h extent)))
             (tw (spanning-size (col-sizes layout) (extent-w extent))))
         (loop with elements = (elements layout)
-              for y = (+ (pxy extent) (pxh extent) (- mb)) then (- y h)
+              for y = (+ (pxh extent) (- mb)) then (- y h)
               for hish across (row-sizes layout)
               for h = (if (eql T hish) th (to-px hish))
               for i from 0
-              do (loop for x = (+ (pxx extent) ml) then (+ x w)
+              do (loop for x = ml then (+ x w)
                        for wish across (col-sizes layout)
                        for w = (if (eql T wish) tw (to-px wish))
                        for j from 0
