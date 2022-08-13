@@ -75,6 +75,14 @@
 (defmethod preferred-size ((element layout-element))
   (suggest-size (size) element))
 
+(defmethod suggest-size :around ((size size) (element layout-element))
+  ;; No need to actually pass through if we're re-using the current size,
+  ;; as it's already been stabilised before.
+  (if (and (u= (size-w size) (extent-w (bounds element)))
+           (u= (size-h size) (extent-h (bounds element))))
+      size
+      (call-next-method)))
+
 (defun compute-global-position (element)
   (with-unit-parent element
     (let ((x 0f0) (y 0f0))
