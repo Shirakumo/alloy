@@ -75,10 +75,13 @@
               (setf (bounds element)
                     (px-extent x
                                (ecase (align layout)
-                                 (:start (prog1 y (incf y (+ eh u b))))
-                                 (:end (decf y (+ eh u b))))
+                                 (:start y)
+                                 (:end (- y (+ eh u b))))
                                (max mw (if (stretch layout) (- w l r) (min (- w l r) ew)))
-                               eh)))))))))
+                               eh))
+              (ecase (align layout)
+                (:start (incf y (+ u b (pxh (bounds element)))))
+                (:end (decf y (+ u b (pxh (bounds element)))))))))))))
 
 (defclass horizontal-linear-layout (linear-layout)
   ())
@@ -120,8 +123,11 @@
                    (ew (max (pxw size) mw)))
               (setf (bounds element)
                     (px-extent (ecase (align layout)
-                                 (:start (prog1 x (incf x (+ ew l r))))
-                                 (:end (decf x (+ ew l r))))
+                                 (:start x)
+                                 (:end (- x (+ ew l r))))
                                y
                                ew
-                               (max mh (if (stretch layout) (- h u b) (min (- h u b) eh))))))))))))
+                               (max mh (if (stretch layout) (- h u b) (min (- h u b) eh)))))
+              (ecase (align layout)
+                (:start (incf x (+ l r (pxw (bounds element)))))
+                (:end (decf x (+ l r (pxw (bounds element)))))))))))))
