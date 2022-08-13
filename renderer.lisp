@@ -30,6 +30,11 @@
          (funcall function)
       (setf (visible-bounds renderer) old))))
 
+(defmethod translate :before ((renderer renderer) (point point))
+  (let ((bounds (visible-bounds renderer)))
+    (decf (unit-value (extent-x bounds)) (to-px (point-x point)))
+    (decf (unit-value (extent-y bounds)) (to-px (point-y point)))))
+
 ;; TODO: this sucks
 (defmethod call-with-constrained-visibility (function (size size) (renderer renderer))
   (call-with-constrained-visibility function (extent 0 0 (size-w size) (size-h size)) renderer))
@@ -38,9 +43,7 @@
   `(call-with-constrained-visibility (lambda () ,@body) ,extent ,renderer))
 
 (defmethod extent-visible-p ((extent extent) (renderer renderer))
-  ;; FIXME: do this right.
-  #++(overlapping-p extent (visible-bounds renderer))
-  T)
+  (overlapping-p extent (visible-bounds renderer)))
 
 (defmethod allocate :after ((renderer renderer))
   (setf (slot-value renderer 'allocated-p) T))
@@ -51,6 +54,10 @@
 (defmethod suggest-size :before (size (renderer renderer))
   (setf (extent-w (visible-bounds renderer)) (size-w size))
   (setf (extent-h (visible-bounds renderer)) (size-h size)))
+
+(defmethod (setf bounds) :before (extent (renderer renderer))
+  (setf (extent-w (visible-bounds renderer)) (size-w extent))
+  (setf (extent-h (visible-bounds renderer)) (size-h extent)))
 
 (defclass renderable ()
   ((render-needed-p :initform T :reader render-needed-p)))

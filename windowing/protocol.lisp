@@ -134,6 +134,3 @@
 
 (defmethod alloy:extent-visible-p ((extent alloy:extent) (screen screen))
   T)
-
-(defmethod alloy:extent-visible-p ((extent alloy:extent) (window window))
-  T)
