@@ -78,7 +78,7 @@
 (defmethod resize ((element layout-element) (w unit) (h unit))
   (setf (extent-w (bounds element)) w)
   (setf (extent-h (bounds element)) h)
-  point)
+  element)
 
 ;; Default to minimal size
 (defmethod preferred-size ((element layout-element))
