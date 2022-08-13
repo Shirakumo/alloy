@@ -37,7 +37,9 @@
   `(call-with-constrained-visibility (lambda () ,@body) ,extent ,renderer))
 
 (defmethod extent-visible-p ((extent extent) (renderer renderer))
-  (overlapping-p extent (visible-bounds renderer)))
+  ;; FIXME: do this right.
+  #++(overlapping-p extent (visible-bounds renderer))
+  T)
 
 (defmethod allocate :after ((renderer renderer))
   (setf (slot-value renderer 'allocated-p) T))

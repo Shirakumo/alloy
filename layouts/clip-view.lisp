@@ -38,8 +38,7 @@
   (when (inner layout)
     (with-unit-parent layout
       (let ((ideal (suggest-size bounds (inner layout))))
-        (setf (bounds (inner layout)) (px-extent (- (pxx bounds) (max 0 (- (pxw ideal) (pxw bounds))))
-                                                 (- (pxy bounds) (max 0 (- (pxh ideal) (pxh bounds))))
+        (setf (bounds (inner layout)) (px-extent 0 0
                                                  (cond ((null (stretch layout)) (w ideal))
                                                        ((eq :x (limit layout)) (w bounds))
                                                        (T (max (pxw ideal) (pxw bounds))))
@@ -59,7 +58,8 @@
 
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)
-    (with-constrained-visibility ((bounds layout) renderer)
+    (with-constrained-visibility (layout renderer)
+      (org.shirakumo.alloy.renderers.simple:translate renderer (offset layout))
       (render renderer (inner layout)))))
 
 (defmethod ensure-visible ((element layout-element) (layout clip-view))

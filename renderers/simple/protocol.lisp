@@ -41,8 +41,7 @@
 
 (defmethod alloy:call-with-constrained-visibility (function (extent alloy:extent) (renderer renderer))
   (with-pushed-transforms (renderer)
-    (with-pushed-transforms (renderer :clear T)
-      (clip renderer extent))
+    (clip renderer extent)
     (call-next-method)))
 
 (defmethod alloy:render :around ((renderer renderer) (layout alloy:layout-element))
