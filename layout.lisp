@@ -83,6 +83,16 @@
       size
       (call-next-method)))
 
+(defmethod (setf bounds) :around ((extent extent) (element layout-element))
+  ;; No need to actually pass through if we're re-using the current size,
+  ;; as it's already been stabilised before.
+  (let ((bounds (bounds element)))
+    (if (and (u= (extent-w extent) (extent-w bounds))
+             (u= (extent-h extent) (extent-h bounds)))
+        (setf (extent-x bounds) (extent-x extent)
+              (extent-y bounds) (extent-y extent))
+        (call-next-method))))
+
 (defun compute-global-position (element)
   (with-unit-parent element
     (let ((x 0f0) (y 0f0))
