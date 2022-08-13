@@ -10,7 +10,7 @@
    (#:alloy #:org.shirakumo.alloy)
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
-  (:import-from #:org.shirakumo.alloy #:arg!)
+  (:import-from #:org.shirakumo.alloy #:arg! #:translate)
   ;; defaults.lisp
   (:export
    #:font

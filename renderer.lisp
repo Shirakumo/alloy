@@ -17,6 +17,7 @@
 (defgeneric maybe-render (renderer renderable))
 (defgeneric call-with-constrained-visibility (function extent renderer))
 (defgeneric extent-visible-p (extent renderer))
+(defgeneric translate (renderer point))
 
 (defclass renderer ()
   ((allocated-p :initform NIL :reader allocated-p)

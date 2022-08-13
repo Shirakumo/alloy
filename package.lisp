@@ -395,6 +395,7 @@
    #:call-with-constrained-visibility
    #:with-constrained-visibility
    #:extent-visible-p
+   #:translate
    #:renderer
    #:visible-bounds
    #:renderable)

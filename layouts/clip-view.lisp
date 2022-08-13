@@ -59,7 +59,7 @@
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)
     (with-constrained-visibility (layout renderer)
-      (org.shirakumo.alloy.renderers.simple:translate renderer (offset layout))
+      (translate renderer (offset layout))
       (render renderer (inner layout)))))
 
 (defmethod ensure-visible ((element layout-element) (layout clip-view))
