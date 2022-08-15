@@ -43,8 +43,7 @@
                                                        ((eq :y (limit layout)) (h bounds))
                                                        (T (max (pxh ideal) (pxh bounds)))))))
       ;; Ensure we clamp the offset into valid bounds.
-      ;;(setf (offset layout) (offset layout))
-      )))
+      (setf (offset layout) (offset layout)))))
 
 (defmethod compute-global-position ((element clip-view))
   (with-unit-parent element
