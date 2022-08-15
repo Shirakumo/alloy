@@ -15,11 +15,11 @@
     (format stream "~a ~a" (bounds element) (focus element))))
 
 (defmethod suggest-size (size (component component))
-  (preferred-size component))
+  (or (preferred-size component)
+      size))
 
 (defmethod preferred-size ((component component))
-  (or (ideal-size component)
-      (call-next-method)))
+  (ideal-size component))
 
 (defmethod handle ((event pointer-down) (component component))
   (unless (and (slot-boundp component 'focus-parent)
