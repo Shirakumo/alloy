@@ -102,7 +102,7 @@
               (extent-y bounds) (extent-y extent))
         (call-next-method))))
 
-(defun compute-global-position (element)
+(defmethod compute-global-position ((element layout-element))
   (with-unit-parent element
     (let ((x 0f0) (y 0f0))
       (loop for current = element then parent

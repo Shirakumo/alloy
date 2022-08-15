@@ -31,9 +31,6 @@
                  (/= (pxy clamped) (pxy (offset layout))))
       (call-next-method clamped layout))))
 
-(defmethod (setf offset) :after (offset (layout clip-view))
-  (setf (bounds layout) (bounds layout)))
-
 (defmethod (setf bounds) :after (bounds (layout clip-view))
   (when (inner layout)
     (with-unit-parent layout
@@ -49,12 +46,34 @@
       ;;(setf (offset layout) (offset layout))
       )))
 
+(defmethod compute-global-position ((element clip-view))
+  (with-unit-parent element
+    (let ((x 0f0) (y 0f0))
+      (loop for current = element then parent
+            for parent = (layout-parent current)
+            do (incf x (pxx (bounds current)))
+               (incf y (pxy (bounds current)))
+               (when (typep current 'clip-view)
+                 (incf x (pxx (offset current)))
+                 (incf y (pxy (offset current))))
+            until (eql current parent))
+      (values (- x (pxx (offset element)))
+              (- y (pxy (offset element)))))))
+
 (defmethod handle ((event scroll) (layout clip-view))
   (restart-case (call-next-method)
     (decline ()
-      (let ((off (offset layout)))
-        (setf (offset layout) (px-point (+ (* (pxw layout) 0.1 (dx event)) (pxx off))
-                                        (+ (* (pxh layout) 0.1 (dy event)) (pxy off))))))))
+      (let ((off (offset layout))
+            (dx (case (limit layout)
+                  (:x 0.0)
+                  (:y (if (= 0.0 (dx event)) (dy event) (dx event)))
+                  (T (dx event))))
+            (dy (case (limit layout)
+                  (:x (if (= 0.0 (dy event)) (dx event) (dy event)))
+                  (:y 0.0)
+                  (T (dy event)))))
+        (setf (offset layout) (px-point (+ (* (pxw layout) 0.1 dx) (pxx off))
+                                        (+ (* (pxh layout) 0.1 dy) (pxy off))))))))
 
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)

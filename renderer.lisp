@@ -21,7 +21,7 @@
 
 (defclass renderer ()
   ((allocated-p :initform NIL :reader allocated-p)
-   (visible-bounds :initform (px-extent) :accessor visible-bounds)))
+   (visible-bounds :initform (%extent (%px 0f0) (%px 0f0) (%px 0f0) (%px 0f0)) :accessor visible-bounds)))
 
 (defmethod call-with-constrained-visibility (function (extent extent) (renderer renderer))
   (let ((old (visible-bounds renderer)))
@@ -29,11 +29,6 @@
     (unwind-protect
          (funcall function)
       (setf (visible-bounds renderer) old))))
-
-(defmethod translate :before ((renderer renderer) (point point))
-  (let ((bounds (visible-bounds renderer)))
-    (decf (unit-value (extent-x bounds)) (to-px (point-x point)))
-    (decf (unit-value (extent-y bounds)) (to-px (point-y point)))))
 
 ;; TODO: this sucks
 (defmethod call-with-constrained-visibility (function (size size) (renderer renderer))
