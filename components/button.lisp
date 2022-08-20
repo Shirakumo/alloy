@@ -13,9 +13,10 @@
   (mark-for-render button))
 
 (defmethod handle ((event pointer-down) (button button))
-  (if (contained-p (location event) (bounds button))
-      (setf (pressed button) T)
-      (call-next-method)))
+  (with-global-bounds (bounds button)
+    (if (contained-p (location event) bounds)
+        (setf (pressed button) T)
+        (call-next-method))))
 
 (defmethod handle ((event pointer-up) (button button))
   (cond ((pressed button)

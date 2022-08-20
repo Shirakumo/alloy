@@ -13,7 +13,7 @@
 
 (defmethod notice-size ((element layout-element) (layout flow-layout))
   (if (eq layout (layout-parent layout))
-      (setf (bounds layout) (bounds layout))
+      (update-flow-layout layout)
       (let ((updated (suggest-size (bounds layout) layout)))
         (unless (size= (bounds layout) updated)
           (setf (bounds layout) updated)))))
@@ -31,10 +31,10 @@
                    (setf th (max (pxh size) th))))
         (px-size tw (+ mb mu th))))))
 
-(defmethod (setf bounds) :after (extent (layout flow-layout))
+(defun update-flow-layout (layout)
   (with-unit-parent layout
     (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
-      (destructure-extent (:w w :h h :to-px T) extent
+      (destructure-extent (:w w :h h :to-px T) (bounds layout)
         (let* ((mh (pxh (min-size layout)))
                (mw (pxw (min-size layout)))
                (y (ecase (align layout)
@@ -71,3 +71,6 @@
                    (incf i))
           (incf th (+ rh mu mb))
           (setf (h layout) th))))))
+
+(defmethod (setf bounds) :after (extent (layout flow-layout))
+  (update-flow-layout layout))

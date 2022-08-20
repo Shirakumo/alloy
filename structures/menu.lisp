@@ -48,12 +48,12 @@
     (cond (submenu
            (with-unit-parent item
              (let* ((extent (bounds item))
-                    (size (suggest-size (px-size (pxw extent) (pxh extent)) submenu)))
-               (setf (bounds submenu) (px-extent (+ (pxx extent) (if (typep (layout-parent item) 'menubar)
-                                                                     0 (pxw extent)))
-                                                 (+ (pxy extent) (if (typep (layout-parent item) 'menubar)
-                                                                     0 (pxh extent))
-                                                    (- (pxy bounds) (pxh bounds)))
+                    (bounds (suggest-size (px-size (pxw extent) (pxh extent)) submenu)))
+               (setf (bounds submenu) (px-extent (if (typep (layout-parent item) 'menubar)
+                                                     0 (pxw extent))
+                                                 (- (if (typep (layout-parent item) 'menubar)
+                                                        0 (pxh extent))
+                                                    (pxh bounds))
                                                  (pxw bounds) (pxh bounds)))
                (setf (focus submenu) (if (focus submenu) NIL :strong)))))
           (T

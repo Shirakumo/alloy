@@ -88,12 +88,11 @@
 (defmethod handle ((event pointer-move) (slider slider))
   (case (state slider)
     (:dragging
-     (let ((range (ecase (orientation slider)
-                    (:horizontal (/ (- (pxx (location event)) (pxx (bounds slider)))
-                                    (pxw (bounds slider))))
-                    (:vertical (/ (- (pxy (location event)) (pxy (bounds slider)))
-                                  (pxh (bounds slider)))))))
-       (setf (value slider) (+ (minimum slider) (* range (- (maximum slider) (minimum slider)))))))
+     (with-global-bounds (bounds slider)
+       (let ((range (ecase (orientation slider)
+                      (:horizontal (/ (- (pxx (location event)) (pxx bounds)) (pxw bounds)))
+                      (:vertical (/ (- (pxy (location event)) (pxy bounds)) (pxh bounds))))))
+         (setf (value slider) (+ (minimum slider) (* range (- (maximum slider) (minimum slider))))))))
     (T
      (call-next-method))))
 
