@@ -43,18 +43,22 @@
 (defmethod enter :around ((child menu-item) (parent menu-item) &key)
   (enter child (inner parent)))
 
+(defmethod enter :after ((child submenu) (parent menu-item) &key)
+  (setf (slot-value child 'layout-parent) parent))
+
 (defmethod activate ((item menu-item))
   (let ((submenu (inner item)))
     (cond (submenu
            (with-unit-parent item
              (let* ((extent (bounds item))
-                    (bounds (suggest-size (px-size (pxw extent) (pxh extent)) submenu)))
+                    (bounds (suggest-size extent submenu)))
                (setf (bounds submenu) (px-extent (if (typep (layout-parent item) 'menubar)
                                                      0 (pxw extent))
                                                  (- (if (typep (layout-parent item) 'menubar)
                                                         0 (pxh extent))
                                                     (pxh bounds))
-                                                 (pxw bounds) (pxh bounds)))
+                                                 (pxw bounds)
+                                                 (pxh bounds)))
                (setf (focus submenu) (if (focus submenu) NIL :strong)))))
           (T
            (funcall (on-activate item))

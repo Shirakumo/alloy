@@ -90,9 +90,10 @@
 (defmethod preferred-size ((element layout-element))
   (suggest-size (size) element))
 
+;; KLUDGE: We can't actually elide this as the layout might prefer a *different*
+;;         size to what it already has right now, and we need to reconsider it.
+#++
 (defmethod suggest-size :around ((size size) (element layout-element))
-  ;; No need to actually pass through if we're re-using the current size,
-  ;; as it's already been stabilised before.
   (if (and (u= (size-w size) (extent-w (bounds element)))
            (u= (size-h size) (extent-h (bounds element))))
       size
