@@ -9,9 +9,10 @@
 (defclass fixed-layout (layout vector-container)
   ())
 
-(defmethod (setf bounds) ((bounds extent) (layout fixed-layout)))
-
 (defmethod notice-size ((element layout-element) (layout fixed-layout)))
+
+(defmethod extent-visible-p ((layout fixed-layout) (renderer renderer))
+  T)
 
 (defmethod suggest-size (size (layout fixed-layout))
   size)
@@ -27,10 +28,6 @@
                          (or w (when extent (extent-w extent)) (extent-w e))
                          (or h (when extent (extent-h extent)) (extent-h e))))))
     element))
-
-(defmethod leave :after ((element layout-element) (layout fixed-layout))
-  (when (= 0 (element-count layout))
-    (setf (slot-value layout 'bounds) (px-extent))))
 
 (defmethod update ((element layout-element) (layout fixed-layout) &key x y w h extent)
   (call-next-method)

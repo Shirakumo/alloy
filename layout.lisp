@@ -132,7 +132,7 @@
 (defmacro with-global-bounds ((bounds element) &body body)
   (let ((x (gensym "X"))
         (y (gensym "Y")))
-    `(multiple-value-bind (,x ,y) (compute-global-position element)
+    `(multiple-value-bind (,x ,y) (compute-global-position ,element)
        (let* ((,x (%px ,x))
               (,y (%px ,y))
               (,bounds (bounds ,element))
@@ -169,6 +169,10 @@
     (error 'element-has-different-root
            :bad-element element :container tree)))
 
+(defmethod extent-visible-p ((element layout-element) (renderer renderer))
+  (with-global-bounds (bounds element)
+    (extent-visible-p bounds renderer)))
+
 (defmethod handle ((event event) (element layout-element))
   (decline))
 
@@ -178,10 +182,9 @@
 
 (defmethod render :around ((renderer renderer) (element layout-element))
   (with-unit-parent element
-    (with-global-bounds (bounds element)
-      (when (and (layout-tree element)
-                 (extent-visible-p bounds renderer))
-        (call-next-method)))))
+    (when (and (layout-tree element)
+               (extent-visible-p element renderer))
+      (call-next-method))))
 
 (defmethod register :around ((element layout-element) (renderer renderer))
   (with-unit-parent element
@@ -318,4 +321,4 @@
         (popups (popups tree)))
     (suggest-size size root)
     (setf (bounds root) size)
-    (setf (bounds popups) (bounds popups))))
+    (setf (bounds popups) size)))
