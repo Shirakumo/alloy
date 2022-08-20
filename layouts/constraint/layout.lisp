@@ -22,12 +22,11 @@
   (setf (gethash layout (variables layout))
         (make-variables layout (solver layout) :strength :strong)))
 
-(defun suggest-extent (layout element extent)
+(defun suggest-size (layout element size)
   (with-vars (x y w h layout) element
-    (cass:suggest x (alloy:to-un (alloy:extent-x extent)))
-    (cass:suggest y (alloy:to-un (alloy:extent-y extent)))
-    (cass:suggest w (alloy:to-un (alloy:extent-w extent)))
-    (cass:suggest h (alloy:to-un (alloy:extent-h extent)))
+    (declare (ignore x y))
+    (cass:suggest w (alloy:to-un (alloy:size-w size)))
+    (cass:suggest h (alloy:to-un (alloy:size-h size)))
     (cass:update-variables (solver layout))))
 
 (defun element-var (layout element var)
@@ -65,7 +64,7 @@
   (apply-constraints constraints element layout)
   (when (alloy:layout-tree layout)
     (alloy:with-unit-parent layout
-      (suggest-extent layout layout (alloy:bounds layout))
+      (suggest-size layout layout (alloy:bounds layout))
       (update layout element))))
 
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
@@ -83,15 +82,16 @@
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
   (alloy:with-unit-parent layout
-    (suggest-extent layout layout extent)
+    (suggest-size layout layout extent)
     (alloy:do-elements (element layout)
       (update layout element))))
 
 (defmethod alloy:suggest-size (size (layout layout))
   (alloy:with-unit-parent layout
     ;; FIXME: LAYOUT
-    (suggest-extent layout layout extent)
+    (suggest-size layout layout size)
     (with-vars (x y w h layout) layout
+      (declare (ignore x y))
       (alloy:size (cass:value w) (cass:value h)))))
 
 (defun apply-constraints (constraints element layout)
