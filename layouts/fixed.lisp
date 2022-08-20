@@ -9,9 +9,7 @@
 (defclass fixed-layout (layout vector-container)
   ())
 
-(defmethod (setf bounds) ((bounds extent) (layout fixed-layout))
-  (do-elements (element layout)
-    (setf (bounds element) (bounds element))))
+(defmethod (setf bounds) ((bounds extent) (layout fixed-layout)))
 
 (defmethod notice-size ((element layout-element) (layout fixed-layout)))
 

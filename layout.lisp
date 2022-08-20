@@ -67,6 +67,12 @@
     (setf (extent-h bounds) (extent-h extent))
     extent))
 
+(defmethod (setf bounds) ((size size) (element layout-element))
+  (let ((bounds (bounds element)))
+    (setf (extent-w bounds) (size-w size))
+    (setf (extent-h bounds) (size-h size))
+    size))
+
 (defmethod location ((element layout-element))
   (point (extent-x (bounds element)) (extent-y (bounds element))))
 
@@ -101,6 +107,14 @@
         (setf (extent-x bounds) (extent-x extent)
               (extent-y bounds) (extent-y extent))
         (call-next-method))))
+
+(defmethod (setf bounds) :around ((size size) (element layout-element))
+  ;; No need to actually pass through if we're re-using the current size,
+  ;; as it's already been stabilised before.
+  (let ((bounds (bounds element)))
+    (when (or (u/= (size-w size) (extent-w bounds))
+              (u/= (size-h size) (extent-h bounds)))
+      (call-next-method))))
 
 (defmethod compute-global-position ((element layout-element))
   (with-unit-parent element
@@ -303,5 +317,5 @@
   (let ((root (root tree))
         (popups (popups tree)))
     (suggest-size size root)
-    (setf (size root) size)
-    (setf (size popups) (size popups))))
+    (setf (bounds root) size)
+    (setf (bounds popups) (bounds popups))))

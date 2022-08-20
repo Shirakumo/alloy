@@ -48,10 +48,14 @@
       size
       (suggest-size size (current layout))))
 
-(defmethod (setf bounds) :after (extent (layout swap-layout))
+(defmethod (setf bounds) :after ((extent extent) (layout swap-layout))
   (when (< 0 (length (elements layout)))
     (setf (bounds (current layout))
           (extent 0 0 (w layout) (h layout)))))
+
+(defmethod (setf bounds) :after ((size size) (layout swap-layout))
+  (when (< 0 (length (elements layout)))
+    (setf (bounds (current layout)) size)))
 
 (defmethod render ((renderer renderer) (layout swap-layout))
   (when (< 0 (length (elements layout)))

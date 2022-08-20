@@ -16,7 +16,7 @@
       (setf (bounds layout) (bounds layout))
       (let ((updated (suggest-size (bounds layout) layout)))
         (unless (size= (bounds layout) updated)
-          (setf (size layout) updated)))))
+          (setf (bounds layout) updated)))))
 
 (defmethod suggest-size (size (layout flow-layout))
   (with-unit-parent layout

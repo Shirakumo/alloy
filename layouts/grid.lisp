@@ -140,8 +140,8 @@
 (defmethod (setf bounds) :after (extent (layout grid-layout))
   (with-unit-parent layout
     (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
-      (let ((th (spanning-size (row-sizes layout) (extent-h extent)))
-            (tw (spanning-size (col-sizes layout) (extent-w extent))))
+      (let ((th (spanning-size (row-sizes layout) (size-h extent)))
+            (tw (spanning-size (col-sizes layout) (size-w extent))))
         (loop with elements = (elements layout)
               for y = (+ (pxh extent) (- mb)) then (- y h)
               for hish across (row-sizes layout)
@@ -158,8 +158,8 @@
                               (let ((ideal (suggest-size (px-size (- w ml mr) (- h mb mu)) element)))
                                 (setf (bounds element)
                                       (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
-                                                 (if (stretch layout) (- w ml mr) (extent-w ideal))
-                                                 (if (stretch layout) (- h mb mu) (extent-h ideal)))))))))))))
+                                                 (if (stretch layout) (- w ml mr) (size-w ideal))
+                                                 (if (stretch layout) (- h mb mu) (size-h ideal)))))))))))))
 
 (defmethod suggest-size (size (layout grid-layout))
   (with-unit-parent layout

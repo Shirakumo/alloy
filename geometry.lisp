@@ -218,7 +218,7 @@
   (declare (ignore x y w h))
   (let ((extentg (gensym "EXTENT")))
     `(let* ((,extentg ,extent)
-            ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
+            ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w size-w) (:h size-h))
                     for var = (getf args name)
                     when var
                     collect `(,var (,(if to-px 'to-px 'identity) (,func ,extentg)))))

@@ -133,8 +133,8 @@
 (defmethod (setf bounds) :after (bounds (combo combo))
   (let ((ideal (suggest-size bounds (combo-list combo))))
     (setf (bounds (combo-list combo))
-          (px-extent (pxx bounds)
-                     (+ (- (pxy bounds) (pxh ideal)) (pxh bounds))
+          (px-extent 0
+                     (- (pxh bounds) (pxh ideal))
                      (pxw ideal)
                      (pxh ideal)))))
 
