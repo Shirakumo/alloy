@@ -67,7 +67,8 @@
       (princ-to-string (value combo))))
 
 (defmethod activate :after ((combo combo))
-  (setf (state combo) :selecting))
+  (setf (state combo) :selecting)
+  (handle (make-instance 'scroll :dx 0.0 :dy 0.0 :location (point 0 0)) (combo-list combo)))
 
 (defmethod handle ((event key-down) (combo combo))
   (case (key event)
