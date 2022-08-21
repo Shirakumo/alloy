@@ -66,6 +66,7 @@
 
 (defmethod render :after ((renderer renderer) (item menu-item))
   (when (and (inner item) (focus (inner item)))
+    (reset-visibility renderer)
     (render renderer (inner item))))
 
 (defclass menu (structure)

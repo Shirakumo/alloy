@@ -171,9 +171,8 @@
 (defmethod (setf markup) :around ((markup cons) (text text))
   (call-next-method (sort-markup markup) text))
 
-(defmethod alloy:render :around ((renderer renderer) (text text))
-  (alloy:with-constrained-visibility ((alloy:ensure-extent (bounds text)) renderer)
-    (call-next-method)))
+(defmethod alloy:render :before ((renderer renderer) (text text))
+  (alloy:constrain-visibility (alloy:ensure-extent (bounds text)) renderer))
 
 (defclass icon (shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)

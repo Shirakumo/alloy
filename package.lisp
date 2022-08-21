@@ -392,8 +392,8 @@
    #:mark-for-render
    #:render
    #:maybe-render
-   #:call-with-constrained-visibility
-   #:with-constrained-visibility
+   #:constrain-visibility
+   #:reset-visibility
    #:extent-visible-p
    #:translate
    #:renderer

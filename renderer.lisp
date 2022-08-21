@@ -15,7 +15,8 @@
 (defgeneric mark-for-render (renderable))
 (defgeneric render (renderer renderable))
 (defgeneric maybe-render (renderer renderable))
-(defgeneric call-with-constrained-visibility (function extent renderer))
+(defgeneric constrain-visibility (extent renderer))
+(defgeneric reset-visibility (renderer))
 (defgeneric extent-visible-p (extent renderer))
 (defgeneric translate (renderer point))
 
@@ -27,24 +28,22 @@
   ((allocated-p :initform NIL :reader allocated-p)
    (visible-bounds :initform (%extent (%px 0f0) (%px 0f0) (%px 0f0) (%px 0f0)) :accessor visible-bounds)))
 
-(defmethod call-with-constrained-visibility (function (extent extent) (renderer renderer))
-  (let ((old (visible-bounds renderer)))
-    (setf (visible-bounds renderer) (extent-intersection extent old))
-    (unwind-protect
-         (funcall function)
-      (setf (visible-bounds renderer) old))))
+(defmethod constrain-visibility ((extent extent) (renderer renderer))
+  (setf (visible-bounds renderer) (extent-intersection extent (visible-bounds renderer))))
+
+(defmethod constrain-visibility ((size size) (renderer renderer))
+  (constrain-visibility (extent 0 0 (size-w size) (size-h size)) renderer))
+
+(defmethod reset-visibility ((renderer renderer))
+  (setf (extent-x (visible-bounds renderer)) (px most-negative-single-float))
+  (setf (extent-y (visible-bounds renderer)) (px most-negative-single-float))
+  (setf (extent-w (visible-bounds renderer)) (px float-features:single-float-positive-infinity))
+  (setf (extent-h (visible-bounds renderer)) (px float-features:single-float-positive-infinity)))
 
 (defmethod translate :before ((renderer renderer) (point point))
   (let ((bounds (visible-bounds renderer)))
     (setf (extent-x bounds) (px (- (to-px (extent-x bounds)) (to-px (point-x point)))))
     (setf (extent-y bounds) (px (- (to-px (extent-y bounds)) (to-px (point-y point)))))))
-
-;; TODO: this sucks
-(defmethod call-with-constrained-visibility (function (size size) (renderer renderer))
-  (call-with-constrained-visibility function (extent 0 0 (size-w size) (size-h size)) renderer))
-
-(defmacro with-constrained-visibility ((extent renderer) &body body)
-  `(call-with-constrained-visibility (lambda () ,@body) ,extent ,renderer))
 
 (defmethod extent-visible-p ((extent extent) (renderer renderer))
   (overlapping-p extent (visible-bounds renderer)))

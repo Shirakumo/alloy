@@ -59,8 +59,3 @@
             for point = (aref points i)
             do (setf (slot-value (x point) 'value) x)
                (setf (slot-value (y point) 'value) y)))))
-
-(defmethod render :around ((renderer renderer) (component plot))
-  ;; Ensures that a plotted line doesn't leave the bounds of the plot
-  (with-constrained-visibility ((bounds component) renderer)
-    (call-next-method)))

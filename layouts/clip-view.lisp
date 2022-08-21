@@ -80,9 +80,9 @@
 
 (defmethod render ((renderer renderer) (layout clip-view))
   (when (inner layout)
-    (with-constrained-visibility (layout renderer)
-      (translate renderer (offset layout))
-      (render renderer (inner layout)))))
+    (constrain-visibility layout renderer)
+    (translate renderer (offset layout))
+    (render renderer (inner layout))))
 
 (defmethod ensure-visible ((element layout-element) (layout clip-view))
   (let* ((view (bounds layout))
