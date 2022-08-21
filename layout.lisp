@@ -171,8 +171,7 @@
            :bad-element element :container tree)))
 
 (defmethod extent-visible-p ((element layout-element) (renderer renderer))
-  (with-global-bounds (bounds element)
-    (extent-visible-p bounds renderer)))
+  (extent-visible-p (bounds element) renderer))
 
 (defmethod handle ((event event) (element layout-element))
   (decline))

@@ -46,5 +46,10 @@
 
 (defmethod alloy:render :around ((renderer renderer) (layout alloy:layout-element))
   (with-pushed-transforms (renderer)
-    (translate renderer (alloy:bounds layout))
-    (call-next-method)))
+    (let ((old (alloy:visible-bounds renderer)))
+      (setf (alloy:visible-bounds renderer) (alloy::copy-extent old))
+      (unwind-protect
+           (progn
+             (translate renderer (alloy:bounds layout))
+             (call-next-method))
+        (setf (alloy:visible-bounds renderer) old)))))

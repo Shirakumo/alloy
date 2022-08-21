@@ -19,6 +19,10 @@
 (defgeneric extent-visible-p (extent renderer))
 (defgeneric translate (renderer point))
 
+;; TODO: Replace 'call with constrained visibility' with 'constrain-visibility' and 'clear-visibility'
+;;       and then mandate that visibility constraints are only applicable within a RENDER call.
+;;       thus combining the current dual-use of c-w-c-v and w-p-m.
+
 (defclass renderer ()
   ((allocated-p :initform NIL :reader allocated-p)
    (visible-bounds :initform (%extent (%px 0f0) (%px 0f0) (%px 0f0) (%px 0f0)) :accessor visible-bounds)))
@@ -29,6 +33,11 @@
     (unwind-protect
          (funcall function)
       (setf (visible-bounds renderer) old))))
+
+(defmethod translate :before ((renderer renderer) (point point))
+  (let ((bounds (visible-bounds renderer)))
+    (setf (extent-x bounds) (px (- (to-px (extent-x bounds)) (to-px (point-x point)))))
+    (setf (extent-y bounds) (px (- (to-px (extent-y bounds)) (to-px (point-y point)))))))
 
 ;; TODO: this sucks
 (defmethod call-with-constrained-visibility (function (size size) (renderer renderer))
