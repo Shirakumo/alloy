@@ -402,19 +402,19 @@
 (defmethod alloy:suggest-size ((size alloy:size) (element alloy:tab-button))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:suggest-size size shape)
+        (alloy:widen (alloy:suggest-size size shape) (alloy:margins 2))
         size)))
 
 (defmethod alloy:suggest-size ((size alloy:size) (element alloy:button))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:suggest-size size shape)
+        (alloy:widen (alloy:suggest-size size shape) (alloy:margins 2))
         size)))
 
 (defmethod alloy:suggest-size ((size alloy:size) (element alloy:label))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:suggest-size size shape)
+        (alloy:widen (alloy:suggest-size size shape) (alloy:margins 2))
         size)))
 
 (defmethod alloy:ideal-size ((element alloy:label))
