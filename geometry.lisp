@@ -24,10 +24,11 @@
 (defun pxr (geometry) (to-px (r geometry)))
 (defun pxb (geometry) (to-px (b geometry)))
 
+(cl:declaim (inline %point))
 (defstruct (point (:constructor %point (x y))
                   (:copier NIL))
-  (x NIL :type unit :read-only T)
-  (y NIL :type unit :read-only T))
+  (x NIL :type unit)
+  (y NIL :type unit))
 
 (defmethod print-object ((point point) stream)
   (format stream "~s" (list 'point (point-x point) (point-y point))))
@@ -38,6 +39,11 @@
 
 (defun point (&optional (x 0) (y 0))
   (%point (unit x) (unit y)))
+
+(define-compiler-macro point (&whole whole &optional (x 0) (y 0) &environment env)
+  (if (and (constantp x env) (constantp y env))
+      `(load-time-value (%point (unit ,x) (unit ,y)))
+      whole))
 
 (defun px-point (&optional (x 0) (y 0))
   (%point (px x) (px y)))
@@ -51,28 +57,40 @@
   (and (u= (point-x a) (point-x b))
        (u= (point-y a) (point-y b))))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defstruct (size (:constructor %size (w h))
-                   (:copier NIL))
-    (w NIL :type unit :read-only T)
-    (h NIL :type unit :read-only T))
+(cl:declaim (inline %size))
+(defstruct (size (:constructor %size (w h))
+                 (:copier NIL))
+  (w NIL :type unit)
+  (h NIL :type unit))
 
-  (defmethod print-object ((size size) stream)
-    (format stream "~s" (list 'size (size-w size) (size-h size))))
+(defmethod print-object ((size size) stream)
+  (format stream "~s" (list 'size (size-w size) (size-h size))))
 
-  (defmethod make-load-form ((size size) &optional env)
-    (declare (ignore env))
-    (list '%size (size-w size) (size-h size))))
+(defmethod make-load-form ((size size) &optional env)
+  (declare (ignore env))
+  (list '%size (size-w size) (size-h size)))
 
 (defun size (&optional w h)
   (cond (h (%size (unit w) (unit h)))
         (w (%size (unit w) (unit w)))
-        (T #.(%size (unit 0) (unit 0)))))
+        (T (%size (unit 0) (unit 0)))))
+
+(define-compiler-macro size (&whole whole &optional (w 0 w-p) (h 0 h-p) &environment env)
+  (cond (h-p
+         (if (and (constantp w env) (constantp h env))
+             `(load-time-value (%size (unit ,w) (unit ,h)))
+             whole))
+        (w-p
+         (if (constantp w env)
+             `(load-time-value (%size (unit ,w) (unit ,w)))
+             whole))
+        (T
+         `(load-time-value (%size (unit 0) (unit 0))))))
 
 (defun px-size (&optional w h)
   (cond (h (%size (px w) (px h)))
         (w (%size (px w) (px w)))
-        (T #.(%size (px 0) (px 0)))))
+        (T (%size (px 0) (px 0)))))
 
 (defmethod w ((size size)) (size-w size))
 (defmethod h ((size size)) (size-h size))
@@ -81,34 +99,54 @@
   (and (u= (size-w a) (size-w b))
        (u= (size-h a) (size-h b))))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defstruct (margins (:constructor %margins (l u r b))
-                      (:copier NIL))
-    (l NIL :type unit :read-only T)
-    (u NIL :type unit :read-only T)
-    (r NIL :type unit :read-only T)
-    (b NIL :type unit :read-only T))
+(cl:declaim (inline %margins))
+(defstruct (margins (:constructor %margins (l u r b))
+                    (:copier NIL))
+  (l NIL :type unit)
+  (u NIL :type unit)
+  (r NIL :type unit)
+  (b NIL :type unit))
 
-  (defmethod print-object ((margins margins) stream)
-    (format stream "~s" (list 'margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins))))
+(defmethod print-object ((margins margins) stream)
+  (format stream "~s" (list 'margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins))))
 
-  (defmethod make-load-form ((margins margins) &optional env)
-    (declare (ignore env))
-    (list '%margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins))))
+(defmethod make-load-form ((margins margins) &optional env)
+  (declare (ignore env))
+  (list '%margins (margins-l margins) (margins-u margins) (margins-r margins) (margins-b margins)))
 
 (defun margins (&optional l u r b)
   (cond (b (%margins (unit l) (unit u) (unit r) (unit b)))
         (r (%margins (unit l) (unit u) (unit r) (unit 0)))
         (u (%margins (unit l) (unit u) (unit l) (unit u)))
         (l (%margins (unit l) (unit l) (unit l) (unit l)))
-        (T #.(%margins (unit 0) (unit 0) (unit 0) (unit 0)))))
+        (T (%margins (unit 0) (unit 0) (unit 0) (unit 0)))))
+
+(define-compiler-macro margins (&whole whole &optional (l 0 l-p) (u 0 u-p) (r 0 r-p) (b 0 b-p) &environment env)
+  (cond (b-p
+         (if (and (constantp l env) (constantp u env) (constantp r env) (constantp b env))
+             `(load-time-value (%margins (unit ,l) (unit ,u) (unit ,r) (unit ,b)))
+             whole))
+        (r-p
+         (if (and (constantp l env) (constantp u env) (constantp r env))
+             `(load-time-value (%margins (unit ,l) (unit ,u) (unit ,r) (unit 0)))
+             whole))
+        (u-p
+         (if (and (constantp l env) (constantp u env))
+             `(load-time-value (%margins (unit ,l) (unit ,u) (unit ,l) (unit ,u)))
+             whole))
+        (l-p
+         (if (and (constantp l env))
+             `(load-time-value (%margins (unit ,l) (unit ,l) (unit ,l) (unit ,l)))
+             whole))
+        (T
+         `(load-time-value (%margins (unit 0) (unit 0) (unit 0) (unit 0))))))
 
 (defun px-margins (&optional l u r b)
   (cond (b (%margins (px l) (px u) (px r) (px b)))
         (r (%margins (px l) (px u) (px r) (px 0)))
         (u (%margins (px l) (px u) (px l) (px u)))
         (l (%margins (px l) (px l) (px l) (px l)))
-        (T #.(%margins (px 0) (px 0) (px 0) (px 0)))))
+        (T (%margins (px 0) (px 0) (px 0) (px 0)))))
 
 (defmethod l ((margins margins)) (margins-l margins))
 (defmethod u ((margins margins)) (margins-u margins))
@@ -131,10 +169,11 @@
                     collect `(,var (,(if to-px 'to-px 'identity) (,func ,marginsg)))))
        ,@body)))
 
+(cl:declaim (inline %extent))
 (defstruct (extent (:include size)
                    (:constructor %extent (x y w h)))
-  (x NIL :type unit :read-only T)
-  (y NIL :type unit :read-only T))
+  (x NIL :type unit)
+  (y NIL :type unit))
 
 (defmethod print-object ((extent extent) stream)
   (format stream "~s" (list 'extent (extent-x extent) (extent-y extent) (extent-w extent) (extent-h extent))))
@@ -145,6 +184,11 @@
 
 (defun extent (&optional (x 0) (y 0) (w 0) (h 0))
   (%extent (unit x) (unit y) (unit w) (unit h)))
+
+(define-compiler-macro extent (&whole whole &optional (x 0) (y 0) (w 0) (h 0) &environment env)
+  (if (and (constantp x env) (constantp y env) (constantp w env) (constantp h env))
+      `(load-time-value (%extent (unit ,x) (unit ,y) (unit ,w) (unit ,h)))
+      whole))
 
 (defun px-extent (&optional (x 0) (y 0) (w 0) (h 0))
   (%extent (px x) (px y) (px w) (px h)))
@@ -174,7 +218,7 @@
   (declare (ignore x y w h))
   (let ((extentg (gensym "EXTENT")))
     `(let* ((,extentg ,extent)
-            ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w extent-w) (:h extent-h))
+            ,@(loop for (name func) in '((:x extent-x) (:y extent-y) (:w size-w) (:h size-h))
                     for var = (getf args name)
                     when var
                     collect `(,var (,(if to-px 'to-px 'identity) (,func ,extentg)))))
@@ -187,16 +231,9 @@
              (r2 (+ x2 w2)) (u2 (+ y2 h2))
              (x (max x1 x2))
              (y (max y1 y2))
-             (w (- (min r1 r2) x))
-             (h (- (min u1 u2) y)))
-        (cond ((and (<= w 0) (<= h 0))
-               (load-time-value (px-extent 0 0 0 0)))
-              ((and (= x x1) (= y y1) (= w w1) (= h h1))
-               a)
-              ((and (= x x2) (= y y2) (= w w2) (= h h2))
-               b)
-              (T
-               (px-extent x y w h)))))))
+             (w (max 0.0 (- (min r1 r2) x)))
+             (h (max 0.0 (- (min u1 u2) y))))
+        (px-extent x y w h)))))
 
 (defun overlapping-p (a b)
   (destructure-extent (:x x1 :y y1 :w w1 :h h1 :to-px T) a

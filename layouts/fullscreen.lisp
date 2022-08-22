@@ -9,17 +9,26 @@
 (defclass fullscreen-layout (layout vector-container)
   ())
 
-(defmethod notice-bounds ((element layout-element) (layout fullscreen-layout))
-  (setf (bounds element) (bounds layout)))
+(defmethod notice-size ((element layout-element) (layout fullscreen-layout))
+  (setf (bounds element) (extent 0 0 (w layout) (h layout))))
 
-(defmethod suggest-bounds (extent (layout fullscreen-layout))
-  (loop for element across (elements layout)
-        do (suggest-bounds extent element))
-  extent)
+(defmethod suggest-size (size (layout fullscreen-layout))
+  (with-unit-parent layout
+    (let ((w (w size))
+          (h (h size)))
+      (loop for element across (elements layout)
+            for new = (suggest-size size element)
+            do (setf w (umax w (w new)))
+               (setf h (umax h (h new))))
+      (size w h))))
 
-(defmethod (setf bounds) :after (extent (layout fullscreen-layout))
+(defmethod (setf bounds) :after ((extent extent) (layout fullscreen-layout))
   (loop for element across (elements layout)
-        do (setf (bounds element) extent)))
+        do (setf (bounds element) (size (w layout) (h layout)))))
+
+(defmethod (setf bounds) :after ((size size) (layout fullscreen-layout))
+  (loop for element across (elements layout)
+        do (setf (bounds element) size)))
 
 (defmethod render ((renderer renderer) (layout fullscreen-layout))
   (loop for element across (elements layout)

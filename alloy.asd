@@ -65,5 +65,6 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "documentation"))
   :depends-on (:documentation-utils
                :array-utils
+               :float-features
                :closer-mop)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))

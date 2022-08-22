@@ -10,7 +10,7 @@
   ())
 
 ;;; TODO: The shapes should be able to influence the renderable's "ideal size" as returned
-;;;       by the SUGGEST-BOUNDS function. This is a bit tricky, since some shapes might have
+;;;       by the SUGGEST-SIZE function. This is a bit tricky, since some shapes might have
 ;;;       bounds that are just adaptive, whereas others might have bounds that are restrictive
 ;;;       and we need to only consider restrictive bounds.
 
@@ -87,21 +87,20 @@
     (realize-renderable renderer renderable)))
 
 (defmethod alloy:render ((renderer renderer) (renderable renderable))
-  (simple:with-pushed-transforms (renderer)
-    (simple:translate renderer (alloy:bounds renderable))
-    (loop for (name . shape) across (shapes renderable)
-          unless (hidden-p shape)
-          do (simple:with-pushed-transforms (renderer)
-               (setf (simple:composite-mode renderer) (composite-mode shape))
-               (incf (simple:z-index renderer) (z-index shape))
-               ;; TODO: Not sure this is quite right.
-               (simple:translate renderer (offset shape))
-               (simple:translate renderer (pivot shape))
-               (simple:rotate renderer (rotation shape))
-               (simple:scale renderer (scale shape))
-               (simple:translate renderer (alloy:px-point (- (alloy:pxx (pivot shape)))
-                                                          (- (alloy:pxy (pivot shape)))))
-               (alloy:render renderer shape))))
+  (loop for (name . shape) across (shapes renderable)
+        unless (hidden-p shape)
+        do (simple:with-pushed-transforms (renderer)
+             (setf (simple:composite-mode renderer) (composite-mode shape))
+             (incf (simple:z-index renderer) (z-index shape))
+             ;; TODO: Not sure this is quite right.
+             (simple:translate renderer (offset shape))
+             (simple:translate renderer (pivot shape))
+             (simple:rotate renderer (rotation shape))
+             (simple:scale renderer (scale shape))
+             (simple:translate-by renderer
+                                  (- (alloy:pxx (pivot shape)))
+                                  (- (alloy:pxy (pivot shape))))
+             (alloy:render renderer shape)))
   (when (next-method-p) (call-next-method)))
 
 (defmethod realize-renderable ((renderer renderer) (renderable renderable)))
@@ -113,7 +112,7 @@
 (defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
   (setf (realized-p renderable) T)
   (when (slot-boundp renderable 'alloy:layout-parent)
-    (alloy:notice-bounds renderable (alloy:layout-parent renderable))))
+    (alloy:notice-size renderable (alloy:layout-parent renderable))))
 
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))

@@ -16,10 +16,10 @@
   (let ((extent (bounds layout))
         (pextent (bounds (parent layout))))
     (setf (bounds layout)
-          (px-extent (pxx extent)
+          (px-extent 0
                      (min (max (+ (pxy extent) (* -20 (dy event)))
-                               (- (pxy pextent) (pxh extent) (- (pxh pextent))))
-                          (pxy pextent))
+                               (- 0 (pxh extent) (- (pxh pextent))))
+                          0)
                      (pxw extent)
                      (pxh extent)))))
 
@@ -29,11 +29,14 @@
 
 (defmethod initialize-instance ((combo combo) &key)
   (call-next-method)
-  (setf (slot-value combo 'combo-list) (make-instance 'combo-layout :layout-parent NIL :cell-margins (margins) :parent combo)))
+  (setf (slot-value combo 'combo-list) (make-instance 'combo-layout :cell-margins (margins) :parent combo))
+  (setf (slot-value (slot-value combo 'combo-list) 'layout-parent) combo))
 
 (defgeneric combo-item (item combo))
 (defgeneric value-set (data))
 (define-observable (setf value-set) (set observable))
+
+(defmethod notice-size (thing (combo combo)))
 
 (defmethod value-changed :after ((combo combo))
   ;; FIXME: This is bad
@@ -51,11 +54,10 @@
 
 (defmethod (setf index) :after (index (combo combo))
   (let ((ib (bounds (focused combo)))
-        (lb (bounds (combo-list combo)))
-        (fb (bounds combo)))
+        (lb (bounds (combo-list combo))))
     (setf (bounds (combo-list combo))
           (px-extent (pxx lb)
-                     (- (pxy fb) (- (pxy ib) (pxy lb)))
+                     (- 0 (- (pxy ib) (pxy lb)))
                      (pxw lb)
                      (pxh lb)))))
 
@@ -65,7 +67,8 @@
       (princ-to-string (value combo))))
 
 (defmethod activate :after ((combo combo))
-  (setf (state combo) :selecting))
+  (setf (state combo) :selecting)
+  (handle (make-instance 'scroll :dx 0.0 :dy 0.0 :location (point 0 0)) (combo-list combo)))
 
 (defmethod handle ((event key-down) (combo combo))
   (case (key event)
@@ -128,13 +131,14 @@
 (defmethod render :after ((renderer renderer) (combo combo))
   (case (state combo)
     (:selecting
+     (reset-visibility renderer)
      (render renderer (combo-list combo)))))
 
 (defmethod (setf bounds) :after (bounds (combo combo))
-  (let ((ideal (suggest-bounds bounds (combo-list combo))))
+  (let ((ideal (suggest-size bounds (combo-list combo))))
     (setf (bounds (combo-list combo))
-          (px-extent (pxx bounds)
-                     (+ (- (pxy bounds) (pxh ideal)) (pxh bounds))
+          (px-extent 0
+                     (- (pxh bounds) (pxh ideal))
                      (pxw ideal)
                      (pxh ideal)))))
 

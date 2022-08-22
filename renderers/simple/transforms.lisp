@@ -18,6 +18,7 @@
              collect `(setf (aref ,mat ,i) (float ,el 0f0)))
      ,@body))
 
+(declaim (ftype (function () (simple-array single-float (9))) matrix-identity))
 (defun matrix-identity ()
   (matrix 1 0 0
           0 1 0
@@ -71,46 +72,59 @@
     r))
 
 (defclass transformed-renderer (renderer)
-  ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)))
+  ((transform-matrix :initform (matrix-identity) :accessor transform-matrix)
+   (identity-matrix :initform (matrix-identity) :accessor identity-matrix)))
 
-(defmethod call-with-pushed-transforms (function (renderer transformed-renderer))
+(defmethod call-with-pushed-transforms (function (renderer transformed-renderer) &key clear)
   (let ((current (transform-matrix renderer))
         (new (make-array 9 :element-type 'single-float)))
     (declare (dynamic-extent new))
     (declare (type (simple-array single-float (9)) current new))
-    (dotimes (i 9) (setf (aref new i) (aref current i)))
+    (declare (optimize speed))
+    (if clear
+        (dotimes (i 9) (setf (aref new i) (aref (the (simple-array single-float (9)) (identity-matrix renderer)) i)))
+        (dotimes (i 9) (setf (aref new i) (aref current i))))
     (setf (transform-matrix renderer) new)
     (unwind-protect
-         (funcall function)
+         (funcall (the function function))
       (setf (transform-matrix renderer) current))))
 
 (defmethod add-matrix ((renderer transformed-renderer) new)
   (let ((ex (transform-matrix renderer)))
-    (setf (transform-matrix renderer) (mat* ex ex new))))
+    (setf (transform-matrix renderer) (mat* ex ex new))
+    renderer))
+
+(defun translate-by (renderer pxx pxy)
+  (let* ((matrix (transform-matrix renderer)))
+    (incf (aref matrix 2) (+ (* (aref matrix 0) pxx)
+                             (* (aref matrix 1) pxy)))
+    (incf (aref matrix 5) (+ (* (aref matrix 3) pxx)
+                             (* (aref matrix 4) pxy)))
+    (incf (aref matrix 8) (+ (* (aref matrix 6) pxx)
+                             (* (aref matrix 7) pxy)))
+    renderer))
+
+(defun scale-by (renderer pxw pxh)
+  (let* ((matrix (transform-matrix renderer)))
+    (setf (aref matrix 0) (* (aref matrix 0) pxw))
+    (setf (aref matrix 1) (* (aref matrix 1) pxh))
+    (setf (aref matrix 3) (* (aref matrix 3) pxw))
+    (setf (aref matrix 4) (* (aref matrix 4) pxh))
+    (setf (aref matrix 6) (* (aref matrix 6) pxw))
+    (setf (aref matrix 7) (* (aref matrix 7) pxh))
+    renderer))
 
 (defmethod translate ((renderer transformed-renderer) (point alloy:point))
-  (with-matrix (mat 1 0 (alloy:pxx point)
-                    0 1 (alloy:pxy point)
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (translate-by renderer (alloy:pxx point) (alloy:pxy point)))
 
 (defmethod translate ((renderer transformed-renderer) (extent alloy:extent))
-  (with-matrix (mat 1 0 (alloy:pxx extent)
-                    0 1 (alloy:pxy extent)
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (translate-by renderer (alloy:pxx extent) (alloy:pxy extent)))
 
 (defmethod translate ((renderer transformed-renderer) (margins alloy:margins))
-  (with-matrix (mat 1 0 (alloy:pxl margins)
-                    0 1 (alloy:pxb margins)
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (translate-by renderer (alloy:pxl margins) (alloy:pxb margins)))
 
 (defmethod scale ((renderer transformed-renderer) (size alloy:size))
-  (with-matrix (mat (alloy:pxw size) 0 0
-                    0 (alloy:pxh size) 0
-                    0 0 1)
-    (add-matrix renderer mat)))
+  (scale-by renderer (alloy:pxw size) (alloy:pxh size)))
 
 (defmethod scale ((renderer transformed-renderer) (margins alloy:margins))
   (scale renderer (alloy:ensure-extent margins)))

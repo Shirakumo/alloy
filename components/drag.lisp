@@ -16,9 +16,10 @@
   )
 
 (defmethod handle ((event pointer-down) (draggable draggable))
-  (setf (initial-pos draggable) (px-point (x (bounds draggable)) (y (bounds draggable))))
-  (setf (press-offset draggable) (px-point (- (pxx (location event)) (pxx (initial-pos draggable)))
-                                           (- (pxy (location event)) (pxy (initial-pos draggable)))))
+  (with-global-bounds (bounds draggable)
+    (setf (initial-pos draggable) (px-point (pxx bounds) (pxy bounds)))
+    (setf (press-offset draggable) (px-point (- (pxx (location event)) (pxx (initial-pos draggable)))
+                                             (- (pxy (location event)) (pxy (initial-pos draggable))))))
   (activate draggable))
 
 (defmethod handle ((event pointer-up) (draggable draggable))
@@ -48,7 +49,7 @@
 
 (defmethod (setf initial-pos) :after (value (resizer resizer))
   (setf (initial-bounds resizer) (if value
-                                     (bounds (data resizer))
+                                     (copy-extent (bounds (data resizer)))
                                      NIL)))
 
 (defmethod drag-to (location (resizer resizer))
@@ -65,8 +66,7 @@
        (setf (bounds target) (px-extent (x ib) (+ (pxy ib) dy) (w ib) (- (pxh ib) dy))))
       (:west
        (setf (bounds target) (px-extent (+ (pxx ib) dx) (y ib) (- (pxw ib) dx) (h ib)))))
-    ;; FIXME: We ought to do this, but it causes unwanted springyness in dragged layouts...
-    (notice-bounds target (layout-parent target))))
+    (notice-size target (layout-parent target))))
 
-(defmethod suggest-bounds (extent (resizer resizer))
-  (px-extent (pxx extent) (pxy extent) (un 5) (un 5)))
+(defmethod suggest-size (size (resizer resizer))
+  (size (un 5) (un 5)))

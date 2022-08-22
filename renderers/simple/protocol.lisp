@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy.renderers.simple)
 
-(defgeneric call-with-pushed-transforms (function renderer))
+(defgeneric call-with-pushed-transforms (function renderer &key clear))
 (defgeneric clip (renderer extent))
 (defgeneric translate (renderer point))
 (defgeneric scale (renderer size))
@@ -36,10 +36,19 @@
 (defclass renderer (alloy:renderer)
   ((composite-mode :initform :source-over :accessor composite-mode)))
 
-(defmacro with-pushed-transforms ((renderer) &body body)
-  `(call-with-pushed-transforms (lambda () ,@body) ,renderer))
+(defmacro with-pushed-transforms ((renderer &rest args) &body body)
+  `(call-with-pushed-transforms (lambda () ,@body) ,renderer ,@args))
 
-(defmethod alloy:call-with-constrained-visibility (function (extent alloy:extent) (renderer renderer))
+(defmethod alloy:constrain-visibility ((extent alloy:extent) (renderer renderer))
+  (call-next-method)
+  (clip renderer extent))
+
+(defmethod alloy:render :around ((renderer renderer) (layout alloy:layout-element))
   (with-pushed-transforms (renderer)
-    (clip renderer extent)
-    (call-next-method)))
+    (let ((old (alloy:visible-bounds renderer)))
+      (setf (alloy:visible-bounds renderer) (alloy::copy-extent old))
+      (unwind-protect
+           (progn
+             (translate renderer (alloy:bounds layout))
+             (call-next-method))
+        (setf (alloy:visible-bounds renderer) old)))))

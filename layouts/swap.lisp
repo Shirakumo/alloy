@@ -32,24 +32,30 @@
            :index index :range (list 0 (length (elements layout))))))
 
 (defmethod (setf index) :after (index (layout swap-layout))
-  (setf (bounds (current layout)) (bounds layout)))
+  (setf (bounds (current layout))
+        (extent 0 0 (w layout) (h layout))))
 
 (defmethod leave :after ((element layout-element) (layout swap-layout))
   (when (and (< 0 (index layout))
              (<= (length (elements layout)) (index layout)))
     (decf (index layout))))
 
-(defmethod notice-bounds ((element layout-element) (layout swap-layout))
-  (notice-bounds element (layout-parent layout)))
+(defmethod notice-size ((element layout-element) (layout swap-layout))
+  (notice-size element (layout-parent layout)))
 
-(defmethod suggest-bounds (extent (layout swap-layout))
+(defmethod suggest-size (size (layout swap-layout))
   (if (= 0 (length (elements layout)))
-      extent
-      (suggest-bounds extent (current layout))))
+      size
+      (suggest-size size (current layout))))
 
-(defmethod (setf bounds) :after (extent (layout swap-layout))
+(defmethod (setf bounds) :after ((extent extent) (layout swap-layout))
   (when (< 0 (length (elements layout)))
-    (setf (bounds (current layout)) extent)))
+    (setf (bounds (current layout))
+          (extent 0 0 (w layout) (h layout)))))
+
+(defmethod (setf bounds) :after ((size size) (layout swap-layout))
+  (when (< 0 (length (elements layout)))
+    (setf (bounds (current layout)) size)))
 
 (defmethod render ((renderer renderer) (layout swap-layout))
   (when (< 0 (length (elements layout)))

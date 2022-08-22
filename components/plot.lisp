@@ -19,8 +19,8 @@
   (mark-for-render plot)
   (recompute-plot-points plot))
 
-(defmethod suggest-bounds (extent (plot plot))
-  (extent (x extent) (y extent) (w extent) (umax (un 400) (h extent))))
+(defmethod suggest-size (size (plot plot))
+  (size (w size) (umax (un 400) (h size))))
 
 (defmethod value-changed ((plot plot))
   (call-next-method)
@@ -59,8 +59,3 @@
             for point = (aref points i)
             do (setf (slot-value (x point) 'value) x)
                (setf (slot-value (y point) 'value) y)))))
-
-(defmethod render :around ((renderer renderer) (component plot))
-  ;; Ensures that a plotted line doesn't leave the bounds of the plot
-  (with-constrained-visibility ((bounds component) renderer)
-    (call-next-method)))
