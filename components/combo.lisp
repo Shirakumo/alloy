@@ -131,6 +131,7 @@
 (defmethod render :after ((renderer renderer) (combo combo))
   (case (state combo)
     (:selecting
+     (reset-visibility renderer)
      (render renderer (combo-list combo)))))
 
 (defmethod (setf bounds) :after (bounds (combo combo))

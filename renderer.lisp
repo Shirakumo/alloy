@@ -26,7 +26,10 @@
 
 (defclass renderer ()
   ((allocated-p :initform NIL :reader allocated-p)
-   (visible-bounds :initform (%extent (%px 0f0) (%px 0f0) (%px 0f0) (%px 0f0)) :accessor visible-bounds)))
+   (visible-bounds :initform (%extent (%px most-negative-single-float)
+                                      (%px most-negative-single-float)
+                                      (%px float-features:single-float-positive-infinity)
+                                      (%px float-features:single-float-positive-infinity)) :accessor visible-bounds)))
 
 (defmethod constrain-visibility ((extent extent) (renderer renderer))
   (setf (visible-bounds renderer) (extent-intersection extent (visible-bounds renderer))))
@@ -53,14 +56,6 @@
 
 (defmethod deallocate :after ((renderer renderer))
   (setf (slot-value renderer 'allocated-p) NIL))
-
-(defmethod suggest-size :before (size (renderer renderer))
-  (setf (extent-w (visible-bounds renderer)) (size-w size))
-  (setf (extent-h (visible-bounds renderer)) (size-h size)))
-
-(defmethod (setf bounds) :before (extent (renderer renderer))
-  (setf (extent-w (visible-bounds renderer)) (size-w extent))
-  (setf (extent-h (visible-bounds renderer)) (size-h extent)))
 
 (defclass renderable ()
   ((render-needed-p :initform T :reader render-needed-p)))
