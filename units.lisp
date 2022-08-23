@@ -68,13 +68,7 @@
   (destructuring-bind (to-px from-px) conversion
     (let* ((make-fun (intern (format NIL "%~a" name)))
            (whole (gensym "WHOLE"))
-           (env (gensym "ENV"))
-           (constructor `(etypecase ,name
-                           (real (,make-fun (float ,name 0f0)))
-                           (,name ,name)
-                           (unit (,make-fun
-                                  (let ((px (%to-px ,name)))
-                                    ,from-px))))))
+           (env (gensym "ENV")))
       `(progn
          (cl:declaim (inline ,make-fun))
          (defstruct (,name
@@ -84,11 +78,22 @@
                      (:predicate NIL)))
 
          (defun ,name (&optional (,name 1f0))
-           ,constructor)
+           (etypecase ,name
+             (real (,make-fun (float ,name 0f0)))
+             (,name ,name)
+             (unit (,make-fun
+                    (let ((px (%to-px ,name)))
+                      ,from-px)))))
 
          (define-compiler-macro ,name (&whole ,whole &optional (,name 1f0) &environment ,env)
            (if (constantp ,name ,env)
-               (list 'load-time-value ,constructor)
+               `(load-time-value
+                 (etypecase ,,name
+                   (real (,',make-fun (float ,,name 0f0)))
+                   (,',name ,,name)
+                   (unit (,',make-fun
+                          (let ((px (%to-px ,,name)))
+                            ,',from-px)))))
                ,whole))
          
          (defmethod %to-px ((,name ,name))
