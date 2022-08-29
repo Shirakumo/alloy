@@ -67,11 +67,12 @@
           path)))
 
 (defmethod compute-fallback-chain ((renderer renderer))
-  (let ((chain (make-array (hash-table-count (fontcache renderer)))))
+  (let ((fonts ()))
     (loop for font being the hash-values of (fontcache renderer)
-          for i from 0
-          do (setf (aref chain i) font))
-    chain))
+          do (pushnew font fonts))
+    (flet ((font-score (font)
+             (hash-table-count (3b-bmfont::chars (data (partial-allocate font))))))
+      (sort (coerce fonts 'vector) #'< :key #'font-score))))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   (unless (opengl:resource 'text-vbo renderer NIL)
@@ -165,6 +166,13 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
          (pos (position font chain)))
     (rotatef (aref chain 0) (aref chain pos))
     chain))
+
+(defun partial-allocate (font)
+  (unless (slot-boundp font 'data)
+    (with-open-file (stream (file font) :external-format :utf-8)
+      (setf (data font) (3b-bmfont-json:read-bmfont-json stream)))
+    (setf (px-range font) (float (getf (3b-bmfont:distance-field (data font)) :distance-range) 0f0)))
+  font)
 
 (defmethod alloy:allocate ((font font))
   (let ((renderer (renderer font)))
