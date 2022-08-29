@@ -29,7 +29,11 @@
 ;; TODO: Update this code to be more efficient and only consider updating the bounds of elements
 ;;       that are actively affected by the change.
 (defmethod notice-size ((element layout-element) (layout linear-layout))
-  (fit-linear-layout-contents layout (bounds layout)))
+  (let* ((old (bounds layout))
+         (new (fit-linear-layout-contents layout old)))
+    (when (or (/= (pxh old) (pxh new))
+              (/= (pxw old) (pxw new)))
+      (notice-size layout (layout-parent layout)))))
 
 (defmethod leave :after ((element layout-element) (layout linear-layout))
   (fit-linear-layout-contents layout (bounds layout)))
