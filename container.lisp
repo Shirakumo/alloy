@@ -84,12 +84,25 @@
 (defmethod call-with-elements (function (container vector-container) &key start end from-end)
   (let* ((elements (elements container))
          (start (or start 0))
-         (end (or end (length elements))))
+         (end (or end (length elements)))
+         (length (length elements)))
     (if from-end
-        (loop for i downfrom (1- end) to start
-              do (funcall function (aref elements i)))
-        (loop for i from start below end
-              do (funcall function (aref elements i))))))
+        (loop for i downfrom (1- end)
+              while (<= start i)
+              do (funcall function (aref elements i))
+                 (when (< (length elements) length)
+                   ;; Decrease to make sure we don't skip or run over.
+                   (setf length (length elements))
+                   (decf end)
+                   (setf i (min end (1+ i)))))
+        (loop for i from start
+              while (< i end)
+              do (funcall function (aref elements i))
+                 (when (< (length elements) length)
+                   ;; Decrease to make sure we don't skip or run over.
+                   (setf length (length elements))
+                   (decf end)
+                   (decf i))))))
 
 (defmethod element-index ((element element) (container vector-container))
   (position element (elements container)))
