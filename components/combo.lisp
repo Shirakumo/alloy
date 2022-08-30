@@ -17,9 +17,9 @@
         (pextent (bounds (parent layout))))
     (setf (bounds layout)
           (px-extent 0
-                     (min (max (+ (pxy extent) (* -20 (dy event)))
-                               (- 0 (pxh extent) (- (pxh pextent))))
-                          0)
+                     ;; FIXME: still not correct.
+                     (max (+ (pxy extent) (* -20 (dy event)))
+                          (- (pxh pextent) (pxh extent)))
                      (pxw extent)
                      (pxh extent)))))
 
