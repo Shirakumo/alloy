@@ -255,15 +255,19 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
         (i (or start 0)) (si 0)
         (end (or end (length string))))
     (labels ((select-font (font)
-               (setf f font)
-               (let ((font (data font)))
-                 (setf scale (/ base-scale (3b-bmfont:base font)))
-                 (setf w (/ (float (3b-bmfont::scale-w font))))
-                 (setf h (/ (float (3b-bmfont::scale-h font))))
-                 (setf line (* scale (3b-bmfont::line-height font)))
-                 (setf space (* scale (3b-bmfont::space-size font)))
-                 (setf chars (3b-bmfont::chars font))
-                 (setf kernings (3b-bmfont::kernings font))))
+               (unless (eq f font)
+                 (setf f font)
+                 (let ((font (data font)))
+                   (setf scale (* (/ base-scale (3b-bmfont:base font))
+                                  (/ #++(3b-bmfont:size font) 32.0 35.0)))
+                   (setf w (/ (float (3b-bmfont::scale-w font))))
+                   (setf h (/ (float (3b-bmfont::scale-h font))))
+                   ;; KLUDGE: we ignore the line height of fonts other than our primary font
+                   (unless line
+                     (setf line (* scale (3b-bmfont::line-height font))))
+                   (setf space (* scale (3b-bmfont::space-size font)))
+                   (setf chars (3b-bmfont::chars font))
+                   (setf kernings (3b-bmfont::kernings font)))))
              (find-font (i)
                (loop while (< i (car (aref font-sequence si)))
                      do (decf si))
@@ -274,8 +278,6 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                (setf (car %k) previous)
                (setf (cdr %k) next)
                (gethash %k kernings 0))
-             (thunk (i x- y- x+ y+ u- v- u+ v+)
-               (funcall function i x- y- x+ y+ u- v- u+ v+))
              (map-line (start end)
                ;; FIXME: need to know what alignment to use to decide on proper starting X.
                (setf x 0.0)
@@ -311,6 +313,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                  (setf x 0.0)
                  (decf y line))
                (setf line-start at)))
+      (select-font (cdr (aref font-sequence 0)))
       ;; This first loops through, only computing the width. Then, when a line break
       ;; is encountered or the line is full, it calls 3b-bmfont:map-glyphs to emit
       ;; the complete line before starting on the next line.
