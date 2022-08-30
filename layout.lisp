@@ -113,9 +113,10 @@
   ;; No need to actually pass through if we're re-using the current size,
   ;; as it's already been stabilised before.
   (let ((bounds (bounds element)))
-    (when (or (u/= (size-w size) (extent-w bounds))
-              (u/= (size-h size) (extent-h bounds)))
-      (call-next-method))))
+    (with-unit-parent element
+      (when (or (u/= (size-w size) (extent-w bounds))
+                (u/= (size-h size) (extent-h bounds)))
+        (call-next-method)))))
 
 (defmethod compute-global-position ((element layout-element))
   (with-unit-parent element
