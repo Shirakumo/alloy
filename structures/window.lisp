@@ -99,6 +99,7 @@
     (enter title focus-stack :layer 0)
     (enter title header :row 0 :col 0)
     (on drag-to (location title)
+      ;; FIXME: broken
       (let ((ox (- (pxx title) (pxx frame)))
             (oy (- (pxy title) (pxy frame))))
         (setf (bounds frame)

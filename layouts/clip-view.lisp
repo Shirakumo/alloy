@@ -72,9 +72,9 @@
                   (:y (if (= 0.0 (dx event)) (dy event) (dx event)))
                   (T (dx event))))
             (dy (case (limit layout)
-                  (:x (if (= 0.0 (dy event)) (dx event) (dy event)))
+                  (:x (if (= 0.0 (dy event)) (dx event) (- (dy event))))
                   (:y 0.0)
-                  (T (dy event)))))
+                  (T (- (dy event))))))
         (setf (offset layout) (px-point (+ (* (pxw layout) 0.1 dx) (pxx off))
                                         (+ (* (pxh layout) 0.1 dy) (pxy off))))))))
 
