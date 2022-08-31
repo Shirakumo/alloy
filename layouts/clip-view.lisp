@@ -31,6 +31,14 @@
                  (/= (pxy clamped) (pxy (offset layout))))
       (call-next-method clamped layout))))
 
+(defmethod clipped-p ((layout clip-view))
+  (with-unit-parent layout
+    (case (limit layout)
+      (:x (< (pxh (bounds layout)) (pxh (bounds (inner layout)))))
+      (:y (< (pxw (bounds layout)) (pxw (bounds (inner layout)))))
+      (T (or (< (pxh (bounds layout)) (pxh (bounds (inner layout))))
+             (< (pxw (bounds layout)) (pxw (bounds (inner layout)))))))))
+
 (defun update-clip-view (layout)
   (when (inner layout)
     (with-unit-parent layout

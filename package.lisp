@@ -335,6 +335,7 @@
   ;; layouts/clip-view.lisp
   (:export
    #:clip-view
+   #:clipped-p
    #:offset
    #:stretch)
   ;; layouts/fixed.lisp
