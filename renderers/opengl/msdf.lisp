@@ -238,7 +238,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
     (vector-push-extend (cons end (aref font-fallback-chain 0)) result)
     result))
 
-(defun map-glyphs (font-sequence function string extent scale wrap &key start end)
+(defun map-glyphs (font-sequence function string extent scale wrap &key start end (halign :start))
   (declare (type string string))
   (declare (type function function))
   (let ((x 0.0) (y 0.0)
@@ -249,11 +249,14 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
         (next-break 0)
         (next-mandatory NIL)
         (last-break 0)
+        (last-width 0.0)
         (base-scale scale)
-        f w h line space chars kernings
+        f (w 0.0) (h 0.0) line (space 0.0) chars kernings
         (%k (cons NIL NIL))
         (i (or start 0)) (si 0)
         (end (or end (length string))))
+    (declare (type single-float x y max-width last-width w h space))
+    (declare (type (unsigned-byte 32) line-start next-break last-break i end))
     (labels ((select-font (font)
                (unless (eq f font)
                  (setf f font)
@@ -277,10 +280,9 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
              (kerning (previous next)
                (setf (car %k) previous)
                (setf (cdr %k) next)
-               (gethash %k kernings 0))
+               (float (gethash %k kernings 0) 0f0))
              (map-line (start end)
                ;; FIXME: need to know what alignment to use to decide on proper starting X.
-               (setf x 0.0)
                (loop for i from start below end
                      for p = NIL then c
                      for c = (aref string i)
@@ -306,8 +308,15 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                                    (v+ (* (+ cy height) h)))
                                (funcall function i x- y- x+ y+ u- v- u+ v+))
                              (incf x (* scale (+ (kerning p c) xadvance))))))))
-             (insert-break (at)
+             (insert-break (at width)
                (vector-push-extend at breaks)
+               (ecase halign
+                 ((:start :left)
+                  (setf x 0.0))
+                 ((:middle :center)
+                  (setf x (* 0.5 (- max-width width))))
+                 ((:end :right)
+                  (setf x (- max-width width))))
                (map-line line-start at)
                (unless (= x 0.0)
                  (setf x 0.0)
@@ -315,7 +324,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                (setf line-start at)))
       (select-font (cdr (aref font-sequence 0)))
       ;; This first loops through, only computing the width. Then, when a line break
-      ;; is encountered or the line is full, it calls 3b-bmfont:map-glyphs to emit
+      ;; is encountered or the line is full, it calls INSERT-BREAK to emit
       ;; the complete line before starting on the next line.
       ;;
       ;; This is obviously stupid, and could be improved a lot by backtracking instead
@@ -323,12 +332,12 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
       ;;
       ;; FIXME: This model inherently assumes a LTR system and will not deal with
       ;;        RTL, TTB, BTT orientations correctly. We also don't use UAX-9 yet.
-      (when (and wrap (< i end))
+      (when (< i end)
         (loop for p = nil then c
               for c = (aref string i)
               do (find-font i)
                  (when (and next-mandatory (= next-break i))
-                   (insert-break i))
+                   (insert-break i x))
                  (case c
                    (#\linefeed)
                    (#\space
@@ -339,23 +348,24 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                       (incf x (* scale k))
                       (let ((x+ (+ x (* scale (+ (getf char :xoffset) (getf char :width))))))
                         (cond ((< x+ max-width))
+                              ((null wrap))
                               ((< line-start last-break)
-                               (insert-break last-break)
+                               (insert-break last-break last-width)
                                (setf i last-break))
                               ((< line-start i)
-                               (insert-break (1- i)))))
+                               (insert-break (1- i) x))))
                       (incf x (* scale (getf char :xadvance))))))
                  (when (<= next-break i)
                    (multiple-value-bind (pos mandatory) (uax-14:next-break breaker)
                      (setf next-mandatory mandatory)
-                     (shiftf last-break next-break (or pos (1+ end)))))
+                     (shiftf last-break next-break (or pos (1+ end)))
+                     (setf last-width x)))
                  (incf i)
               while (< i end)))
-      (vector-push-extend end breaks)
-      (map-line line-start end)
+      (insert-break end x)
       breaks)))
 
-(defun compute-text (font text extent scale wrap markup)
+(defun compute-text (font text extent scale wrap markup halign)
   (declare (optimize speed))
   (declare (type string text))
   (let ((array (make-array (* 6 10 (the (signed-byte 32) (length text))) :element-type 'single-float))
@@ -391,7 +401,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                (setf maxx (max maxx x+))
                (setf maxy (max maxy y+))
                (let ((tx (if (prop :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
-                     (off (if (prop :bold styles) (* scale 5.0) 0.0))
+                     (off (if (prop :bold styles) (* scale 0.2) 0.0))
                      (color NIL))
                  (when (and (prop :italic styles) (/= 0 (- y+ y-)))
                    (let ((skew (* (/ (- 0.0 y-) (- y+ y-)) tx)))
@@ -403,6 +413,14 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                  (let ((prop (prop :rainbow styles)))
                    (when prop
                      (setf color (colored:convert (colored:hsv (* 10 c) 1 1) 'colored:rgb))))
+                 ;; This can't work because the offsets we get are absolute and we don't know the cursor pos.
+                 #++
+                 (let ((prop (first (prop :size styles))))
+                   (when prop
+                     (setf x+ (* x+ prop))
+                     (setf x- (* x- prop))
+                     (setf y+ (* y+ prop))
+                     (setf y- (* y- prop))))
                  (unless color (setf color (colored:rgb 0 0 0 0)))
                  (vertex (- (+ tx x-) off) (+ y+ off) u- (- 1 v-) color)
                  (vertex (- x- off) (- y- off) u- (- 1 v+) color)
@@ -410,7 +428,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                  (vertex (+ tx x+ off) (+ y+ off) u+ (- 1 v-) color)
                  (vertex (- x- off) (- y- off) u- (- 1 v+) color)
                  (vertex (+ x+ off) (- y- off) u+ (- 1 v+) color))))
-      (values (map-glyphs font-sequence #'thunk text extent scale wrap)
+      (values (map-glyphs font-sequence #'thunk text extent scale wrap :halign halign)
               array font-sequence minx miny maxx maxy))))
 
 (defclass text (simple:text)
@@ -506,12 +524,12 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
 (defmethod alloy:suggest-size (size (text text))
   (let ((scale (alloy:to-px (simple:size text)))
         (markup (simple::flatten-markup (simple:markup text))))
-    (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) size scale (simple:wrap text) markup)
+    (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) size scale (simple:wrap text) markup (simple:halign text))
       (let* ((w (- x+ x-))
              (line (* (/ scale (3b-bmfont:base (data (simple:font text))))
                       (+ (3b-bmfont:line-height (data (simple:font text))))))
              (h (max (- y+ y-) line))
-             (p (simple:resolve-alignment (simple:bounds text) (simple:halign text) (simple:valign text)
+             (p (simple:resolve-alignment (simple:bounds text) :start (simple:valign text)
                                           (alloy:px-size w h))))
         (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (if (<= (length breaks) 1) h (+ h scale)))
                 array font-sequence breaks markup)))))
