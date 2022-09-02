@@ -393,7 +393,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                (let ((tx (if (prop :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
                      (off (if (prop :bold styles) (* scale 5.0) 0.0))
                      (color NIL))
-                 (when (prop :italic styles)
+                 (when (and (prop :italic styles) (/= 0 (- y+ y-)))
                    (let ((skew (* (/ (- 0.0 y-) (- y+ y-)) tx)))
                      (decf x- skew)
                      (decf x+ skew)))
