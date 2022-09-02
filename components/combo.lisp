@@ -68,6 +68,8 @@
 
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting)
+  (let ((ideal (suggest-size (bounds combo) (combo-list combo))))
+    (resize (combo-list combo) (w ideal) (h ideal)))
   (handle (make-instance 'scroll :dx 0.0 :dy 0.0 :location (point 0 0)) (combo-list combo)))
 
 (defmethod handle ((event key-down) (combo combo))

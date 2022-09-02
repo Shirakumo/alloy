@@ -26,6 +26,9 @@
 (defmethod (setf bounds) :after (extent (layout linear-layout))
   (fit-linear-layout-contents layout extent))
 
+(defmethod resize :after ((layout linear-layout) x y)
+  (fit-linear-layout-contents layout (bounds layout)))
+
 ;; TODO: Update this code to be more efficient and only consider updating the bounds of elements
 ;;       that are actively affected by the change.
 (defmethod notice-size ((element layout-element) (layout linear-layout))
