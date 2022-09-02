@@ -36,7 +36,8 @@
          (new (fit-linear-layout-contents layout old)))
     (when (or (/= (pxh old) (pxh new))
               (/= (pxw old) (pxw new)))
-      (notice-size layout (layout-parent layout)))))
+      (unless (eq layout (layout-parent layout))
+        (notice-size layout (layout-parent layout))))))
 
 (defmethod leave :after ((element layout-element) (layout linear-layout))
   (fit-linear-layout-contents layout (bounds layout)))
