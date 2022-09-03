@@ -242,31 +242,47 @@
            (< y1 (+ y2 h2)) (< y2 (+ y1 h1))))))
 
 (defun widen (extent margins)
-  (extent (u- (x extent) (l margins))
-          (u- (y extent) (b margins))
-          (u+ (w extent) (l margins) (r margins))
-          (u+ (h extent) (b margins) (u margins))))
+  (etypecase extent
+    (extent
+     (extent (u- (x extent) (l margins))
+             (u- (y extent) (b margins))
+             (u+ (w extent) (l margins) (r margins))
+             (u+ (h extent) (b margins) (u margins))))
+    (size
+     (size (u+ (w extent) (l margins) (r margins))
+           (u+ (h extent) (b margins) (u margins))))))
 
 (defun ensure-extent (extent-ish &optional base)
   (etypecase extent-ish
     (extent
      extent-ish)
     (margins
-     (if base
-         (px-extent
-          (+ (pxx base) (pxl extent-ish))
-          (+ (pxy base) (pxb extent-ish))
-          (- (pxw base) (pxr extent-ish) (pxl extent-ish))
-          (- (pxh base) (pxu extent-ish) (pxb extent-ish)))
-         (px-extent
-          (pxl extent-ish) (pxb extent-ish)
-          (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish))
-          (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish)))))
+     (etypecase base
+       (extent
+        (px-extent
+         (+ (pxx base) (pxl extent-ish))
+         (+ (pxy base) (pxb extent-ish))
+         (- (pxw base) (pxr extent-ish) (pxl extent-ish))
+         (- (pxh base) (pxu extent-ish) (pxb extent-ish))))
+       (size
+        (px-extent
+         (pxl extent-ish) (pxb extent-ish)
+         (- (pxw base) (pxr extent-ish) (pxl extent-ish))
+         (- (pxh base) (pxu extent-ish) (pxb extent-ish))))
+       (null
+        (px-extent
+         (pxl extent-ish) (pxb extent-ish)
+         (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish))
+         (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish))))))
     (size
-     (if base
-         (extent (x base) (y base) (w extent-ish) (h extent-ish))
-         (extent 0 0 (w extent-ish) (h extent-ish))))
+     (etypecase base
+       (extent
+        (extent (x base) (y base) (w extent-ish) (h extent-ish)))
+       ((or null size)
+        (extent 0 0 (w extent-ish) (h extent-ish)))))
     (point
-     (if base
-         (extent (x extent-ish) (y extent-ish) (w base) (h base))
-         (extent (x extent-ish) (y extent-ish) 0 0)))))
+     (etypecase base
+       (size
+        (extent (x extent-ish) (y extent-ish) (w base) (h base)))
+       (null
+        (extent (x extent-ish) (y extent-ish) 0 0))))))

@@ -434,7 +434,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
 (defclass text (simple:text)
   ((vertex-data :accessor vertex-data)
    (font-sequence :initform (make-array 1) :accessor font-sequence)
-   (dimensions :accessor dimensions)
+   (dimensions :initform (alloy:px-extent 0 0 0 0) :accessor dimensions)
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
    (markup :initform () :accessor markup)
@@ -484,6 +484,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
   (/ (alloy:to-px (simple:size text)) (3b-bmfont:base (data (simple:font text)))))
 
 (defmethod shared-initialize :after ((text text) slots &key)
+  ;; TODO: Only update the size and internal data if any of the relevant slots actually changed (text, extent, markup).
   (alloy:allocate (simple:font text))
   (multiple-value-bind (bounds array font-sequence breaks markup) (alloy:suggest-size (alloy:ensure-extent (simple:bounds text)) text)
     (setf (vertex-data text) array)
@@ -531,7 +532,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
              (h (max (- y+ y-) line))
              (p (simple:resolve-alignment (simple:bounds text) :start (simple:valign text)
                                           (alloy:px-size w h))))
-        (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (if (<= (length breaks) 1) h (+ h scale)))
+        (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w (if (<= (length breaks) 1) h (+ h (* scale 0.5))))
                 array font-sequence breaks markup)))))
 
 (defmethod alloy:ideal-size ((text text))

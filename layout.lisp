@@ -84,6 +84,8 @@
 (defmethod resize ((element layout-element) (w unit) (h unit))
   (setf (extent-w (bounds element)) w)
   (setf (extent-h (bounds element)) h)
+  (when (layout-tree element)
+    (notice-size element (layout-parent element)))
   element)
 
 ;; Default to minimal size
