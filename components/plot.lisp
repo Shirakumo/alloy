@@ -26,6 +26,12 @@
   (call-next-method)
   (recompute-plot-points plot))
 
+;; KLUDGE: specialising on RENDERER here would apply too late,
+;;         and :AROUND too early...
+(defmethod render ((renderer ui) (plot plot))
+  (constrain-visibility plot renderer)
+  (call-next-method))
+
 (defun recompute-plot-points (plot)
   (let ((x-range (x-range plot))
         (y-range (y-range plot))
