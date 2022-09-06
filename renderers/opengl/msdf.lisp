@@ -406,8 +406,8 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                  (when (and (prop :italic styles) (/= 0 (- y+ y-)))
                    (let ((skew (* (/ (- 0.0 y-) (- y+ y-)) tx)))
                      ;; KLUDGE: Dunno if the base shift of base/16 is good?
-                     (incf x- (- (/ base 16) skew))
-                     (incf x+ (- (/ base 16) skew))))
+                     (incf x- (- (/ base 8) skew))
+                     (incf x+ (- (/ base 8) skew))))
                  (let ((prop (prop :color styles)))
                    (when prop
                      (setf color (first prop))))
