@@ -54,7 +54,8 @@
      (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                        (alloy:bounds (alloy:bounds alloy:renderable))
                        (alloy:value (alloy:value alloy:renderable))
-                       (alloy:text (alloy:text alloy:renderable)))
+                       (alloy:text (alloy:text alloy:renderable))
+                       (alloy:data (alloy:data alloy:renderable)))
        (declare (ignorable alloy:focus alloy:bounds alloy:value))
        ,@(loop for shape in shapes
                collect (destructuring-bind ((name type) &body initargs) shape
@@ -69,7 +70,8 @@
        (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                          (alloy:bounds (alloy:bounds alloy:renderable))
                          (alloy:value (alloy:value alloy:renderable))
-                         (alloy:text (alloy:text alloy:renderable)))
+                         (alloy:text (alloy:text alloy:renderable))
+                         (alloy:data (alloy:data alloy:renderable)))
          (declare (ignorable alloy:focus alloy:bounds alloy:value))
          (case (name shape)
            ,@(loop for (name . initargs) in shapes
