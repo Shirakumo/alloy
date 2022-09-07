@@ -17,6 +17,7 @@
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:export
-   #:simple-window))
+   #:simple-window
+   #:fonts))
 
 (in-package #:org.shirakumo.alloy.examples)
