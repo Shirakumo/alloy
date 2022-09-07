@@ -22,8 +22,11 @@
 (defun clamp-offset (offset layout)
   (flet ((clamp (l x u)
            (min (max l x) u)))
-    (px-point (clamp (min 0 (- (pxw (bounds layout)) (pxw (bounds (inner layout))))) (pxx offset) 0)
-              (clamp (min 0 (- (pxh (bounds layout)) (pxh (bounds (inner layout))))) (pxy offset) 0))))
+    (let ((inner (inner layout)))
+      (if inner
+          (px-point (clamp (min 0 (- (pxw (bounds layout)) (pxw (bounds inner)))) (pxx offset) 0)
+                    (clamp (min 0 (- (pxh (bounds layout)) (pxh (bounds inner)))) (pxy offset) 0))
+          offset))))
 
 (defmethod (setf offset) :around ((offset point) (layout clip-view))
   (let ((clamped (clamp-offset offset layout)))
