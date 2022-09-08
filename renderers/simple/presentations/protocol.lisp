@@ -113,8 +113,7 @@
 
 (defmethod realize-renderable :after ((renderer renderer) (renderable renderable))
   (setf (realized-p renderable) T)
-  (when (slot-boundp renderable 'alloy:layout-parent)
-    (alloy:notice-size renderable (alloy:layout-parent renderable))))
+  (alloy:notice-size renderable T))
 
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))

@@ -88,6 +88,11 @@
     (notice-size element (layout-parent element)))
   element)
 
+(defmethod notice-size ((element layout-element) (parent (eql T)))
+  (when (and (slot-boundp element 'layout-parent)
+             (not (eq element (layout-parent element))))
+    (notice-size element (layout-parent element))))
+
 ;; Default to minimal size
 (defmethod preferred-size ((element layout-element))
   (suggest-size (size) element))
