@@ -25,7 +25,9 @@
 
 (defclass combo (value-component focus-list)
   ((state :initform NIL :accessor state)
-   (combo-list :reader combo-list)))
+   (combo-list :reader combo-list)
+   (typed :initform "" :accessor typed)
+   (last-typed :initform 0 :accessor last-typed)))
 
 (defmethod initialize-instance ((combo combo) &key)
   (call-next-method)
@@ -53,10 +55,13 @@
   (set-layout-tree value (combo-list combo)))
 
 (defmethod (setf index) :after (index (combo combo))
-  (let ((ib (bounds (focused combo)))
-        (lb (bounds (combo-list combo))))
-    (setf (y (combo-list combo))
-          (- (pxy ib))))
+  (let ((ib (bounds (focused combo))))
+    (setf (y (combo-list combo)) (- (pxy ib))))
+  (mark-for-render combo))
+
+(defmethod (setf focused) :after (index (combo combo))
+  (let ((ib (bounds (focused combo))))
+    (setf (y (combo-list combo)) (- (pxy ib))))
   (mark-for-render combo))
 
 (defmethod text ((combo combo))
@@ -70,6 +75,21 @@
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting)
   (setf (index combo) (index combo)))
+
+(defmethod handle ((event text-event) (combo combo))
+  (let ((typed (concatenate 'string
+                            (if (< internal-time-units-per-second (- (get-internal-real-time) (last-typed combo)))
+                                ""
+                                (typed combo))
+                            (text event))))
+    (setf (last-typed combo) (get-internal-real-time))
+    (setf (typed combo) typed)
+    (do-elements (element combo)
+      (let ((text (text element)))
+        (when (and (<= (length typed) (length text))
+                   (string-equal typed text :end2 (length typed)))
+          (setf (focused combo) element)
+          (return))))))
 
 (defmethod handle ((event key-down) (combo combo))
   (when (and (< 0 (element-count combo))
@@ -111,7 +131,8 @@
     (setf (state combo) NIL)))
 
 (defmethod exit :after ((combo combo))
-  (setf (value combo) (value combo)))
+  (setf (value combo) (value combo))
+  (setf (typed combo) ""))
 
 (defmethod combo-item (item (combo combo))
   (make-instance 'combo-item :value item))
