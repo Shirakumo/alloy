@@ -219,6 +219,7 @@
    #:code
    #:modifiers
    #:key-down
+   #:repeat-p
    #:key-up
    #:button-event
    #:button

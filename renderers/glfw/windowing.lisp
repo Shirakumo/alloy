@@ -351,6 +351,8 @@
   (case action
     (:press
      (handle (make-instance 'alloy:key-down :code code :key key :modifiers mods)))
+    (:repeat
+     (handle (make-instance 'alloy:key-down :code code :key key :modifiers mods :repeat-p T)))
     (:release
      (handle (make-instance 'alloy:key-up :code code :key key :modifiers mods)))))
 

@@ -66,7 +66,7 @@
    (modifiers :initarg :modifiers :initform () :reader modifiers)))
 
 (defclass key-down (key-event)
-  ())
+  ((repeat-p :initarg :repeat-p :initform NIL :reader repeat-p)))
 
 (defclass key-up (key-event)
   ())
