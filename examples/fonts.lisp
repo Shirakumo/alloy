@@ -33,8 +33,9 @@
     (let ((controls (make-instance 'alloy:horizontal-linear-layout :min-size (alloy:size 50 20) :layout-parent layout)))
       (alloy:represent (font label) 'alloy:combo-set
                        :value-set (sort (delete-duplicates
-                                         (mapcar #'org.shirakumo.font-discovery:family
-                                                 (org.shirakumo.font-discovery:list-fonts))
+                                         (loop for font in (org.shirakumo.font-discovery:list-fonts)
+                                               when (string-equal "ttf" (pathname-type (org.shirakumo.font-discovery:file font)))
+                                               collect (org.shirakumo.font-discovery:family font))
                                          :test #'string-equal)
                                         #'string<)
                        :layout-parent controls
