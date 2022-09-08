@@ -15,13 +15,13 @@
 (defmethod handle ((event scroll) (layout combo-layout))
   (let ((extent (bounds layout))
         (pextent (bounds (parent layout))))
-    (setf (bounds layout)
-          (px-extent 0
-                     ;; FIXME: still not correct.
-                     (max (+ (pxy extent) (* -20 (dy event)))
-                          (- (pxh pextent) (pxh extent)))
-                     (pxw extent)
-                     (pxh extent)))))
+    (setf (y layout) (min (max (+ (pxy extent) (* -20 (dy event)))
+                               (- (pxh pextent) (pxh extent)))
+                          0.0))))
+
+(defmethod notice-size ((layout combo-layout) (parent (eql T)))
+  (let ((ideal (suggest-size (bounds (parent layout)) layout)))
+    (resize layout (w ideal) (h ideal))))
 
 (defclass combo (value-component focus-list)
   ((state :initform NIL :accessor state)
@@ -55,33 +55,42 @@
 (defmethod (setf index) :after (index (combo combo))
   (let ((ib (bounds (focused combo)))
         (lb (bounds (combo-list combo))))
-    (setf (bounds (combo-list combo))
-          (px-extent (pxx lb)
-                     (- 0 (- (pxy ib) (pxy lb)))
-                     (pxw lb)
-                     (pxh lb)))))
+    (setf (y (combo-list combo))
+          (- (pxy ib))))
+  (mark-for-render combo))
 
 (defmethod text ((combo combo))
   (if (focused combo)
       (text (focused combo))
       (princ-to-string (value combo))))
 
+(defmethod notice-size ((list combo-layout) (combo combo))
+  (notice-size combo T))
+
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting)
-  (let ((ideal (suggest-size (bounds combo) (combo-list combo))))
-    (resize (combo-list combo) (w ideal) (h ideal)))
-  (handle (make-instance 'scroll :dx 0.0 :dy 0.0 :location (point 0 0)) (combo-list combo)))
+  (setf (index combo) (index combo)))
 
 (defmethod handle ((event key-down) (combo combo))
-  (case (key event)
-    (:up
-     (focus-prev combo))
-    (:down
-     (focus-next combo))
-    (:enter
-     (when (focused combo)
-       (setf (value combo) (value (focused combo)))))
-    (T (call-next-method))))
+  (when (and (< 0 (element-count combo))
+             (eql (state combo) :selecting))
+    (flet ((set-index (index)
+             (setf (index combo) (max 0 (min (1- (element-count combo)) index)))
+             (setf (value combo) (value (focused combo)))))
+      (case (key event)
+        (:page-up
+         (set-index (- (index combo) 10)))
+        (:page-down
+         (set-index (+ (index combo) 10)))
+        (:home
+         (set-index 0))
+        (:end
+         (set-index (1- (element-count combo))))
+        (:enter
+         (when (focused combo)
+           (setf (value combo) (value (focused combo)))
+           (exit combo)))
+        (T (call-next-method))))))
 
 (defmethod handle :around ((event pointer-event) (combo combo))
   (case (state combo)
@@ -94,18 +103,15 @@
      (call-next-method))))
 
 (defmethod handle ((event scroll) (combo combo))
-  (cond ((< 0 (dy event))
-         (focus-prev combo))
-        ((< (dy event) 0)
-         (focus-next combo)))
+  (setf (index combo) (max 0 (min (1- (element-count combo)) (+ (or (index combo) 0) (if (< 0 (dy event)) -1 +1)))))
   (setf (value combo) (value (focused combo))))
 
 (defmethod (setf focus) :after (focus (combo combo))
   (when (null focus)
     (setf (state combo) NIL)))
 
-(defmethod (setf value) :after (value (combo combo))
-  (exit combo))
+(defmethod exit :after ((combo combo))
+  (setf (value combo) (value combo)))
 
 (defmethod combo-item (item (combo combo))
   (make-instance 'combo-item :value item))
