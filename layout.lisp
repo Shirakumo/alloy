@@ -126,17 +126,19 @@
         (call-next-method)))))
 
 (defmethod compute-global-position ((element layout-element))
-  (with-unit-parent element
-    (let ((x 0f0) (y 0f0))
-      (loop for current = element then parent
-            for parent = (layout-parent current)
-            do (incf x (pxx (bounds current)))
-               (incf y (pxy (bounds current)))
-               (when (typep current 'clip-view)
-                 (incf x (pxx (offset current)))
-                 (incf y (pxy (offset current))))
-            until (eql current parent))
-      (values x y))))
+  (let ((x 0f0) (y 0f0))
+    (when (layout-tree element)
+      (with-unit-parent element
+        (loop for current = element then parent
+              for parent = (layout-parent current)
+              do (incf x (pxx (bounds current)))
+                 (incf y (pxy (bounds current)))
+                 ;; KLUDGE: wish this didn't have to be like this.
+                 (when (typep current 'clip-view)
+                   (incf x (pxx (offset current)))
+                   (incf y (pxy (offset current))))
+              until (eql current parent))))
+    (values x y)))
 
 (defmacro with-global-bounds ((bounds element) &body body)
   (let ((x (gensym "X"))
