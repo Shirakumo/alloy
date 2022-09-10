@@ -294,7 +294,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                            (decf y line))
                           (#\space
                            (incf x space)
-                           (funcall function i 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0))
+                           (funcall function i x y 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0))
                           (t
                            (destructuring-bind (&key xoffset yoffset width height ((:x cx)) ((:y cy)) xadvance
                                                      &allow-other-keys)
@@ -307,7 +307,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                                    (v- (* cy h))
                                    (u+ (* (+ cx width) w))
                                    (v+ (* (+ cy height) h)))
-                               (funcall function i x- y- x+ y+ u- v- u+ v+))
+                               (funcall function i x y x- y- x+ y+ u- v- u+ v+))
                              (incf x (* scale (+ (kerning p c) xadvance))))))))
              (insert-break (at width)
                (vector-push-extend at breaks)
@@ -392,8 +392,8 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                (setf (aref array (+ i 8)) 0.0)
                (setf (aref array (+ i 9)) 0.0)
                (incf i 10))
-             (thunk (c x- y- x+ y+ u- v- u+ v+)
-               (declare (type single-float x- y- x+ y+ u- v- u+ v+))
+             (thunk (c x y x- y- x+ y+ u- v- u+ v+)
+               (declare (type single-float x y x- y- x+ y+ u- v- u+ v+))
                (declare (type (unsigned-byte 32) c))
                (loop while (<= (the (unsigned-byte 32) (or (caar markup) #xFFFFFFFF)) c)
                      do (setf styles (cdr (pop markup))))
@@ -405,10 +405,10 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                      (off (if (prop :bold styles) (* scale 0.2) 0.0))
                      (color NIL))
                  (when (and (prop :italic styles) (/= 0 (- y+ y-)))
-                   (let ((skew (* (/ (- 0.0 y-) (- y+ y-)) tx)))
+                   (let ((skew (* (/ (- y y-) (- y+ y-)) tx)))
                      ;; KLUDGE: Dunno if the base shift of base/16 is good?
-                     (incf x- (- (/ base 8) skew))
-                     (incf x+ (- (/ base 8) skew))))
+                     (incf x- (- (/ base 16) skew))
+                     (incf x+ (- (/ base 16) skew))))
                  (let ((prop (prop :color styles)))
                    (when prop
                      (setf color (first prop))))
@@ -554,8 +554,8 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
               do (when (<= line-start line line-end) (return (values line-start line-end)))
               finally (return (values line-start line-end)))
       (block NIL
-        (flet ((thunk (i x- y- x+ y+ u- v- u+ v+)
-                 (declare (ignore y- y+ u- v- u+ v+))
+        (flet ((thunk (i _x _y x- y- x+ y+ u- v- u+ v+)
+                 (declare (ignore _x _y y- y+ u- v- u+ v+))
                  (when (< x- x x+)
                    (return
                      (if (< (- (alloy:pxx point) x-)
