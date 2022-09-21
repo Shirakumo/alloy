@@ -371,8 +371,8 @@
       (setf idx col))
     (setf (index chain) idx)))
 
-(defclass focus-stack (focus-chain stack-container)
-  ())
+(defclass focus-stack (observable focus-chain stack-container)
+  ((orientation :initarg :orientation :initform :vertical :accessor orientation)))
 
 (defmethod (setf index) :before ((index cons) (stack focus-stack))
   (destructuring-bind (row . col) index
@@ -392,7 +392,7 @@
   (when (and (focused stack) (eql NIL (focus (focused stack))))
     (setf (focus (focused stack)) :weak)))
 
-(defmethod focus-up ((stack focus-stack))
+(defmethod focus-prev-row ((stack focus-stack))
   (when (null (index stack))
     (setf (index stack) '(0 . 0)))
   (destructuring-bind (row . col) (index stack)
@@ -400,13 +400,41 @@
       (setf (index stack) (cons (1- row) 0)))
     (focused stack)))
 
-(defmethod focus-down ((stack focus-stack))
+(defmethod focus-next-row ((stack focus-stack))
   (when (null (index stack))
     (setf (index stack) '(0 . 0)))
   (destructuring-bind (row . col) (index stack)
     (when (< row (1- (length (layers stack))))
       (setf (index stack) (cons (1+ row) 0)))
     (focused stack)))
+
+(defmethod focus-up ((stack focus-stack))
+  (ecase (orientation stack)
+    (:vertical
+     (focus-prev-row stack))
+    (:horizontal
+     (focus-prev stack))))
+
+(defmethod focus-down ((stack focus-stack))
+  (ecase (orientation stack)
+    (:vertical
+     (focus-next-row stack))
+    (:horizontal
+     (focus-next stack))))
+
+(defmethod focus-right ((stack focus-stack))
+  (ecase (orientation stack)
+    (:vertical
+     (focus-next stack))
+    (:horizontal
+     (focus-next-row stack))))
+
+(defmethod focus-left ((stack focus-stack))
+  (ecase (orientation stack)
+    (:vertical
+     (focus-prev stack))
+    (:horizontal
+     (focus-prev-row stack))))
 
 (defmethod focus-next ((stack focus-stack))
   (when (null (index stack))
