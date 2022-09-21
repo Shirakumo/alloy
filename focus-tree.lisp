@@ -373,7 +373,8 @@
 
 (defclass focus-stack (observable focus-chain stack-container)
   ((orientation :initarg :orientation :initform :vertical :accessor orientation)))
-
+;; FIXME: retain the index of each layer in the stack so that moving rows will restore
+;;        the prior index in the new row.
 (defmethod (setf index) :before ((index cons) (stack focus-stack))
   (destructuring-bind (row . col) index
     (unless (<= 0 row (1- (length (layers stack))))
