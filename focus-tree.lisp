@@ -26,8 +26,17 @@
 (defgeneric (setf focused) (focus-element focus-chain))
 (defgeneric focus-next (focus-chain))
 (defgeneric focus-prev (focus-chain))
-(defgeneric focus-up (focus-grid))
-(defgeneric focus-down (focus-grid))
+(defgeneric focus-up (focus-chain))
+(defgeneric focus-down (focus-chain))
+(defgeneric focus-left (focus-chain))
+(defgeneric focus-right (focus-chain))
+
+(define-observable focus-next (observable))
+(define-observable focus-prev (observable))
+(define-observable focus-up (observable))
+(define-observable focus-down (observable))
+(define-observable focus-left (observable))
+(define-observable focus-right (observable))
 
 (defgeneric root (focus-tree))
 
@@ -235,6 +244,12 @@
 (defmethod focus-down ((chain focus-chain))
   (focus-next chain))
 
+(defmethod focus-left ((chain focus-chain))
+  (focus-prev chain))
+
+(defmethod focus-right ((chain focus-chain))
+  (focus-next chain))
+
 (defmethod activate :around ((chain focus-chain))
   (if (and (eql :strong (focus chain))
            (focused chain))
@@ -293,13 +308,13 @@
 (defmethod handle ((event focus-left) (chain focus-chain))
   (if (and (< 0 (element-count chain))
            (eql :strong (focus chain)))
-      (focus-prev chain)
+      (focus-left chain)
       (decline)))
 
 (defmethod handle ((event focus-right) (chain focus-chain))
   (if (and (< 0 (element-count chain))
            (eql :strong (focus chain)))
-      (focus-next chain)
+      (focus-right chain)
       (decline)))
 
 (defclass focus-list (observable focus-chain vector-container)
