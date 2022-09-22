@@ -106,6 +106,8 @@ in vec2 uv;
 in vec4 vert_color;
 uniform sampler2D image;
 uniform float pxRange = 32.0;
+uniform float outline_thickness = 0.0;
+uniform vec4 outline_color = vec4(0.0);
 uniform vec4 color = vec4(0, 0, 0, 1);
 out vec4 out_color;
 
@@ -127,10 +129,13 @@ ivec2 sz = textureSize( image, 0 );
 float dx = dFdx( uv.x ) * sz.x;
 float dy = dFdy( uv.y ) * sz.y;
 float toPixels = pxRange * inversesqrt( dx * dx + dy * dy );
+float outline_opacity = clamp( sigDist * toPixels + 0.5 + outline_thickness, 0.0, 1.0 );
 float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
 
   vec4 frag_col = mix(color, vert_color, vert_color.a);
-  out_color = vec4(frag_col.rgb, frag_col.a*opacity);
+  out_color.rgb = outline_color.rgb * outline_opacity;
+  out_color.rgb = mix(out_color.rgb, frag_col.rgb, opacity);
+  out_color.a = frag_col.a*min(1.0, outline_opacity+opacity);
 }"))))
 
 (defmethod alloy:deallocate ((renderer renderer))
@@ -440,7 +445,10 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
    (markup :initform () :accessor markup)
-   (clock :initform 0f0 :accessor clock)))
+   (clock :initform 0f0 :accessor clock)
+   ;; FIXME: put this stuff into MARKUP and instead segment the font-sequence according to
+   ;;        styling as well, then render that.
+   (outline :initform () :initarg :outline :accessor outline)))
 
 (defmethod org.shirakumo.alloy.animation:update :after ((text text) dt)
   (let* ((markup (markup text))
@@ -510,6 +518,9 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
       (simple:translate renderer (dimensions shape))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer))
       (setf (opengl:uniform shader "color") (simple:pattern shape))
+      (destructuring-bind (&optional (thickness 0.0) (color colors:black)) (outline shape)
+        (setf (opengl:uniform shader "outline_thickness") thickness)
+        (setf (opengl:uniform shader "outline_color") color))
       ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text...
       (opengl:update-vertex-buffer vbo data)
       (let ((sequence (font-sequence shape)))
