@@ -32,7 +32,8 @@
   (let ((clamped (clamp-offset offset layout)))
     (unless (and (/= (pxx clamped) (pxx (offset layout)))
                  (/= (pxy clamped) (pxy (offset layout))))
-      (call-next-method clamped layout))))
+      (prog1 (call-next-method clamped layout)
+        (notify-observers 'value layout clamped layout)))))
 
 (defmethod clipped-p ((layout clip-view))
   (with-unit-parent layout
