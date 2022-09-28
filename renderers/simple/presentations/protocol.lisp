@@ -115,6 +115,9 @@
   (setf (realized-p renderable) T)
   (alloy:notice-size renderable T))
 
+(defmethod alloy:refresh :after ((renderable renderable))
+  (setf (realized-p renderable) NIL))
+
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))
 
