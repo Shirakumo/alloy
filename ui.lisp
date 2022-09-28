@@ -70,6 +70,9 @@
 (defmethod (setf base-scale) :after (value (ui ui))
   (suggest-size (bounds ui) ui))
 
+(defmethod refresh ((ui ui))
+  (refresh (layout-tree ui)))
+
 (defclass smooth-scaling-ui (ui)
   ())
 

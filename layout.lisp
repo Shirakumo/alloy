@@ -33,6 +33,8 @@
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a" (bounds element))))
 
+(defmethod refresh ((element layout-element)))
+
 (defmethod ui ((element layout-element))
   (ui (layout-tree element)))
 
@@ -216,6 +218,10 @@
 (defclass layout (layout-element container renderable)
   ())
 
+(defmethod refresh :after ((layout layout))
+  (do-elements (element layout)
+    (refresh element)))
+
 (defmethod set-layout-tree :before (value (layout layout))
   (do-elements (element layout)
     (set-layout-tree value element)))
@@ -332,3 +338,7 @@
     (suggest-size size root)
     (setf (bounds root) size)
     (setf (bounds popups) size)))
+
+(defmethod refresh ((tree layout-tree))
+  (refresh (root tree))
+  (refresh (popups tree)))
