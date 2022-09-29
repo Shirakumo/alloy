@@ -53,6 +53,9 @@
 (defclass cut-event (direct-event)
   ())
 
+(defclass reset-event (direct-event)
+  ())
+
 (defclass drop-event (direct-event)
   ((paths :initarg :paths :initform (arg! :paths) :reader paths)))
 ;; FIXME: drop-event should be a pointer event and be handled on the thing it's being dropped on.

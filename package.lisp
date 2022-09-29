@@ -210,6 +210,7 @@
    #:cut-event
    #:paste-event
    #:content
+   #:reset-event
    #:drop-event
    #:paths
    #:text-event

@@ -303,6 +303,9 @@
       (T
        (call-next-method)))))
 
+(defmethod handle ((event reset-event) (component text-input-component))
+  (setf (text component) ""))
+
 (defclass filtered-text-input (text-input-component)
   ())
 
