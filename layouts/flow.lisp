@@ -12,11 +12,9 @@
    (min-size :initarg :min-size :initform (size 20 20) :accessor min-size)))
 
 (defmethod notice-size ((element layout-element) (layout flow-layout))
-  (if (eq layout (layout-parent layout))
-      (update-flow-layout layout)
-      (let ((updated (suggest-size (bounds layout) layout)))
-        (unless (size= (bounds layout) updated)
-          (setf (bounds layout) updated)))))
+  (update-flow-layout layout)
+  (unless (eq layout (layout-parent layout))
+    (notice-size layout T)))
 
 (defmethod suggest-size (size (layout flow-layout))
   (with-unit-parent layout
