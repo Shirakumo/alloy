@@ -72,7 +72,7 @@
              (loop for element across elements
                    do (setf (y element) (u+ (y element) (max h (+ th mu mb (pxh element))))))))
           (incf th (+ rh mu mb))
-          (setf (h layout) th))))))
+          (setf (h layout) (max h th)))))))
 
 (defmethod (setf bounds) :after (extent (layout flow-layout))
   (update-flow-layout layout))
