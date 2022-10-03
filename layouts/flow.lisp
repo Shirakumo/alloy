@@ -37,7 +37,7 @@
                (mw (pxw (min-size layout)))
                (y (ecase (align layout)
                     (:start mb)
-                    (:end (- h mu))))
+                    (:end (- mu))))
                (x ml)
                (rh mh)
                (th 0.0)
@@ -67,6 +67,10 @@
                             (setf (bounds element) (px-extent x ey ew eh))
                             (incf x (+ ew ml mr)))))
                    (incf i))
+          (ecase (align layout)
+            (:end
+             (loop for element across elements
+                   do (setf (y element) (u+ (y element) (max h (+ th mu mb (pxh element))))))))
           (incf th (+ rh mu mb))
           (setf (h layout) th))))))
 
