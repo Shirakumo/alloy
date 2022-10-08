@@ -68,5 +68,12 @@
        (setf (bounds target) (px-extent (+ (pxx ib) dx) (y ib) (- (pxw ib) dx) (h ib)))))
     (notice-size target (layout-parent target))))
 
+(defmethod handle :before ((event pointer-move) (resizer resizer))
+  (if (contained-p (location event) resizer)
+      (setf (cursor (ui resizer)) (ecase (side resizer)
+                                    ((:north :south) :vertical-resize)
+                                    ((:east :west) :horizontal-resize)))
+      (setf (cursor (ui resizer)) NIL)))
+
 (defmethod suggest-size (size (resizer resizer))
   (size (un 5) (un 5)))

@@ -9,6 +9,9 @@
 ;;; Provided by the backend
 (defgeneric clipboard (ui))
 (defgeneric (setf clipboard) (content ui))
+;; Standard cursors: :ARROW :TEXT :HAND :HORIZONTAL-RESIZE :VERTICAL-RESIZE :CROSSHAIR
+(defgeneric cursor (ui))
+(defgeneric (setf cursor) (cursor ui))
 
 (defclass ui ()
   ((layout-tree :initarg :layout-tree :reader layout-tree)

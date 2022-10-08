@@ -272,6 +272,11 @@
         (T
          (call-next-method))))))
 
+(defmethod handle ((event pointer-move) (component text-input-component))
+  (if (contained-p (location event) component)
+      (setf (cursor (ui component)) :text)
+      (setf (cursor (ui component)) NIL)))
+
 (defmethod handle ((event copy-event) (component text-input-component))
   (let* ((cursor (cursor component))
          (pos (pos cursor))

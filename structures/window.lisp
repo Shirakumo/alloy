@@ -16,7 +16,9 @@
 
 (defmethod handle ((event pointer-event) (layout frame))
   (restart-case (call-next-method)
-    (decline ())))
+    (decline ()
+      (when (typep event 'pointer-move)
+        (setf (cursor (ui layout)) NIL)))))
 
 (defclass window-title (label* draggable)
   ())

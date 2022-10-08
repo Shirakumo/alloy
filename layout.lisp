@@ -330,6 +330,8 @@
 (defmethod handle ((event pointer-event) (tree layout-tree))
   (or (handle event (popups tree))
       (handle event (root tree))
+      (when (typep event 'pointer-move)
+        (setf (cursor (ui tree)) NIL))
       (decline)))
 
 (defmethod suggest-size (size (tree layout-tree))
