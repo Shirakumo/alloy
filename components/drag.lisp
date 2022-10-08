@@ -69,7 +69,8 @@
     (notice-size target (layout-parent target))))
 
 (defmethod handle :before ((event pointer-move) (resizer resizer))
-  (if (contained-p (location event) resizer)
+  (if (or (contained-p (location event) resizer)
+          (initial-pos resizer))
       (setf (cursor (ui resizer)) (ecase (side resizer)
                                     ((:north :south) :vertical-resize)
                                     ((:east :west) :horizontal-resize)))
