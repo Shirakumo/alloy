@@ -551,13 +551,19 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
 (defmethod alloy:ideal-size ((text text))
   (dimensions text))
 
+(defclass cursor (simple:cursor) ())
+
+(defmethod simple:cursor ((renderer renderer) (text text) (start integer) &rest initargs)
+  (apply #'make-instance 'cursor :text text :start start initargs))
+
 (defun estimate-cursor-pos (text point offset)
   (let* ((bounds (dimensions text))
          (font (data (simple:font text)))
          (line-height (3b-bmfont:line-height font))
          (breaks (line-breaks text))
          (scale (alloy:to-px (simple:size text)))
-         (x (/ (- (alloy:pxx point) (+ (alloy:pxx bounds) (alloy:pxx offset))) (scale text)))
+         (x (* (- (alloy:pxx point) (+ (alloy:pxx bounds) (alloy:pxx offset)))
+               (/ 32.0 35.0)))
          (line (min (length breaks) (max 0 (floor (- (+ (alloy:pxy offset) (alloy:pxy bounds)) (alloy:pxy point)) line-height)))))
     (multiple-value-bind (start end)
         (loop for line-start = 0 then line-end
@@ -575,12 +581,8 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
           (map-glyphs (font-sequence text) #'thunk (alloy:text text) bounds scale NIL :start start :end end))
         (return end)))))
 
-(defclass cursor (simple:cursor) ())
-
-(defmethod simple:cursor ((renderer renderer) (text text) (start integer) &rest initargs)
-  (apply #'make-instance 'cursor :text text :start start initargs))
-
 (defun compute-cursor-location (text point)
+  ;; FIXME: This does **NOT** work with mixed fonts
   (let* ((line (loop for prev = 0 then next
                      for next across (line-breaks text)
                      for i from 0
@@ -593,8 +595,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
          (x (3b-bmfont:measure-glyphs font (alloy:text text)
                                       :start (if (= 0 line) 0 (aref (line-breaks text) (1- line)))
                                       :end point))
-         (s (* (scale text)
-               (/ #++(3b-bmfont:size font) 32.0 35.0)))
+         (s (* (scale text) (/ 32.0 35.0)))
          (d (dimensions text)))
     ;; KLUDGE: Dunno how I could do this cleanly.
     (when (and (= (length (alloy:text text)) point)
