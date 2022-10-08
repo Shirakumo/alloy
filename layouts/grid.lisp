@@ -73,7 +73,8 @@
   ;; Extend rows as much as necessary
   (loop while (< (* (length (row-sizes layout)) (length (col-sizes layout)))
                  (fill-pointer (elements layout)))
-        do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout))))
+        do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout)))
+  (reevaluate-grid-size layout))
 
 (defmethod leave ((element layout-element) (layout grid-layout))
   (setf (aref (elements layout) (element-index element layout)) NIL)
@@ -88,7 +89,8 @@
     ;; Extend rows as much as necessary
     (loop while (< (* (length (row-sizes layout)) (length (col-sizes layout)))
                    (fill-pointer (elements layout)))
-          do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout))))
+          do (vector-push-extend (aref (row-sizes layout) (1- (length (row-sizes layout)))) (row-sizes layout)))
+    (reevaluate-grid-size layout))
   element)
 
 (defmethod call-with-elements (function (layout grid-layout) &rest args)
@@ -98,7 +100,8 @@
   (loop for i downfrom (1- (length (elements layout))) to 0
         for element = (aref (elements layout) i)
         do (when element (leave element layout)))
-  (setf (fill-pointer (elements layout)) 0))
+  (setf (fill-pointer (elements layout)) 0)
+  (reevaluate-grid-size layout))
 
 (defmethod notice-size ((target layout-element) (layout grid-layout))
   ;; FIXME: This is almost 100% the same as (setf bounds) update.
@@ -170,3 +173,8 @@
                (loop for row across (row-sizes layout)
                      if (eql T row) sum (+ mu mb)
                      else sum (to-px row))))))
+
+(defun reevaluate-grid-size (layout)
+  (when (layout-tree layout)
+    (setf (bounds layout) (suggest-size (bounds layout) layout))
+    (notice-size layout T)))
