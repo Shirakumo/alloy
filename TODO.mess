@@ -16,13 +16,6 @@ Currently gradients only exist as a protocol, but are not actually implemented. 
 ### Using Cluffer for Text Buffers
 The "Cluffer"(https://github.com/robert-strandh/Cluffer) library implements a protocol suited for text editor buffers. We should make use of it to implement our text editor components instead of rolling our own ad-hoc buffer system.
 
-### Animation System
-Currently the simple-presentations protocol does not support a way to dynamically change properties over time. This is not terribly important for most applications, but the presence of tweens between different states can massively improve the look and feel of an application, and is especially important for certain domains like games.
-
-In order to do this the first step would be to design an abstract protocol that extends the simple-presentations protocol to allow declaring and managing animation states, as well as a protocol to actually advance animations over time, as currently Alloy is completely unaware of time progression. A protocol design here means a set of classes and generic functions that would facilitate the functionality represented by this extension.
-
-Do //not// start implementing this system before the protocol has been designed and discussed.
-
 ### Query System DPI Information
 Currently we rely on the user to supply actual DPI information about the real system we are running on. It would be great if there was an Alloy extension that allowed querying the DPI information from the system. Several challenges exist here:
 
