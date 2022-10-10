@@ -296,7 +296,10 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                         (case c
                           (#\linefeed
                            (setf x 0.0)
-                           (decf y line))
+                           (decf y line)
+                           ;; KLUDGE: We need these stubs to ensure that things that estimate vertex position
+                           ;;         based on character index don't shift things badly for newlines and spaces
+                           (funcall function i x y 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0))
                           (#\space
                            (incf x space)
                            (funcall function i x y 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0))
