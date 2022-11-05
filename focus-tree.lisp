@@ -459,6 +459,98 @@
           (setf (index stack) (cons row 0))))
     (focused stack)))
 
+(defclass visual-focus-manager (focus-chain)
+  ())
+
+;; KLUDGE: this is not scalable to a lot of elements as we need to scan each element
+;;         every time the focus changes. The naive idea would be to cache neighbors
+;;         when elements are added or removed, though the problem here is manifold:
+;;         1) we do not know when the position of an element changes!
+;;         2) if the visual tree is unhooked we cannot know the position of an element at all!
+;;         3) we can't know when the tree is unhooked or rehooked, either!
+
+(defun %find-next-visual-focus (test manager)
+  (let ((candidate (aref (elements manager) 0)))
+    (with-global-bounds (cur candidate)
+      (loop for element across (elements manager)
+            do (with-global-bounds (new element)
+                 (when (funcall test cur new)
+                   (setf candidate element)))))
+    (setf (focused manager) candidate)))
+
+(defmethod (setf focus) :after ((focus (eql :strong)) (manager visual-focus-manager))
+  (when (and (< 0 (element-count manager))
+             (null (focused manager)))
+    (setf (focused manager) (%find-next-visual-focus
+                             (lambda (cur new)
+                               (or (< (pxx new) (pxx cur))
+                                   (< (pxy cur) (pxy cur))))
+                             manager))))
+
+(defmethod focus-up ((manager visual-focus-manager))
+  (cond ((index manager)
+         (with-global-bounds (foc (focused manager))
+           (setf (focused manager) (%find-next-visual-focus
+                                    (lambda (cur new)
+                                      (and (< (+ (pxy foc) (pxh foc)) (pxy new))
+                                           (< (+ (expt (- (pxx new) (pxx foc)) 4)
+                                                 (expt (- (pxy new) (pxy foc)) 4))
+                                              (+ (expt (- (pxx cur) (pxx foc)) 4)
+                                                 (expt (- (pxy cur) (pxy foc)) 4)))))
+                                    manager))))
+        ((< 0 (element-count manager))
+         (setf (focused manager) (%find-top-left manager)))))
+
+(defmethod focus-down ((manager visual-focus-manager))
+  (cond ((index manager)
+         (with-global-bounds (foc (focused manager))
+           (setf (focused manager) (%find-next-visual-focus
+                                    (lambda (cur new)
+                                      (and (< (pxy new) (pxy foc))
+                                           (< (+ (expt (- (pxx new) (pxx foc)) 4)
+                                                 (expt (- (pxy new) (pxy foc)) 4))
+                                              (+ (expt (- (pxx cur) (pxx foc)) 4)
+                                                 (expt (- (pxy cur) (pxy foc)) 4)))))
+                                    manager))))
+        ((< 0 (element-count manager))
+         (setf (focused manager) (%find-top-left manager)))))
+
+(defmethod focus-right ((manager visual-focus-manager))
+  (cond ((index manager)
+         (with-global-bounds (foc (focused manager))
+           (setf (focused manager) (%find-next-visual-focus
+                                    (lambda (cur new)
+                                      (and (< (+ (pxx foc) (pxw foc)) (pxx new))
+                                           (< (+ (expt (- (pxx new) (pxx foc)) 4)
+                                                 (expt (- (pxy new) (pxy foc)) 4))
+                                              (+ (expt (- (pxx cur) (pxx foc)) 4)
+                                                 (expt (- (pxy cur) (pxy foc)) 4)))))
+                                    manager))))
+        ((< 0 (element-count manager))
+         (setf (focused manager) (%find-top-left manager)))))
+
+(defmethod focus-left ((manager visual-focus-manager))
+  (cond ((index manager)
+         (with-global-bounds (foc (focused manager))
+           (setf (focused manager) (%find-next-visual-focus
+                                    (lambda (cur new)
+                                      (and (< (pxx new) (pxx foc))
+                                           (< (+ (expt (- (pxx new) (pxx foc)) 4)
+                                                 (expt (- (pxy new) (pxy foc)) 4))
+                                              (+ (expt (- (pxx cur) (pxx foc)) 4)
+                                                 (expt (- (pxy cur) (pxy foc)) 4)))))
+                                    manager))))
+        ((< 0 (element-count manager))
+         (setf (focused manager) (%find-top-left manager)))))
+
+(defmethod focus-next ((manager visual-focus-manager))
+  (or (focus-right manager)
+      (focus-down manager)))
+
+(defmethod focus-prev ((manager visual-focus-manager))
+  (or (focus-left manager)
+      (focus-up manager)))
+
 (defclass popup-focus-list (focus-list)
   ())
 

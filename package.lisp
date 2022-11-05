@@ -261,6 +261,7 @@
    #:vertical-focus-list
    #:focus-grid
    #:focus-stack
+   #:visual-focus-manager
    #:focus-tree
    #:popups)
   ;; geometry.lisp
