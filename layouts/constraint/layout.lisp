@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.alloy.layouts.constraint)
 
-(defun make-variables (element solver &key (strength :medium))
+(defun make-variables (element solver &key strength)
   (list (cass:make-variable solver :name (format NIL "X ~a" element) :strength strength)
         (cass:make-variable solver :name (format NIL "Y ~a" element) :strength strength)
         (cass:make-variable solver :name (format NIL "W ~a" element) :strength strength)
@@ -39,7 +39,7 @@
 
 (defun suggest (layout element var size)
   (alloy:with-unit-parent layout
-    (cass:suggest (element-var layout element var) (alloy:to-un size))
+    (cass:suggest (element-var layout element var) (alloy:to-un size) :make-suggestable)
     (cass:update-variables (solver layout))
     (alloy:do-elements (element layout)
       (update layout element))))
@@ -60,12 +60,13 @@
 (defmethod alloy:enter ((element alloy:layout-element) (layout layout) &key constraints)
   (call-next-method)
   (setf (gethash element (variables layout))
-        (make-variables element (solver layout)))
-  (apply-constraints constraints element layout)
-  (when (alloy:layout-tree layout)
-    (alloy:with-unit-parent layout
-      (suggest-size layout layout (alloy:bounds layout))
-      (update layout element))))
+        (make-variables element (solver layout) :strength (if constraints :medium)))
+  (when constraints
+    (apply-constraints constraints element layout)
+    (when (alloy:layout-tree layout)
+      (alloy:with-unit-parent layout
+        (suggest-size layout layout (alloy:bounds layout))
+        (update layout element)))))
 
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
   (dolist (constraint (gethash element (constraints layout)))
