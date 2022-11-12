@@ -487,9 +487,9 @@
 
 (defun %find-top-left (manager)
   (%find-next-visual-focus
-   (lambda (cur new)
-     (or (< (pxx new) (pxx cur))
-         (< (pxy cur) (pxy cur))))
+   (lambda (new) T)
+   (lambda (new)
+     (+ (pxx new) (- most-positive-fixnum (pxy new))))
    manager))
 
 (defun %element-distance (a b)
