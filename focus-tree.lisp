@@ -459,7 +459,7 @@
           (setf (index stack) (cons row 0))))
     (focused stack)))
 
-(defclass visual-focus-manager (focus-list)
+(defclass visual-focus-manager (observable focus-chain vector-container)
   ())
 
 ;; KLUDGE: this is not scalable to a lot of elements as we need to scan each element
