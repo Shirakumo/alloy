@@ -36,8 +36,12 @@
     (T (call-next-method))))
 
 (defmethod (setf focus) :after (value (button button))
-  (unless (eql value :strong)
-    (setf (pressed button) NIL)))
+  (if (eql value :strong)
+      (exit button)
+      (setf (pressed button) NIL)))
+
+(defmethod activate ((button button))
+  button)
 
 (defclass button* (direct-value-component button)
   ((on-activate :initarg :on-activate :initform (arg! :on-activate) :accessor on-activate)))
