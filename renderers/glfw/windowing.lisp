@@ -109,6 +109,12 @@
               ,@init-body))
        (call-with-screen #',init ,@args))))
 
+(defmethod alloy:cursor ((screen screen))
+  :default)
+
+(defmethod (setf alloy:cursor) (value (screen screen))
+  value)
+
 (defclass window (window:window renderer
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ((cursor :reader window:cursor)
@@ -118,6 +124,9 @@
    (min-size :initarg :min-size :accessor window:min-size)
    (max-size :initarg :max-size :accessor window:max-size)
    (background-color :initarg :background-color :initform colors:black :accessor window:background-color)))
+
+(defmethod initialize-instance :after ((window window) &key)
+  (setf (slot-value window 'cursor) (make-instance 'cursor :window window)))
 
 (defmethod window:make-window ((screen screen) &key (title window:*default-window-title*)
                                                     (icon window:*default-window-icon*)
@@ -230,6 +239,13 @@
 
 (defmethod alloy:base-scale ((window window))
   (alloy:base-scale (parent window)))
+
+(defmethod alloy:cursor ((window window))
+  (or (window:icon window)
+      :default))
+
+(defmethod (setf alloy:cursor) (value (window window))
+  (setf (window:icon (window:cursor window)) value))
 
 (defmethod window:notify ((window window))
   (%glfw::request-window-attention (pointer window)))
