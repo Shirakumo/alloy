@@ -149,7 +149,8 @@
                (enter item list)
                (enter item combo)
                (on activate (item)
-                 (setf (value combo) (value item))))))
+                 (setf (value combo) (value item))
+                 (setf (state combo) NIL)))))
       (etypecase items
         (list (loop for item in items do (add item)))
         (vector (loop for item across items do (add item)))))))
