@@ -21,11 +21,21 @@
         (setf (cursor (ui layout)) NIL)))))
 
 (defclass window-title (label* draggable)
-  ())
+  ((initial-location :initform NIL :accessor initial-location)))
 
 (define-observable close (observable))
 (define-observable minimize (observable))
 (define-observable maximize (observable))
+
+(defmethod (setf initial-pos) :after (value (title window-title))
+  (setf (initial-location title) (if value
+                                     (location (layout-parent (layout-parent title)))
+                                     NIL)))
+
+(defmethod drag-to (location (title window-title))
+  (let ((frame (layout-parent (layout-parent title))))
+    (setf (x frame) (+ (pxx (initial-location title)) (- (pxx location) (pxx (initial-pos title)))))
+    (setf (y frame) (+ (pxy (initial-location title)) (- (pxy location) (pxy (initial-pos title)))))))
 
 (defmethod close ((structure window))
   (leave structure T))
@@ -100,16 +110,6 @@
     (enter header frame :place :north)
     (enter title focus-stack :layer 0)
     (enter title header :row 0 :col 0)
-    (on drag-to (location title)
-      ;; FIXME: broken
-      (let ((ox (- (pxx title) (pxx frame)))
-            (oy (- (pxy title) (pxy frame))))
-        (setf (bounds frame)
-              (px-extent (- (pxx location) ox)
-                         (- (pxy location) oy)
-                         (w frame)
-                         (h frame)))
-        (notice-size frame (layout-parent frame))))
     (when closeable
       (let ((button (represent "X" 'button)))
         (enter button header :row 0 :col 3)
