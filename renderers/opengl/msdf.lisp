@@ -29,8 +29,7 @@
    #:selection))
 (in-package #:org.shirakumo.alloy.renderers.opengl.msdf)
 
-(defvar +default-char+
-  '(:xoffset 0 :yoffset 0 :x 0 :y 0 :width 0 :height 0 :xadvance 0))
+(defvar +default-char+ (3b-bmfont::make-glyph))
 
 (defun fontcache-default-directory ()
   ;; KLUDGE: Would be better to use the LOCALAPPDATA envvar, but that requires portable getenv.
