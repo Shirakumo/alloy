@@ -9,6 +9,8 @@
 (defclass separator (layout-element renderable)
   ())
 
+(defmethod activate ((separator separator)))
+
 (defmethod set-focus-tree (tree (separator separator)))
 (defmethod suggest-size (size (separator separator))
   (px-size (pxw size) (un 5)))
