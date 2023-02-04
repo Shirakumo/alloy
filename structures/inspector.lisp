@@ -34,6 +34,8 @@
       ((eql any)
        'printable)
       ((eql T))
+      ((eql string)
+       'input-line)
       ((and symbol (not null))
        (component-class-for-object (c2mop:class-prototype (find-canonical-class slot-type))))
       (cons
