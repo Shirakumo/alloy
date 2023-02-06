@@ -69,9 +69,7 @@
 
 (defmethod initialize-instance :after ((data accessor-data) &key)
   (when (typep (object data) 'observable)
-    (observe (accessor data) (object data)
-             (lambda (value object)
-               (notify-observers 'value data value object)))))
+    (observe (accessor data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)))
 
 (defmethod value ((data accessor-data))
   (funcall (accessor data) (object data)))
@@ -79,20 +77,43 @@
 (defmethod (setf value) (new-value (data accessor-data))
   (funcall (fdefinition `(setf ,(accessor data))) new-value (object data)))
 
+(defmethod (setf object) :around (value (data accessor-data))
+  (remove-observers (accessor data) (object data) data)
+  (call-next-method)
+  (observe (accessor data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)
+  (refresh data))
+
+(defmethod (setf accessor) :around (value (data accessor-data))
+  (remove-observers (accessor data) (object data) data)
+  (call-next-method)
+  (observe (accessor data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)
+  (refresh data))
+
 (defclass slot-data (value-data)
   ((object :initarg :object :initform (arg! :object) :accessor object)
    (slot :initarg :slot :initform (arg! :slot) :accessor slot)))
 
 (defmethod initialize-instance :after ((data slot-data) &key)
   (when (typep (object data) 'observable)
-    (observe (slot data) (object data) (lambda (value object)
-                                         (notify-observers 'value data value object)))))
+    (observe (slot data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)))
 
 (defmethod value ((data slot-data))
   (slot-value (object data) (slot data)))
 
 (defmethod (setf value) (new-value (data slot-data))
   (setf (slot-value (object data) (slot data)) new-value))
+
+(defmethod (setf object) :around (value (data slot-data))
+  (remove-observers (slot data) (object data) data)
+  (call-next-method)
+  (observe (slot data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)
+  (refresh data))
+
+(defmethod (setf slot) :around (value (data slot-data))
+  (remove-observers (slot data) (object data) data)
+  (call-next-method)
+  (observe (slot data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)
+  (refresh data))
 
 (defmethod expand-compound-place-data ((place (eql 'slot-value)) args)
   (destructuring-bind (object slot) args
