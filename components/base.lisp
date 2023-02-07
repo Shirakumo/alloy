@@ -10,10 +10,10 @@
   ())
 
 (defclass value-component (component)
-  ())
+  ((value-function :initarg :value-function :initform 'value :reader value-function)))
 
 (defmethod initialize-instance :after ((component value-component) &key)
-  (observe 'value (data component)
+  (observe (value-function component) (data component)
            (lambda (value observable)
              (declare (ignore value observable))
              (value-changed component))
@@ -23,10 +23,10 @@
   (mark-for-render component))
 
 (defmethod value ((component value-component))
-  (value (data component)))
+  (funcall (value-function component) (data component)))
 
 (defmethod (setf value) (new-value (component value-component))
-  (setf (value (data component)) new-value))
+  (funcall (fdefinition `(setf ,(value-function component))) new-value (data component)))
 
 (defmethod refresh ((component value-component))
   (setf (value component) (value component)))
