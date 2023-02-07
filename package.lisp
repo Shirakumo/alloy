@@ -170,24 +170,23 @@
   (:export
    #:data
    #:refresh
+   #:access
    #:expand-place-data
    #:expand-compound-place-data
    #:value-data
    #:value
-   #:delegate-data
+   #:object-data
    #:object
+   #:delegate-data
    #:observed
    #:remap-data
-   #:object
    #:mapping
    #:place-data
    #:getter
    #:setter
    #:accessor-data
-   #:object
    #:accessor
    #:slot-data
-   #:object
    #:slot
    #:aref-data
    #:object

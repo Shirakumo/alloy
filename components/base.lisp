@@ -23,10 +23,10 @@
   (mark-for-render component))
 
 (defmethod value ((component value-component))
-  (funcall (value-function component) (data component)))
+  (access (data component) (value-function component)))
 
 (defmethod (setf value) (new-value (component value-component))
-  (funcall (fdefinition `(setf ,(value-function component))) new-value (data component)))
+  (setf (access (data component) (value-function component)) new-value))
 
 (defmethod refresh ((component value-component))
   (setf (value component) (value component)))

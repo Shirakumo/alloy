@@ -12,12 +12,20 @@
 (defgeneric refresh (data))
 (defgeneric expand-place-data (place))
 (defgeneric expand-compound-place-data (place args))
+(defgeneric access (data field))
+(defgeneric (setf access) (value data field))
 
 (defmethod expand-place-data ((place cons))
   (expand-compound-place-data (first place) (rest place)))
 
 (defmacro place-data (place)
   (expand-place-data place))
+
+(defmethod access ((object standard-object) field)
+  (slot-value object field))
+
+(defmethod (setf access) (value (object standard-object) field)
+  (setf (slot-value object field) value))
 
 (defclass value-data (data)
   ((value :initarg :value :accessor value)))
@@ -28,15 +36,34 @@
 
 (defmethod value ((string string)) string)
 
+(defmethod access ((data value-data) (field (eql 'value)))
+  (value data))
+
+(defmethod (setf access) (value (data value-data) (field (eql 'value)))
+  (setf (value data) value))
+
 (defmethod refresh ((data value-data))
   (notify-observers 'value data (value data) data))
 
 (defmethod expand-place-data (atom)
   `(make-instance 'value-data :value ,atom))
 
-(defclass delegate-data (data)
-  ((object :initarg :object :initform (arg! :object) :accessor object)
-   (observed :initarg :observed :initform () :accessor observed)))
+(defclass object-data (data)
+  ((object :initarg :object :initform (arg! :object) :accessor object)))
+
+(defmethod (setf object) :around (value (data object-data))
+  (observe NIL (object data) data)
+  (prog1 (call-next-method)
+    (observe T (object data) data)))
+
+(defmethod access ((data object-data) field)
+  (access (object data) field))
+
+(defmethod (setf access) (value (data object-data) field)
+  (setf (access (object data) field) value))
+
+(defclass delegate-data (object-data)
+  ((observed :initarg :observed :initform () :accessor observed)))
 
 (defmethod reinitialize-instance :befroe ((data delegate-data) &key)
   (observe NIL (object data) data))
@@ -57,11 +84,6 @@
   (unless (find function (observed data))
     (push function (observed data))))
 
-(defmethod (setf object) :around (value (data delegate-data))
-  (observe NIL (object data) data)
-  (prog1 (call-next-method)
-    (observe T (object data) data)))
-
 (defmethod (setf observed) :around (value (data delegate-data))
   (observe NIL (object data) data)
   (prog1 (call-next-method)
@@ -71,17 +93,11 @@
   ;; FIXME: do this. somehow.
   )
 
-(defclass remap-data (data)
-  ((object :initarg :object :initform (arg! :object) :accessor object)
-   (mapping :initform (make-hash-table :test 'eql) :accessor mapping)))
+(defclass remap-data (object-data)
+  ((mapping :initform (make-hash-table :test 'eql) :accessor mapping)))
 
 (defmethod shared-initialize :after ((data remap-data) slots &key (mapping NIL mapping-p))
   (when mapping-p (setf (mapping data) mapping)))
-
-(defmethod (setf object) :around (value (data remap-data))
-  (observe NIL (object data) data)
-  (prog1 (call-next-method)
-    (observe T (object data) data)))
 
 (defmethod (setf mapping) :around ((value hash-table) (data remap-data))
   (observe NIL (object data) data)
@@ -140,9 +156,8 @@
                     :getter (lambda () ,place)
                     :setter (lambda (,value) (setf ,place ,value)))))
 
-(defclass accessor-data (value-data)
-  ((object :initarg :object :initform (arg! :object) :accessor object)
-   (accessor :initarg :accessor :initform (arg! :accessor) :accessor accessor)))
+(defclass accessor-data (value-data object-data)
+  ((accessor :initarg :accessor :initform (arg! :accessor) :accessor accessor)))
 
 (defmethod initialize-instance :after ((data accessor-data) &key)
   (when (typep (object data) 'observable)
@@ -166,9 +181,8 @@
   (observe (accessor data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)
   (refresh data))
 
-(defclass slot-data (value-data)
-  ((object :initarg :object :initform (arg! :object) :accessor object)
-   (slot :initarg :slot :initform (arg! :slot) :accessor slot)))
+(defclass slot-data (value-data object-data)
+  ((slot :initarg :slot :initform (arg! :slot) :accessor slot)))
 
 (defmethod initialize-instance :after ((data slot-data) &key)
   (when (typep (object data) 'observable)
@@ -180,17 +194,17 @@
 (defmethod (setf value) (new-value (data slot-data))
   (setf (slot-value (object data) (slot data)) new-value))
 
-(defmethod (setf object) :around (value (data slot-data))
-  (remove-observers (slot data) (object data) data)
-  (call-next-method)
-  (observe (slot data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)
+(defmethod observe ((nothing (eql NIL)) object (data slot-data) &optional (name data))
+  (remove-observers (slot data) object name))
+
+(defmethod observe ((all (eql T)) object (data slot-data) &optional (name data))
+  (observe (slot data) object (lambda (value object) (notify-observers 'value data value object)) name)
   (refresh data))
 
 (defmethod (setf slot) :around (value (data slot-data))
-  (remove-observers (slot data) (object data) data)
-  (call-next-method)
-  (observe (slot data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)
-  (refresh data))
+  (observe NIL (object data) data)
+  (prog1 (call-next-method)
+    (observe T (object data) data)))
 
 (defmethod expand-compound-place-data ((place (eql 'slot-value)) args)
   (destructuring-bind (object slot) args
