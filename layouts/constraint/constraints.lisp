@@ -210,7 +210,7 @@
       `(= (:x ,other) (- :x ,margin))))))
 
 (define-expression-transform :aspect-ratio (ratio)
-  (list `(= :h (* :w ,ratio))))
+  (list `(= :w (* :h ,ratio))))
 
 (define-expression-transform :min-width (width)
   (list `(<= ,width :w)))
