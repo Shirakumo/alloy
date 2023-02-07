@@ -9,7 +9,7 @@
 ;;; Provided by the backend
 (defgeneric clipboard (ui))
 (defgeneric (setf clipboard) (content ui))
-;; Standard cursors: :ARROW :TEXT :HAND :HORIZONTAL-RESIZE :VERTICAL-RESIZE :CROSSHAIR
+;; Standard cursors: :ARROW :TEXT :HAND :HORIZONTAL-RESIZE :VERTICAL-RESIZE :CROSSHAIR :BOTTOMLEFT-TOPRIGHT-RESIZE :TOPLEFT-BOTTOMRIGHT-RESIZE :RESIZE :DISALLOWED
 (defgeneric cursor (ui))
 (defgeneric (setf cursor) (cursor ui))
 
