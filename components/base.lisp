@@ -12,10 +12,12 @@
 (defclass value-component (component)
   ())
 
-(defmethod initialize-instance :after ((component value-component) &key)
-  (on value (value (data component))
-    (declare (ignore value))
-    (value-changed component)))
+(defmethod initialize-instance :after ((component value-component) &key (value-function 'value))
+  (observe value-function (data component)
+           (lambda (value observable)
+             (declare (ignore value observable))
+             (value-changed component))
+           component))
 
 (defmethod value-changed ((component value-component))
   (mark-for-render component))
