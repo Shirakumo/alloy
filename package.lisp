@@ -174,6 +174,12 @@
    #:expand-compound-place-data
    #:value-data
    #:value
+   #:delegate-data
+   #:object
+   #:observed
+   #:remap-data
+   #:object
+   #:mapping
    #:place-data
    #:getter
    #:setter

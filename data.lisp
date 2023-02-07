@@ -34,6 +34,83 @@
 (defmethod expand-place-data (atom)
   `(make-instance 'value-data :value ,atom))
 
+(defclass delegate-data (data)
+  ((object :initarg :object :initform (arg! :object) :accessor object)
+   (observed :initarg :observed :initform () :accessor observed)))
+
+(defmethod reinitialize-instance :befroe ((data delegate-data) &key)
+  (observe NIL (object data) data))
+
+(defmethod shared-initialize :after ((data delegate-data) slots &key)
+  (observe T (object data) data))
+
+(defmethod observe ((nothing (eql NIL)) object (data delegate-data) &optional (name data))
+  (dolist (function (observed data))
+    (remove-observers function object name)))
+
+(defmethod observe ((all (eql T)) object (data delegate-data) &optional (name data))
+  (dolist (function (observed data))
+    (observe function object (lambda (&rest args) (apply #'notify-observers function data args)) name)))
+
+(defmethod observe :after (function (data delegate-data) observer &optional name)
+  (declare (ignore name))
+  (unless (find function (observed data))
+    (push function (observed data))))
+
+(defmethod (setf object) :around (value (data delegate-data))
+  (observe NIL (object data) data)
+  (prog1 (call-next-method)
+    (observe T (object data) data)))
+
+(defmethod (setf observed) :around (value (data delegate-data))
+  (observe NIL (object data) data)
+  (prog1 (call-next-method)
+    (observe T (object data) data)))
+
+(defmethod refresh ((data delegate-data))
+  ;; FIXME: do this. somehow.
+  )
+
+(defclass remap-data (data)
+  ((object :initarg :object :initform (arg! :object) :accessor object)
+   (mapping :initform (make-hash-table :test 'eql) :accessor mapping)))
+
+(defmethod shared-initialize :after ((data remap-data) slots &key (mapping NIL mapping-p))
+  (when mapping-p (setf (mapping data) mapping)))
+
+(defmethod (setf object) :around (value (data remap-data))
+  (observe NIL (object data) data)
+  (prog1 (call-next-method)
+    (observe T (object data) data)))
+
+(defmethod (setf mapping) :around ((value hash-table) (data remap-data))
+  (observe NIL (object data) data)
+  (prog1 (call-next-method)
+    (observe T (object data) data)))
+
+(defmethod (setf mapping) ((value cons) (data remap-data))
+  (let ((table (make-hash-table :test 'eql)))
+    (loop for (k . v) in value
+          do (setf (gethash k table) v))
+    (setf (mapping data) table)))
+
+(defmethod (setf mapping) ((value null) (data remap-data))
+  (let ((table (make-hash-table :test 'eql)))
+    (setf (mapping data) table)))
+
+(defmethod observe ((nothing (eql NIL)) object (data remap-data) &optional (name data))
+  (loop for function being the hash-keys of (observed data)
+        do (remove-observers function object name)))
+
+(defmethod observe ((all (eql T)) object (data remap-data) &optional (name data))
+  (loop for function being the hash-keys of (observed data) using (hash-value mapped)
+        do (observe function object (lambda (&rest args) (apply #'notify-observers mapped data args)) name))
+  (refresh data))
+
+(defmethod refresh ((data remap-data))
+  ;; FIXME: do this. somehow.
+  )
+
 ;;; General case.
 (defclass place-data (value-data)
   ((getter :initarg :getter :initform (arg! :getter) :accessor getter)
