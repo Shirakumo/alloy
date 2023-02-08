@@ -77,7 +77,8 @@
 
 (defmethod observe ((all (eql T)) object (data delegate-data) &optional (name data))
   (dolist (function (observed data))
-    (observe function object (lambda (&rest args) (apply #'notify-observers function data args)) name)))
+    (observe function object (lambda (&rest args) (apply #'notify-observers function data args)) name))
+  (refresh data))
 
 (defmethod observe :after (function (data delegate-data) observer &optional name)
   (declare (ignore name))
