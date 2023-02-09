@@ -197,7 +197,7 @@
 (defmethod enter ((element element) (container single-container) &key)
   (when (inner container)
     (cerror "Replace the element" 'place-already-occupied
-            :element element :place T :layout container :existing (inner container)))
+            :bad-element element :place T :layout container :existing (inner container)))
   (setf (inner container) element))
 
 (defmethod update ((element element) (container single-container) &key))
