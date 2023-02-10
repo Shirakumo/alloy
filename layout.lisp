@@ -226,6 +226,11 @@
   (do-elements (element layout)
     (set-layout-tree value element)))
 
+(defmethod set-layout-tree :after (value (layout layout))
+  (unless value
+    (setf (extent-w (bounds layout)) (px 0))
+    (setf (extent-h (bounds layout)) (px 0))))
+
 (defmethod enter :after ((element layout-element) (layout layout) &key)
   (when (layout-tree layout)
     (notice-size element layout)))
