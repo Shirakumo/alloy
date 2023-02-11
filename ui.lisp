@@ -44,7 +44,9 @@
 (defmethod handle ((event pointer-event) (ui ui))
   (or (handle event (focus-tree ui))
       (handle event (layout-tree ui))
-      (decline)))
+      (progn
+        (setf (cursor ui) :arrow)
+        (decline))))
 
 (defmethod render ((renderer renderer) (ui ui))
   (render renderer (layout-tree ui)))
