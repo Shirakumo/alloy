@@ -150,7 +150,9 @@
                (enter item combo)
                (on activate (item)
                  (setf (value combo) (value item))
-                 (setf (state combo) NIL)))))
+                 (setf (state combo) NIL))
+               (when (eql el (value combo))
+                 (setf (focused combo) item)))))
       (etypecase items
         (list (loop for item in items do (add item)))
         (vector (loop for item across items do (add item)))))))
