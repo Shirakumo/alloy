@@ -128,9 +128,12 @@
         (setf w (umax 0 w))
         (with-border (c pxh)
           (declare (ignore size))
-          (setf (bounds element) (px-extent (+ x (pxl p)) (+ y (pxb p))
-                                            (- w (pxl p) (pxr p))
-                                            (- h (pxb p) (pxu p)))))))))
+          (setf (bounds element) (px-extent (+ x (if (slot-value layout 'l) (pxl p) 0))
+                                            (+ y (if (slot-value layout 'b) (pxb p) 0))
+                                            (- w (if (slot-value layout 'l) (pxl p) 0)
+                                               (if (slot-value layout 'r) (pxr p) 0))
+                                            (- h (if (slot-value layout 'b) (pxb p) 0)
+                                               (if (slot-value layout 'u) (pxu p) 0)))))))))
 
 (defmethod notice-size ((element layout-element) (layout border-layout))
   ;; FIXME: this is slow. Should only update as necessary by the change.
