@@ -14,7 +14,7 @@
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a ~a" (bounds element) (focus element))))
 
-(defmethod suggest-size (size (component component))
+(defmethod suggest-size ((size size) (component component))
   (or (preferred-size component)
       size))
 
