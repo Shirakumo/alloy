@@ -12,6 +12,12 @@
 (defmethod (setf pressed) :after (value (button button))
   (mark-for-render button))
 
+(defmethod handle ((event pointer-move) (button button))
+  (if (contained-p (location event) button)
+      (setf (cursor (ui button)) :hand)
+      (setf (cursor (ui button)) NIL))
+  (call-next-method))
+
 (defmethod handle ((event pointer-down) (button button))
   (with-global-bounds (bounds button)
     (if (contained-p (location event) bounds)
