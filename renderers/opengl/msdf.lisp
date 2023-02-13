@@ -625,8 +625,10 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
       (incf line))
     (when (= (length (alloy:text text)) 0)
       (setf line -0.5))
-    (alloy:px-extent (* s x) (- (alloy:pxy d) (* s line-height line))
-                     (* s 4) (* s line-height))))
+    (alloy:px-extent (+ (alloy:pxx d) (* s x))
+                     (- (alloy:pxy d) (* s line-height line))
+                     (* s 4)
+                     (* s line-height))))
 
 (defmethod shared-initialize :after ((cursor cursor) slots &key)
   (setf (simple:bounds cursor) (compute-cursor-location (simple:text-object cursor) (simple:start cursor))))
