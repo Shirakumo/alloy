@@ -224,14 +224,30 @@
         (:escape
          (exit component))
         (T
-         (case (char (or (key-text (key event) (ui component)) " ") 0)
-           (#\a
-            (when (find :control (modifiers event))
-              (set-anchor 0 cursor)
-              (move-to :end cursor)))
-           (T
-            (unless (eql :strong (focus component))
-              (decline)))))))))
+         (if (find :control (modifiers event))
+             (case (char (or (key-text (key event) (ui component)) " ") 0)
+               (#\a
+                (set-anchor 0 cursor)
+                (move-to :end cursor))
+               (#\b
+                (if (find :alt (modifiers event))
+                    (move :prev-token)
+                    (move :prev-char)))
+               (#\e
+                (move :line-end))
+               (#\f
+                (if (find :alt (modifiers event))
+                    (move :prev-token)
+                    (move :prev-char)))
+               (#\n
+                (move :next-line))
+               (#\p
+                (move :prev-line))
+               (T
+                (unless (eql :strong (focus component))
+                  (decline))))
+             (unless (eql :strong (focus component))
+               (decline))))))))
 
 (defmethod handle ((event key-up) (component text-input-component))
   ;; FIXME: This is not quite correct as we *do* eat corresponding text inputs...
