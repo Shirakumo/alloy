@@ -560,7 +560,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
       (let* ((data (data (simple:font text)))
              (w (- x+ x-))
              (line (* (/ scale (3b-bmfont:base data)) (3b-bmfont:line-height data)))
-             (h (* line (ceiling (- y+ y-) line)))
+             (h (* line (max 1 (floor (- y+ y-) line))))
              (p (simple:resolve-alignment (simple:bounds text) :start (simple:valign text)
                                           (alloy:px-size w h))))
         (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p))
