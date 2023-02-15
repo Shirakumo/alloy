@@ -456,6 +456,8 @@
   ;; ui.lisp
   (:export
    #:clipboard
+   #:cursor
+   #:key-text
    #:ui
    #:layout-tree
    #:focus-tree

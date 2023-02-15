@@ -200,10 +200,6 @@
                              component))
                ((< (pos cursor) (length (text component)))
                 (delete-text (pos cursor) (1+ (pos cursor)) component))))
-        (:a
-         (when (find :control (modifiers event))
-           (set-anchor 0 cursor)
-           (move-to :end cursor)))
         (:left
          (if (find :control (modifiers event))
              (move :prev-token)
@@ -228,8 +224,14 @@
         (:escape
          (exit component))
         (T
-         (unless (eql :strong (focus component))
-           (decline)))))))
+         (case (char (or (key-text (key event) (ui component)) " ") 0)
+           (#\a
+            (when (find :control (modifiers event))
+              (set-anchor 0 cursor)
+              (move-to :end cursor)))
+           (T
+            (unless (eql :strong (focus component))
+              (decline)))))))))
 
 (defmethod handle ((event key-up) (component text-input-component))
   ;; FIXME: This is not quite correct as we *do* eat corresponding text inputs...

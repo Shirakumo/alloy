@@ -65,3 +65,7 @@
 
 (cffi:defcfun (%glfw::wait-events-timeout "glfwWaitEventsTimeout") :void
   (timeout :double))
+
+(cffi:defcfun (%glfw::get-key-name "glfwGetKeyName") :string
+  (key %glfw::key)
+  (scan-code :int))

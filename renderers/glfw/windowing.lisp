@@ -247,6 +247,9 @@
 (defmethod (setf alloy:cursor) (value (window window))
   (setf (window:icon (window:cursor window)) value))
 
+(defmethod alloy:key-text (key (window window))
+  (%glfw::get-key-name key (pointer screen)))
+
 (defmethod window:notify ((window window))
   (%glfw::request-window-attention (pointer window)))
 

@@ -12,6 +12,7 @@
 ;; Standard cursors: :ARROW :TEXT :HAND :HORIZONTAL-RESIZE :VERTICAL-RESIZE :CROSSHAIR :BOTTOMLEFT-TOPRIGHT-RESIZE :TOPLEFT-BOTTOMRIGHT-RESIZE :RESIZE :DISALLOWED
 (defgeneric cursor (ui))
 (defgeneric (setf cursor) (cursor ui))
+(defgeneric key-text (key ui))
 
 (defclass ui ()
   ((layout-tree :initarg :layout-tree :reader layout-tree)
