@@ -163,7 +163,7 @@
                (push k arglist))
       (when arglist
         (flet ((update ()
-                 (apply #'reinitialize-instance shape arglist)))
+                 (apply #'reinitialize-instance shape :renderer renderer arglist)))
           (declare (dynamic-extent #'update))
           (call-with-tracked-changes renderable shape #'update))))))
 
