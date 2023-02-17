@@ -330,6 +330,7 @@
    #:ensure-visible
    #:bounds
    #:resize
+   #:refit
    #:location
    #:global-location
    #:layout-element

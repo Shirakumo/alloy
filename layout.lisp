@@ -15,6 +15,7 @@
 (defgeneric bounds (layout-element))
 (defgeneric (setf bounds) (extent layout-element))
 (defgeneric resize (element w h))
+(defgeneric refit (layout))
 (defgeneric location (element))
 (defgeneric (setf location) (location element))
 (defgeneric global-location (layout-element))
