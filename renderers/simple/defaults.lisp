@@ -57,6 +57,10 @@
   (apply #'make-instance 'image-pattern :image image initargs))
 
 (defclass shape () ())
+
+(defmethod reinitialize-instance :after ((shape shape) &key renderer)
+  (declare (ignore renderer)))
+
 (defclass patterned-shape (shape)
   ((pattern :initarg :pattern :initform colors:black :accessor pattern)))
 (defclass filled-shape (patterned-shape) ())
@@ -168,6 +172,10 @@
                 (T (request-font renderer font)))))
     (apply #'call-next-method renderer bounds text :font font initargs)))
 
+(defmethod reinitialize-instance :after ((text text) &key (font NIL font-p) renderer)
+  (when (and font-p (not (typep font 'font)))
+    (setf (font text) (request-font renderer font))))
+
 (defmethod (setf markup) :around ((markup cons) (text text))
   (call-next-method (sort-markup markup) text))
 
@@ -185,6 +193,10 @@
 
 (defmethod icon ((renderer renderer) bounds (image image) &rest initargs)
   (apply #'make-instance 'icon :image image :bounds bounds initargs))
+
+(defmethod reinitialize-instance :after ((icon icon) &key (image NIL image-p) renderer)
+  (when (and image-p (not (typep image 'image)))
+    (setf (image icon) (request-image renderer image))))
 
 (defclass cursor (filled-rectangle)
   ((text-object :initarg :text :accessor text-object)
