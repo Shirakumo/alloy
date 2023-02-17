@@ -517,5 +517,9 @@ void main(){
       (setf (uniform shader "transform") (simple:transform-matrix renderer))
       (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6))))
 
-(defmethod simple:request-image ((renderer renderer) (data vector) &key size)
-  (make-texture renderer (alloy:pxw size) (alloy:pxh size) data))
+(defmethod simple:request-image ((renderer renderer) (data vector) &rest args &key size)
+  (etypecase data
+    ((vector (unsigned-byte 8))
+     (make-texture renderer (alloy:pxw size) (alloy:pxh size) data))
+    (string
+     (apply #'simple:request-image renderer (pathname data) args))))
