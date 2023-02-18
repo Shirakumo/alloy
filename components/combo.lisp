@@ -74,6 +74,7 @@
 
 (defmethod activate :after ((combo combo))
   (setf (state combo) :selecting)
+  (refit combo)
   (setf (index combo) (index combo)))
 
 (defmethod handle ((event text-event) (combo combo))
@@ -170,7 +171,11 @@
      (render renderer (combo-list combo)))))
 
 (defmethod (setf bounds) :after (bounds (combo combo))
-  (let ((ideal (suggest-size bounds (combo-list combo))))
+  (refit combo))
+
+(defmethod refit ((combo combo))
+  (let* ((bounds (bounds combo))
+         (ideal (suggest-size bounds (combo-list combo))))
     (setf (bounds (combo-list combo))
           (px-extent 0
                      (- (pxh bounds) (pxh ideal))
