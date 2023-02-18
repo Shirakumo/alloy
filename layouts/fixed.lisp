@@ -49,3 +49,8 @@
     ;; Shuffle to ensure element is last, and thus drawn on top.
     (rotatef (aref (elements layout) (1- (length (elements layout))))
              (aref (elements layout) (position element (elements layout))))))
+
+(defmethod refit ((layout fixed-layout)))
+
+(defmethod (setf bounds) :after (bounds (layout fixed-layout))
+  (refit layout))

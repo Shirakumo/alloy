@@ -47,3 +47,7 @@
         do (when (handle event element)
              (return))
         finally (decline)))
+
+(defmethod refit ((layout fullscreen-layout))
+  (loop for element across (elements layout)
+        do (setf (bounds element) (bounds layout))))

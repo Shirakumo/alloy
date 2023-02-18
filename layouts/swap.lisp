@@ -49,9 +49,7 @@
       (suggest-size size (current layout))))
 
 (defmethod (setf bounds) :after ((extent extent) (layout swap-layout))
-  (when (< 0 (length (elements layout)))
-    (setf (bounds (current layout))
-          (extent 0 0 (w layout) (h layout)))))
+  (refit layout))
 
 (defmethod (setf bounds) :after ((size size) (layout swap-layout))
   (when (< 0 (length (elements layout)))
@@ -77,3 +75,8 @@
   (when (and (current layout)
              (contained-p (location event) (current layout)))
     (handle event (current layout))))
+
+(defmethod refit ((layout swap-layout))
+  (when (< 0 (length (elements layout)))
+    (setf (bounds (current layout))
+          (extent 0 0 (w layout) (h layout)))))

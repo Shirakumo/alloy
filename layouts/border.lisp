@@ -89,15 +89,16 @@
     (mapc #'test '(l u r b c))
     layout))
 
-(defun update-border-layout (layout &optional (extent (bounds layout)))
+(defmethod refit ((layout border-layout))
   (macrolet ((with-border ((slot dim) &body body)
                `(destructuring-bind (&optional element size) (slot-value layout ',slot)
                   (when element
                     (let ((size (or size (,dim element))))
                       ,@body)))))
     (with-unit-parent layout
-      (let ((w (pxw extent)) (h (pxh extent)) (x 0) (y 0)
-            (p (padding layout)))
+      (let* ((extent (bounds layout))
+             (w (pxw extent)) (h (pxh extent)) (x 0) (y 0)
+             (p (padding layout)))
         ;;(incf x (pxl p))
         ;;(incf y (pxb p))
         ;;(decf w (+ (pxl p) (pxr p)))
@@ -137,7 +138,7 @@
 
 (defmethod notice-size ((element layout-element) (layout border-layout))
   ;; FIXME: this is slow. Should only update as necessary by the change.
-  (update-border-layout layout))
+  (refit layout))
 
 (defmethod suggest-size (new-size (layout border-layout))
   (macrolet ((with-border ((slot dim) &body body)
@@ -172,4 +173,4 @@
         (px-size w h)))))
 
 (defmethod (setf bounds) :after (extent (layout border-layout))
-  (update-border-layout layout extent))
+  (refit layout))

@@ -103,48 +103,12 @@
   (setf (fill-pointer (elements layout)) 0)
   (reevaluate-grid-size layout))
 
-(defmethod notice-size ((target layout-element) (layout grid-layout))
-  ;; FIXME: This is almost 100% the same as (setf bounds) update.
+(defmethod refit ((layout grid-layout))
   (with-unit-parent layout
     (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
       (let* ((extent (bounds layout))
-             (th (spanning-size (row-sizes layout) (extent-h extent)))
-             (tw (spanning-size (col-sizes layout) (extent-w extent))))
-        (loop with elements = (elements layout)
-              for y = (+ (pxh extent) (- mb)) then (- y h)
-              for hish across (row-sizes layout)
-              for h = (if (eql T hish) th (to-px hish))
-              for i from 0
-              do (loop for x = ml then (+ x w)
-                       for wish across (col-sizes layout)
-                       for w = (if (eql T wish) tw (to-px wish))
-                       for j from 0
-                       for idx from (* i (length (col-sizes layout)))
-                       while (< idx (fill-pointer elements))
-                       do (let ((element (aref elements idx)))
-                            (when (eq element target)
-                              (let ((ideal (suggest-size (px-size (- w ml mr) (- h mb mu)) element)))
-                                (setf (bounds element)
-                                      (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
-                                                 (if (stretch layout) (- w ml mr) (extent-w ideal))
-                                                 (if (stretch layout) (- h mb mu) (extent-h ideal)))))))))))))
-
-(defun spanning-size (sizes total)
-  (let ((count 0)
-        (total (to-px total)))
-    (loop for size across sizes
-          do (etypecase size
-               (unit (decf total (to-px size)))
-               ((eql T) (incf count))))
-    (max 0.0 (if (< 0 count)
-                 (/ total count)
-                 total))))
-
-(defmethod (setf bounds) :after (extent (layout grid-layout))
-  (with-unit-parent layout
-    (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
-      (let ((th (spanning-size (row-sizes layout) (size-h extent)))
-            (tw (spanning-size (col-sizes layout) (size-w extent))))
+             (th (spanning-size (row-sizes layout) (size-h extent)))
+             (tw (spanning-size (col-sizes layout) (size-w extent))))
         (loop with elements = (elements layout)
               for y = (+ (pxh extent) (- mb)) then (- y h)
               for hish across (row-sizes layout)
@@ -159,14 +123,34 @@
                        do (let ((element (aref elements idx)))
                             (when element
                               (let ((ideal (suggest-size (px-size (- w ml mr) (- h mb mu)) element)))
-                                (setf (bounds element)
-                                      (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
-                                                 (if (stretch layout) (- w ml mr) (size-w ideal))
-                                                 (if (stretch layout) (- h mb mu) (size-h ideal)))))))))))))
+                                (if (and (< 0 (pxh ideal)) (< 0 (pxw ideal)))
+                                    (setf (bounds element)
+                                          (px-extent x (- y (if (stretch layout) (- h mb mu) (pxh ideal)))
+                                                     (if (stretch layout) (- w ml mr) (size-w ideal))
+                                                     (if (stretch layout) (- h mb mu) (size-h ideal))))
+                                    (setf (bounds element) (px-extent 0 0 0 0))))))))))))
+
+(defun spanning-size (sizes total)
+  (let ((count 0)
+        (total (to-px total)))
+    (loop for size across sizes
+          do (etypecase size
+               (unit (decf total (to-px size)))
+               ((eql T) (incf count))))
+    (max 0.0 (if (< 0 count)
+                 (/ total count)
+                 total))))
+
+(defmethod notice-size ((target layout-element) (layout grid-layout))
+  (refit layout))
+
+(defmethod (setf bounds) :after (extent (layout grid-layout))
+  (refit layout))
 
 (defmethod suggest-size (size (layout grid-layout))
   (with-unit-parent layout
     (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
+      ;; FIXME: For T cells we should SUGGEST-SIZE the contents to get better estimates.
       (px-size (loop for col across (col-sizes layout)
                      if (eql T col) sum (+ ml mr)
                      else sum (to-px col))

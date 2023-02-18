@@ -82,8 +82,11 @@
 (defmethod alloy:notice-size ((element alloy:layout-element) (layout layout)))
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
+  (alloy:refit layout))
+
+(defmethod alloy:refit ((layout layout))
   (alloy:with-unit-parent layout
-    (suggest-size layout layout extent)
+    (suggest-size layout layout (alloy:bounds layout))
     (alloy:do-elements (element layout)
       (update layout element))))
 

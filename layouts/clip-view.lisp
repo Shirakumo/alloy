@@ -17,7 +17,7 @@
       size))
 
 (defmethod notice-size ((element layout-element) (layout clip-view))
-  (update-clip-view layout))
+  (refit layout))
 
 (defun clamp-offset (offset layout)
   (flet ((clamp (l x u)
@@ -43,7 +43,7 @@
       (T (or (< (pxh (bounds layout)) (pxh (bounds (inner layout))))
              (< (pxw (bounds layout)) (pxw (bounds (inner layout)))))))))
 
-(defun update-clip-view (layout)
+(defmethod refit ((layout clip-view))
   (when (inner layout)
     (with-unit-parent layout
       (let* ((bounds (bounds layout))
@@ -59,7 +59,7 @@
       (setf (offset layout) (offset layout)))))
 
 (defmethod (setf bounds) :after (bounds (layout clip-view))
-  (update-clip-view layout))
+  (refit layout))
 
 (defmethod compute-global-position ((element clip-view))
   (with-unit-parent element
