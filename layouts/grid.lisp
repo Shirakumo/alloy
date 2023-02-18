@@ -150,13 +150,36 @@
 (defmethod suggest-size (size (layout grid-layout))
   (with-unit-parent layout
     (destructure-margins (:l ml :u mu :r mr :b mb :to-px T) (cell-margins layout)
-      ;; FIXME: For T cells we should SUGGEST-SIZE the contents to get better estimates.
-      (px-size (loop for col across (col-sizes layout)
-                     if (eql T col) sum (+ ml mr)
-                     else sum (to-px col))
-               (loop for row across (row-sizes layout)
-                     if (eql T row) sum (+ mu mb)
-                     else sum (to-px row))))))
+      (let* ((cols (col-sizes layout))
+             (rows (row-sizes layout))
+             (elements (elements layout))
+             (col-count (length cols))
+             (row-count (length rows))
+             (wtotal (loop for col across cols
+                           unless (eql T col) sum (to-px col)))
+             (htotal (loop for row across rows
+                           unless (eql T row) sum (to-px row)))
+             (flex-cols (loop for col across cols count (eql T col)))
+             (flex-rows (loop for row across rows count (eql T row)))
+             (suggested (px-size (- (/ (- (pxw size) wtotal) (max 1 flex-cols)) ml mr)
+                                 (- (/ (- (pxh size) htotal) (max 1 flex-rows)) mu mb))))
+        (flet ((el (row col)
+                 (let ((idx (+ col (* row col-count))))
+                   (when (< idx (length elements))
+                     (aref elements idx)))))
+          (loop for col from 0 below col-count
+                do (when (eql (aref cols col) T)
+                     (incf wtotal (+ (loop for row from 0 below row-count
+                                           for el = (el row col)
+                                           maximize (if el (pxw (suggest-size suggested el)) 0.0))
+                                     ml mr))))
+          (loop for row from 0 below row-count
+                do (when (eql (aref rows row) T)
+                     (incf htotal (+ (loop for col from 0 below col-count
+                                           for el = (el row col)
+                                           maximize (if el (pxh (suggest-size suggested el)) 0.0))
+                                     mu mb))))
+          (px-size wtotal htotal))))))
 
 (defun reevaluate-grid-size (layout)
   (when (layout-tree layout)
