@@ -124,7 +124,9 @@
   (update-shape renderer renderable T NIL)
   ;; The renderable's preferred size may depend on the shapes, such as text, so we should
   ;; notify the layout mechanism that we need to update, now that the shapes are there.
-  (alloy:notice-size renderable T))
+  (when (loop for (id . shape) across (shapes renderable)
+              thereis (typep shape 'simple:text))
+    (alloy:notice-size renderable T)))
 
 (defmethod alloy:refresh :after ((renderable renderable))
   (setf (realized-p renderable) NIL))
