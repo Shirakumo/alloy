@@ -13,7 +13,11 @@
 
 (defmethod suggest-size (size (layout clip-view))
   (if (inner layout)
-      (suggest-size size (inner layout))
+      (case (limit layout)
+        ((NIL) size)
+        (:x (size (w (suggest-size size (inner layout))) (h size)))
+        (:y (size (w size) (h (suggest-size size (inner layout)))))
+        (T (suggest-size size (inner layout))))
       size))
 
 (defmethod notice-size ((element layout-element) (layout clip-view))
