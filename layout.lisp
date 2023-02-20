@@ -290,6 +290,16 @@
           (return)
           (decline)))))
 
+(defmethod handle ((event pointer-move) (layout layout))
+  ;; Need to process in reverse order to ensure overlapping elements come first,
+  ;; since elements drawn last overlap previous elements.
+  (do-elements (element layout :result (decline) :from-end T)
+    (when (or (contained-p (location event) element)
+              (contained-p (old-location event) element))
+      (if (handle event element)
+          (return)
+          (decline)))))
+
 (defclass layout-tree ()
   ((root :initform NIL :accessor root)
    (popups :initform (make-instance 'fixed-layout) :reader popups)
@@ -350,3 +360,6 @@
 (defmethod refresh ((tree layout-tree))
   (refresh (root tree))
   (refresh (popups tree)))
+
+(defmethod w ((tree layout-tree)) (w (root tree)))
+(defmethod h ((tree layout-tree)) (h (root tree)))

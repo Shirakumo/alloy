@@ -15,6 +15,7 @@
   ;; component.lisp
   (:export
    #:component
+   #:tooltip
    #:component-class-for-object
    #:represent-with
    #:represent

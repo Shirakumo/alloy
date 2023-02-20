@@ -23,11 +23,30 @@
               ((:weak :strong) colors:black)
               (T colors:white))))
 
+(define-realization (default-look-and-feel alloy:tooltip)
+  ((:background simple:rectangle)
+   (alloy:margins)
+   :pattern colors:black
+   :z-index 1000)
+  ((:label simple:text)
+   (alloy:margins 2)
+   alloy:text
+   :pattern colors:white
+   :wrap NIL
+   :halign :start :valign :middle
+   :z-index 1000))
+
+(define-update (default-look-and-feel alloy:tooltip)
+  (:background
+   :pattern colors:black)
+  (:label
+   :text alloy:text))
+
 (define-realization (default-look-and-feel alloy:label)
   ((:label simple:text)
    (alloy:margins)
    alloy:text
-   :pattern (colored:color 1 1 1)
+   :pattern colors:white
    :wrap (alloy:wrap alloy:renderable)
    :halign :start :valign :middle))
 
@@ -41,7 +60,7 @@
   ((:label simple:text)
    (alloy:margins)
    alloy:text
-   :pattern (colored:color 1 1 1)
+   :pattern colors:white
    :halign :start :valign :middle))
 
 (define-update (default-look-and-feel alloy::list-label)
@@ -423,3 +442,9 @@
       (let ((label (find-shape :label element)))
         (when label
           (alloy:ideal-size label)))))
+
+(defmethod alloy:suggest-size ((size alloy:size) (element alloy:tooltip))
+  (let ((shape (find-shape :label element)))
+    (if shape
+        (alloy:widen (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape) (alloy:margins 2))
+        size)))

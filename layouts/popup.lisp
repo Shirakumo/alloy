@@ -41,3 +41,17 @@
   (when (typep popup 'focus-element)
     (leave popup (focus-tree ui)))
   (leave popup (layout-tree ui)))
+
+(defclass tooltip (popup renderable)
+  ((component :initarg :component :initform (arg! :component) :accessor component)))
+
+(defmethod text ((tooltip tooltip))
+  (tooltip (component tooltip)))
+
+(defmethod focus ((tooltip tooltip))
+  NIL)
+
+(defmethod notice-size ((tooltip tooltip) (parent layout))
+  (let ((size (suggest-size (bounds tooltip) tooltip)))
+    (setf (extent-w (bounds tooltip)) (w size))
+    (setf (extent-h (bounds tooltip)) (h size))))
