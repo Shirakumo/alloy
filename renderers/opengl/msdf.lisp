@@ -295,7 +295,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
              (kerning (previous next)
                (setf (car %k) previous)
                (setf (cdr %k) next)
-               (float (gethash %k kernings 0) 0f0))
+               (the single-float (gethash %k kernings 0f0)))
              (map-line (start end)
                ;; FIXME: need to know what alignment to use to decide on proper starting X.
                (loop for i from start below end
