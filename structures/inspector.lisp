@@ -43,7 +43,7 @@
          (member
           (values 'combo-set (list :value-set (rest slot-type)))))))))
 
-(defmethod object-slot-component (object class slot)
+(defmethod object-slot-component (object class (slot symbol))
   (when (slot-boundp object slot)
     (multiple-value-bind (type initargs) (object-slot-component-type object class slot)
       (when type
@@ -53,6 +53,12 @@
                    (make-instance 'accessor-data :object object :accessor slot)
                    (make-instance 'slot-data :object object :slot slot))
                initargs)))))
+
+(defmethod object-slot-component (object class slot)
+  (let ((component (object-slot-component object class (c2mop:slot-definition-name slot))))
+    (when component
+      (setf (tooltip component) (documentation slot T)))
+    component))
 
 (defun update-inspector-slots (inspector)
   (let* ((layout (layout-element inspector))
@@ -64,14 +70,14 @@
          (slots (slot-value inspector 'slots)))
     (case slots
       (:all
-       (setf slots (mapcar #'c2mop:slot-definition-name (c2mop:class-slots class))))
+       (setf slots (c2mop:class-slots class)))
       (:direct
-       (setf slots (mapcar #'c2mop:slot-definition-name (c2mop:class-direct-slots class)))))
+       (setf slots (c2mop:class-direct-slots class))))
     (dolist (slot slots)
       (with-simple-restart (continue "Ignore the slot ~a" slot)
         (let ((component (object-slot-component object class slot)))
           (when component
-            (enter (string slot) layout)
+            (enter (string (c2mop:slot-definition-name slot)) layout)
             (enter component layout)
             (enter component focus)))))))
 
