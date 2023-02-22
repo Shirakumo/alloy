@@ -110,7 +110,7 @@
         (:enter
          (when (focused combo)
            (setf (value combo) (value (focused combo)))
-           (exit combo)))
+           (setf (state combo) NIL)))
         (T (call-next-method))))))
 
 (defmethod handle :around ((event pointer-event) (combo combo))
