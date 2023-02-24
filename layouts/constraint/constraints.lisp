@@ -251,3 +251,8 @@
         collect (ecase item
                   ((:x :w :width) `(= :x (- (+ :rx (/ :rw 2)) (/ :w 2))))
                   ((:y :h :height) `(= :y (- (+ :ry (/ :rh 2)) (/ :h 2)))))))
+
+(define-expression-transform :off-center (what offset)
+  (ecase what
+    ((:x :w :width) `((= :x (- (+ :rx (/ :rw 2) ,offset) (/ :w 2)))))
+    ((:y :h :height) `((= :y (- (+ :ry (/ :rh 2) ,offset) (/ :h 2)))))))
