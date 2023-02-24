@@ -65,8 +65,8 @@
   (if (or (contained-p (location event) resizer)
           (initial-pos resizer))
       (setf (cursor (ui resizer)) (ecase (side resizer)
-                                    ((:north :south) :vertical-resize)
-                                    ((:east :west) :horizontal-resize)))
+                                    ((:north :south) :ns-resize)
+                                    ((:east :west) :ew-resize)))
       (setf (cursor (ui resizer)) NIL)))
 
 (defmethod suggest-size (size (resizer resizer))

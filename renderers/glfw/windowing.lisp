@@ -33,7 +33,9 @@
 
 (defmethod (setf window:icon) ((type symbol) (cursor cursor))
   (let ((type (case type
-                ((:default :text :crosshair :pointer :h-resize :v-resize) type)
+                ((:default :text :crosshair :pointer) type)
+                ((:h-resize :ew-resize) :h-resize)
+                ((:v-resize :ns-resize) :v-resize)
                 (T :default)))
         (pointer (%glfw::create-standard-cursor type)))
     (%glfw::set-cursor (pointer (window cursor)) pointer)
