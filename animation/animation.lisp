@@ -92,16 +92,16 @@
                       (funcall setter (aref values max) animated)
                       (etypecase (tween-loop tween)
                         ((eql T)
-                         (setf (tween-idx tween) idx)
-                         (setf (tween-clock tween) (- clock max-time)))
+                         (setf clock (- clock max-time)))
                         (real
-                         (setf clock (+ (tween-loop tween) (- clock max-time)))
-                         (setf (tween-idx tween) (loop for i from 0 below max
-                                                       do (when (<= (aref stops i) clock)
-                                                            (return i))
-                                                       finally (return 0)))
-                         (setf (tween-clock tween) clock))
-                        (null)))))))
+                         (setf clock (+ (tween-loop tween) (- clock max-time))))
+                        (null))
+                      (when (tween-loop tween)
+                        (setf (tween-clock tween) clock)
+                        (setf (tween-idx tween) (loop for i from 0 below max
+                                                      do (when (<= (aref stops i) clock)
+                                                           (return i))
+                                                      finally (return 0)))))))))
   ;; KLUDGE: trim expired tweens
   (setf (tweens animated) (remove-if (lambda (tween) (<= (length (tween-stops tween)) (tween-idx tween)))
                                      (tweens animated))))
