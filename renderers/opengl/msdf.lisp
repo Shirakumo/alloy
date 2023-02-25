@@ -615,7 +615,7 @@ float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
                 0.0
                 (3b-bmfont:measure-glyphs font (alloy:text text)
                                           :start (if (= 0 line) 0 (aref (line-breaks text) (1- line)))
-                                          :end point)))
+                                          :end (min point (length (alloy:text text))))))
          (s (* (scale text) (/ 32.0 35.0)))
          (d (dimensions text)))
     ;; KLUDGE: Dunno how I could do this cleanly.
