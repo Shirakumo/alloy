@@ -65,7 +65,7 @@
 (defclass delegate-data (object-data)
   ((observed :initarg :observed :initform () :accessor observed)))
 
-(defmethod reinitialize-instance :befroe ((data delegate-data) &key)
+(defmethod reinitialize-instance :before ((data delegate-data) &key)
   (observe NIL (object data) data))
 
 (defmethod shared-initialize :after ((data delegate-data) slots &key)
