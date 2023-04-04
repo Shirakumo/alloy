@@ -127,20 +127,24 @@ vec2 safeNormalize(in vec2 v){
 }
 
 void main(){
-vec4 sample = texture(image, uv);
-float sigDist = median( sample.r, sample.g, sample.b ) - 0.5;
-
-ivec2 sz = textureSize( image, 0 );
-float dx = dFdx( uv.x ) * sz.x;
-float dy = dFdy( uv.y ) * sz.y;
-float toPixels = pxRange * inversesqrt( dx * dx + dy * dy );
-float outline_opacity = clamp( sigDist * toPixels + 0.5 + outline_thickness, 0.0, 1.0 );
-float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
+  vec4 sample = texture(image, uv);
+  float sigDist = median( sample.r, sample.g, sample.b ) - 0.5;
+  
+  ivec2 sz = textureSize( image, 0 );
+  float dx = dFdx( uv.x ) * sz.x;
+  float dy = dFdy( uv.y ) * sz.y;
+  float toPixels = pxRange * inversesqrt( dx * dx + dy * dy );
+  float outline_opacity = clamp( sigDist * toPixels + 0.5 + outline_thickness, 0.0, 1.0 );
+  float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
 
   vec4 frag_col = mix(color, vert_color, vert_color.a);
-  out_color.rgb = outline_color.rgb * outline_opacity;
-  out_color.rgb = mix(out_color.rgb, frag_col.rgb, opacity);
-  out_color.a = frag_col.a*min(1.0, outline_opacity+opacity);
+  out_color = frag_col;
+  if(0.0 < outline_opacity*outline_color.a*outline_thickness){
+    out_color.a *= outline_opacity * outline_color.a;
+    out_color.rgb = mix(out_color.rgb, outline_color.rgb, 1-opacity);
+  } else {
+    out_color.a *= opacity;
+  }
 }"))))
 
 (defmethod alloy:deallocate ((renderer renderer))
