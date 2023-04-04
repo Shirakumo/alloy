@@ -221,7 +221,7 @@
     (setf (aref target 0) (/ 2f0 (max 1f0 (alloy:pxw extent))))
     (setf (aref target 1) 0f0)
     (setf (aref target 2) -1f0)
-    
+
     (setf (aref target 3) 0f0)
     (setf (aref target 4) (/ 2f0 (max 1f0 (alloy:pxh extent))))
     (setf (aref target 5) -1f0)
@@ -361,7 +361,7 @@
        (defun ,name (,window ,@(mapcar #'car args))
          (flet ((handle (ev)
                   (handle-window-event ,window ev)))
-           (declare (ignore #'handle))
+           (declare (ignorable #'handle))
            ,@body)))))
 
 (cffi:defcallback glfw-error-callback :void ((code :int) (message :string))
@@ -399,13 +399,14 @@
     (setf (cursor-location window) location)))
 
 (define-callback mouse-button-callback (window (button %glfw::mouse) (action %glfw::key-action) (mods %glfw::mod-keys))
+  (declare (ignore mods))
   (case action
     (:press
      (handle (make-instance 'alloy:pointer-down
                             :location (cursor-location window)
                             :kind button)))
     (:release
-     (handle (make-instance 'alloy:pointer-up 
+     (handle (make-instance 'alloy:pointer-up
                             :location (cursor-location window)
                             :kind button)))))
 
