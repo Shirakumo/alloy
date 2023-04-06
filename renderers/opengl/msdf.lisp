@@ -87,32 +87,38 @@
           (opengl:make-vertex-buffer renderer (* 10 1024 24)
                                      :data-usage :dynamic-draw))
     (setf (opengl:resource 'text-vao renderer)
-          (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 0)
-                                               (,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 8)
-                                               (,(opengl:resource 'text-vbo renderer) :size 4 :stride 40 :offset 16)
-                                               (,(opengl:resource 'text-vbo renderer) :size 2 :stride 40 :offset 32))))
+          (opengl:make-vertex-array renderer `((,(opengl:resource 'text-vbo renderer) :size 2 :stride 60 :offset 0)
+                                               (,(opengl:resource 'text-vbo renderer) :size 2 :stride 60 :offset 8)
+                                               (,(opengl:resource 'text-vbo renderer) :size 4 :stride 60 :offset 16)
+                                               (,(opengl:resource 'text-vbo renderer) :size 3 :stride 60 :offset 32)
+                                               (,(opengl:resource 'text-vbo renderer) :size 4 :stride 60 :offset 44))))
     (setf (opengl:resource 'text-shader renderer)
           (opengl:make-shader renderer :vertex-shader "
 layout (location=0) in vec2 pos;
 layout (location=1) in vec2 in_uv;
 layout (location=2) in vec4 in_vert_color;
-layout (location=3) in vec2 offset;
+layout (location=3) in vec3 in_offset;
+layout (location=4) in vec4 in_outline;
 uniform mat3 transform;
 out vec2 uv;
 out vec4 vert_color;
+out vec4 outline;
+out float bias;
 
 void main(){
-  gl_Position = vec4(transform*vec3(pos+offset, 1.0), 1.0);
+  gl_Position = vec4(transform*vec3(pos+in_offset.xy, 1.0), 1.0);
   uv = in_uv;
   vert_color = in_vert_color;
+  outline = in_outline;
+  bias = in_offset.z;
 }"
                                        :fragment-shader "
 in vec2 uv;
 in vec4 vert_color;
+in vec4 outline;
+in float bias;
 uniform sampler2D image;
 uniform float pxRange = 32.0;
-uniform float outline_thickness = 0.0;
-uniform vec4 outline_color = vec4(0.0);
 uniform vec4 color = vec4(0, 0, 0, 1);
 out vec4 out_color;
 
@@ -127,6 +133,9 @@ vec2 safeNormalize(in vec2 v){
 }
 
 void main(){
+  vec3 outline_color = outline.xyz;
+  float outline_thickness = outline.w;
+
   vec4 sample = texture(image, uv);
   float sigDist = median( sample.r, sample.g, sample.b ) - 0.5;
   
@@ -134,14 +143,14 @@ void main(){
   float dx = dFdx( uv.x ) * sz.x;
   float dy = dFdy( uv.y ) * sz.y;
   float toPixels = pxRange * inversesqrt( dx * dx + dy * dy );
-  float outline_opacity = clamp( sigDist * toPixels + 0.5 + outline_thickness, 0.0, 1.0 );
-  float opacity = clamp( sigDist * toPixels + 0.5, 0.0, 1.0 );
+  float outline_opacity = clamp( sigDist * toPixels + 0.5 + bias + outline_thickness, 0.0, 1.0 );
+  float opacity = clamp( sigDist * toPixels + 0.5 + bias, 0.0, 1.0 );
 
   vec4 frag_col = mix(color, vert_color, vert_color.a);
   out_color = frag_col;
-  if(0.0 < outline_opacity*outline_color.a*outline_thickness){
-    out_color.a *= outline_opacity * outline_color.a;
-    out_color.rgb = mix(out_color.rgb, outline_color.rgb, 1-opacity);
+  if(0.0 < outline_opacity*outline_thickness){
+    out_color.a *= outline_opacity;
+    out_color.rgb = mix(out_color.rgb, outline_color, 1-opacity);
   } else {
     out_color.a *= opacity;
   }
@@ -396,7 +405,7 @@ void main(){
 (defun compute-text (font text extent scale wrap markup halign)
   (declare (optimize speed))
   (declare (type string text))
-  (let ((array (make-array (* 6 10 (the (signed-byte 32) (length text))) :element-type 'single-float))
+  (let ((array (make-array (* 6 15 (the (signed-byte 32) (length text))) :element-type 'single-float))
         (minx 0.0) (miny 0.0) (maxx 0.0) (maxy 0.0) (i 0)
         (base (float (3b-bmfont:base (data font)) 0f0))
         (font-sequence (compute-glyph-font-sequence text (fallback-chain font)))
@@ -407,7 +416,7 @@ void main(){
                (loop for style in styles
                      do (when (eq (car style) prop)
                           (return (rest style)))))
-             (vertex (x y u v c)
+             (vertex (x y u v c o oc)
                (setf (aref array (+ i 0)) (float x))
                (setf (aref array (+ i 1)) (float y))
                (setf (aref array (+ i 2)) (float u))
@@ -418,7 +427,12 @@ void main(){
                (setf (aref array (+ i 7)) (colored:a c))
                (setf (aref array (+ i 8)) 0.0)
                (setf (aref array (+ i 9)) 0.0)
-               (incf i 10))
+               (setf (aref array (+ i 10)) 0.0)
+               (setf (aref array (+ i 11)) (colored:r oc))
+               (setf (aref array (+ i 12)) (colored:g oc))
+               (setf (aref array (+ i 13)) (colored:b oc))
+               (setf (aref array (+ i 14)) o)
+               (incf i 15))
              (thunk (c x y x- y- x+ y+ u- v- u+ v+)
                (declare (type single-float x y x- y- x+ y+ u- v- u+ v+))
                (declare (type (unsigned-byte 32) c))
@@ -430,7 +444,9 @@ void main(){
                (setf maxy (max maxy y+))
                (let ((tx (if (prop :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
                      (off (if (prop :bold styles) (* scale 0.2) 0.0))
-                     (color NIL))
+                     (color NIL)
+                     (outline-color colors:black)
+                     (outline 0.0))
                  (when (and (prop :italic styles) (/= 0 (- y+ y-)))
                    (let ((skew (* (/ (- y y-) (- y+ y-)) tx)))
                      ;; KLUDGE: Dunno if the base shift of base/16 is good?
@@ -442,6 +458,11 @@ void main(){
                  (let ((prop (prop :rainbow styles)))
                    (when prop
                      (setf color (colored:convert (colored:hsv (* 10 c) 1 1) 'colored:rgb))))
+                 (let ((prop (prop :outline styles)))
+                   (when prop
+                     (setf outline (float (first prop) 0f0))
+                     (when (second prop)
+                       (setf outline-color (second prop)))))
                  ;; This can't work because the offsets we get are absolute and we don't know the cursor pos.
                  #++
                  (let ((prop (first (prop :size styles))))
@@ -451,12 +472,12 @@ void main(){
                      (setf y+ (* y+ prop))
                      (setf y- (* y- prop))))
                  (unless color (setf color (colored:rgb 0 0 0 0)))
-                 (vertex (- (+ tx x-) off) (+ y+ off) u- (- 1 v-) color)
-                 (vertex (- x- off) (- y- off) u- (- 1 v+) color)
-                 (vertex (+ tx x+ off) (+ y+ off) u+ (- 1 v-) color)
-                 (vertex (+ tx x+ off) (+ y+ off) u+ (- 1 v-) color)
-                 (vertex (- x- off) (- y- off) u- (- 1 v+) color)
-                 (vertex (+ x+ off) (- y- off) u+ (- 1 v+) color))))
+                 (vertex (- (+ tx x-) off) (+ y+ off) u- (- 1 v-) color outline outline-color)
+                 (vertex (- x- off) (- y- off) u- (- 1 v+) color outline outline-color)
+                 (vertex (+ tx x+ off) (+ y+ off) u+ (- 1 v-) color outline outline-color)
+                 (vertex (+ tx x+ off) (+ y+ off) u+ (- 1 v-) color outline outline-color)
+                 (vertex (- x- off) (- y- off) u- (- 1 v+) color outline outline-color)
+                 (vertex (+ x+ off) (- y- off) u+ (- 1 v+) color outline outline-color))))
       (values (map-glyphs font-sequence #'thunk text extent scale wrap :halign halign)
               array font-sequence minx miny maxx maxy))))
 
@@ -467,10 +488,7 @@ void main(){
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
    (markup :initform () :accessor markup)
-   (clock :initform 0f0 :accessor clock)
-   ;; FIXME: put this stuff into MARKUP and instead segment the font-sequence according to
-   ;;        styling as well, then render that.
-   (outline :initform () :initarg :outline :accessor outline)))
+   (clock :initform 0f0 :accessor clock)))
 
 (defmethod org.shirakumo.alloy.animation:update :after ((text text) dt)
   (let* ((markup (markup text))
@@ -485,32 +503,33 @@ void main(){
                (loop for thing in style
                      do (when (eq prop (car thing))
                           (return (rest thing))))))
-        (loop with i = 0
-              for c from 0 below (length string)
-              do (when (<= (or (caar markup) (length data)) c)
-                   (setf style (pop markup)))
-                 (when (prop :rainbow (rest style))
-                   (let ((color (colored:convert (colored:hsv (mod (+ (* 10 c) (* 200 clock)) 360.0) 1 1) 'colored:rgb)))
-                     (loop for j from 0 below 6
-                           do (setf (aref data (+ 4 (* 10 (+ j (* 6 i))))) (colored:r color))
-                              (setf (aref data (+ 5 (* 10 (+ j (* 6 i))))) (colored:g color))
-                              (setf (aref data (+ 6 (* 10 (+ j (* 6 i))))) (colored:b color))
-                              (setf (aref data (+ 7 (* 10 (+ j (* 6 i))))) 1.0))))
-                 (when (prop :wave (rest style))
-                   (let* ((s (scale text))
-                          (off (* s 10 (sin (+ (* 0.5 c) (* 10 clock))))))
-                     (loop for j from 0 below 6
-                           do (setf (aref data (+ 9 (* 10 (+ j (* 6 i))))) off))))
-                 (when (prop :shake (rest style))
-                   (let* ((s (* 0.02 (scale text)))
-                          (time (mod (floor (* clock 50)) 1000))
-                          (xoff (* s (logand #xFF (sxhash (+ (* 97 c) time)))))
-                          (yoff (* s (logand #xFF (sxhash (+ (* 11 c) time))))))
-                     (loop for j from 0 below 6
-                           do (setf (aref data (+ 8 (* 10 (+ j (* 6 i))))) xoff)
-                              (setf (aref data (+ 9 (* 10 (+ j (* 6 i))))) yoff))))
-                 (unless (find (char string c) '(#\Linefeed))
-                   (incf i)))))))
+        (macrolet ((fill-glyph (&body body)
+                     `(loop for j from 0 below 6
+                            do ,@(loop for (i val) on body by #'cddr
+                                       collect `(setf (aref data (+ ,i (* 15 (+ j (* 6 i))))) ,val)))))
+          (loop with i = 0
+                for c from 0 below (length string)
+                do (when (<= (or (caar markup) (length data)) c)
+                     (setf style (pop markup)))
+                   (when (prop :rainbow (rest style))
+                     (let ((color (colored:convert (colored:hsv (mod (+ (* 10 c) (* 200 clock)) 360.0) 1 1) 'colored:rgb)))
+                       (fill-glyph 4 (colored:r color)
+                                   5 (colored:g color)
+                                   6 (colored:b color)
+                                   7 1.0)))
+                   (when (prop :wave (rest style))
+                     (let* ((s (scale text))
+                            (off (* s 10 (sin (+ (* 0.5 c) (* 10 clock))))))
+                       (fill-glyph 9 off)))
+                   (when (prop :shake (rest style))
+                     (let* ((s (* 0.02 (scale text)))
+                            (time (mod (floor (* clock 50)) 1000))
+                            (xoff (* s (logand #xFF (sxhash (+ (* 97 c) time)))))
+                            (yoff (* s (logand #xFF (sxhash (+ (* 11 c) time))))))
+                       (fill-glyph 8 xoff
+                                   9 yoff)))
+                   (unless (find (char string c) '(#\Linefeed))
+                     (incf i))))))))
 
 (defmethod scale ((text text))
   (/ (alloy:to-px (simple:size text)) (3b-bmfont:base (data (simple:font text)))))
@@ -540,9 +559,6 @@ void main(){
       (simple:translate renderer (dimensions shape))
       (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer))
       (setf (opengl:uniform shader "color") (simple:pattern shape))
-      (destructuring-bind (&optional (thickness 0.0) (color colors:black)) (outline shape)
-        (setf (opengl:uniform shader "outline_thickness") thickness)
-        (setf (opengl:uniform shader "outline_color") color))
       ;; FIXME: this seems expensive, but maybe it would be worse to statically allocate for each text...
       (opengl:update-vertex-buffer vbo data)
       (let ((sequence (font-sequence shape)))
