@@ -63,12 +63,18 @@
 
 (defclass patterned-shape (shape)
   ((pattern :initarg :pattern :initform colors:black :accessor pattern)))
+
 (defclass filled-shape (patterned-shape) ())
+
 (defclass outlined-shape (patterned-shape)
-  ((line-width :initarg :line-width :initform (alloy:un 1) :accessor line-width)))
+  ((line-width :initarg :line-width :initform (alloy:un 1) :accessor line-width)
+   (line-style :initarg :line-style :initform NIL :accessor line-style)
+   (join-style :initarg :join-style :initform NIL :accessor join-style)
+   (cap-style :initarg :cap-style :initform NIL :accessor cap-style)))
 
 (defclass rectangle (shape)
-  ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)))
+  ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
+   (corner-radius :initarg :corner-radius :initform (make-array 4 :element-type 'single-float) :accessor corner-radius)))
 
 (defclass filled-rectangle (rectangle filled-shape) ())
 (defclass outlined-rectangle (rectangle outlined-shape) ())
@@ -77,7 +83,15 @@
   (apply #'make-instance (if line-width 'outlined-rectangle 'filled-rectangle) :bounds bounds initargs))
 
 (defclass ellipse (shape)
-  ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)))
+  ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
+   (start-angle :initarg :start-angle :initform 0.0 :accessor start-angle)
+   (end-angle :initarg :end-angle :initform #.(float (* 2 PI) 0f0) :accessor end-angle)))
+
+(defmethod (setf start-angle) ((value real) (ellipse ellipse))
+  (setf (slot-value ellipse 'start-angle) (mod (float value 0f0) (float (* 2 PI) 0f0))))
+
+(defmethod (setf end-angle) ((value real) (ellipse ellipse))
+  (setf (slot-value ellipse 'end-angle) (mod (float value 0f0) (float (* 2 PI) 0f0))))
 
 (defclass filled-ellipse (ellipse filled-shape) ())
 (defclass outlined-ellipse (ellipse outlined-shape) ())

@@ -41,11 +41,17 @@
    #:filled-shape
    #:outlined-shape
    #:line-width
+   #:line-style
+   #:join-style
+   #:cap-style
    #:rectangle
    #:bounds
+   #:corner-radius
    #:filled-rectangle
    #:outlined-rectangle
    #:ellipse
+   #:start-angle
+   #:end-angle
    #:filled-ellipse
    #:outlined-ellipse
    #:polygon
