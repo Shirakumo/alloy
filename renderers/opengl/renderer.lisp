@@ -32,26 +32,29 @@
   (setf (gethash name (resources renderer)) value))
 
 (defun make-line-array (points)
-  (let ((array (make-array (max 0 (* 6 4 (1- (length points)))) :element-type 'single-float))
-        (i -1))
-    (labels ((vertex (p nx ny)
+  (let ((array (make-array (max 0 (* 6 5 (1- (length points)))) :element-type 'single-float))
+        (i -1) (tt 0.0))
+    (labels ((vertex (p nx ny tt)
                (setf (aref array (incf i)) (alloy:pxx p))
                (setf (aref array (incf i)) (alloy:pxy p))
                (setf (aref array (incf i)) nx)
-               (setf (aref array (incf i)) ny))
+               (setf (aref array (incf i)) ny)
+               (setf (aref array (incf i)) tt))
              (line (a b)
                (let* ((ux (- (- (alloy:pxy b) (alloy:pxy a))))
                       (uy (- (alloy:pxx b) (alloy:pxx a)))
-                      (len (sqrt (+ (* ux ux) (* uy uy)))))
+                      (len (sqrt (+ (* ux ux) (* uy uy))))
+                      (tt0 tt) (tt1 (+ tt len)))
                  (when (< 0 len)
                    (setf ux (/ ux len))
                    (setf uy (/ uy len))
-                   (vertex a (- ux) (- uy))
-                   (vertex b (- ux) (- uy))
-                   (vertex a (+ ux) (+ uy))
-                   (vertex b (- ux) (- uy))
-                   (vertex b (+ ux) (+ uy))
-                   (vertex a (+ ux) (+ uy))))))
+                   (vertex a (- ux) (- uy) tt0)
+                   (vertex b (- ux) (- uy) tt1)
+                   (vertex a (+ ux) (+ uy) tt0)
+                   (vertex b (- ux) (- uy) tt1)
+                   (vertex b (+ ux) (+ uy) tt1)
+                   (vertex a (+ ux) (+ uy) tt0)
+                   (setf tt tt1)))))
       (etypecase points
         (list
          (loop for (a b) on points
@@ -79,10 +82,14 @@
                                           (alloy:px-point 1f0 1f0)
                                           (alloy:px-point 1f0 0f0)
                                           (alloy:px-point 0f0 0f0)))
-                   :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
+                   :bindings '((:size 2 :offset 0 :stride 20)
+                               (:size 2 :offset 8 :stride 20)
+                               (:size 1 :offset 16 :stride 20)))
     (make-geometry 'line-vbo 'line-vao (arr)
                    :data-usage :stream-draw
-                   :bindings '((:size 2 :offset 0 :stride 16) (:size 2 :offset 8 :stride 16)))
+                   :bindings '((:size 2 :offset 0 :stride 20)
+                               (:size 2 :offset 8 :stride 20)
+                               (:size 1 :offset 16 :stride 20)))
     ;; :triangles
     (make-geometry 'rect-fill-vbo 'rect-fill-vao
                    (arr 0f0 0f0  1f0 1f0  0f0 1f0
@@ -101,9 +108,12 @@
                  "
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 normal;
+layout(location = 2) in float time;
 
 out vec2 line_normal;
+out float t;
 uniform float line_width = 3.0;
+uniform float gap = 0.0;
 uniform mat3 transform;
 uniform vec2 view_size;
 
@@ -113,15 +123,18 @@ void main(){
   vec3 pos = transform*vec3(position, 1.0);
   gl_Position = vec4(pos + delta, 1.0);
   line_normal = normal;
+  t = time/(line_width*0.3)*gap;
 }"
                  "
 in vec2 line_normal;
+in float t;
 uniform float feather = 0.3;
 uniform vec4 color;
 out vec4 out_color;
 
 void main(){
    out_color = color * ((1-length(line_normal))/feather);
+   out_color = color * clamp(1-sin(t)*4, 0.0, 1.0);
 }")
     (make-shader 'circle-fill-shader
                  "
@@ -226,6 +239,30 @@ out vec4 out_color;
 
 void main(){
   out_color = color;
+}")
+    (make-shader 'corner-shader
+                 "
+layout (location=0) in vec2 pos;
+uniform mat3 transform;
+uniform float start_angle;
+uniform float end_angle;
+out vec2 uv;
+
+void main(){
+  uv = pos-1.0;
+  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
+}"
+                 "
+uniform vec4 color;
+uniform float line_width = 3.0;
+in vec2 uv;
+out vec4 out_color;
+
+void main(){
+  float sdf = length(uv)-1.0;
+  float dsdf = fwidth(sdf)*0.5;
+  sdf = smoothstep(dsdf, -dsdf, sdf);
+  out_color = vec4(color.rgb, color.a*sdf);
 }")
     (make-shader 'basic-shader
                  "
@@ -423,7 +460,12 @@ void main(){
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (setf (uniform shader "color") color)
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
+    (setf (uniform shader "gap") (case (simple:line-style shape)
+                                   (:dashed 0.3)
+                                   (:dotted 1.0)
+                                   (T 0.0)))
     (setf (uniform shader "view_size") (view-size renderer))
+    ;; TODO: line caps, joints?
     (draw-vertex-array (resource 'line-vao renderer) :triangles 0 (min (/ (length data) 4) (* (or (size shape) 1000000) 6)))))
 
 (defclass curve (line-strip)
@@ -483,6 +525,7 @@ void main(){
     (setf (uniform shader "color") color)
     (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
     (setf (uniform shader "view_size") (view-size renderer))
+    ;; TODO: rounded corners?
     (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 0 24)))
 
 (defmethod render-direct ((shape simple:filled-ellipse) renderer color)
