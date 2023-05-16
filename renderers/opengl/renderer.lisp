@@ -116,13 +116,12 @@ void main(){
 }"
                  "
 in vec2 line_normal;
-uniform float feather = 0.66;
+uniform float feather = 0.3;
 uniform vec4 color;
 out vec4 out_color;
 
 void main(){
-   float strength = 1.0-length(line_normal);
-   out_color = color * clamp(strength*feather+feather, 0.0, 1.0);
+   out_color = color * ((1-length(line_normal))/feather);
 }")
     (make-shader 'circle-fill-shader
                  "
