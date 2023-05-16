@@ -122,14 +122,20 @@
 
 (defclass ellipse (shape)
   ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
-   (start-angle :initarg :start-angle :initform 0.0 :accessor start-angle)
-   (end-angle :initarg :end-angle :initform #.(float (* 2 PI) 0f0) :accessor end-angle)))
+   (start-angle :initform 0.0 :accessor start-angle)
+   (end-angle :initform #.(float (* 2 PI) 0f0) :accessor end-angle)))
+
+(defmethod shared-initialize :after ((ellipse ellipse) slots &key (start-angle NIL start-angle-p) (end-angle NIL end-angle-p))
+  (when start-angle-p
+    (setf (start-angle ellipse) start-angle))
+  (when end-angle-p
+    (setf (end-angle ellipse) end-angle)))
 
 (defmethod (setf start-angle) ((value real) (ellipse ellipse))
-  (setf (slot-value ellipse 'start-angle) (mod (float value 0f0) (float (* 2 PI) 0f0))))
+  (setf (slot-value ellipse 'start-angle) (float value 0f0)))
 
 (defmethod (setf end-angle) ((value real) (ellipse ellipse))
-  (setf (slot-value ellipse 'end-angle) (mod (float value 0f0) (float (* 2 PI) 0f0))))
+  (setf (slot-value ellipse 'end-angle) (float value 0f0)))
 
 (defclass filled-ellipse (ellipse filled-shape) ())
 (defclass outlined-ellipse (ellipse outlined-shape) ())
