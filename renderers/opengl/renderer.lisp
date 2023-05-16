@@ -175,7 +175,7 @@ void main(){
   float sdf = max(l,m*sign(c.y*p.x-c.x*p.y));
   float dsdf = fwidth(sdf)*0.5;
   sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = vec4(color.rgb, color.a*sdf);
+  out_color = color*sdf;
 }")
     (make-shader 'circle-line-shader
                  "
@@ -218,7 +218,7 @@ void main(){
   float sdf = max(max(l,m*sign(c.y*p.x-c.x*p.y)), (0.5-line_width)-length(uv));
   float dsdf = fwidth(sdf)*0.5;
   sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = vec4(color.rgb, color.a*sdf);
+  out_color = color*sdf;
 }")
     (make-shader 'gradient-shader
                  "
@@ -237,7 +237,7 @@ in vec4 color;
 out vec4 out_color;
 
 void main(){
-  out_color = color;
+  out_color = vec4(color.rgb*color.a, color.a);
 }")
     (make-shader 'corner-shader
                  "
@@ -261,7 +261,7 @@ void main(){
   float sdf = length(uv)-1.0;
   float dsdf = fwidth(sdf)*0.5;
   sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = vec4(color.rgb, color.a*sdf);
+  out_color = color*sdf;
 }")
     (make-shader 'basic-shader
                  "
@@ -276,7 +276,7 @@ uniform vec4 color;
 out vec4 out_color;
 
 void main(){
-  out_color = color;
+  out_color = vec4(color.rgb*color.a, color.a);
 }")
     (make-shader 'image-shader
                  "
@@ -296,7 +296,8 @@ in vec2 uv;
 out vec4 out_color;
 
 void main(){
-  out_color = texture(image, (uv/uv_scale)+uv_offset);
+  vec4 color = texture(image, (uv/uv_scale)+uv_offset);
+  out_color = vec4(color.rgb*color.a, color.a);
 }")))
 
 (defmethod alloy:allocate ((renderer renderer))
@@ -383,10 +384,12 @@ void main(){
          (simple:rectangle renderer extent)
       (setf (simple:composite-mode renderer) mode))))
 
+;; NOTE: For these to work correctly, all output colours must be premultiplied.
+;;       We do this in the shaders above.
 (defmethod (setf simple:composite-mode) :before (mode (renderer renderer))
   (ecase mode
     (:source-over
-     (gl:blend-func-separate :src-alpha :one-minus-src-alpha :one :one-minus-src-alpha)
+     (gl:blend-func-separate :one :one-minus-src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:destination-over
      (gl:blend-func-separate :one-minus-dst-alpha :one :one :one-minus-src-alpha)
@@ -419,20 +422,46 @@ void main(){
      (gl:blend-func-separate :one-minus-dst-alpha :one-minus-src-alpha :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:add
-     (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
+     (gl:blend-func-separate :src-alpha :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:multiply
-     (gl:blend-func-separate :dst-color :one-minus-src-alpha :one :one-minus-src-alpha)
-     (gl:blend-equation :func-add))
+     (gl:blend-func-separate :zero :src-color :one :one-minus-src-alpha)
+     (gl:blend-equation :func-add)
+     (gl:blend-equation :multiply-khr))
     (:screen
      (gl:blend-func-separate :one :one-minus-src-color :one :one-minus-src-alpha)
-     (gl:blend-equation :func-add))
+     (gl:blend-equation :func-add)
+     (gl:blend-equation :screen-khr))
+    (:overlay
+     (gl:blend-equation :overlay-khr))
     (:darken
      (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
-     (gl:blend-equation :max))
+     (gl:blend-equation :max)
+     (gl:blend-equation :darken-khr))
+    (:lighten
+     (gl:blend-equation :lighten-khr))
+    (:dodge
+     (gl:blend-equation :colordodge-khr))
+    (:burn
+     (gl:blend-equation :colorburn-khr))
+    (:hard-light
+     (gl:blend-equation :hardlight-khr))
+    (:soft-light
+     (gl:blend-equation :softlight-khr))
     (:difference
      (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
-     (gl:blend-equation :func-subtract))
+     (gl:blend-equation :func-subtract)
+     (gl:blend-equation :difference-khr))
+    (:exclusion
+     (gl:blend-equation :exclusion-khr))
+    (:hue
+     (gl:blend-equation :hue-khr))
+    (:saturation
+     (gl:blend-equation :saturation-khr))
+    (:color
+     (gl:blend-equation :color-khr))
+    (:luminosity
+     (gl:blend-equation :luminosity-khr))
     (:invert
      (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-reverse-subtract))))
