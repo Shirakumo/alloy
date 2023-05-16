@@ -6,6 +6,8 @@
 
 (in-package #:org.shirakumo.alloy.renderers.opengl)
 
+(defvar *shaders-directory*
+  #.(merge-pathnames "shaders/" (or *compile-file-pathname* *load-pathname*)))
 (defvar *clip-depth* 0)
 (defvar *clip-region*)
 
@@ -135,272 +137,22 @@
                    :bindings '((:size 2 :offset 0 :stride 24) (:size 4 :offset 8 :stride 24))))
 
   ;; Allocate the necessary shaders.
-  (flet ((make-shader (name vert frag)
+  (flet ((make-shader (name &optional (file (make-pathname :name (string-downcase name) :type "glsl" :defaults *shaders-directory*)))
            (unless (resource name renderer NIL)
-             (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag)))))
-    (make-shader 'line-shader
-                 "
-layout(location = 0) in vec2 position;
-layout(location = 1) in vec2 normal;
-layout(location = 2) in float time;
-
-out vec2 line_normal;
-out float t;
-uniform float line_width = 3.0;
-uniform float gap = 0.0;
-uniform mat3 transform;
-uniform vec2 view_size;
-
-void main(){
-  vec3 delta = vec3(normal * line_width, 0.0);
-  delta.xy /= view_size;
-  vec3 pos = transform*vec3(position, 1.0);
-  gl_Position = vec4(pos + delta, 1.0);
-  line_normal = normal;
-  t = time/(line_width*0.3)*gap;
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-in vec2 line_normal;
-in float t;
-uniform float feather = 0.3;
-uniform vec4 color;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-   out_color = color * ((1-length(line_normal))/feather) * clamp(1-sin(t)*4, 0.0, 1.0);
-}")
-    (make-shader 'circle-fill-shader
-                 "
-layout (location=0) in vec2 pos;
-uniform mat3 transform;
-uniform float start_angle;
-uniform float end_angle;
-out vec2 uv;
-out vec2 c;
-
-#define PI_2 1.5707963267948966
-
-void main(){
-  uv = pos-0.5;
-  float start = start_angle-PI_2;
-  float aperture = abs(end_angle-start_angle)*0.5;
-  if(end_angle < start_angle){
-    start += -2*(aperture+PI_2);
-    aperture -= 2*PI_2;
-  }
-
-  c = vec2(sin(aperture), cos(aperture));
-  float cstart = cos(aperture+start);
-  float sstart = sin(aperture+start);
-  uv = mat2(cstart,-sstart,
-            sstart, cstart)*uv;
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-uniform vec4 color;
-in vec2 uv;
-in vec2 c;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-  vec2 p = vec2(abs(uv.x), uv.y);
-  float l = length(p)-0.5;
-  float m = length(p-c*clamp(dot(p,c),0.0,0.5));
-  float sdf = max(l,m*sign(c.y*p.x-c.x*p.y));
-  float dsdf = fwidth(sdf)*0.5;
-  sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = color*sdf;
-}")
-    (make-shader 'circle-line-shader
-                 "
-layout (location=0) in vec2 pos;
-uniform mat3 transform;
-uniform float start_angle;
-uniform float end_angle;
-out vec2 uv;
-out vec2 c;
-
-#define PI_2 1.5707963267948966
-
-void main(){
-  uv = pos-0.5;
-  float start = start_angle-PI_2;
-  float aperture = abs(end_angle-start_angle)*0.5;
-  if(end_angle < start_angle){
-    start += -2*(aperture+PI_2);
-    aperture -= 2*PI_2;
-  }
-
-  c = vec2(sin(aperture), cos(aperture));
-  float cstart = cos(aperture+start);
-  float sstart = sin(aperture+start);
-  uv = mat2(cstart,-sstart,
-            sstart, cstart)*uv;
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-uniform vec4 color;
-uniform float line_width = 3.0;
-in vec2 uv;
-in vec2 c;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-  vec2 p = vec2(abs(uv.x), uv.y);
-  float l = length(p)-0.5;
-  float m = length(p-c*clamp(dot(p,c),0.0,0.5));
-  float sdf = max(max(l,m*sign(c.y*p.x-c.x*p.y)), (0.5-line_width)-length(uv));
-  float dsdf = fwidth(sdf)*0.5;
-  sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = color*sdf;
-}")
-    (make-shader 'gradient-shader
-                 "
-layout (location=0) in vec2 pos;
-layout (location=1) in vec4 vertex_color;
-
-out vec4 color;
-uniform mat3 transform;
-
-void main(){
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
-  color = vertex_color;
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-in vec4 color;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-  out_color = vec4(color.rgb*color.a, color.a);
-}")
-    (make-shader 'corner-shader
-                 "
-layout (location=0) in vec2 pos;
-layout (location=1) in vec2 weight;
-uniform mat3 transform;
-uniform float corner_radius[5];
-uniform vec2 size;
-out vec2 uv;
-
-void main(){
-  vec2 position = pos*size;
-  ivec2 corner_idx = abs(ivec2(weight));
-  vec2 offset_dir = 1.0-pos*2.0;
-  vec2 offset = vec2(corner_radius[corner_idx.x], corner_radius[corner_idx.y]);
-
-  gl_Position = vec4(transform*vec3(position+offset*offset_dir, 1.0), 1.0);
-  uv = 1-sign(weight);
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-uniform vec4 color;
-in vec2 uv;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-  float sdf = length(uv)-1.0;
-  float dsdf = fwidth(sdf)*0.5;
-  sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = color*clamp(sdf,0,1);
-}")
-    (make-shader 'rect-shader
-                 "
-layout (location=0) in vec2 pos;
-layout (location=1) in vec2 weight;
-uniform mat3 transform;
-uniform float corner_radius[5];
-uniform vec2 size;
-
-void main(){
-  vec2 position = pos*size;
-  ivec2 corner_idx = abs(ivec2(weight));
-  vec2 offset_dir = 1.0-pos*2.0;
-  vec2 offset = vec2(corner_radius[corner_idx.x], corner_radius[corner_idx.y]);
-
-  gl_Position = vec4(transform*vec3(position+offset*offset_dir, 1.0), 1.0);
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-uniform vec4 color;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-  out_color = vec4(color.rgb*color.a, color.a);
-}")
-    (make-shader 'basic-shader
-                 "
-layout (location=0) in vec2 pos;
-uniform mat3 transform;
-
-void main(){
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-uniform vec4 color;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-  out_color = vec4(color.rgb*color.a, color.a);
-}")
-    (make-shader 'image-shader
-                 "
-layout (location=0) in vec2 pos;
-uniform mat3 transform;
-out vec2 uv;
-
-void main(){
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
-  uv = pos;
-}"
-                 "
-#extension GL_KHR_blend_equation_advanced : enable
-uniform sampler2D image;
-uniform vec2 uv_offset = vec2(0,0);
-uniform vec2 uv_scale = vec2(1,1);
-in vec2 uv;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
-
-void main(){
-  vec4 color = texture(image, (uv/uv_scale)+uv_offset);
-  out_color = vec4(color.rgb*color.a, color.a);
-}")))
+             (let* ((contents (alexandria:read-file-into-string file))
+                    (vert-start (search "//VERT" contents))
+                    (frag-start (search "//FRAG" contents))
+                    (vert (subseq contents vert-start (if (< vert-start frag-start) frag-start (length contents))))
+                    (frag (subseq contents frag-start (if (< frag-start vert-start) vert-start (length contents)))))
+               (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag))))))
+    (make-shader 'line-shader)
+    (make-shader 'circle-fill-shader)
+    (make-shader 'circle-line-shader)
+    (make-shader 'gradient-shader)
+    (make-shader 'corner-shader)
+    (make-shader 'rect-shader)
+    (make-shader 'basic-shader)
+    (make-shader 'image-shader)))
 
 (defmethod alloy:allocate ((renderer renderer))
   (loop for resource being the hash-values of (resources renderer)

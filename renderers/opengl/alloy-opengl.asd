@@ -20,5 +20,6 @@
                (:file "documentation"))
   :depends-on (:documentation-utils
                :alloy-simple
-               :cl-opengl)
+               :cl-opengl
+               :alexandria)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))
