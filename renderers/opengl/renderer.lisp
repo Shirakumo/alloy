@@ -67,6 +67,8 @@
 (defmethod alloy:allocate :before ((renderer renderer))
   ;; TODO: Implement sharing between renderers.
   ;; Allocate the necessary geometry.
+  (unless *gl-extensions*
+    (cache-gl-extensions))
   (flet ((arr (&rest data)
            (make-array (length data) :element-type 'single-float :initial-contents data))
          (make-geometry (vbo vao content &key (data-usage :static-draw) (bindings `((:size 2 :offset 0 :stride 8))))
@@ -158,11 +160,16 @@ void main(){
   t = time/(line_width*0.3)*gap;
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 in vec2 line_normal;
 in float t;
 uniform float feather = 0.3;
 uniform vec4 color;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
    out_color = color * ((1-length(line_normal))/feather) * clamp(1-sin(t)*4, 0.0, 1.0);
@@ -195,10 +202,15 @@ void main(){
   gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 uniform vec4 color;
 in vec2 uv;
 in vec2 c;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
   vec2 p = vec2(abs(uv.x), uv.y);
@@ -237,11 +249,16 @@ void main(){
   gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 uniform vec4 color;
 uniform float line_width = 3.0;
 in vec2 uv;
 in vec2 c;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
   vec2 p = vec2(abs(uv.x), uv.y);
@@ -265,8 +282,13 @@ void main(){
   color = vertex_color;
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 in vec4 color;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
   out_color = vec4(color.rgb*color.a, color.a);
@@ -290,9 +312,14 @@ void main(){
   uv = 1-sign(weight);
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 uniform vec4 color;
 in vec2 uv;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
   float sdf = length(uv)-1.0;
@@ -317,8 +344,13 @@ void main(){
   gl_Position = vec4(transform*vec3(position+offset*offset_dir, 1.0), 1.0);
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 uniform vec4 color;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
   out_color = vec4(color.rgb*color.a, color.a);
@@ -332,8 +364,13 @@ void main(){
   gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 uniform vec4 color;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
   out_color = vec4(color.rgb*color.a, color.a);
@@ -349,11 +386,16 @@ void main(){
   uv = pos;
 }"
                  "
+#extension GL_KHR_blend_equation_advanced : enable
 uniform sampler2D image;
 uniform vec2 uv_offset = vec2(0,0);
 uniform vec2 uv_scale = vec2(1,1);
 in vec2 uv;
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out vec4 out_color;
+#else
 out vec4 out_color;
+#endif
 
 void main(){
   vec4 color = texture(image, (uv/uv_scale)+uv_offset);
@@ -485,43 +527,77 @@ void main(){
      (gl:blend-func-separate :src-alpha :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-add))
     (:multiply
-     (gl:blend-func-separate :zero :src-color :one :one-minus-src-alpha)
-     (gl:blend-equation :func-add)
-     (gl:blend-equation :multiply-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :multiply-khr))
+       (T
+        (gl:blend-func-separate :zero :src-color :one :one-minus-src-alpha)
+        (gl:blend-equation :func-add))))
     (:screen
-     (gl:blend-func-separate :one :one-minus-src-color :one :one-minus-src-alpha)
-     (gl:blend-equation :func-add)
-     (gl:blend-equation :screen-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :screen-khr))
+       (T
+        (gl:blend-func-separate :one :one-minus-src-color :one :one-minus-src-alpha)
+        (gl:blend-equation :func-add))))
     (:overlay
-     (gl:blend-equation :overlay-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :overlay-khr))))
     (:darken
-     (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
-     (gl:blend-equation :max)
-     (gl:blend-equation :darken-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :darken-khr))
+       (T
+        (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
+        (gl:blend-equation :max))))
     (:lighten
-     (gl:blend-equation :lighten-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :lighten-khr))))
     (:dodge
-     (gl:blend-equation :colordodge-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :colordodge-khr))))
     (:burn
-     (gl:blend-equation :colorburn-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :colorburn-khr))))
     (:hard-light
-     (gl:blend-equation :hardlight-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :hardlight-khr))))
     (:soft-light
-     (gl:blend-equation :softlight-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :softlight-khr))))
     (:difference
-     (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
-     (gl:blend-equation :func-subtract)
-     (gl:blend-equation :difference-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :difference-khr))
+       (T
+        (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
+        (gl:blend-equation :func-subtract))))
     (:exclusion
-     (gl:blend-equation :exclusion-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :exclusion-khr))))
     (:hue
-     (gl:blend-equation :hue-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :hue-khr))))
     (:saturation
-     (gl:blend-equation :saturation-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :saturation-khr))))
     (:color
-     (gl:blend-equation :color-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :color-khr))))
     (:luminosity
-     (gl:blend-equation :luminosity-khr))
+     (gl-extension-case
+       (:GL-KHR-BLEND-EQUATION-ADVANCED
+        (gl:blend-equation :luminosity-khr))))
     (:invert
      (gl:blend-func-separate :one :one :one :one-minus-src-alpha)
      (gl:blend-equation :func-reverse-subtract))))

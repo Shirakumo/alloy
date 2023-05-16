@@ -42,3 +42,25 @@
 (defgeneric draw-vertex-array (array primitive-type offset count))
 
 (defgeneric make-texture (renderer width height data &key channels filtering))
+
+(defvar *gl-extensions* ())
+
+(defun cache-gl-extensions ()
+  (let ((*package* (find-package "KEYWORD")))
+    (setf *gl-extensions*
+          (loop for i from 0 below (gl:get* :num-extensions)
+                for name = (ignore-errors (gl:get-string-i :extensions i))
+                when name
+                collect (cffi:translate-name-from-foreign name *package*)))))
+
+(defmacro gl-extension-case (&body cases)
+  (let ((extensions (gensym "EXTENSIONS")))
+    `(let ((,extensions *gl-extensions*))
+       (cond ,@(loop for (find . body) in cases
+                     collect (case find
+                               ((T otherwise)
+                                `(T ,@body))
+                               (T
+                                `((and ,@(loop for extension in (if (listp find) find (list find))
+                                               collect `(find ,extension ,extensions)))
+                                  ,@body))))))))
