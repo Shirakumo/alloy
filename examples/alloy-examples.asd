@@ -20,6 +20,7 @@
                (:file "animation")
                (:file "menu")
                (:file "font-mixing")
-               (:file "fonts"))
+               (:file "fonts")
+               (:file "canvas"))
   :depends-on (:alloy-glfw
                :alloy-constraint))
