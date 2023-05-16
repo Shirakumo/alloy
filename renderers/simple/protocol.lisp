@@ -20,7 +20,7 @@
 
 (defgeneric line-strip (renderer points &key pattern line-width line-style join-style cap-style &allow-other-keys))
 (defgeneric curve (renderer points &key pattern line-width line-style join-style cap-style &allow-other-keys))
-(defgeneric rectangle (renderer bounds &key pattern corner-radius line-width line-style join-style cap-style &allow-other-keys))
+(defgeneric rectangle (renderer bounds &key pattern corner-radii line-width line-style join-style cap-style &allow-other-keys))
 (defgeneric ellipse (renderer bounds &key pattern start-angle end-angle line-width line-style join-style cap-style &allow-other-keys))
 (defgeneric polygon (renderer points &key pattern &allow-other-keys))
 (defgeneric icon (renderer bounds image &key size halign valign &allow-other-keys))

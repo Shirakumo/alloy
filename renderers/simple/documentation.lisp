@@ -37,9 +37,9 @@ it must treat it as NIL.")
 
 May be one of:
   NIL     --- The backend's default is used.
+  :NONE   --- The line ends are truncated.
   :ROUND  --- The line ends are rounded.
   :SQUARE --- The line ends are squares.
-  :BUTT   --- The line ends are truncated.
   :SPIKE  --- The line ends in triangles.
 
 Backends may offer more styles. If a backend does not support a style,

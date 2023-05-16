@@ -74,7 +74,11 @@
 
 (defclass rectangle (shape)
   ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
-   (corner-radii :initarg :corner-radii :initform (make-array 4 :element-type 'single-float) :accessor corner-radii)))
+   (corner-radii :initform (make-array 4 :element-type 'single-float) :reader corner-radii)))
+
+(defmethod shared-initialize :after ((rectangle rectangle) slots &key (corner-radii NIL corner-radii-p))
+  (when corner-radii-p
+    (setf (corner-radii rectangle) corner-radii)))
 
 (defmethod corner-radius (position (rectangle rectangle))
   (let ((radii (corner-radii rectangle)))
@@ -100,6 +104,15 @@
 
 (defmethod (setf corner-radius) ((null null) position (rectangle rectangle))
   (setf (corner-radius position rectangle) 0.0))
+
+(defmethod (setf corner-radii) ((value real) (rectangle rectangle))
+  (fill (corner-radii rectangle) (float value 0f0)))
+
+(defmethod (setf corner-radii) ((null null) (rectangle rectangle))
+  (fill (corner-radii rectangle) 0.0))
+
+(defmethod (setf corner-radii) ((sequence sequence) (rectangle rectangle))
+  (map-into (corner-radii rectangle) #'float sequence))
 
 (defclass filled-rectangle (rectangle filled-shape) ())
 (defclass outlined-rectangle (rectangle outlined-shape) ())
