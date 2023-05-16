@@ -94,6 +94,38 @@
     (make-geometry 'rect-fill-vbo 'rect-fill-vao
                    (arr 0f0 0f0  1f0 1f0  0f0 1f0
                         0f0 0f0  1f0 0f0  1f0 1f0))
+    (make-geometry 'rect-inner-vbo 'rect-inner-vao
+                   ;;    W   H   XR   YR
+                   (arr 0f0 0f0 0f0 4f0  0f0 0f0 4f0 4f0  0f0 1f0 1f0 1f0 ; L
+                        0f0 1f0 1f0 1f0  0f0 1f0 0f0 1f0  0f0 0f0 0f0 4f0
+                        
+                        0f0 0f0 4f0 0f0  1f0 0f0 3f0 0f0  0f0 0f0 4f0 4f0 ; B
+                        0f0 0f0 4f0 4f0  1f0 0f0 3f0 0f0  1f0 0f0 3f0 3f0
+
+                        0f0 0f0 4f0 4f0  1f0 0f0 3f0 3f0  0f0 1f0 1f0 1f0 ; C
+                        0f0 1f0 1f0 1f0  1f0 0f0 3f0 3f0  1f0 1f0 2f0 2f0
+
+                        1f0 1f0 2f0 2f0  1f0 0f0 3f0 3f0  1f0 1f0 0f0 2f0 ; R
+                        1f0 1f0 0f0 2f0  1f0 0f0 3f0 3f0  1f0 0f0 0f0 3f0
+
+                        0f0 1f0 1f0 1f0  1f0 1f0 2f0 2f0  1f0 1f0 2f0 0f0 ; T
+                        1f0 1f0 2f0 0f0  0f0 1f0 1f0 0f0  0f0 1f0 1f0 1f0)
+                   :bindings '((:size 2 :offset 0 :stride 16)
+                               (:size 2 :offset 8 :stride 16)))
+    (make-geometry 'rect-corner-vbo 'rect-corner-vao
+                   (arr 0f0 0f0 0f0 0f0  0f0 0f0 4f0 0f0  0f0 0f0 4f0 4f0 ; BL
+                        0f0 0f0 4f0 4f0  0f0 0f0 0f0 4f0  0f0 0f0 0f0 0f0
+
+                        1f0 0f0 0f0 0f0  1f0 0f0 3f0 0f0  1f0 0f0 3f0 3f0 ; BR
+                        1f0 0f0 3f0 3f0  1f0 0f0 0f0 3f0  1f0 0f0 0f0 0f0
+
+                        1f0 1f0 0f0 0f0  1f0 1f0 2f0 0f0  1f0 1f0 2f0 2f0 ; TR
+                        1f0 1f0 2f0 2f0  1f0 1f0 0f0 2f0  1f0 1f0 0f0 0f0
+
+                        0f0 1f0 0f0 0f0  0f0 1f0 1f0 0f0  0f0 1f0 1f0 1f0 ; TL
+                        0f0 1f0 1f0 1f0  0f0 1f0 0f0 1f0  0f0 1f0 0f0 0f0)
+                   :bindings '((:size 2 :offset 0 :stride 16)
+                               (:size 2 :offset 8 :stride 16)))
     (make-geometry 'stream-vbo 'stream-vao (arr)
                    :data-usage :stream-draw)
     (make-geometry 'gradient-vbo 'gradient-vao (arr)
@@ -242,18 +274,23 @@ void main(){
     (make-shader 'corner-shader
                  "
 layout (location=0) in vec2 pos;
+layout (location=1) in vec2 weight;
 uniform mat3 transform;
-uniform float start_angle;
-uniform float end_angle;
+uniform float corner_radius[5];
+uniform vec2 size;
 out vec2 uv;
 
 void main(){
-  uv = pos-1.0;
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
+  vec2 position = pos*size;
+  ivec2 corner_idx = abs(ivec2(weight));
+  vec2 offset_dir = 1.0-pos*2.0;
+  vec2 offset = vec2(corner_radius[corner_idx.x], corner_radius[corner_idx.y]);
+
+  gl_Position = vec4(transform*vec3(position+offset*offset_dir, 1.0), 1.0);
+  uv = 1-sign(weight);
 }"
                  "
 uniform vec4 color;
-uniform float line_width = 3.0;
 in vec2 uv;
 out vec4 out_color;
 
@@ -261,7 +298,30 @@ void main(){
   float sdf = length(uv)-1.0;
   float dsdf = fwidth(sdf)*0.5;
   sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = color*sdf;
+  out_color = color*clamp(sdf,0,1);
+}")
+    (make-shader 'rect-shader
+                 "
+layout (location=0) in vec2 pos;
+layout (location=1) in vec2 weight;
+uniform mat3 transform;
+uniform float corner_radius[5];
+uniform vec2 size;
+
+void main(){
+  vec2 position = pos*size;
+  ivec2 corner_idx = abs(ivec2(weight));
+  vec2 offset_dir = 1.0-pos*2.0;
+  vec2 offset = vec2(corner_radius[corner_idx.x], corner_radius[corner_idx.y]);
+
+  gl_Position = vec4(transform*vec3(position+offset*offset_dir, 1.0), 1.0);
+}"
+                 "
+uniform vec4 color;
+out vec4 out_color;
+
+void main(){
+  out_color = vec4(color.rgb*color.a, color.a);
 }")
     (make-shader 'basic-shader
                  "
@@ -533,15 +593,26 @@ void main(){
   (apply #'make-instance 'curve :points points initargs))
 
 (defmethod render-direct ((shape simple:filled-rectangle) renderer color)
-  (let ((shader (resource 'basic-shader renderer)))
-    (bind shader)
-    (simple:with-pushed-transforms (renderer)
-      (simple:translate renderer (simple:bounds shape))
-      (simple:scale renderer (simple:bounds shape))
-      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
-    (setf (uniform shader "color") color)
-    (setf (uniform shader "view_size") (view-size renderer))
-    (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
+  (let* ((corner-radii (simple:corner-radii shape))
+         (round-p (not (every #'zerop corner-radii))))
+    (flet ((prepare (shader)
+             (bind shader)
+             (simple:with-pushed-transforms (renderer)
+               (simple:translate renderer (simple:bounds shape))
+               (setf (uniform shader "transform") (simple:transform-matrix renderer)))
+             (setf (uniform shader "size") (simple:bounds shape))
+             (setf (uniform shader "corner_radius[0]") 0.0)
+             (setf (uniform shader "corner_radius[1]") (aref corner-radii 0))
+             (setf (uniform shader "corner_radius[2]") (aref corner-radii 1))
+             (setf (uniform shader "corner_radius[3]") (aref corner-radii 2))
+             (setf (uniform shader "corner_radius[4]") (aref corner-radii 3))
+             (setf (uniform shader "color") color)
+             (setf (uniform shader "view_size") (view-size renderer))))
+      (prepare (resource 'rect-shader renderer))
+      (draw-vertex-array (resource 'rect-inner-vao renderer) :triangles 0 32)
+      (when round-p
+        (prepare (resource 'corner-shader renderer))
+        (draw-vertex-array (resource 'rect-corner-vao renderer) :triangles 0 32)))))
 
 (defmethod render-direct ((shape simple:outlined-rectangle) renderer color)
   (let ((shader (resource 'line-shader renderer)))
