@@ -46,6 +46,7 @@
    #:cap-style
    #:rectangle
    #:bounds
+   #:corner-radii
    #:corner-radius
    #:filled-rectangle
    #:outlined-rectangle

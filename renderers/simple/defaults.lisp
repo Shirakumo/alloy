@@ -74,7 +74,32 @@
 
 (defclass rectangle (shape)
   ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
-   (corner-radius :initarg :corner-radius :initform (make-array 4 :element-type 'single-float) :accessor corner-radius)))
+   (corner-radii :initarg :corner-radii :initform (make-array 4 :element-type 'single-float) :accessor corner-radii)))
+
+(defmethod corner-radius (position (rectangle rectangle))
+  (let ((radii (corner-radii rectangle)))
+    (ecase position
+      ((0 :top-left :north-west) (aref radii 0))
+      ((1 :top-right :north-east) (aref radii 1))
+      ((2 :bottom-right :south-east) (aref radii 2))
+      ((3 :bottom-left :south-west) (aref radii 3)))))
+
+(defmethod (setf corner-radius) ((value real) position (rectangle rectangle))
+  (let ((radii (corner-radii rectangle))
+        (value (float value 0f0)))
+    (ecase position
+      ((0 :top-left :north-west) (setf (aref radii 0) value))
+      ((1 :top-right :north-east) (setf (aref radii 1) value))
+      ((2 :bottom-right :south-east) (setf (aref radii 2) value))
+      ((3 :bottom-left :south-west) (setf (aref radii 3) value))
+      ((4 :top :north) (setf (aref radii 0) (setf (aref radii 1) value)))
+      ((5 :right :east) (setf (aref radii 2) (setf (aref radii 1) value)))
+      ((6 :bottom :south) (setf (aref radii 2) (setf (aref radii 3) value)))
+      ((7 :left :west) (setf (aref radii 0) (setf (aref radii 3) value)))
+      ((8 T :all) (fill radii value)))))
+
+(defmethod (setf corner-radius) ((null null) position (rectangle rectangle))
+  (setf (corner-radius position rectangle) 0.0))
 
 (defclass filled-rectangle (rectangle filled-shape) ())
 (defclass outlined-rectangle (rectangle outlined-shape) ())
