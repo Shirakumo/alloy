@@ -324,12 +324,12 @@
 (defmethod (setf element) (value (data vector-data) (index integer))
   (setf (aref (value data) index) value))
 
-(defmethod push-element (value (data list-data) &optional index)
+(defmethod push-element (value (data vector-data) &optional index)
   (if index
       (array-utils:vector-push-extend-position value (value data) index)
       (vector-push-extend value (value data))))
 
-(defmethod pop-element ((data list-data) &optional index)
+(defmethod pop-element ((data vector-data) &optional index)
   (if index
       (array-utils:vector-pop-position (value data) index)
       (vector-pop (value data))))
