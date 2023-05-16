@@ -16,6 +16,7 @@
                (:file "protocol")
                (:file "transforms")
                (:file "defaults")
+               (:file "canvas")
                (:file "documentation"))
   :depends-on (:documentation-utils
                :colored

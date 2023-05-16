@@ -11,6 +11,30 @@
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:import-from #:org.shirakumo.alloy #:arg! #:translate)
+  ;; canvas.lisp
+  (:export
+   #:canvas-style
+   #:pattern
+   #:line-width
+   #:line-style
+   #:join-style
+   #:cap-style
+   #:family
+   #:size
+   #:canvas
+   #:draw-shape
+   #:draw-rectangle
+   #:draw-ellipse
+   #:draw-curve
+   #:fill-rectangle
+   #:fill-ellipse
+   #:draw-text
+   #:draw-image
+   #:start-line
+   #:start-polygon
+   #:complete-shape
+   #:move-to
+   #:style)
   ;; defaults.lisp
   (:export
    #:font
