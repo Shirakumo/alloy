@@ -34,6 +34,8 @@
 (defgeneric start-polygon (canvas &optional x y))
 (defgeneric complete-shape (canvas))
 (defgeneric move-to (canvas x y))
+(defgeneric push-matrix (canvas))
+(defgeneric pop-matrix (canvas))
 (defgeneric style (canvas))
 (defgeneric (setf style) (value canvas))
 
@@ -46,13 +48,14 @@
   (wrap pattern line-width line-style join-style cap-style family size))
 
 (defmethod draw-shape ((canvas canvas) function &rest initargs)
-  (let ((shape (apply function (renderer canvas) initargs)))
-    (alloy::push-element (cons 'alloy:render shape) (data canvas))
-    shape))
+  (alloy:with-unit-parent canvas
+    (let ((shape (apply function (renderer canvas) initargs)))
+      (alloy::push-element (cons 'alloy:render shape) (alloy:data canvas))
+      shape)))
 
 (defmethod draw-shape ((canvas canvas) (shape shape) &rest initargs)
   (let ((shape (if initargs (apply #'reinitialize-instance shape initargs) shape)))
-    (alloy::push-element (cons 'alloy:render shape) (data canvas))
+    (alloy::push-element (cons 'alloy:render shape) (alloy:data canvas))
     shape))
 
 (defmethod draw-rectangle ((canvas canvas) x y w h &optional corner-radii)
@@ -148,37 +151,50 @@
     (vector-push-extend (location canvas) (cdr (state canvas)))))
 
 (defmethod clip ((canvas canvas) extent)
-  (alloy::push-element (cons 'clip extent) (data canvas)))
+  (alloy::push-element (cons 'clip extent) (alloy:data canvas)))
 
 (defmethod translate ((canvas canvas) point)
-  (alloy::push-element (cons 'translate point) (data canvas)))
+  (alloy::push-element (cons 'translate point) (alloy:data canvas)))
 
 (defmethod scale ((canvas canvas) size)
-  (alloy::push-element (cons 'scale size) (data canvas)))
+  (alloy::push-element (cons 'scale size) (alloy:data canvas)))
 
 (defmethod rotate ((canvas canvas) phi)
-  (alloy::push-element (cons 'rotate phi) (data canvas)))
+  (alloy::push-element (cons 'rotate phi) (alloy:data canvas)))
 
 (defmethod clear ((canvas canvas) bounds)
-  (alloy::push-element (cons 'clear bounds) (data canvas)))
+  (alloy::push-element (cons 'clear bounds) (alloy:data canvas)))
 
 (defmethod (setf composite-mode) (mode (canvas canvas))
-  (alloy::push-element (cons 'composite-mode mode) (data canvas)))
+  (alloy::push-element (cons 'composite-mode mode) (alloy:data canvas)))
+
+(defmethod push-matrix ((canvas canvas))
+  (alloy::push-element (cons 'push-matrix NIL) (alloy:data canvas)))
+
+(defmethod pop-matrix ((canvas canvas))
+  (alloy::push-element (cons 'pop-matrix NIL) (alloy:data canvas)))
 
 (defmethod alloy:render ((renderer renderer) (canvas canvas))
-  (loop for (action . arg) across (alloy:value (alloy:data canvas))
-        do (ecase action
-             (alloy:render 
-              (alloy:render renderer arg))
-             (clip
-              (clip renderer arg))
-             (translate
-              (translate renderer arg))
-             (scale
-              (scale renderer arg))
-             (rotate
-              (rotate renderer arg))
-             (clear
-              (clear renderer arg))
-             (composite-mode
-              (setf (composite-mode renderer) arg)))))
+  (let ((matrix-stack ()))
+    (loop for (action . arg) across (alloy:value (alloy:data canvas))
+          do (ecase action
+               (alloy:render 
+                (alloy:render renderer arg))
+               (clip
+                (clip renderer arg))
+               (translate
+                (translate renderer arg))
+               (scale
+                (scale renderer arg))
+               (rotate
+                (rotate renderer arg))
+               (clear
+                (clear renderer arg))
+               (composite-mode
+                (setf (composite-mode renderer) arg))
+               (push-matrix
+                (push (make-array 9 :element-type 'single-float :initial-contents (transform-matrix renderer)) matrix-stack))
+               (pop-matrix
+                (let ((prev (pop matrix-stack)))
+                  (when prev
+                    (replace (transform-matrix renderer) prev))))))))

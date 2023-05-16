@@ -34,6 +34,8 @@
    #:start-polygon
    #:complete-shape
    #:move-to
+   #:push-matrix
+   #:pop-matrix
    #:style)
   ;; defaults.lisp
   (:export
