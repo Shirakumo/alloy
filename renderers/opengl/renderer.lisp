@@ -133,8 +133,7 @@ uniform vec4 color;
 out vec4 out_color;
 
 void main(){
-   out_color = color * ((1-length(line_normal))/feather);
-   out_color = color * clamp(1-sin(t)*4, 0.0, 1.0);
+   out_color = color * ((1-length(line_normal))/feather) * clamp(1-sin(t)*4, 0.0, 1.0);
 }")
     (make-shader 'circle-fill-shader
                  "
