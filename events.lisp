@@ -44,6 +44,25 @@
 (defclass drop-event (pointer-event)
   ((paths :initarg :paths :initform (arg! :paths) :reader paths)))
 
+(defclass pen-event (pointer-event)
+  ((kind :initarg :kind :initform :left :reader kind)
+   (pressure :initarg pressure :initform 0.0 :reader pressure)
+   (rotation :initarg rotation :initform 0.0 :reader rotation)
+   (tangential-pressure :initarg tangential-pressure :initform 0.0 :reader tangential-pressure)
+   (tilt :initarg tilt :initform (cons 0.0 0.0) :reader tilt)
+   (z :initarg z :initform 0.0 :reader z)))
+
+(defclass pen-move (pen-event pointer-move) ())
+(defclass pen-down (pen-event pointer-down) ())
+(defclass pen-up (pen-event pointer-up) ())
+
+(defclass touch-event (pointer-event)
+  ((points :initarg :points :initform (arg! :points) :reader points)))
+
+(defclass touch-move (touch-event pointer-move) ())
+(defclass touch-down (touch-event pointer-down) ())
+(defclass touch-up (touch-event pointer-up) ())
+
 (defclass direct-event (event)
   ())
 

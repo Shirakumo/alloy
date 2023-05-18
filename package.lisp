@@ -219,6 +219,20 @@
    #:reset-event
    #:drop-event
    #:paths
+   #:pen-event
+   #:pressure
+   #:rotation
+   #:tangential-pressure
+   #:tilt
+   #:z
+   #:pen-move
+   #:pen-down
+   #:pen-up
+   #:touch-event
+   #:points
+   #:touch-move
+   #:touch-down
+   #:touch-up
    #:text-event
    #:text
    #:key-event
