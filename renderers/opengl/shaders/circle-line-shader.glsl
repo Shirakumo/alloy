@@ -29,6 +29,7 @@ void main(){
 #extension GL_KHR_blend_equation_advanced : enable
 uniform vec4 color;
 uniform float line_width = 3.0;
+uniform float gap = 0.0;
 in vec2 uv;
 in vec2 c;
 #ifdef GL_KHR_blend_equation_advanced
@@ -44,5 +45,8 @@ void main(){
   float sdf = max(max(l,m*sign(c.y*p.x-c.x*p.y)), (0.5-line_width)-length(uv));
   float dsdf = fwidth(sdf)*0.5;
   sdf = smoothstep(dsdf, -dsdf, sdf);
-  out_color = color*sdf;
+
+  float time = atan(uv.y, uv.x);
+  float t = time/(line_width*0.3)*gap;
+  out_color = color*sdf*clamp(1-sin(t)*4, 0.0, 1.0);
 }

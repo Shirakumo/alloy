@@ -584,7 +584,10 @@
     (setf (uniform shader "start_angle") (simple:start-angle shape))
     (setf (uniform shader "end_angle") (simple:end-angle shape))
     (setf (uniform shader "color") color)
-    ;; TODO: line caps, line styles?
+    (setf (uniform shader "gap") (case (simple:line-style shape)
+                                   (:dashed 0.1)
+                                   (:dotted 0.3)
+                                   (T 0.0)))
     ;; KLUDGE: I don't think this is quite right yet but whatever.
     (setf (uniform shader "line_width") (/ (alloy:to-px (simple:line-width shape))
                                            (max w h)))
