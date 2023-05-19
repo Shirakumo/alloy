@@ -57,7 +57,7 @@
                (vector-push-extend u dots)
                (vector-push-extend v dots))
              (join (ax ay bx by ux uy tt0)
-               (let* ((cw (if (< 0 (- (* (- ax pax) (- by pax))
+               (let* ((cw (if (< 0 (- (* (- ax pax) (- by pay))
                                       (* (- bx pax) (- ay pay))))
                               -1 +1))
                       (o2x (+ ax (* w cw ux))) (o2y (+ ay (* w cw uy)))
@@ -480,7 +480,7 @@
   ())
 
 (defmethod shared-initialize :around ((shape curve) slots &rest initargs &key points (segments 20))
-  ;; TODO: Do this GPU-side with tesselation
+  ;; TODO: Do this GPU-side with tesselation. Requires GL4.1 though....
   (let ((lines (make-array (* (1+ segments) (/ (1- (length points)) 3))))
         (i 0))
     (declare (type (signed-byte 32) i segments))
@@ -504,7 +504,7 @@
                     do (curve a b c d)))
         (vector (loop for j from 0 below (1- (length points)) by 3
                       do (curve (aref points (+ j 0)) (aref points (+ j 1)) (aref points (+ j 2)) (aref points (+ j 3))))))
-      (apply #'call-next-method shape slots :points lines initargs))))
+      (apply #'call-next-method shape slots :points lines :join-style :bevel initargs))))
 
 (defmethod simple:curve ((renderer renderer) (points vector) &rest initargs)
   (apply #'make-instance 'curve :points points initargs))
