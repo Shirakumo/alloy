@@ -22,6 +22,9 @@
       :report (lambda (s) (format s "Decline handling ~a" event))
       NIL)))
 
+(defclass scale-changed (event)
+  ())
+
 (defclass input-event (event)
   ())
 

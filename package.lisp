@@ -199,6 +199,7 @@
    #:handle
    #:event
    #:decline
+   #:scale-changed
    #:input-event
    #:pointer-event
    #:location

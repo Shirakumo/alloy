@@ -71,10 +71,12 @@
   (register (layout-tree ui) renderer))
 
 (defmethod (setf base-scale) (value (ui ui))
-  (setf (slot-value ui 'base-scale) (float value 0f0)))
+  (setf (slot-value ui 'base-scale) (float value 0f0))
+  (handle (make-instance 'scale-changed) ui))
 
 (defmethod (setf resolution-scale) (value (ui ui))
-  (setf (slot-value ui 'resolution-scale) (float value 0f0)))
+  (setf (slot-value ui 'resolution-scale) (float value 0f0))
+  (handle (make-instance 'scale-changed) ui))
 
 (defmethod (setf base-scale) :after (value (ui ui))
   (suggest-size (bounds ui) ui))

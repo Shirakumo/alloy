@@ -126,8 +126,10 @@
   (/ px (pxh *unit-parent*)))
 
 (define-unit un (un)
-  (* un (resolution-scale (ui (layout-tree *unit-parent*))) (base-scale (ui (layout-tree *unit-parent*))))
-  (/ px (resolution-scale (ui (layout-tree *unit-parent*))) (base-scale (ui (layout-tree *unit-parent*)))))
+  (let ((ui (ui (layout-tree *unit-parent*))))
+    (* un (resolution-scale ui) (base-scale ui)))
+  (let ((ui (ui (layout-tree *unit-parent*))))
+    (/ px (resolution-scale ui) (base-scale ui))))
 
 (define-unit cm (cm)
   (* cm (dots-per-cm (ui (layout-tree *unit-parent*))))
