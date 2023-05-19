@@ -11,10 +11,7 @@ uniform mat3 transform;
 uniform vec2 view_size;
 
 void main(){
-  vec3 delta = vec3(normal * line_width, 0.0);
-  delta.xy /= view_size;
-  vec3 pos = transform*vec3(position, 1.0);
-  gl_Position = vec4(pos + delta, 1.0);
+  gl_Position = vec4(transform*vec3(position, 1.0), 1.0);
   line_normal = normal;
   t = time/(line_width*0.3)*gap;
 }

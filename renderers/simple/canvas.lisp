@@ -143,7 +143,8 @@
                    :cap-style (cap-style style)))
       (:polygon
        (draw-shape canvas 'polygon (cdr (state canvas))
-                   :pattern (pattern style))))))
+                   :pattern (pattern style))))
+    (setf (state canvas) NIL)))
 
 (defmethod move-to ((canvas canvas) x y)
   (setf (location canvas) (alloy:point x y))

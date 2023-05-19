@@ -33,38 +33,133 @@
 (defmethod (setf resource) (value name (renderer renderer))
   (setf (gethash name (resources renderer)) value))
 
-(defun make-line-array (points)
-  (let ((array (make-array (max 0 (* 6 5 (1- (length points)))) :element-type 'single-float))
-        (i -1) (tt 0.0))
-    (labels ((vertex (p nx ny tt)
-               (setf (aref array (incf i)) (alloy:pxx p))
-               (setf (aref array (incf i)) (alloy:pxy p))
-               (setf (aref array (incf i)) nx)
-               (setf (aref array (incf i)) ny)
-               (setf (aref array (incf i)) tt))
+(defun intersect (o1x o1y d1x d1y o2x o2y d2x d2y)
+  (declare (type single-float o1x o1y d1x d1y o2x o2y d2x d2y))
+  (let ((u (/ (- (* d2x (- o2y o1y)) (* d2y (- o2x o1x)))
+              (- (* d2x d1y) (* d2y d1x)))))
+    (values (+ o1x (* d1x u))
+            (+ o1y (* d1y u)))))
+
+(defun make-line-array (points width cap-style join-style &key closed)
+  (let ((array (make-array (max 0 (* 6 5 (1- (length points)))) :element-type 'single-float :adjustable T :fill-pointer 0))
+        (dots (make-array 0 :element-type 'single-float :adjustable T :fill-pointer 0))
+        (w (* 0.5 (alloy:to-px width)))
+        (tt 0.0) pax pay pbx pby pux puy)
+    (labels ((vertex (x y nx ny tt)
+               (vector-push-extend x array)
+               (vector-push-extend y array)
+               (vector-push-extend nx array)
+               (vector-push-extend ny array)
+               (vector-push-extend tt array))
+             (dvertex (x y u v)
+               (vector-push-extend x dots)
+               (vector-push-extend y dots)
+               (vector-push-extend u dots)
+               (vector-push-extend v dots))
+             (join (ax ay bx by ux uy tt0)
+               (let* ((cw (if (< 0 (- (* (- ax pax) (- by pax))
+                                      (* (- bx pax) (- ay pay))))
+                              -1 +1))
+                      (o2x (+ ax (* w cw ux))) (o2y (+ ay (* w cw uy)))
+                      (o1x (+ pbx (* w cw pux))) (o1y (+ pby (* w cw puy))))
+                 (case join-style
+                   (:bevel
+                    (vertex o1x o1y (* cw pux) (* cw puy) tt0)
+                    (vertex ax ay 0.0 0.0 tt0)
+                    (vertex o2x o2y (* cw ux) (* cw uy) tt0))
+                   (:miter
+                    (let ((d1x (- pbx pax)) (d1y (- pby pay))
+                          (d2x (- bx ax)) (d2y (- by ay)))
+                      (multiple-value-bind (ex ey) (intersect o1x o1y d1x d1y o2x o2y d2x d2y)
+                        (vertex o1x o1y (+ pux) (+ puy) tt0)
+                        (vertex ax ay 0.0 0.0 tt0)
+                        (vertex ex ey (+ pux) (+ puy) tt0)
+                        (vertex ex ey (+ ux) (+ uy) tt0)
+                        (vertex ax ay 0.0 0.0 tt0)
+                        (vertex o2x o2y (+ ux) (+ uy) tt0))))
+                   (:round
+                    (let ((r (max (sqrt (+ (expt (- ax o1x) 2) (expt (- ay o1y) 2)))
+                                  (sqrt (+ (expt (- ax o2x) 2) (expt (- ay o2y) 2))))))
+                      (dvertex (- ax r) (- ay r) 0.0 0.0)
+                      (dvertex (+ ax r) (- ay r) 1.0 0.0)
+                      (dvertex (+ ax r) (+ ay r) 1.0 1.0)
+                      (dvertex (+ ax r) (+ ay r) 1.0 1.0)
+                      (dvertex (- ax r) (+ ay r) 0.0 1.0)
+                      (dvertex (- ax r) (- ay r) 0.0 0.0))))))
+             (cap (bx by ux uy tt)
+               (case cap-style
+                 (:square
+                  (let ((ax bx) (ay by)
+                        (bx (+ bx (* uy w)))
+                        (by (+ by (* (- ux) w))))
+                    (vertex (- ax (* w ux)) (- ay (* w uy)) (- ux) (- uy) tt)
+                    (vertex (- bx (* w ux)) (- by (* w uy)) (- ux) (- uy) tt)
+                    (vertex (+ ax (* w ux)) (+ ay (* w uy)) (+ ux) (+ uy) tt)
+                    (vertex (- bx (* w ux)) (- by (* w uy)) (- ux) (- uy) tt)
+                    (vertex (+ bx (* w ux)) (+ by (* w uy)) (+ ux) (+ uy) tt)
+                    (vertex (+ ax (* w ux)) (+ ay (* w uy)) (+ ux) (+ uy) tt)))
+                 (:spike
+                  (let ((ax (- bx (* uy (* 0.5 w))))
+                        (ay (- by (* (- ux) (* 0.5 w))))
+                        (bx (+ bx (* uy (* 2 w))))
+                        (by (+ by (* (- ux) (* 2 w)))))
+                    (vertex (- ax (* w ux)) (- ay (* w uy)) (- ux) (- uy) tt)
+                    (vertex bx by (- ux) (- uy) tt)
+                    (vertex ax ay (+ ux) (+ uy) tt)
+                    (vertex (+ ax (* w ux)) (+ ay (* w uy)) (+ ux) (+ uy) tt)
+                    (vertex ax ay (+ ux) (+ uy) tt)
+                    (vertex bx by (- ux) (- uy) tt)))
+                 (:round
+                  (dvertex (- bx w) (- by w) 0.0 0.0)
+                  (dvertex (+ bx w) (- by w) 1.0 0.0)
+                  (dvertex (+ bx w) (+ by w) 1.0 1.0)
+                  (dvertex (+ bx w) (+ by w) 1.0 1.0)
+                  (dvertex (- bx w) (+ by w) 0.0 1.0)
+                  (dvertex (- bx w) (- by w) 0.0 0.0))))
              (line (a b)
-               (let* ((ux (- (- (alloy:pxy b) (alloy:pxy a))))
-                      (uy (- (alloy:pxx b) (alloy:pxx a)))
+               (let* ((ax (alloy:pxx a)) (ay (alloy:pxy a))
+                      (bx (alloy:pxx b)) (by (alloy:pxy b))
+                      (ux (- (- by ay))) (uy (- bx ax))
                       (len (sqrt (+ (* ux ux) (* uy uy))))
                       (tt0 tt) (tt1 (+ tt len)))
                  (when (< 0 len)
                    (setf ux (/ ux len))
                    (setf uy (/ uy len))
-                   (vertex a (- ux) (- uy) tt0)
-                   (vertex b (- ux) (- uy) tt1)
-                   (vertex a (+ ux) (+ uy) tt0)
-                   (vertex b (- ux) (- uy) tt1)
-                   (vertex b (+ ux) (+ uy) tt1)
-                   (vertex a (+ ux) (+ uy) tt0)
-                   (setf tt tt1)))))
+                   (vertex (- ax (* w ux)) (- ay (* w uy)) (- ux) (- uy) tt0)
+                   (vertex (- bx (* w ux)) (- by (* w uy)) (- ux) (- uy) tt1)
+                   (vertex (+ ax (* w ux)) (+ ay (* w uy)) (+ ux) (+ uy) tt0)
+                   (vertex (- bx (* w ux)) (- by (* w uy)) (- ux) (- uy) tt1)
+                   (vertex (+ bx (* w ux)) (+ by (* w uy)) (+ ux) (+ uy) tt1)
+                   (vertex (+ ax (* w ux)) (+ ay (* w uy)) (+ ux) (+ uy) tt0)
+                   (cond (pax
+                          (join ax ay bx by ux uy tt0))
+                         ((not closed)
+                          (cap ax ay (- ux) (- uy) tt0)))
+                   (setf tt tt1)
+                   (setf pax ax pay ay pbx bx pby by pux ux puy uy))))
+             (finish (a b)
+               (if closed
+                   (let* ((ax (alloy:pxx a)) (ay (alloy:pxy a))
+                          (bx (alloy:pxx b)) (by (alloy:pxy b))
+                          (ux (- (- by ay))) (uy (- bx ax))
+                          (len (sqrt (+ (* ux ux) (* uy uy)))))
+                     (setf ux (/ ux len))
+                     (setf uy (/ uy len))
+                     (join ax ay bx by ux uy tt))
+                   (cap pbx pby pux puy tt))))
       (etypecase points
         (list
          (loop for (a b) on points
-               while b do (line a b)))
+               while b do (line a b))
+         (when pax
+           (finish (first points) (second points))))
         (vector
          (loop for i from 0 below (1- (length points))
-               do (line (aref points i) (aref points (1+ i))))))
-      array)))
+               do (line (aref points i) (aref points (1+ i))))
+         (when pax
+           (finish (aref points 0) (aref points 1)))))
+      (values (make-array (length array) :element-type 'single-float :initial-contents array)
+              (make-array (length dots) :element-type 'single-float :initial-contents dots)))))
 
 (defmethod alloy:allocate :before ((renderer renderer))
   ;; TODO: Implement sharing between renderers.
@@ -79,39 +174,28 @@
            (unless (resource vao renderer NIL)
              (setf (resource vao renderer) (make-vertex-array renderer (loop for binding in bindings
                                                                              collect (list* (resource vbo renderer) binding)))))))
-    ;; lines
-    (make-geometry 'rect-line-vbo 'rect-line-vao
-                   (make-line-array (list (alloy:px-point 0f0 0f0)
-                                          (alloy:px-point 0f0 1f0)
-                                          (alloy:px-point 1f0 1f0)
-                                          (alloy:px-point 1f0 0f0)
-                                          (alloy:px-point 0f0 0f0)))
-                   :bindings '((:size 2 :offset 0 :stride 20)
-                               (:size 2 :offset 8 :stride 20)
-                               (:size 1 :offset 16 :stride 20)))
     (make-geometry 'line-vbo 'line-vao (arr)
                    :data-usage :stream-draw
                    :bindings '((:size 2 :offset 0 :stride 20)
                                (:size 2 :offset 8 :stride 20)
                                (:size 1 :offset 16 :stride 20)))
-    ;; :triangles
+    (make-geometry 'points-vbo 'points-vao (arr)
+                   :data-usage :stream-draw
+                   :bindings '((:size 2 :offset 0 :stride 16)
+                               (:size 2 :offset 8 :stride 16)))
     (make-geometry 'rect-fill-vbo 'rect-fill-vao
                    (arr 0f0 0f0  1f0 1f0  0f0 1f0
                         0f0 0f0  1f0 0f0  1f0 1f0))
     (make-geometry 'rect-inner-vbo 'rect-inner-vao
-                   ;;    W   H   XR   YR
+                   ;;    W   H   XR  YR
                    (arr 0f0 0f0 0f0 4f0  0f0 0f0 4f0 4f0  0f0 1f0 1f0 1f0 ; L
                         0f0 1f0 1f0 1f0  0f0 1f0 0f0 1f0  0f0 0f0 0f0 4f0
-                        
                         0f0 0f0 4f0 0f0  1f0 0f0 3f0 0f0  0f0 0f0 4f0 4f0 ; B
                         0f0 0f0 4f0 4f0  1f0 0f0 3f0 0f0  1f0 0f0 3f0 3f0
-
                         0f0 0f0 4f0 4f0  1f0 0f0 3f0 3f0  0f0 1f0 1f0 1f0 ; C
                         0f0 1f0 1f0 1f0  1f0 0f0 3f0 3f0  1f0 1f0 2f0 2f0
-
                         1f0 1f0 2f0 2f0  1f0 0f0 3f0 3f0  1f0 1f0 0f0 2f0 ; R
                         1f0 1f0 0f0 2f0  1f0 0f0 3f0 3f0  1f0 0f0 0f0 3f0
-
                         0f0 1f0 1f0 1f0  1f0 1f0 2f0 2f0  1f0 1f0 2f0 0f0 ; T
                         1f0 1f0 2f0 0f0  0f0 1f0 1f0 0f0  0f0 1f0 1f0 1f0)
                    :bindings '((:size 2 :offset 0 :stride 16)
@@ -119,13 +203,10 @@
     (make-geometry 'rect-corner-vbo 'rect-corner-vao
                    (arr 0f0 0f0 0f0 0f0  0f0 0f0 4f0 0f0  0f0 0f0 4f0 4f0 ; BL
                         0f0 0f0 4f0 4f0  0f0 0f0 0f0 4f0  0f0 0f0 0f0 0f0
-
                         1f0 0f0 0f0 0f0  1f0 0f0 3f0 0f0  1f0 0f0 3f0 3f0 ; BR
                         1f0 0f0 3f0 3f0  1f0 0f0 0f0 3f0  1f0 0f0 0f0 0f0
-
                         1f0 1f0 0f0 0f0  1f0 1f0 2f0 0f0  1f0 1f0 2f0 2f0 ; TR
                         1f0 1f0 2f0 2f0  1f0 1f0 0f0 2f0  1f0 1f0 0f0 0f0
-
                         0f0 1f0 0f0 0f0  0f0 1f0 1f0 0f0  0f0 1f0 1f0 1f0 ; TL
                         0f0 1f0 1f0 1f0  0f0 1f0 0f0 1f0  0f0 1f0 0f0 0f0)
                    :bindings '((:size 2 :offset 0 :stride 16)
@@ -146,6 +227,7 @@
                     (frag (subseq contents frag-start (if (< frag-start vert-start) vert-start (length contents)))))
                (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag))))))
     (make-shader 'line-shader)
+    (make-shader 'points-shader)
     (make-shader 'circle-fill-shader)
     (make-shader 'circle-line-shader)
     (make-shader 'gradient-shader)
@@ -355,12 +437,16 @@
      (gl:blend-equation :func-reverse-subtract))))
 
 (defclass line-strip (simple:line-strip)
-  ((data :accessor data)
+  ((line-data :accessor line-data)
+   (point-data :accessor point-data)
    (size :initform NIL :accessor size)))
 
-(defmethod shared-initialize :after ((shape line-strip) slots &key (points NIL points-p))
-  (when points-p
-    (setf (data shape) (make-line-array points))))
+(defmethod shared-initialize :after ((shape line-strip) slots &key closed)
+  (multiple-value-bind (lines points) (make-line-array (simple:points shape) (simple:line-width shape)
+                                                       (simple:cap-style shape) (simple:join-style shape)
+                                                       :closed closed)
+    (setf (line-data shape) lines)
+    (setf (point-data shape) points)))
 
 (defmethod simple:line-strip ((renderer renderer) (points vector) &rest initargs)
   (apply #'make-instance 'line-strip :points points initargs))
@@ -370,19 +456,25 @@
 
 (defmethod render-direct ((shape line-strip) renderer color)
   (let ((shader (resource 'line-shader renderer))
-        (data (data shape)))
-    (update-vertex-buffer (resource 'line-vbo renderer) data)
-    (bind shader)
-    (setf (uniform shader "transform") (simple:transform-matrix renderer))
-    (setf (uniform shader "color") color)
-    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
-    (setf (uniform shader "gap") (case (simple:line-style shape)
-                                   (:dashed 0.3)
-                                   (:dotted 1.0)
-                                   (T 0.0)))
-    (setf (uniform shader "view_size") (view-size renderer))
-    ;; TODO: line caps, joints?
-    (draw-vertex-array (resource 'line-vao renderer) :triangles 0 (min (/ (length data) 4) (* (or (size shape) 1000000) 6)))))
+        (lines (line-data shape))
+        (points (point-data shape)))
+    (flet ((prepare (shader)
+             (bind shader)
+             (setf (uniform shader "transform") (simple:transform-matrix renderer))
+             (setf (uniform shader "color") color)))
+      (update-vertex-buffer (resource 'line-vbo renderer) lines)
+      (prepare shader)
+      (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
+      (setf (uniform shader "gap") (case (simple:line-style shape)
+                                     (:dashed 0.3)
+                                     (:dotted 1.0)
+                                     (T 0.0)))
+      (setf (uniform shader "view_size") (view-size renderer))
+      (draw-vertex-array (resource 'line-vao renderer) :triangles 0 (floor (length lines) 5))
+      (when (< 0 (length points))
+        (update-vertex-buffer (resource 'points-vbo renderer) points)
+        (prepare (resource 'points-shader renderer))
+        (draw-vertex-array (resource 'points-vao renderer) :triangles 0 (floor (length points) 4))))))
 
 (defclass curve (line-strip)
   ())
@@ -442,18 +534,26 @@
         (prepare (resource 'corner-shader renderer))
         (draw-vertex-array (resource 'rect-corner-vao renderer) :triangles 0 32)))))
 
-(defmethod render-direct ((shape simple:outlined-rectangle) renderer color)
-  (let ((shader (resource 'line-shader renderer)))
-    (bind shader)
-    (simple:with-pushed-transforms (renderer)
-      (simple:translate renderer (simple:bounds shape))
-      (simple:scale renderer (simple:bounds shape))
-      (setf (uniform shader "transform") (simple:transform-matrix renderer)))
-    (setf (uniform shader "color") color)
-    (setf (uniform shader "line_width") (alloy:to-px (simple:line-width shape)))
-    (setf (uniform shader "view_size") (view-size renderer))
-    ;; TODO: rounded corners?
-    (draw-vertex-array (resource 'rect-line-vao renderer) :triangles 0 24)))
+(defclass outlined-rectangle (simple:outlined-rectangle line-strip)
+  ())
+
+(defmethod shared-initialize :around ((rectangle outlined-rectangle) slots &rest args &key bounds)
+  (let* ((points (make-array 5))
+         (bounds (or bounds (alloy:bounds rectangle)))
+         (x (alloy:pxx bounds))
+         (y (alloy:pxy bounds))
+         (w (alloy:pxw bounds))
+         (h (alloy:pxh bounds)))
+    (setf (aref points 0) (alloy:px-point (+ x 0) (+ y 0)))
+    (setf (aref points 1) (alloy:px-point (+ x w) (+ y 0)))
+    (setf (aref points 2) (alloy:px-point (+ x w) (+ y h)))
+    (setf (aref points 3) (alloy:px-point (+ x 0) (+ y h)))
+    (setf (aref points 4) (alloy:px-point (+ x 0) (+ y 0)))
+    (setf (simple:points rectangle) points)
+    (apply #'call-next-method rectangle slots :closed T args)))
+
+(defmethod simple:rectangle ((renderer renderer) bounds &rest initargs &key line-width)
+  (apply #'make-instance (if line-width 'outlined-rectangle 'simple:filled-rectangle) :bounds bounds initargs))
 
 (defmethod render-direct ((shape simple:filled-ellipse) renderer color)
   (let ((shader (resource 'circle-fill-shader renderer))
@@ -484,6 +584,7 @@
     (setf (uniform shader "start_angle") (simple:start-angle shape))
     (setf (uniform shader "end_angle") (simple:end-angle shape))
     (setf (uniform shader "color") color)
+    ;; TODO: line caps, line styles?
     ;; KLUDGE: I don't think this is quite right yet but whatever.
     (setf (uniform shader "line_width") (/ (alloy:to-px (simple:line-width shape))
                                            (max w h)))
