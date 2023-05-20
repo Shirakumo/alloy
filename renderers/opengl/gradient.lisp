@@ -15,7 +15,12 @@
   (setf (slot-value gradient 'data) (compute-gradient-data gradient)))
 
 (defmethod simple:request-gradient ((renderer renderer) type start stop stops &key)
-  (make-instance (find-symbol (string type) #.*package*) :start start :stop stop :stops stops))
+  (make-instance (ecase type
+                   ((:linear :linear-gradient 'linear-gradient) 'linear-gradient)
+                   ((:radial :radial-gradient 'radial-gradient) 'radial-gradient)
+                   ((:angle :angle-gradient 'angle-gradient) 'angle-gradient)
+                   ((:diamond :diamond-gradient 'diamond-gradient) 'diamond-gradient))
+                 :start start :stop stop :stops stops))
 
 (defmethod render-direct ((shape gradient) renderer color)
   (let ((shader (resource 'gradient-shader renderer))
