@@ -47,7 +47,7 @@ The following values must be accepted as the specified OpenGL value types:
   COLORED:COLOR      vec4
   VECTOR             mat3
   SINGLE-FLOAT       float
-  (UNSIGNED-BYTE 32) int
+  (SIGNED-BYTE 32)   int
 
 The backend will access the following locations in shaders:
   transform
