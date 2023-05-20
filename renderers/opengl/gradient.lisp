@@ -49,11 +49,13 @@
       (colored:color
        (call-next-method))
       (simple:image-pattern
-       (simple:clip renderer shape)
-       (render-direct pattern renderer NIL))
+       (simple:with-pushed-transforms (renderer)
+         (simple:clip renderer shape)
+         (render-direct pattern renderer NIL)))
       (gradient
-       (simple:clip renderer shape)
-       (render-direct pattern renderer colors:black)))))
+       (simple:with-pushed-transforms (renderer)
+         (simple:clip renderer shape)
+         (render-direct pattern renderer colors:black))))))
 
 (defgeneric compute-gradient-data (gradient))
 
