@@ -17,7 +17,8 @@ See ALLOY:SIZE")
 
 For shaders: the shader program is activated.
 For textures: the texture is bound as Texture0.
-For framebuffers: the framebuffer is set as the draw framebuffer.
+For framebuffers: the framebuffer is set as the draw framebuffer
+target and cleared.
 
 See MAKE-SHADER
 See MAKE-TEXTURE
@@ -182,7 +183,7 @@ See BLIT-FRAMEBUFFER")
   (function blit-framebuffer
     "Blits the bound framebuffer to the backing render buffer.
 
-After this call the framebuffer will be unbound, and the backing
-render buffer should be bound as the draw framebuffer.
+After this call the framebuffer will be unbound, and the
+backing render buffer should be bound as the draw framebuffer.
 
 See MAKE-FRAMEBUFFER"))

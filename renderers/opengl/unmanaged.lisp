@@ -186,7 +186,8 @@
   ;; Check for size consistency now
   (let ((data (gl:get-integer :viewport 4)))
     (resize fbo (aref data 2) (aref data 3)))
-  (gl:bind-framebuffer :draw-framebuffer (gl-resource-name fbo)))
+  (gl:bind-framebuffer :draw-framebuffer (gl-resource-name fbo))
+  (gl:clear :color-buffer :depth-buffer :stencil-buffer))
 
 (defmethod blit-framebuffer ((fbo fbo))
   (gl:bind-framebuffer :read-framebuffer (gl-resource-name fbo))
