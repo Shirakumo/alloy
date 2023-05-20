@@ -22,7 +22,9 @@
    #:update-vertex-buffer
    #:make-vertex-array
    #:draw-vertex-array
-   #:make-texture)
+   #:make-texture
+   #:make-framebuffer
+   #:blit-framebuffer)
   ;; renderer.lisp
   (:export
    #:renderer

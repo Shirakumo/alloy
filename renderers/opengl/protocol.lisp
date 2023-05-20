@@ -38,10 +38,13 @@
 (defgeneric make-vertex-buffer (renderer contents &key buffer-type data-usage))
 (defgeneric update-vertex-buffer (buffer contents))
 
-(defgeneric make-vertex-array (renderer bindings))
+(defgeneric make-vertex-array (renderer bindings &key index-buffer))
 (defgeneric draw-vertex-array (array primitive-type offset count))
 
 (defgeneric make-texture (renderer width height data &key channels filtering))
+
+(defgeneric make-framebuffer (renderer))
+(defgeneric blit-framebuffer (framebuffer))
 
 (defvar *gl-extensions* ())
 

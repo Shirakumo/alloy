@@ -63,6 +63,8 @@
          (%gl:uniform-matrix-3fv location 1 T data)))
       (single-float
        (%gl:uniform-1f location value))
+      ((unsigned-byte 32)
+       (%gl:uniform-1i location value))
       (colored:color
        (%gl:uniform-4f location (colored:r value) (colored:g value) (colored:b value) (colored:a value)))
       (alloy:point
