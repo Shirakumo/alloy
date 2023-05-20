@@ -44,4 +44,5 @@ void main(){
   float dsdf = fwidth(sdf)*0.5;
   sdf = smoothstep(dsdf, -dsdf, sdf);
   out_color = color*sdf;
+  if(out_color.w <= 0.0) discard;
 }

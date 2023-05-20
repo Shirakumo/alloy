@@ -49,4 +49,5 @@ void main(){
   float time = atan(uv.y, uv.x);
   float t = time/(line_width*0.3)*gap;
   out_color = color*sdf*clamp(1-sin(t)*4, 0.0, 1.0);
+  if(out_color.w <= 0.0) discard;
 }

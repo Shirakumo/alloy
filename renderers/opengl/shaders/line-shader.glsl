@@ -29,5 +29,6 @@ out vec4 out_color;
 #endif
 
 void main(){
-   out_color = color * ((1-length(line_normal))/feather) * clamp(1-sin(t)*4, 0.0, 1.0);
+  out_color = color * ((1-length(line_normal))/feather) * clamp(1-sin(t)*4, 0.0, 1.0);
+  if(out_color.w <= 0.0) discard;
 }
