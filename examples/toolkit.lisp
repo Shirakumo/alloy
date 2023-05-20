@@ -8,6 +8,10 @@
 
 (defvar *screen*)
 (defvar *examples* ())
+(defvar *here* #.(make-pathname :name NIL :type NIL :defaults (or *compile-file-truename* *load-truename*)))
+
+(defun file (path)
+  (merge-pathnames path *here*))
 
 (defclass screen (glfw:screen) ())
 
