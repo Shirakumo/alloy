@@ -85,6 +85,8 @@
    #:points
    #:line-strip
    #:curve
+   #:sort-markup
+   #:flatten-markup
    #:text
    #:font
    #:size
