@@ -414,6 +414,7 @@
    #:allocated-p
    #:deallocate
    #:register
+   #:deregister
    #:render-needed-p
    #:mark-for-render
    #:render

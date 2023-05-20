@@ -164,6 +164,9 @@
 (defmethod register :after ((combo combo) (renderer renderer))
   (register (combo-list combo) renderer))
 
+(defmethod deregister :after ((combo combo) (renderer renderer))
+  (deregister (combo-list combo) renderer))
+
 (defmethod render :after ((renderer renderer) (combo combo))
   (case (state combo)
     (:selecting

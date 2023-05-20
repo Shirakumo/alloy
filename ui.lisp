@@ -70,6 +70,9 @@
 (defmethod register ((ui ui) renderer)
   (register (layout-tree ui) renderer))
 
+(defmethod deregister ((ui ui) renderer)
+  (deregister (layout-tree ui) renderer))
+
 (defmethod (setf base-scale) (value (ui ui))
   (setf (slot-value ui 'base-scale) (float value 0f0))
   (handle (make-instance 'scale-changed) ui))

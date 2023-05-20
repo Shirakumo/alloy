@@ -10,6 +10,7 @@
 (defgeneric deallocate (renderer))
 (defgeneric allocated-p (renderer))
 (defgeneric register (renderable renderer))
+(defgeneric deregister (renderable renderer))
 
 (defgeneric render-needed-p (renderable))
 (defgeneric mark-for-render (renderable))

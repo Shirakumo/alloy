@@ -273,6 +273,10 @@
   (do-elements (element layout)
     (register element renderer)))
 
+(defmethod deregister :before ((layout layout) (renderer renderer))
+  (do-elements (element layout)
+    (deregister element renderer)))
+
 (defmethod render ((renderer renderer) (layout layout))
   (do-elements (element layout)
     (render renderer element)))
@@ -334,6 +338,10 @@
 (defmethod register ((tree layout-tree) (renderer renderer))
   (register (root tree) renderer)
   (register (popups tree) renderer))
+
+(defmethod deregister ((tree layout-tree) (renderer renderer))
+  (deregister (root tree) renderer)
+  (deregister (popups tree) renderer))
 
 (defmethod render ((renderer renderer) (tree layout-tree))
   (render renderer (root tree))

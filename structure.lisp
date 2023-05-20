@@ -24,6 +24,9 @@
 (defmethod register ((structure structure) (renderer renderer))
   (register (layout-element structure) renderer))
 
+(defmethod deregister ((structure structure) (renderer renderer))
+  (deregister (layout-element structure) renderer))
+
 (macrolet ((define-deferral (gf target wrapper &optional rest-p)
              `(defmethod ,gf ((structure structure) (,target ,target) ,@(when rest-p '(&rest initargs)))
                 (when (,wrapper structure)

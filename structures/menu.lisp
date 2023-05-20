@@ -38,9 +38,14 @@
 
 (defmethod notice-focus (sub (item menu-item)))
 (defmethod notice-size (sub (item menu-item)))
+
 (defmethod register :after ((item menu-item) (renderer renderer))
   (when (inner item)
     (register (inner item) renderer)))
+
+(defmethod deregister :after ((item menu-item) (renderer renderer))
+  (when (inner item)
+    (deregister (inner item) renderer)))
 
 (defmethod enter :around ((child menu-item) (parent menu-item) &key)
   (enter child (inner parent)))
