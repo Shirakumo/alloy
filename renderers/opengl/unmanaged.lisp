@@ -136,7 +136,7 @@
                                 (1  (cffi:foreign-enum-value '%gl:enum :one)))))
                (%gl:tex-parameter-iv :texture-2d :texture-swizzle-rgba params))))
       (ecase format
-        (:red (swizzle :r :r :r :r))
+        (:red (swizzle :r :r :r 1))
         (:rg (swizzle :r :r :r :g))
         (:rgb (swizzle :r :g :b 1))
         (:rgba (swizzle :r :g :b :a))))
