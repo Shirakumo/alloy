@@ -49,6 +49,7 @@
       (colored:color
        (call-next-method))
       (simple:image-pattern
+       ;; FIXME: scale the image pattern to fit according to the simple:mode and the shape it is applied to
        (simple:with-pushed-transforms (renderer)
          (simple:clip renderer shape)
          (render-direct pattern renderer NIL)))
