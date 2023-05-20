@@ -7,6 +7,55 @@
 (in-package #:org.shirakumo.alloy.renderers.simple)
 
 (docs:define-docs
+  (function markup
+    "Accesses the markup style of text.
+
+Should be a sequence of the following format:
+  MARKUP        ::= ELEMENT*
+  ELEMENT       ::= (start stop STYLE*)
+  start         --- The starting (inclusive) index
+  stop          --- The ending (exclusive) index
+  STYLE         ::= SIMPLE-STYLE | COMPLEX-STYLE
+  SIMPLE-STYLE  ::=
+      :ITALIC    --- The font is switched to an italic variant, or a
+                     slant is applied to each character
+    | :BOLD      --- The font is switched to a bold variant, or extra
+                     thickness is applied to each character
+    | :STRIKE    --- A strikethrough line is applied across the region
+    | :UNDERLINE --- An underline is applied along the region
+    | :FIXED     --- The font is switched to a monospace variant, or
+                     each character in the region is set to a fixed
+                     width
+  COMPLEX-STYLE ::=
+      (:COLOR color) --- The colour of the characters in the region
+                         is changed to the specified one
+    | (:SIZE size)   --- The font size of the characters in the region
+                         is changed to the specified one
+    | (:OUTLINE size color) --- An outline is applied to each
+                         character in the region, where the outline
+                         has a thickness of the given size, and
+                         the specified color
+    | (:BOLD weight) --- The font is switched to a bold variant of the
+                         specified weight, or extra thickness is
+                         applied to each character to achieve the
+                         required thickness
+
+Where each element designates one or more styles to apply to a region
+of the text. Special restrictions apply:
+  - Every STOP must be greater than the START.
+    The behaviour is unspecified if this constraint is violated
+  - The regions of any two elements must not partially overlap:
+      ((0 10) (3 5)) is valid, and
+      ((0 5) (5 10)) is also valid, but
+      ((0 5) (3 10)) is invalid
+    The behaviour is unspecified if this constraint is violated
+  - If two elements overlap fully and use the same style type, but
+    with different parameters, the parameters of the style closest to
+    the character is applied
+
+A backend may provide additional style types, or only partially
+support one of the standardised style types.")
+  
   (function line-style
     "The style of the line being drawn.
 
