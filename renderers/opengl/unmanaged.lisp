@@ -120,9 +120,26 @@
   array)
 
 (defmethod make-texture ((renderer renderer) width height data &key (channels 4) (filtering :linear))
-  (let* ((format (ecase channels (1 :r) (2 :rg) (3 :rgb) (4 :rgba)))
+  (let* ((format (ecase channels (1 :red) (2 :rg) (3 :rgb) (4 :rgba)))
          (name (gl:gen-texture)))
     (gl:bind-texture :texture-2d name)
+    (flet ((swizzle (&rest channels)
+             (cffi:with-foreign-object (params :int 4)
+               (loop for c in channels
+                     for i from 0
+                     do (setf (cffi:mem-aref params :int i)
+                              (ecase c
+                                (:r (cffi:foreign-enum-value '%gl:enum :red))
+                                (:g (cffi:foreign-enum-value '%gl:enum :green))
+                                (:b (cffi:foreign-enum-value '%gl:enum :blue))
+                                (:a (cffi:foreign-enum-value '%gl:enum :alpha))
+                                (1  (cffi:foreign-enum-value '%gl:enum :one)))))
+               (%gl:tex-parameter-iv :texture-2d :texture-swizzle-rgba params))))
+      (ecase format
+        (:red (swizzle :r :r :r :r))
+        (:rg (swizzle :r :r :r :g))
+        (:rgb (swizzle :r :g :b 1))
+        (:rgba (swizzle :r :g :b :a))))
     (gl:tex-image-2d :texture-2d 0 format width height 0 format :unsigned-byte data)
     (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-border)
     (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-border)
