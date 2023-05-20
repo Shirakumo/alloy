@@ -49,14 +49,13 @@
       (colored:color
        (call-next-method))
       (simple:image-pattern
-       ;; FIXME: scale the image pattern to fit according to the simple:mode and the shape it is applied to
-       (simple:with-pushed-transforms (renderer)
-         (simple:clip renderer shape)
-         (render-direct pattern renderer NIL)))
+       (simple:clip renderer shape)
+       (render-direct pattern renderer NIL)
+       (unclip renderer shape))
       (gradient
-       (simple:with-pushed-transforms (renderer)
-         (simple:clip renderer shape)
-         (render-direct pattern renderer colors:black))))))
+       (simple:clip renderer shape)
+       (render-direct pattern renderer colors:black)
+       (unclip renderer shape)))))
 
 (defgeneric compute-gradient-data (gradient))
 
