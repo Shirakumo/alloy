@@ -41,7 +41,7 @@
 (defmethod ensure-visible ((element layout-element) (layout fullscreen-layout))
   (call-next-method))
 
-(defmethod handle ((event pointer-event) (layout fullscreen-layout))
+(defmethod handle ((event layout-event) (layout fullscreen-layout))
   (loop for i downfrom (1- (length (elements layout))) to 0
         for element = (aref (elements layout) i)
         do (when (handle event element)

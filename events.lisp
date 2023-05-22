@@ -22,13 +22,16 @@
       :report (lambda (s) (format s "Decline handling ~a" event))
       NIL)))
 
-(defclass scale-changed (event)
+(defclass layout-event (event)
+  ())
+
+(defclass scale-changed (layout-event)
   ())
 
 (defclass input-event (event)
   ())
 
-(defclass pointer-event (input-event)
+(defclass pointer-event (layout-event input-event)
   ((location :initarg :location :initform (arg! :location) :reader location)))
 
 (defclass pointer-move (pointer-event)

@@ -285,6 +285,12 @@
   (do-elements (element layout)
     (maybe-render renderer element)))
 
+(defmethod handle ((event layout-event) (layout layout))
+  (do-elements (element layout :result (decline) :from-end T)
+    (if (handle event element)
+        (return)
+        (decline))))
+
 (defmethod handle ((event pointer-event) (layout layout))
   ;; Need to process in reverse order to ensure overlapping elements come first,
   ;; since elements drawn last overlap previous elements.
@@ -351,7 +357,7 @@
   (maybe-render renderer (root tree))
   (maybe-render renderer (popups tree)))
 
-(defmethod handle ((event pointer-event) (tree layout-tree))
+(defmethod handle ((event layout-event) (tree layout-tree))
   (or (handle event (popups tree))
       (handle event (root tree))
       (when (typep event 'pointer-move)

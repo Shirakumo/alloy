@@ -45,7 +45,7 @@
   (or (handle event (focus-tree ui))
       (decline)))
 
-(defmethod handle ((event pointer-event) (ui ui))
+(defmethod handle ((event layout-event) (ui ui))
   (or (handle event (focus-tree ui))
       (handle event (layout-tree ui))
       (progn

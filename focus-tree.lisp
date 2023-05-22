@@ -111,7 +111,7 @@
       (or (handle event (focus-parent element))
           (decline))))
 
-(defmethod handle ((event pointer-event) (element focus-element))
+(defmethod handle ((event layout-event) (element focus-element))
   (decline))
 
 (defmethod handle ((event activate) (element focus-element))
