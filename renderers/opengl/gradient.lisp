@@ -16,10 +16,10 @@
 
 (defmethod simple:request-gradient ((renderer renderer) type start stop stops &key)
   (make-instance (ecase type
-                   ((:linear :linear-gradient 'linear-gradient) 'linear-gradient)
-                   ((:radial :radial-gradient 'radial-gradient) 'radial-gradient)
-                   ((:angle :angle-gradient 'angle-gradient) 'angle-gradient)
-                   ((:diamond :diamond-gradient 'diamond-gradient) 'diamond-gradient))
+                   ((:linear :linear-gradient simple:linear-gradient) 'linear-gradient)
+                   ((:radial :radial-gradient simple:radial-gradient) 'radial-gradient)
+                   ((:angle :angle-gradient simple:angle-gradient) 'angle-gradient)
+                   ((:diamond :diamond-gradient simple:diamond-gradient) 'diamond-gradient))
                  :start start :stop stop :stops stops))
 
 (defmethod render-direct ((shape gradient) renderer color)

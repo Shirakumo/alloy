@@ -556,7 +556,7 @@
 
 (defmethod shared-initialize :around ((rectangle outlined-rectangle) slots &rest args &key bounds)
   (let* ((points (make-array 5))
-         (bounds (or bounds (alloy:bounds rectangle)))
+         (bounds (alloy:ensure-extent (or bounds (simple:bounds rectangle))))
          (x (alloy:pxx bounds))
          (y (alloy:pxy bounds))
          (w (alloy:pxw bounds))
