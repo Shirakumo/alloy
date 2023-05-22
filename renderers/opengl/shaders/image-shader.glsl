@@ -10,15 +10,14 @@ void main(){
 
 //FRAG
 #extension GL_KHR_blend_equation_advanced : enable
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out;
+#endif
+out vec4 out_color;
 uniform sampler2D image;
 uniform vec2 uv_offset = vec2(0,0);
 uniform vec2 uv_scale = vec2(1,1);
 in vec2 uv;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
 
 void main(){
   vec4 color = texture(image, (uv/uv_scale)+uv_offset);

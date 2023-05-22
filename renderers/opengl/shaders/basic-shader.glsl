@@ -8,12 +8,11 @@ void main(){
 
 //FRAG
 #extension GL_KHR_blend_equation_advanced : enable
-uniform vec4 color;
 #ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
+layout(blend_support_all_equations) out;
 #endif
+out vec4 out_color;
+uniform vec4 color;
 
 void main(){
   out_color = vec4(color.rgb*color.a, color.a);

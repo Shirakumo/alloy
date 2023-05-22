@@ -27,14 +27,13 @@ void main(){
 
 //FRAG
 #extension GL_KHR_blend_equation_advanced : enable
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out;
+#endif
+out vec4 out_color;
 uniform vec4 color;
 in vec2 uv;
 in vec2 c;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
 
 void main(){
   vec2 p = vec2(abs(uv.x), uv.y);

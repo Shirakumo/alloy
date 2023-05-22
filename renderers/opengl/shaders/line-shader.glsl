@@ -18,15 +18,14 @@ void main(){
 
 //FRAG
 #extension GL_KHR_blend_equation_advanced : enable
+#ifdef GL_KHR_blend_equation_advanced
+layout(blend_support_all_equations) out;
+#endif
+out vec4 out_color;
 in vec2 line_normal;
 in float t;
 uniform float feather = 0.3;
 uniform vec4 color;
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out vec4 out_color;
-#else
-out vec4 out_color;
-#endif
 
 void main(){
   out_color = color * ((1-length(line_normal))/feather) * clamp(1-sin(t)*4, 0.0, 1.0);
