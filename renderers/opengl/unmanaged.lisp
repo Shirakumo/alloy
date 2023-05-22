@@ -101,21 +101,20 @@
   (gl:bind-buffer (vbo-type buffer) 0)
   buffer)
 
-(defmethod make-vertex-array ((renderer renderer) bindings)
+(defmethod make-vertex-array ((renderer renderer) bindings &key index-buffer)
   (let ((name (gl:gen-vertex-array))
         (type :arrays)
         (i 0))
     (gl:bind-vertex-array name)
     (dolist (binding bindings)
-      (cond ((listp binding)
-             (destructuring-bind (buffer &key (size 3) (stride 0) (offset 0)) binding
-               (gl:bind-buffer :array-buffer (gl-resource-name buffer))
-               (gl:vertex-attrib-pointer i size :float NIL stride offset)
-               (gl:enable-vertex-attrib-array i)
-               (incf i)))
-            (T
-             (gl:bind-buffer :element-array-buffer (gl-resource-name binding))
-             (setf type :elements))))
+      (destructuring-bind (buffer &key (size 3) (stride 0) (offset 0)) binding
+        (gl:bind-buffer :array-buffer (gl-resource-name buffer))
+        (gl:vertex-attrib-pointer i size :float NIL stride offset)
+        (gl:enable-vertex-attrib-array i)
+        (incf i)))
+    (when index-buffer
+      (gl:bind-buffer :element-array-buffer (gl-resource-name index-buffer))
+      (setf type :elements))
     (gl:bind-vertex-array 0)
     (make-vao name type)))
 
