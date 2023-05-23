@@ -46,6 +46,9 @@
 (defgeneric find-shape (id renderable &optional errorp))
 (defgeneric (setf find-shape) (shape id renderable))
 
+(simple::define-renderer-delegate realize-renderable (simple:renderer renderable))
+(simple::define-renderer-delegate update-shape (simple:renderer renderable name argtable))
+
 (defmacro define-realization ((renderer renderable &optional append) &body shapes)
   `(defmethod realize-renderable ((alloy:renderer ,renderer) (alloy:renderable ,renderable))
      ,(if append

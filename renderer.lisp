@@ -6,6 +6,8 @@
 
 (in-package #:org.shirakumo.alloy)
 
+(global-vars:define-global-var +renderer+ NIL)
+
 (defgeneric allocate (renderer))
 (defgeneric deallocate (renderer))
 (defgeneric allocated-p (renderer))
@@ -31,6 +33,9 @@
                                       (%px most-negative-single-float)
                                       (%px float-features:single-float-positive-infinity)
                                       (%px float-features:single-float-positive-infinity)) :accessor visible-bounds)))
+
+(defmethod make-instance :after ((renderer renderer) &key)
+  (setf +renderer+ renderer))
 
 (defmethod constrain-visibility ((extent extent) (renderer renderer))
   (setf (visible-bounds renderer) (extent-intersection extent (visible-bounds renderer))))
@@ -72,3 +77,26 @@
       (render renderer renderable)
       (call-next-method)))
 
+(defmethod register ((renderable renderable) (default (eql T)))
+  (register renderable +renderer+))
+
+(defmethod deregister ((renderable renderable) (default (eql T)))
+  (deregister renderable +renderer+))
+
+(defmethod render ((default (eql T)) (renderable renderable))
+  (render +renderer+ renderable))
+
+(defmethod maybe-render ((default (eql T)) (renderable renderable))
+  (render +renderer+ renderable))
+
+(defmethod constrain-visibility (extent (default (eql T)))
+  (constrain-visibility extent +renderer+))
+
+(defmethod reset-visibility ((default (eql T)))
+  (reset-visibility +renderer+))
+
+(defmethod extent-visible-p (extent (default (eql T)))
+  (extent-visible-p extent +renderer+))
+
+(defmethod translate ((default (eql T)) point)
+  (translate +renderer+ point))

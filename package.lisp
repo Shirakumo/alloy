@@ -411,6 +411,7 @@
    #:observable-object)
   ;; renderer.lisp
   (:export
+   #:+renderer+
    #:allocate
    #:allocated-p
    #:deallocate
