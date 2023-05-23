@@ -234,6 +234,7 @@
   ;; Allocate the necessary shaders.
   (make-shader-from-file renderer 'line-shader)
   (make-shader-from-file renderer 'points-shader)
+  (make-shader-from-file renderer 'pie-fill-shader)
   (make-shader-from-file renderer 'circle-fill-shader)
   (make-shader-from-file renderer 'circle-line-shader)
   (make-shader-from-file renderer 'gradient-shader)
@@ -579,7 +580,9 @@
   (apply #'make-instance (if line-width 'outlined-rectangle 'simple:filled-rectangle) :bounds bounds initargs))
 
 (defmethod render-direct ((shape simple:filled-ellipse) renderer color)
-  (let ((shader (resource 'circle-fill-shader renderer))
+  (let ((shader (if (<= (* 2 PI) (abs (- (simple:end-angle shape) (simple:start-angle shape))))
+                    (resource 'circle-fill-shader renderer)
+                    (resource 'pie-fill-shader renderer)))
         (extent (alloy:ensure-extent (simple:bounds shape))))
     (bind shader)
     (simple:with-pushed-transforms (renderer)
