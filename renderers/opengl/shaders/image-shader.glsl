@@ -9,10 +9,6 @@ void main(){
 }
 
 //FRAG
-#extension GL_KHR_blend_equation_advanced : enable
-#ifdef GL_KHR_blend_equation_advanced
-layout(blend_support_all_equations) out;
-#endif
 out vec4 out_color;
 uniform sampler2D image;
 uniform vec2 uv_offset = vec2(0,0);

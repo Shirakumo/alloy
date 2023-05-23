@@ -47,6 +47,11 @@
            (frag-start (search "//FRAG" contents))
            (vert (subseq contents vert-start (if (< vert-start frag-start) frag-start (length contents))))
            (frag (subseq contents frag-start (if (< frag-start vert-start) vert-start (length contents)))))
+      (gl-extension-case
+        (:GL-KHR-BLEND-EQUATION-ADVANCED
+         (setf frag (concatenate 'string (alexandria:read-file-into-string (make-pathname :name "blend-equation" :type "glsl" :defaults *shaders-directory*))
+                                 (string #\Linefeed)
+                                 frag))))
       (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag)))))
 
 (defun make-line-array (points width cap-style join-style &key closed)
