@@ -190,7 +190,6 @@
 
 ;; When scale changed, recreate to ensure we flush shapes.
 (defmethod alloy:handle :before ((event alloy:scale-changed) (renderable renderable))
-  (setf (realized-p renderable) NIL)
   (alloy:mark-for-render renderable))
 
 (defgeneric tracked-shapes (animated)
