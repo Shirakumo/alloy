@@ -42,8 +42,8 @@ void main(){
   vec3 outline_color = outline.xyz;
   float outline_thickness = outline.w;
 
-  vec4 sample = texture(image, uv);
-  float sigDist = median( sample.r, sample.g, sample.b ) - 0.5;
+  vec4 smpl = texture(image, uv);
+  float sigDist = median( smpl.r, smpl.g, smpl.b ) - 0.5;
   
   ivec2 sz = textureSize( image, 0 );
   float dx = dFdx( uv.x ) * sz.x;
