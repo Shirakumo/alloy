@@ -13,19 +13,20 @@
 (defmethod initialize-instance :after ((renderer renderer) &key title (size (alloy:px-size 1 1)) visible-p decorated-p)
   (let ((glfw:*window* NIL))
     (%glfw:make-context-current (cffi:null-pointer))
-    (glfw:create-window
-     :width (round (alloy:pxw size))
-     :height (round (alloy:pxh size))
-     :title (or title "")
-     :visible visible-p
-     :decorated decorated-p
-     :opengl-forward-compat T
-     :opengl-profile :opengl-core-profile
-     :context-version-major 3
-     :context-version-minor 3
-     :shared (if (slot-boundp renderer 'parent)
-                 (pointer (parent renderer))
-                 (cffi:null-pointer)))
+    (float-features:with-float-traps-masked T
+      (glfw:create-window
+       :width (round (alloy:pxw size))
+       :height (round (alloy:pxh size))
+       :title (or title "")
+       :visible visible-p
+       :decorated decorated-p
+       :opengl-forward-compat T
+       :opengl-profile :opengl-core-profile
+       :context-version-major 3
+       :context-version-minor 3
+       :shared (if (slot-boundp renderer 'parent)
+                   (pointer (parent renderer))
+                   (cffi:null-pointer))))
     (gl:clear-color 0 0 0 0)
     (gl:enable :blend :depth-test :depth-clamp :stencil-test)
     (gl:clear-stencil #x00)

@@ -18,6 +18,7 @@
                :alloy-opengl-msdf
                :alloy-opengl-png
                :alloy-windowing
+               :float-features
                :cl-opengl
                :cl-glfw3
                :colored)
