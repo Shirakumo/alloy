@@ -63,3 +63,12 @@
 (cffi:defcfun (%glfw::get-key-name "glfwGetKeyName") :string
   (key %glfw::key)
   (scan-code :int))
+
+
+(defmacro add-enum-value (enum key value)
+  "Pushes a key/value pair into a cffi enum. Abuses cffi internals.
+   This will work only for enums containing only keywords."
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (setf (gethash ,key (cffi::keyword-values (cffi::ensure-parsed-base-type ,enum))) ,value)))
+
+(add-enum-value '%glfw:window-hint :maximized #X00020008)
