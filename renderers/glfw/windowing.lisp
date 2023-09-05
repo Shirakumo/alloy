@@ -268,8 +268,11 @@
 (defmethod (setf window:min-size) :before (min-size (window window))
   (set-window-size-limits window min-size (window:max-size window)))
 
+(defun get-window-bool-attribute (window attribute)
+  (if (= 1 (%glfw:get-window-attribute (pointer window) attribute)) t nil))
+
 (defmethod window:decorated-p ((window window))
-  (%glfw:get-window-attribute :decorated (pointer window)))
+  (get-window-bool-attribute window :decorated))
 
 (defmethod (setf window:decorated-p) (decorated (window window))
   (%glfw::set-window-attrib (pointer window) :decorated decorated))
@@ -289,7 +292,7 @@
   (%glfw::set-window-icon (pointer window) 0 (cffi:null-pointer)))
 
 (defmethod window:always-on-top-p ((window window))
-  (%glfw:get-window-attribute (pointer window) #x00020007))
+  (get-window-bool-attribute window #x00020007))
 
 (defmethod (setf window:always-on-top-p) (top (window window))
   (%glfw::set-window-attrib (pointer window) #x00020007 top)
@@ -301,9 +304,9 @@
                               0 0 width height refresh-rate)))
 
 (defmethod window:state ((window window))
-  (cond ((%glfw:get-window-attribute (pointer window) :iconified) :minimized)
-        ((%glfw:get-window-attribute (pointer window) :maximized) :maximized)
-        ((not (%glfw:get-window-attribute (pointer window) :visible)) :hidden)
+  (cond ((get-window-bool-attribute window :iconified) :minimized)
+        ((get-window-bool-attribute window :maximized) :maximized)
+        ((not (get-window-bool-attribute window :visible)) :hidden)
         ((not (cffi:null-pointer-p (%glfw:get-window-monitor (pointer window)))) :fullscreen)
         (T :normal)))
 
@@ -322,7 +325,7 @@
        (setf (window:state window) :normal))
      (%glfw:hide-window (pointer window)))
     (:normal
-     (unless (%glfw:get-window-attribute (pointer window) :visible)
+     (unless (get-window-bool-attribute window :visible)
        (%glfw:show-window (pointer window)))
      (if (cffi:null-pointer-p (%glfw:get-window-monitor (pointer window)))
          (%glfw:restore-window (pointer window))
