@@ -10,7 +10,7 @@
   ((parent :initarg :parent :accessor parent)
    (pointer :accessor pointer)))
 
-(defmethod initialize-instance :after ((renderer renderer) &key title (size (alloy:px-size 1 1)) visible-p decorated-p)
+(defmethod initialize-instance :after ((renderer renderer) &key title (size (alloy:px-size 1 1)) visible-p decorated-p (resizable-p t))
   (let ((glfw:*window* NIL))
     (%glfw:make-context-current (cffi:null-pointer))
     (float-features:with-float-traps-masked T
@@ -20,6 +20,7 @@
        :title (or title "")
        :visible visible-p
        :decorated decorated-p
+       :resizable resizable-p
        :opengl-forward-compat T
        :opengl-profile :opengl-core-profile
        :context-version-major 3
