@@ -128,6 +128,7 @@
                                                     (icon window:*default-window-icon*)
                                                     (bounds window:*default-window-bounds*)
                                                     (decorated-p T) (state :normal)
+			                            (resizable-p T)
                                                     (background-color colors:black)
                                                     (class 'window)
                                                     min-size max-size always-on-top-p
@@ -138,6 +139,7 @@
                                       :title title
                                       :size bounds
                                       :decorated-p decorated-p
+				      :resizable-p resizable-p
                                       :background-color background-color))
          (pointer (pointer window)))
     (when (typep bounds 'alloy:extent)
