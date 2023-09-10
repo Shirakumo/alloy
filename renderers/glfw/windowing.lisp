@@ -292,10 +292,10 @@
   (%glfw::set-window-icon (pointer window) 0 (cffi:null-pointer)))
 
 (defmethod window:always-on-top-p ((window window))
-  (get-window-bool-attribute window #x00020007))
+  (get-window-bool-attribute window :floating))
 
 (defmethod (setf window:always-on-top-p) (top (window window))
-  (%glfw::set-window-attrib (pointer window) #x00020007 top)
+  (%glfw::set-window-attrib (pointer window) :floating top)
   top)
 
 (defmethod window:fullscreen ((window window) monitor)

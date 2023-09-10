@@ -71,4 +71,5 @@
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (setf (gethash ,key (cffi::keyword-values (cffi::ensure-parsed-base-type ,enum))) ,value)))
 
+(add-enum-value '%glfw:window-hint :floating #X00020007)
 (add-enum-value '%glfw:window-hint :maximized #X00020008)
