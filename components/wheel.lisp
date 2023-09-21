@@ -94,7 +94,8 @@
                     (+ (start-val wheel)
                        (* (- diff 1)
                           ;; Diagonal along 0,0 -> 1,-1 to determine whether to increase or decrease.
-                          (if (< (- relative-x) relative-y) +1 -1))))
+                          (if (< (- relative-x) relative-y) +1 -1)
+                          (step wheel))))
               (setf (value wheel) (start-val wheel)))))
       (call-next-method)))
 
