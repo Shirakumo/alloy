@@ -55,8 +55,8 @@
   ((pointer :initarg :pointer :initform (alloy:arg! :pointer) :reader pointer)))
 
 (defmethod window:size ((monitor monitor))
-  (destructuring-bind (&key width height &allow-other-keys) (glfw:get-video-mode (pointer monitor))
-    (alloy:px-size width height)))
+  (let* ((vid-mode (glfw:get-video-mode (pointer monitor))))
+    (alloy:px-size (getf vid-mode '%cl-glfw3:width) (getf vid-mode '%cl-glfw3:height))))
 
 (defclass screen (window:screen renderer
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
