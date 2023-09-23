@@ -58,6 +58,10 @@
   (let* ((vid-mode (glfw:get-video-mode (pointer monitor))))
     (alloy:px-size (getf vid-mode '%cl-glfw3:width) (getf vid-mode '%cl-glfw3:height))))
 
+(defmethod window:location ((monitor monitor))
+  (destructuring-bind (x y) (glfw:get-monitor-position (pointer monitor))
+    (alloy:px-point x y)))
+
 (defclass screen (window:screen renderer
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ())
@@ -210,6 +214,11 @@
   (destructuring-bind (w h) (%glfw:get-window-size (pointer window))
     (unless (and (= w (alloy:pxw size)) (= h (alloy:pxh size)))
       (%glfw:set-window-size (pointer window) (max 1 (round (alloy:pxw size))) (max 1 (round (alloy:pxh size)))))))
+
+(defmethod (setf alloy:location) :after (location (window window))
+  (destructuring-bind (x y) (%glfw:get-window-position (pointer window))
+    (unless (and (= x (alloy:pxx location)) (= y (alloy:pxy location)))
+      (%glfw:set-window-position (pointer window) (round (alloy:pxx location)) (round (alloy:pxy location))))))
 
 (defmethod (setf alloy:bounds) :after (extent (window window))
   (let ((target (simple:transform-matrix window)))

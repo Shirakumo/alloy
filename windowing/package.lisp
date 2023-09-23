@@ -15,6 +15,7 @@
    #:list-windows
    #:list-monitors
    #:size
+   #:location
    #:window
    #:layout-element
    #:focus-element

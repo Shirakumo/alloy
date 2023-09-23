@@ -25,6 +25,7 @@
 (defgeneric list-monitors (screen))
 (defgeneric list-windows (screen))
 (defgeneric size (monitor/screen))
+(defgeneric location (monitor/screen))
 
 (defclass window (alloy:layout-element alloy:focus-element alloy:renderable alloy:observable)
   ((layout-element :initform NIL :accessor layout-element)
