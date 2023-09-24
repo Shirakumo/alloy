@@ -55,7 +55,7 @@
       (when (and (< idx (length (elements layout)))
                  (aref (elements layout) idx))
         (error 'place-already-occupied
-               :element element :place (cons row col) :layout layout :existing (aref (elements layout) idx))))))
+               :bad-element element :place (cons row col) :layout layout :existing (aref (elements layout) idx))))))
 
 (defmethod enter ((element layout-element) (layout grid-layout) &key row col index)
   (let ((index (if (and row col)
