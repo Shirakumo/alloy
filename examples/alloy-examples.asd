@@ -15,6 +15,7 @@
                (:file "menu")
                (:file "font-mixing")
                (:file "fonts")
-               (:file "canvas"))
+               (:file "canvas")
+	       (:file "gradient"))
   :depends-on (:alloy-glfw
                :alloy-constraint))
