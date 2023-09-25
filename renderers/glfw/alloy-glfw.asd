@@ -7,7 +7,6 @@
   :homepage "https://github.com/Shirakumo/alloy"
   :serial T
   :components ((:file "package")
-               (:file "fixup")
                (:file "renderer")
                (:file "windowing")
                (:file "documentation"))
@@ -20,6 +19,6 @@
                :alloy-windowing
                :float-features
                :cl-opengl
-               :cl-glfw3
+               :glfw
                :colored)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))
