@@ -17,8 +17,10 @@
          :context-version-major 3
          :context-version-minor 3
          :shared (if (slot-boundp renderer 'parent)
-                     (pointer (parent renderer))
+                     (parent renderer)
                      (cffi:null-pointer))
+         :allow-other-keys T
+         :visible NIL
          args)
   (gl:clear-color 0 0 0 0)
   (gl:enable :blend :depth-test :depth-clamp :stencil-test)
