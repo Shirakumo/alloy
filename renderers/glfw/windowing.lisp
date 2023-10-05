@@ -317,7 +317,7 @@
                                 :dx x
                                 :location (cursor-location window))))
 
-(defmethod glfw:char-entered ((window window) char mods)
+(defmethod glfw:char-entered ((window window) char)
   (handle window (make-instance 'alloy:text-event :text (string char))))
 
 (defmethod glfw:mouse-entered ((window window) entered)
