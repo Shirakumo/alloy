@@ -318,7 +318,7 @@
                                 :location (cursor-location window))))
 
 (defmethod glfw:char-entered ((window window) char)
-  (handle window (make-instance 'alloy:text-event :text (string char))))
+  (handle window (make-instance 'alloy:text-event :text (string (code-char char)))))
 
 (defmethod glfw:mouse-entered ((window window) entered)
   (if entered
