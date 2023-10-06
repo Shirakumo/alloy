@@ -45,11 +45,11 @@
     (set-icon icon cursor)))
 
 (defmethod window:size ((monitor glfw:monitor))
-  (let ((size (glfw:size (pointer monitor))))
+  (let ((size (glfw:size monitor)))
     (alloy:px-size (first size) (second size))))
 
 (defmethod window:location ((monitor glfw:monitor))
-  (let ((location (glfw:location (pointer monitor))))
+  (let ((location (glfw:location monitor)))
     (alloy:px-point (first location) (second location))))
 
 (defclass screen (window:screen renderer
