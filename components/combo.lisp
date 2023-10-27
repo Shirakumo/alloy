@@ -49,8 +49,9 @@
   (set-layout-tree value (combo-list combo)))
 
 (defmethod (setf index) :after (index (combo combo))
-  (let ((ib (bounds (focused combo))))
-    (setf (y (combo-list combo)) (- (pxy ib))))
+  (when (focused combo)
+    (let ((ib (bounds (focused combo))))
+      (setf (y (combo-list combo)) (- (pxy ib)))))
   (mark-for-render combo))
 
 (defmethod (setf focused) :after (index (combo combo))
