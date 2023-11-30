@@ -91,8 +91,9 @@
   (when (and (< 0 (element-count combo))
              (eql (state combo) :selecting))
     (flet ((set-index (index)
-             (setf (index combo) (max 0 (min (1- (element-count combo)) index)))
-             (setf (value combo) (value (focused combo)))))
+             (unless (eql index (index combo))
+               (setf (index combo) (max 0 (min (1- (element-count combo)) index)))
+               (setf (value combo) (value (focused combo))))))
       (case (key event)
         (:page-up
          (set-index (- (index combo) 10)))
@@ -104,7 +105,8 @@
          (set-index (1- (element-count combo))))
         (:enter
          (when (focused combo)
-           (setf (value combo) (value (focused combo)))
+           (unless (eql (value combo) (value (focused combo)))
+             (setf (value combo) (value (focused combo))))
            (setf (state combo) NIL)))
         (T (call-next-method))))))
 
@@ -120,14 +122,16 @@
 
 (defmethod handle ((event scroll) (combo combo))
   (setf (index combo) (max 0 (min (1- (element-count combo)) (+ (or (index combo) 0) (if (< 0 (dy event)) -1 +1)))))
-  (setf (value combo) (value (focused combo))))
+  (unless (eql (value combo) (value (focused combo)))
+    (setf (value combo) (value (focused combo)))))
 
 (defmethod (setf focus) :after (focus (combo combo))
   (when (null focus)
     (setf (state combo) NIL)))
 
 (defmethod exit :after ((combo combo))
-  (setf (value combo) (value combo))
+  (unless (eql (value combo) (value combo))
+    (setf (value combo) (value combo)))
   (setf (typed combo) ""))
 
 (defmethod combo-item (item (combo combo))
@@ -145,7 +149,8 @@
                (enter item list)
                (enter item combo)
                (on activate (item)
-                 (setf (value combo) (value item))
+                 (unless (eql (value combo) (value item))
+                   (setf (value combo) (value item)))
                  (setf (state combo) NIL))
                (when (eql el (value combo))
                  (setf (focused combo) item)))))
