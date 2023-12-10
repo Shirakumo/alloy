@@ -19,3 +19,26 @@
                     (glfw:with-screen (*screen* 'screen :base-scale 2.0)
                       (,thunk *screen*)))))
             (pushnew ',name *examples*))))
+
+
+(defun butwithlast (list)
+  (let* ((last)
+	 (beginning
+	   (loop for item in list
+		 for index from 0
+		 when (eq index (- (length list) 1)) do (setf last item) until last
+		 collect item)))
+    (values beginning last)))
+
+(defmacro enter+ (&rest args)
+  (multiple-value-bind (elements container) (butwithlast args)
+    `(progn
+       ,@(loop for element in elements
+	       collect `(alloy:enter ,element ,container)))))
+
+(defmacro mk-hash-table (&rest args)
+  (let ((table (gensym)))
+    `(let ((,table (make-hash-table :test 'eql)))
+       ,@(loop for (key value) on args by #'cddr
+	       collect `(setf (gethash ,key ,table) ,value))
+       ,table)))
