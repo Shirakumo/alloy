@@ -155,6 +155,12 @@
   ((accessor :initarg :accessor :initform (arg! :accessor) :accessor accessor)))
 
 (defmethod initialize-instance :after ((data accessor-data) &key)
+  (when (typep (object data) 'observable-object)
+    (let* ((generic (c2mop:ensure-generic-function (accessor data)))
+	   (method (car (c2mop:generic-function-methods generic)))
+	   (slot (c2mop:accessor-method-slot-definition method)))
+      (observe (c2mop:slot-definition-name slot) (object data) (lambda (value object) (notify-observers 'value data value object)) data)))
+
   (when (typep (object data) 'observable)
     (observe (accessor data) (object data) (lambda (value object) (notify-observers 'value data value object)) data)))
 
