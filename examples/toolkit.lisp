@@ -30,12 +30,6 @@
 		 collect item)))
     (values beginning last)))
 
-(defmacro enter+ (&rest args)
-  (multiple-value-bind (elements container) (butwithlast args)
-    `(progn
-       ,@(loop for element in elements
-	       collect `(alloy:enter ,element ,container)))))
-
 (defmacro mk-hash-table (&rest args)
   (let ((table (gensym)))
     `(let ((,table (make-hash-table :test 'eql)))
