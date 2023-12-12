@@ -109,13 +109,26 @@
   (let ((table (make-hash-table :test 'eql)))
     (setf (mapping data) table)))
 
+(defmethod access ((data remap-data) field)
+  (let ((mapped (gethash field (mapping data))))
+    (if mapped
+       (access (object data) mapped)
+       (slot-value data field))))
+
+(defmethod (setf access) (value (data remap-data) field)
+  (let ((mapped (gethash field (mapping data))))
+    (if mapped
+       (setf (access (object data) mapped) value)
+       (setf (slot-value data field) value))))
+
 (defmethod observe ((nothing (eql NIL)) object (data remap-data) &optional (name data))
-  (loop for function being the hash-keys of (mapping data)
-        do (remove-observers function object name)))
+  (loop for mapped being the hash-value of (mapping data)
+	do (remove-observers mapped object name)))
 
 (defmethod observe ((all (eql T)) object (data remap-data) &optional (name data))
   (loop for function being the hash-keys of (mapping data) using (hash-value mapped)
-        do (observe function object (lambda (&rest args) (apply #'notify-observers mapped data args)) name))
+        do (let ((mapped mapped) (function function))
+	     (observe mapped object (lambda (&rest args) (apply #'notify-observers function data args)) name)))
   (refresh data))
 
 (defmethod refresh ((data remap-data))
