@@ -109,6 +109,13 @@
   (let ((table (make-hash-table :test 'eql)))
     (setf (mapping data) table)))
 
+(defmethod (setf c2mop:slot-value-using-class) :around (value class (data remap-data) slot)
+  (unless (slot-boundp data 'mapping) (return-from c2mop:slot-value-using-class (call-next-method)))
+  (let ((mapped (gethash (c2mop:slot-definition-name slot) (mapping data))))
+    (if mapped
+	(setf (slot-value (object data) mapped) value)
+	(call-next-method))))
+
 (defmethod access ((data remap-data) field)
   (let ((mapped (gethash field (mapping data))))
     (if mapped
