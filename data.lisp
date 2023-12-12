@@ -110,11 +110,11 @@
     (setf (mapping data) table)))
 
 (defmethod observe ((nothing (eql NIL)) object (data remap-data) &optional (name data))
-  (loop for function being the hash-keys of (observed data)
+  (loop for function being the hash-keys of (mapping data)
         do (remove-observers function object name)))
 
 (defmethod observe ((all (eql T)) object (data remap-data) &optional (name data))
-  (loop for function being the hash-keys of (observed data) using (hash-value mapped)
+  (loop for function being the hash-keys of (mapping data) using (hash-value mapped)
         do (observe function object (lambda (&rest args) (apply #'notify-observers mapped data args)) name))
   (refresh data))
 
