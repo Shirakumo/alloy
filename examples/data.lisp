@@ -117,3 +117,9 @@
 (defun randofar () (format nil "far-~a" (random 1000)))
 (defun randoboo () (format nil "boo-~a" (random 1000)))
 (defun randounique () (format nil "unique-~a" (random 1000)))
+
+(defun mk-hash-table (&rest args)
+  (let ((table (make-hash-table :test 'eql)))
+    (loop for (key value) on args by #'cddr
+	  collect (setf (gethash key table) value))
+    table))
