@@ -12,6 +12,8 @@
   (let* ((window      (windowing:make-window screen))
 	 (object      (make-instance 'example-object))
 	 (object-data (make-instance 'alloy:object-data :object object))
+	 ;; Mapping makes it so that a slot in the new object is mapped to the slot of the base object
+	 (remap-data (make-instance 'another-object :object object :mapping (mk-hash-table 'far 'foo 'boo 'bar)))
          (layout     (make-instance 'alloy:vertical-linear-layout :layout-parent window))
          (focus      (make-instance 'alloy:focus-list :focus-parent window))
 	 (refresh    (alloy:represent "Refresh" 'alloy:button :layout-parent layout :focus-parent focus))
@@ -59,15 +61,43 @@
       (enter+ button label layout)
       (enter+ button focus))
 
+    ;; Using an object with remapped-data targeting boo->bar
+    (let* ((layout   (make-instance 'alloy:horizontal-linear-layout :layout-parent layout))
+	   (label    (make-instance 'alloy:label :data remap-data :value-function 'boo))
+	   (button   (alloy:represent "(alloy:access remap-data 'boo)" 'alloy:button))
+	   (button-2 (alloy:represent "(slot-value remap-data 'boo)" 'alloy:button)))
+      (alloy:on alloy:activate (button) (setf (alloy:access remap-data 'boo) (randoboo)))
+      (alloy:on alloy:activate (button-2) (setf (slot-value remap-data 'boo) (randoboo)))
+      (enter+ button button-2 label layout)
+      (enter+ button button-2 focus))
+
+    ;; Using an object with remapped-data targeting far-foo
+    (let* ((layout   (make-instance 'alloy:horizontal-linear-layout :layout-parent layout))
+	   (label    (make-instance 'alloy:label :data remap-data :value-function 'far))
+	   (button   (alloy:represent "(alloy:access remap-data 'far)" 'alloy:button))
+	   (button-2 (alloy:represent "(slot-value remap-data 'far)" 'alloy:button)))
+      (alloy:on alloy:activate (button) (setf (alloy:access remap-data 'far) (randofar)))
+      (alloy:on alloy:activate (button-2) (setf (slot-value remap-data 'far) (randofar)))
+      (enter+ button button-2 label layout)
+      (enter+ button button-2 focus))
+
+    ;; Using remap-data but with a slot that is not mapped
+    (let* ((layout (make-instance 'alloy:horizontal-linear-layout :layout-parent layout))
+	   (label  (make-instance 'alloy:label :data remap-data :value-function 'unique))
+	   (button (alloy:represent "(alloy:access remap-data 'unique)" 'alloy:button)))
+      (alloy:on alloy:activate (button) (setf (alloy:access remap-data 'unique) (randounique)))
+      (enter+ button label layout)
+      (enter+ button focus))
+
     ;; Attaches observers that will print out the observation
-    ;; e.g: (alloy:observe 'bar object-data (lambda (value data) (print "Observation")))
-    (loop for (observation observable) in `((foo ,object) (bar ,object) (foo ,object-data) (bar ,object-data))
+    ;; e.g: (alloy:observe 'boo remap-data (lambda (value data) (print "Observation")))
+    (loop for (observation observable) in `((foo ,object) (bar ,object) (foo ,object-data) (bar ,object-data)
+					    (unique ,remap-data) (boo ,remap-data) (far ,remap-data))
 	  do (let ((observation observation) (observable observable))
 	       (alloy:observe observation observable
 			      (lambda (value data)
 				(declare (ignore value data))
 				(format t "Observed a change for ~a in ~a~%" observation observable)))))))
-
 
 
 (presentations:define-update (presentations:default-look-and-feel alloy:button)
