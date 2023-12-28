@@ -110,8 +110,8 @@
     (setf (mapping data) table)))
 
 (defmethod (setf c2mop:slot-value-using-class) :around (value class (data remap-data) slot)
-  (unless (slot-boundp data 'mapping) (return-from c2mop:slot-value-using-class (call-next-method)))
-  (let ((mapped (gethash (c2mop:slot-definition-name slot) (mapping data))))
+  (let ((mapped (when (slot-boundp data 'mapping)
+                  (gethash (c2mop:slot-definition-name slot) (mapping data)))))
     (if mapped
         (setf (slot-value (object data) mapped) value)
         (call-next-method))))
