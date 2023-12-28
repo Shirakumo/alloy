@@ -113,29 +113,29 @@
   (unless (slot-boundp data 'mapping) (return-from c2mop:slot-value-using-class (call-next-method)))
   (let ((mapped (gethash (c2mop:slot-definition-name slot) (mapping data))))
     (if mapped
-	(setf (slot-value (object data) mapped) value)
-	(call-next-method))))
+        (setf (slot-value (object data) mapped) value)
+        (call-next-method))))
 
 (defmethod access ((data remap-data) field)
   (let ((mapped (gethash field (mapping data))))
     (if mapped
-       (access (object data) mapped)
-       (slot-value data field))))
+        (access (object data) mapped)
+        (slot-value data field))))
 
 (defmethod (setf access) (value (data remap-data) field)
   (let ((mapped (gethash field (mapping data))))
     (if mapped
-       (setf (access (object data) mapped) value)
-       (setf (slot-value data field) value))))
+        (setf (access (object data) mapped) value)
+        (setf (slot-value data field) value))))
 
 (defmethod observe ((nothing (eql NIL)) object (data remap-data) &optional (name data))
   (loop for mapped being the hash-value of (mapping data)
-	do (remove-observers mapped object name)))
+        do (remove-observers mapped object name)))
 
 (defmethod observe ((all (eql T)) object (data remap-data) &optional (name data))
   (loop for function being the hash-keys of (mapping data) using (hash-value mapped)
         do (let ((mapped mapped) (function function))
-	     (observe mapped object (lambda (&rest args) (apply #'notify-observers function data args)) name)))
+             (observe mapped object (lambda (&rest args) (apply #'notify-observers function data args)) name)))
   (refresh data))
 
 (defmethod refresh ((data remap-data))
@@ -177,8 +177,8 @@
 (defmethod initialize-instance :after ((data accessor-data) &key)
   (when (typep (object data) 'observable-object)
     (let* ((generic (c2mop:ensure-generic-function (accessor data)))
-	   (method (car (c2mop:generic-function-methods generic)))
-	   (slot (c2mop:accessor-method-slot-definition method)))
+           (method (car (c2mop:generic-function-methods generic)))
+           (slot (c2mop:accessor-method-slot-definition method)))
       (observe (c2mop:slot-definition-name slot) (object data) (lambda (value object) (notify-observers 'value data value object)) data)))
 
   (when (typep (object data) 'observable)
