@@ -47,10 +47,12 @@
         (decline))))
 
 (defmethod render ((renderer renderer) (ui ui))
-  (render renderer (layout-tree ui)))
+  (with-unit-parent ui
+    (render renderer (layout-tree ui))))
 
 (defmethod maybe-render ((renderer renderer) (ui ui))
-  (maybe-render renderer (layout-tree ui)))
+  (with-unit-parent ui
+    (maybe-render renderer (layout-tree ui))))
 
 (defmethod activate ((ui ui))
   (mark-for-render (root (layout-tree ui))))
