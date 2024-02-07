@@ -65,7 +65,10 @@
 (defmethod text ((combo combo))
   (if (focused combo)
       (text (focused combo))
-      (princ-to-string (value combo))))
+      (let ((value (value combo)))
+        (do-elements (element combo :result (princ-to-string value))
+          (when (eql value (value element))
+            (return (text element)))))))
 
 (defmethod notice-size ((list combo-layout) (combo combo))
   (notice-size combo T))
