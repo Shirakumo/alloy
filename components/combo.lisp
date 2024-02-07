@@ -3,6 +3,9 @@
 (defclass combo-item (button direct-value-component)
   ())
 
+(defclass combo-item* (combo-item)
+  ((text :initarg :text :initform NIL :accessor text)))
+
 (defclass combo-layout (vertical-linear-layout)
   ((parent :initarg :parent :accessor parent)))
 
@@ -190,3 +193,6 @@
 
 (defmethod (setf value-set) :after (set (combo combo-set))
   (update-combo-items combo set))
+
+(defmethod combo-item ((item cons) (combo combo-set))
+  (make-instance 'combo-item* :value (car item) :text (cdr item)))
