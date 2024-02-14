@@ -55,7 +55,7 @@
       (loop for i from 0 below (length points)
             for x from (/ x-scale 2) by x-scale
             for p = (aref data (+ i xmin))
-            for y = (* (- p ymin -0.5) y-scale)
+            for y = (* (- p ymin) y-scale)
             for point = (aref points i)
             do (setf (slot-value (x point) 'value) x)
                (setf (slot-value (y point) 'value) y)))))
