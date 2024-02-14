@@ -311,7 +311,8 @@
    :line-width (alloy:un 1))
   ((:curve simple:line-strip)
    (alloy:plot-points alloy:renderable)
-   :pattern (colored:color 0.25 0.2 0.8)))
+   :pattern (colored:color 0.25 0.2 0.8)
+   :line-width (alloy:un 2)))
 
 (define-update (default-look-and-feel alloy:plot)
   (:curve
