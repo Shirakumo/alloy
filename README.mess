@@ -63,12 +63,12 @@ While units give us the tool to denote measurements, the geometry protocol gives
 - ``point``
   A singular position in space, denoted by ``x`` and ``y``.
 - ``size``
-  The span of a construct in space, denoted by ``w`` and ``h``. 
+  The span of a construct in space, denoted by ``w`` and ``h``.
 - ``extent``
   A delimited extent in space, denoted by ``x``, ``y``, ``w`` and ``h``.
 - ``margins``
   The offset from the borders of a surrounding extent, denoted by ``l``, ``u``, ``r``, and ``b``. Positive measurements decrease the extent, negative measurements increase the extent.
-  
+
 The default constructors of these structures take unit instances, or a real number that is interpreted as a ``un`` unit. There are alternate convenience constructors that create the structures from device pixel units. These constructors are simply prefixed by ``px-`` (``px-extent``, etc). In the other direction, convenience accessors for device pixels of all the coordinates are also available with a ``px`` prefix (``pxx``, etc).
 
 Just like units, geometrical constructs are immutable and may be constructed at compile time, or emitted into FASLs. To compare them, you should use the respective type's comparison function (``extent=``, etc).
@@ -166,18 +166,18 @@ Every element in a layout tree has exactly one parent, with the element at the r
 
 Layout decisions are primarily made by ``layout`` instances, for which Alloy specifies a protocol to communicate an agreeable layouting between elements. The actual layout decisions are left up completely to the layout implementation.
 
-When an element's bounds change, it must call ``notice-bounds`` in order to notify its parent of the updated bounds. If an element decides that it needs more space, it should call ``notice-bounds`` to ensure a consistent layout. Typically this will result in a standard layout update being run, same as when the layout instance itself changes bounds.
+When an element's bounds change, it must call ``notice-size`` in order to notify its parent of the updated bounds. If an element decides that it needs more space, it should call ``notice-size`` to ensure a consistent layout. Typically this will result in a standard layout update being run, same as when the layout instance itself changes bounds.
 
 When a layout's bounds change it may recompute the bounds of its direct children. It must do so in the following steps for each of its child elements:
 
 1. Compute the new bounds for one element.
-2. Call ``suggest-bounds`` with the new bounds for the element. The element must then extend, contract, or otherwise change the suggested event and return a new extent that it finds more agreeable than the last.
+2. Call ``suggest-size`` with the new bounds for the element. The element must then extend, contract, or otherwise change the suggested event and return a new extent that it finds more agreeable than the last.
 3. Adjust the layouting decisions to account for the element's preferred extent.
 4. Force the final computed extent on the element by calling ``(setf bounds)``.
 
-A layout may perform steps 2 and 3 multiple times before settling on a final extent, though it must guarantee to reach step 4 eventually. ``suggest-bounds`` is primarily used to handle the case of nested layouts or other kinds of elements that may need to shrink or expand to fit their contents. Whether the element's preferred extent is used at all or not however is still up to the layout.
+A layout may perform steps 2 and 3 multiple times before settling on a final extent, though it must guarantee to reach step 4 eventually. ``suggest-size`` is primarily used to handle the case of nested layouts or other kinds of elements that may need to shrink or expand to fit their contents. Whether the element's preferred extent is used at all or not however is still up to the layout.
 
-A layout //must// deal in ``px`` units. The extent supplied to ``suggest-bounds`` and ``(setf bounds)`` must only contain ``px`` units. An element is however allowed to use other units for the extent returned from ``suggest-bounds``. However, be aware that the absolute size of units depends on the currently bound unit parent (See "Units"(link #units)). The layout //must// set this parent to itself when resolving units.
+A layout //must// deal in ``px`` units. The extent supplied to ``suggest-size`` and ``(setf bounds)`` must only contain ``px`` units. An element is however allowed to use other units for the extent returned from ``suggest-size``. However, be aware that the absolute size of units depends on the currently bound unit parent (See "Units"(link #units)). The layout //must// set this parent to itself when resolving units.
 
 Some layouts may temporarily hide elements or regions from view. In order to force a region to be visible, the function ``ensure-visible`` can be used. This function will traverse upwards to ensure that every layout along the way makes the desired region visible as best possible.
 
@@ -186,7 +186,7 @@ An element may only be contained in one layout at a time. Attempting to ``enter`
 ## UI
 Since layout trees and focus trees are disjoint, there needs to be a way to tie them together, including any other global information necessary. For this, Alloy has the ``UI`` object, the main entry point once the interface has been constructed. It has a ``layout-tree`` and ``focus-tree``, as well as provides access to the global unit scaling factors, ``dots-per-cm``, ``target-resolution``, ``resolution-scale``, and ``base-scale``.
 
-Once you've constructed a UI instance, you should be able to add elements to its focus tree and layout tree, set the desired "native" resolution, and finally ``render`` it, ``handle`` events, or change the effective resolution with ``suggest-bounds``.
+Once you've constructed a UI instance, you should be able to add elements to its focus tree and layout tree, set the desired "native" resolution, and finally ``render`` it, ``handle`` events, or change the effective resolution with ``suggest-size``.
 
 If you would like to switch out the layout or focus hierarchies on the fly, you can set the ``root`` of either tree instance.
 
