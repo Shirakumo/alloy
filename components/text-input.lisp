@@ -231,8 +231,8 @@
                 (move :line-end))
                (#\f
                 (if (find :alt (modifiers event))
-                    (move :prev-token)
-                    (move :prev-char)))
+                    (move :next-token)
+                    (move :next-char)))
                (#\n
                 (move :next-line))
                (#\p
