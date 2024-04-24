@@ -305,7 +305,7 @@
   state)
 
 (defun handle (window ev)
-  (if (typep ev 'alloy:pointer-event)
+  (if (typep ev '(or alloy:pointer-event window:window-event))
       (or (alloy:handle ev (alloy:focus-tree (parent window)))
           (alloy:handle ev window))
       (alloy:handle ev (parent window))))
