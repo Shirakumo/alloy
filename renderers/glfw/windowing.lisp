@@ -132,7 +132,8 @@
       (setf (glfw:location pointer) (list (round (alloy:pxx bounds)) (round (alloy:pxy bounds)))))
     (when min-size (setf (window:min-size window) min-size))
     (when max-size (setf (window:max-size window) max-size))
-    (setf (window:icon window) icon)
+    (when icon
+      (setf (window:icon window) icon))
     (setf (window:always-on-top-p window) always-on-top-p)
     (unless (eql state :hidden)
       (glfw:show window)
@@ -273,15 +274,19 @@
   (get-window-bool-attribute :floating window))
 
 (defmethod (setf window:always-on-top-p) (top (window window))
-  (setf (glfw:attribute :floating window) top))
+  (ignore-errors
+   (setf (glfw:attribute :floating window) top))
+  top)
 
 (defmethod (setf window:icon) :before ((icon icon) (window window))
-  (setf (glfw:icon window) (list (list (simple:data icon)
-                                       (floor (alloy:pxw (simple:size icon)))
-                                       (floor (alloy:pxh (simple:size icon)))))))
+  (ignore-errors
+   (setf (glfw:icon window) (list (list (simple:data icon)
+                                        (floor (alloy:pxw (simple:size icon)))
+                                        (floor (alloy:pxh (simple:size icon))))))))
 
 (defmethod (setf window:icon) :before ((null null) (window window))
-  (setf (glfw:icon window) NIL))
+  (ignore-errors
+   (setf (glfw:icon window) NIL)))
 
 (defmethod window:fullscreen ((window window) monitor)
   (setf (glfw:monitor window) monitor))
