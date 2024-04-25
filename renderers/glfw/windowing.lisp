@@ -118,7 +118,7 @@
                                                     (resizable-p T)
                                                     (background-color colors:black)
                                                     (class 'window)
-                                                    min-size max-size always-on-top-p
+                                                    min-size max-size preferred-size always-on-top-p
                                                     &allow-other-keys)
   (let ((window (make-instance class :parent screen
                                      :focus-parent (alloy:root (alloy:focus-tree screen))
@@ -129,7 +129,7 @@
                                      :resizable resizable-p
                                      :background-color background-color)))
     (when (typep bounds 'alloy:extent)
-      (setf (glfw:location pointer) (list (round (alloy:pxx bounds)) (round (alloy:pxy bounds)))))
+      (setf (glfw:location window) (list (round (alloy:pxx bounds)) (round (alloy:pxy bounds)))))
     (when min-size (setf (window:min-size window) min-size))
     (when max-size (setf (window:max-size window) max-size))
     (when icon
@@ -137,7 +137,9 @@
     (setf (window:always-on-top-p window) always-on-top-p)
     (unless (eql state :hidden)
       (glfw:show window)
-      (setf (window:state window) state))
+      (setf (window:state window) state)
+      (when preferred-size
+        (alloy:suggest-size preferred-size window)))
     (alloy:allocate window)
     (alloy:render screen window)
     window))
