@@ -1,17 +1,14 @@
 (in-package #:org.shirakumo.alloy)
 
-(defclass grid-layout (layout vector-container)
-  ((stretch :initarg :stretch :initform T :accessor stretch)
-   (cell-margins :initarg :cell-margins :initform (margins 5) :accessor cell-margins)
+(defclass grid-constraints-mixin ()
+  ((cell-margins :initarg :cell-margins :initform (margins 5) :accessor cell-margins)
    (row-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader row-sizes)
    (col-sizes :initform (make-array 0 :adjustable T :fill-pointer T) :reader col-sizes)))
 
-(defmethod shared-initialize :after ((layout grid-layout) slots &key (row-sizes NIL r-p) (col-sizes NIL c-p))
+(defmethod shared-initialize :after ((layout grid-constraints-mixin) slots
+                                     &key (row-sizes NIL r-p) (col-sizes NIL c-p))
   (when r-p (setf (row-sizes layout) row-sizes))
   (when c-p (setf (col-sizes layout) col-sizes)))
-
-(defmethod (setf stretch) :after (value (layout grid-layout))
-  (suggest-size (bounds layout) layout))
 
 (defun coerce-grid-size (v)
   (etypecase v
@@ -19,15 +16,31 @@
     (unit v)
     ((eql T) T)))
 
-(defmethod (setf row-sizes) ((value sequence) (layout grid-layout))
-  (adjust-grid layout (length value) (length (col-sizes layout)))
-  (adjust-array (row-sizes layout) (length value) :fill-pointer (length value))
-  (map-into (row-sizes layout) #'coerce-grid-size value))
+(defmethod (setf row-sizes) ((new-value sequence) (layout grid-constraints-mixin))
+  (let ((length (length new-value))
+        (value (row-sizes layout)))
+    (adjust-array value length :fill-pointer length)
+    (map-into value #'coerce-grid-size new-value))
+  new-value)
 
-(defmethod (setf col-sizes) ((value sequence) (layout grid-layout))
-  (adjust-grid layout (length (row-sizes layout)) (length value))
-  (adjust-array (col-sizes layout) (length value) :fill-pointer (length value))
-  (map-into (col-sizes layout) #'coerce-grid-size value))
+(defmethod (setf col-sizes) ((new-value sequence) (layout grid-constraints-mixin))
+  (let ((length (length new-value))
+        (value (col-sizes layout)))
+    (adjust-array value length :fill-pointer length)
+    (map-into value #'coerce-grid-size new-value))
+  new-value)
+
+(defclass grid-layout (grid-constraints-mixin layout vector-container)
+  ((stretch :initarg :stretch :initform T :accessor stretch)))
+
+(defmethod (setf stretch) :after (value (layout grid-layout))
+  (suggest-size (bounds layout) layout))
+
+(defmethod (setf row-sizes) :after ((new-value sequence) (layout grid-layout))
+  (adjust-grid layout (length new-value) (length (col-sizes layout))))
+
+(defmethod (setf col-sizes) :after ((new-value sequence) (layout grid-layout))
+  (adjust-grid layout (length (row-sizes layout)) (length new-value)))
 
 (defmethod adjust-grid ((layout grid-layout) nrows ncols)
   (let ((orows (length (row-sizes layout)))
