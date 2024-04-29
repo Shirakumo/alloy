@@ -202,7 +202,7 @@
   element)
 
 (defmethod clear ((layout grid-bag-layout))
-  (map NIL (alexandria:rcurry #'leave layout)
+  (map NIL (lambda (element) (leave element layout))
        (copy-seq (elements layout))))
 
 (macrolet
@@ -236,7 +236,7 @@
         (element-infos (element-infos layout))
         (cells (cells layout)))
     ;; Compute a grid layout with an unknown available size.
-    (gather-preferred-sizes element-infos elements)
+    (gather-preferred-sizes element-infos elements layout)
     (compute-grid-layout cells NIL layout)
     (if (plusp (array-total-size cells))
         (let ((max-cell (aref cells
@@ -252,7 +252,7 @@
         (cells (cells layout))
         (bounds (bounds layout)))
     ;; Compute a grid layout with (bounds layout) as the available size.
-    (gather-preferred-sizes element-infos elements)
+    (gather-preferred-sizes element-infos elements layout)
     (compute-grid-layout cells bounds layout)
     ;; Assign computed bounds
     (loop for element across elements
@@ -294,11 +294,13 @@
    (weight-y :initarg :weight-y :type grid-axis-weight :reader weight-y :initform 0)
    (ideal-size :initarg :ideal-size :accessor ideal-size)))
 
-(defun gather-preferred-sizes (element-infos elements)
-  (loop for element across elements
-        for element-info across element-infos
-        for ideal-size = (suggest-size (px-size 0 0) element)
-        do (setf (ideal-size element-info) ideal-size)))
+(defun gather-preferred-sizes (element-infos elements layout)
+  (with-unit-parent layout
+    (loop for element across elements
+          for element-info across element-infos
+          for ideal-size = (suggest-size (px-size 0 0) element)
+          do (setf (ideal-size element-info) ideal-size))))
+
 
 (defclass cell-info (rectangle-mixin)
   (;; In pixels
@@ -417,15 +419,11 @@
                  (let* ((cell (aref cells row column))
                         (element-info (element-info cell)))
                    (cond (element-info
-                          (multiple-value-bind (min max)
-                              (element-boundary-cells element-info cells)
-                            (let ((ideal-size (ideal-size element-info)))
-                              (values (/ (to-px (pxw ideal-size))
-                                         (1+ (- (x max) (x min))))
-                                      (/ (to-px (pxh ideal-size))
-                                         (1+ (- (y max) (y min))))
-                                      (weight-x element-info)
-                                      (weight-y element-info)))))
+                          (let ((ideal-size (ideal-size element-info)))
+                            (values (/ (pxw ideal-size) (w element-info))
+                                    (/ (pxh ideal-size) (h element-info))
+                                    (weight-x element-info)
+                                    (weight-y element-info))))
                          (T
                           (values 0 0 0 0))))))
           (loop for column below w
@@ -470,8 +468,9 @@
           (loop for column below w
                 for x = ml then (+ x column-width mr ml)
                 for (column-width . fill-weight) = (aref column-widths column)
-                do (incf column-width (* available-width (/ fill-weight
-                                                            total-weight-x)))
+                when (and (plusp available-width) (plusp total-weight-x))
+                  do (incf column-width (* available-width (/ fill-weight
+                                                              total-weight-x)))
                 do (loop for row below h
                          for cell = (aref cells row column)
                          do (setf (x cell) x
@@ -479,8 +478,9 @@
           (loop for row below h
                 for y = mu then (+ y row-height mb mu)
                 for (row-height . fill-weight) = (aref row-heights row)
-                do (incf row-height (* available-height (/ fill-weight
-                                                           total-weight-y)))
+                when (and (plusp available-height) (plusp total-weight-y))
+                  do (incf row-height (* available-height (/ fill-weight
+                                                             total-weight-y)))
                 do (loop for column below w
                          for cell = (aref cells row column)
                          do (setf (y cell) y
