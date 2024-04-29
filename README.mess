@@ -124,7 +124,7 @@ During rendering the renderer must only visualise things if the region to visual
 If the renderer supports partial updates, the user is encouraged to call into the rendering machinery via ``maybe-render`` instead. Unlike ``render``, ``maybe-render`` will silently traverse the hierarchy and only invoke ``render`` on an element if the element was previously marked with ``mark-for-render``. After ``render`` has been called on a renderable, ``render-needed-p`` will always be ``NIL``. The user should always call ``mark-for-render`` if any property of a renderable was changed that would change its visual representation.
 
 ## Focus
-In alloy there is a notion of a "focus tree" -- a hierarchy of elements that designates how the focus flows between elements. Focus in this case refers to how important an element currently is. A ``focus-element`` in alloy can have three states; ``NIL`` for no focus at all, ``:strong`` for when it is fully focused, and ``:weak`` for when it should be considered for strong focus.
+In Alloy there is a notion of a "focus tree" -- a hierarchy of elements that designates how the focus flows between elements. Focus in this case refers to how important an element currently is. A ``focus-element`` in Alloy can have three states; ``NIL`` for no focus at all, ``:strong`` for when it is fully focused, and ``:weak`` for when it should be considered for strong focus.
 
 Within a ``focus-tree`` there must always be exactly one element with strong focus, but there may be many elements with weak or no focus. Every element in a focus tree has exactly one parent element. For the element at the root of the focus tree, this is the element itself. Focus may flow inwards and outwards, meaning that a strongly focused element may pass the strong focus to a child element (``activate``), or it may pass the focus to its parent (``exit``).
 
@@ -160,7 +160,7 @@ Descriptive events allow you to write the user interface interaction in a more a
 ; TODO: Translation mechanism, more descriptive events
 
 ## Layout
-Layouting in alloy refers to the decisions made to determine where elements are positioned in space and how large they are. In other words, it's the mechanism to determine the ``extent`` of each element that should be rendered. Similar to focus trees, there are "layout trees" in Alloy -- hierarchies of elements that govern the layouting decisions.
+Layouting in Alloy refers to the decisions made to determine where elements are positioned in space and how large they are. In other words, it's the mechanism to determine the ``extent`` of each element that should be rendered. Similar to focus trees, there are "layout trees" in Alloy -- hierarchies of elements that govern the layouting decisions.
 
 Every element in a layout tree has exactly one parent, with the element at the root having itself as its own parent. Every element also has a ``bounds`` that determines its axis aligned bounding box. When rendered, the visual representation of the element should not exceed this extent.
 
@@ -247,6 +247,7 @@ Aside from the protocols, Core provides a set of standard implementations of the
   - Clip View
   - Fixed Layout
   - Grid Layout
+  - Grid Bag Layout
   - Linear Layouts
 - Observables
   - Observable Object

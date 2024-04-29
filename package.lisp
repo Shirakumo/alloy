@@ -37,6 +37,11 @@
    #:place-already-occupied
    #:place
    #:existing
+   #:place-does-not-exist
+   #:dimensions
+   #:growth-policy
+   #:layout-cannot-grow
+   #:direction
    #:allocation-failed
    #:renderer)
   ;; components/base.lisp
@@ -369,9 +374,16 @@
    #:grid-layout
    #:row-sizes
    #:col-sizes
-   #:stretch
-   #:row
-   #:col)
+   #:stretch)
+  ;; layouts/grid-bag.lisp
+  (:export
+   #:grid-bag-layout
+   #:row-sizes ; inherited from GRID-CONSTRAINTS-MIXIN
+   #:col-sizes ; same
+   #:add-row
+   #:remove-row
+   #:add-column
+   #:remove-column)
   ;; layouts/linear.lisp
   (:export
    #:linear-layout

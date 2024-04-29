@@ -12,6 +12,7 @@
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:export
    #:simple-window
-   #:fonts))
+   #:fonts
+   #:grid-bag-layout))
 
 (in-package #:org.shirakumo.alloy.examples)

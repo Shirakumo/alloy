@@ -54,6 +54,16 @@
     "Cannot enter~%  ~a~%at ~a into~%  ~a~%as it is already occupied by~%  ~a"
   bad-element place layout existing)
 
+(define-alloy-condition place-does-not-exist (layout-condition error)
+    "Cannot enter~%  ~a~%at ~a into~%  ~a~%as the current dimensions~%  ~a~%~
+     of the layout do not include that place and the layout is not allowed ~
+     to grow according to the policy~%  ~a"
+  bad-element place layout dimensions growth-policy)
+
+(define-alloy-condition layout-cannot-grow (layout-condition error)
+    "Layout~%  ~a~% is not allowed to grow ~(~a~)ly according to policy~%  ~a"
+  layout direction growth-policy)
+
 (define-alloy-condition element-has-different-ui (error)
     "The element~%  ~s~%cannot be used with~%  ~s~%as it is set-up with~%  ~s"
   bad-element ui (ui (bad-element c)))

@@ -24,6 +24,7 @@
                 :components ((:file "fixed")
                              (:file "linear")
                              (:file "grid")
+                             (:file "grid-bag")
                              (:file "border")
                              (:file "clip-view")
                              (:file "swap")
