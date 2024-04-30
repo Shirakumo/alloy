@@ -208,22 +208,41 @@
 (macrolet
     ((define (add-name remove-name reader direction)
        `(progn
-          (defmethod ,add-name ((layout grid-bag-layout) (size T))
+          (defmethod ,add-name ((layout grid-bag-layout) (size T)
+                                &optional (index (length (,reader layout))))
             (let ((policy (growth-policy layout)))
               (unless (member policy '(,direction :both))
                 (error 'layout-cannot-grow :layout layout
                                            :direction ,direction
                                            :growth-policy policy)))
-            (vector-push-extend (coerce-grid-size size) (,reader layout))
+            (let ((size (length (,reader layout))))
+              (unless (<= 0 index size)
+                (error 'index-out-of-range :range `(0 ,(1+ size)) :index index)))
+            ;; Increase sizes of elements that overlap the added column or
+            ;; row. Shift positions of elements "after" the added column or row.
+            ,(ecase direction
+               (:vertical `(shift-grid-positions layout 0 0 index 1))
+               (:horizontal `(shift-grid-positions layout index 1 0 0)))
+            (array-utils:vector-push-extend-position
+             (coerce-grid-size size) (,reader layout) index)
             (update-grid (cells layout) (element-infos layout) layout)
             (refit layout))
 
-          (defmethod ,remove-name ((layout grid-bag-layout))
-            (vector-pop (,reader layout))
+          (defmethod ,remove-name ((layout grid-bag-layout) (index T))
+            (let ((size (length (,reader layout))))
+              (unless (<= 0 index (1- size))
+                (error 'index-out-of-range :range `(0 ,size) :index index)))
+            ;; Reduce sizes of elements that overlap the removed column or
+            ;; row. Shift positions of elements "after" the removed column or
+            ;; row.
+            ,(ecase direction
+               (:vertical `(shift-grid-positions layout 0 0 index -1))
+               (:horizontal `(shift-grid-positions layout index -1 0 0)))
+            (array-utils:vector-pop-position (,reader layout) index)
             (update-grid (cells layout) (element-infos layout) layout)
             (refit layout)))))
   (define add-row remove-row row-sizes :vertical)
-  (define add-col remove-col col-sizes :horizontal))
+  (define add-column remove-column col-sizes :horizontal))
 
 (defmethod (setf bounds) :after (extent (layout grid-bag-layout))
   (refit layout))
@@ -286,10 +305,10 @@
 ;;; Layout information associated with a single element of the layout.
 (defclass grid-element-info (rectangle-mixin)
   (;; Integer cell coordinates
-   (x :initarg :x :type grid-axis-position :reader x)
-   (y :initarg :y :type grid-axis-position :reader y)
-   (w :initarg :w :type grid-axis-size :reader w :initform 1)
-   (h :initarg :h :type grid-axis-size :reader h :initform 1)
+   (x :initarg :x :type grid-axis-position :accessor x)
+   (y :initarg :y :type grid-axis-position :accessor y)
+   (w :initarg :w :type grid-axis-size :accessor w :initform 1)
+   (h :initarg :h :type grid-axis-size :accessor h :initform 1)
    (weight-x :initarg :weight-x :type grid-axis-weight :reader weight-x :initform 0)
    (weight-y :initarg :weight-y :type grid-axis-weight :reader weight-y :initform 0)
    (ideal-size :initarg :ideal-size :accessor ideal-size)))
@@ -301,6 +320,45 @@
           for ideal-size = (suggest-size (px-size 0 0) element)
           do (setf (ideal-size element-info) ideal-size))))
 
+(defun shift-grid-positions (layout column-start column-delta row-start row-delta)
+  (let* ((element-infos (element-infos layout))
+         (elements (elements layout))
+         (remove '()))
+    (loop with column-end = (+ column-start (abs (min column-delta 0)))
+          with row-end = (+ row-start (abs (min row-delta 0)))
+          for element-info across element-infos
+          for x1 = (x element-info)
+          for y1 = (y element-info)
+          for w = (w element-info)
+          for h = (h element-info)
+          for x2 = (+ x1 w)
+          for y2 = (+ y1 h)
+          ;; Adjust x-position and/or width depending on whether the element
+          ;; follows or overlaps the added/deleted column range.
+          unless (or (<= x2 column-start) (<= column-end x1))
+            do (incf w column-delta)
+          when (or (< column-start x1)
+                   (and (plusp column-delta) (= column-start x1)))
+            do (incf x1 column-delta)
+          ;; Adjust y-position and/or height depending on whether the
+          ;; element follows or overlaps the added/deleted row range.
+          unless (or (<= y2 row-start) (<= row-end y1))
+            do (incf h row-delta)
+          when (or (< row-start y1)
+                   (and (plusp row-delta) (= row-start y1)))
+            do (incf y1 row-delta)
+          ;; If the adjusted width or height is zero, remove the element,
+          ;; otherwise assign the new placement.
+          if (not (and (plusp w) (plusp h)))
+            do (let* ((index (position element-info element-infos))
+                      (element (aref elements index)))
+                 (pushnew element remove))
+          else
+            do (setf (x element-info) x1
+                     (y element-info) y1
+                     (w element-info) w
+                     (h element-info) h))
+    (mapc (lambda (element) (leave element layout)) remove)))
 
 (defclass cell-info (rectangle-mixin)
   (;; In pixels
@@ -363,8 +421,8 @@
              (cond ((= old-count new-count))
                    ((or (eq growth-policy direction) (eq growth-policy :both))
                     (let ((fill (elt vector (1- (length vector)))))
-                      (adjust-array vector new-count :initial-element fill
-                                                     :fill-pointer new-count)))
+                      (adjust-array vector new-count :fill-pointer new-count)
+                      (fill vector fill :start old-count :end new-count)))
                    (T
                     (error 'layout-cannot-grow :layout layout
                                                :direction direction
