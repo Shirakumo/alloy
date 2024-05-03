@@ -53,7 +53,6 @@
 
 (defmethod initialize-instance :after ((renderer renderer) &key)
   ;; Init font cache
-  (font-discovery:init)
   (dolist (path (directory (make-pathname :name :wild :type "json" :defaults (fontcache-directory renderer))))
     (setf (gethash (pathname-name path) (fontcache renderer))
           (make-instance 'font :family (pathname-name path) :file path :renderer renderer))
