@@ -1,13 +1,14 @@
 (in-package #:org.shirakumo.alloy.animation)
 
-(defvar *easings* (make-hash-table :test 'eql))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *easings* (make-hash-table :test 'eql))
 
-(defun easing (name &optional (errorp T))
-  (or (gethash name *easings*)
-      (when errorp (error "No easing function named ~s known." name))))
+  (defun easing (name &optional (errorp T))
+    (or (gethash name *easings*)
+        (when errorp (error "No easing function named ~s known." name))))
 
-(defun (setf easing) (func name)
-  (setf (gethash name *easings*) func))
+  (defun (setf easing) (func name)
+    (setf (gethash name *easings*) func)))
 
 (defun ease (by x)
   (let ((easing (easing by)))
@@ -20,12 +21,13 @@
       `(funcall (the (function (single-float) single-float) (easing ,by)) (float ,x 0f0))))
 
 (defmacro define-easing (name (x) &body body)
-  `(progn (setf (easing ',name)
-                (lambda (,x)
-                  (declare (type (single-float 0f0) ,x))
-                  (declare (optimize speed))
-                  ,@body))
-          (setf (easing ',(intern (string name) "KEYWORD")) (easing ',name))))
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (setf (easing ',name)
+           (lambda (,x)
+             (declare (type (single-float 0f0) ,x))
+             (declare (optimize speed))
+             ,@body))
+     (setf (easing ',(intern (string name) "KEYWORD")) (easing ',name))))
 
 (define-easing linear (x)
   x)
