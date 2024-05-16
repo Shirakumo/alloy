@@ -141,15 +141,15 @@
     (check-type (first progression) real)
     ;; Restructure into per-place tween info
     (loop while progression
-          for stop = (pop progression)
-          for parts = (loop until (or (null progression)
-                                      (realp (first progression)))
-                            do (check-type (first progression) cons)
-                            collect (pop progression))
-          when parts
-          do (dolist (part parts)
-               (destructuring-bind (place value &key (easing 'linear)) part
-                 (push (list stop value easing) (gethash place tweens)))))
+          do (let ((stop (pop progression))
+                   (parts (loop until (or (null progression)
+                                          (realp (first progression)))
+                                do (check-type (first progression) cons)
+                                collect (pop progression))))
+               (when parts
+                 (dolist (part parts)
+                   (destructuring-bind (place value &key (easing 'linear)) part
+                     (push (list stop value easing) (gethash place tweens)))))))
     (loop for place being the hash-keys of tweens
           for data being the hash-values of tweens
           do (setf (gethash place tweens) (nreverse data)))
