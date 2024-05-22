@@ -542,10 +542,11 @@
                (setf (uniform shader "transform") (simple:transform-matrix renderer)))
              (setf (uniform shader "size") (alloy:size (alloy:w extent) (alloy:h extent)))
              (setf (uniform shader "corner_radius[0]") 0.0)
-             (setf (uniform shader "corner_radius[1]") (alloy:to-px (aref corner-radii 0)))
-             (setf (uniform shader "corner_radius[2]") (alloy:to-px (aref corner-radii 1)))
-             (setf (uniform shader "corner_radius[3]") (alloy:to-px (aref corner-radii 2)))
-             (setf (uniform shader "corner_radius[4]") (alloy:to-px (aref corner-radii 3)))
+             (setf (uniform shader "corner_radius[1]") (if round-p (alloy:to-px (aref corner-radii 0)) 0.0))
+             (setf (uniform shader "corner_radius[2]") (if round-p (alloy:to-px (aref corner-radii 1)) 0.0))
+             (setf (uniform shader "corner_radius[3]") (if round-p (alloy:to-px (aref corner-radii 2)) 0.0))
+             (setf (uniform shader "corner_radius[4]") (if round-p (alloy:to-px (aref corner-radii 3)) 0.0))
+             (setf (uniform shader "feather") (alloy:to-px (simple:feather-radius shape)))
              (setf (uniform shader "color") color)
              (setf (uniform shader "view_size") (view-size renderer))))
       (prepare (resource 'rect-shader renderer))
@@ -591,6 +592,7 @@
     (setf (uniform shader "end_angle") (simple:end-angle shape))
     (setf (uniform shader "color") color)
     (setf (uniform shader "view_size") (view-size renderer))
+    (setf (uniform shader "feather") (alloy:to-px (simple:feather-radius shape)))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
 
 (defmethod render-direct ((shape simple:outlined-ellipse) (renderer renderer) color)
@@ -638,6 +640,7 @@
     (bind shader)
     (setf (uniform shader "transform") (simple:transform-matrix renderer))
     (setf (uniform shader "color") color)
+    (setf (uniform shader "feather") (alloy:to-px (simple:feather-radius shape)))
     ;; FIXME: This does not work with quite a few non-convex polygons
     (draw-vertex-array (resource 'stream-vao renderer) :triangle-fan 0 (/ (length data) 2))))
 
