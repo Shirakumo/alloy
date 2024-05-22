@@ -59,6 +59,7 @@
    #:patterned-shape
    #:pattern
    #:filled-shape
+   #:feather-radius
    #:outlined-shape
    #:line-width
    #:line-style

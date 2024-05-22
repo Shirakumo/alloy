@@ -91,7 +91,8 @@
 (defclass patterned-shape (shape)
   ((pattern :initarg :pattern :initform colors:black :accessor pattern)))
 
-(defclass filled-shape (patterned-shape) ())
+(defclass filled-shape (patterned-shape)
+  ((feather-radius :initarg :feather-radius :initform (alloy:px 0) :accessor feather-radius)))
 
 (defclass outlined-shape (patterned-shape)
   ((line-width :initarg :line-width :initform (alloy:un 1) :accessor line-width)
