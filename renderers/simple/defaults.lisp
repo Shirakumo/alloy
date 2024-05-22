@@ -94,6 +94,12 @@
 (defclass filled-shape (patterned-shape)
   ((feather-radius :initarg :feather-radius :initform (alloy:px 0) :accessor feather-radius)))
 
+(defmethod (setf feather-radius) ((null null) (shape filled-shape))
+  (setf (feather-radius shape) (alloy:px 0)))
+
+(defmethod (setf feather-radius) ((value real) (shape filled-shape))
+  (setf (feather-radius shape) (alloy:px vvalue)))
+
 (defclass outlined-shape (patterned-shape)
   ((line-width :initarg :line-width :initform (alloy:un 1) :accessor line-width)
    (line-style :initarg :line-style :initform NIL :accessor line-style)
@@ -102,7 +108,7 @@
 
 (defclass rectangle (shape)
   ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
-   (corner-radii :initform (make-array 4 :element-type 'single-float) :reader corner-radii)))
+   (corner-radii :initform (make-array 4 :element-type T :initial-value (alloy:px 0)) :reader corner-radii)))
 
 (defmethod shared-initialize :after ((rectangle rectangle) slots &key (corner-radii NIL corner-radii-p))
   (when corner-radii-p
@@ -116,9 +122,8 @@
       ((2 :bottom-right :south-east) (aref radii 2))
       ((3 :bottom-left :south-west) (aref radii 3)))))
 
-(defmethod (setf corner-radius) ((value real) position (rectangle rectangle))
-  (let ((radii (corner-radii rectangle))
-        (value (float value 0f0)))
+(defmethod (setf corner-radius) ((value alloy:unit) position (rectangle rectangle))
+  (let ((radii (corner-radii rectangle)))
     (ecase position
       ((0 :top-left :north-west) (setf (aref radii 0) value))
       ((1 :top-right :north-east) (setf (aref radii 1) value))
@@ -131,16 +136,19 @@
       ((8 T :all) (fill radii value)))))
 
 (defmethod (setf corner-radius) ((null null) position (rectangle rectangle))
-  (setf (corner-radius position rectangle) 0.0))
+  (setf (corner-radius position rectangle) (alloy:px 0)))
+
+(defmethod (setf corner-radii) ((value alloy:unit) (rectangle rectangle))
+  (fill (corner-radii rectangle) value))
 
 (defmethod (setf corner-radii) ((value real) (rectangle rectangle))
-  (fill (corner-radii rectangle) (float value 0f0)))
+  (fill (corner-radii rectangle) (alloy:px value)))
 
 (defmethod (setf corner-radii) ((null null) (rectangle rectangle))
-  (fill (corner-radii rectangle) 0.0))
+  (fill (corner-radii rectangle) (alloy:px 0)))
 
 (defmethod (setf corner-radii) ((sequence sequence) (rectangle rectangle))
-  (map-into (corner-radii rectangle) #'float sequence))
+  (map-into (corner-radii rectangle) #'identity sequence))
 
 (defclass filled-rectangle (rectangle filled-shape) ())
 (defclass outlined-rectangle (rectangle outlined-shape) ())
