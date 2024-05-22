@@ -19,11 +19,12 @@ void main(){
 //FRAG
 out vec4 out_color;
 uniform vec4 color;
+uniform float feather = 0.0;
 in vec2 uv;
 
 void main(){
   float sdf = length(uv)-1.0;
-  float dsdf = fwidth(sdf)*0.5;
+  float dsdf = fwidth(sdf)*0.5*(feather+1);
   sdf = smoothstep(dsdf, -dsdf, sdf);
   out_color = color*sdf;
   if(out_color.w <= 0.0) discard;

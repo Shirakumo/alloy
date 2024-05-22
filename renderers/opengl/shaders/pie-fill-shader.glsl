@@ -29,6 +29,7 @@ void main(){
 //FRAG
 out vec4 out_color;
 uniform vec4 color;
+uniform float feather = 0.0;
 in vec2 uv;
 in vec2 c;
 
@@ -37,7 +38,7 @@ void main(){
   float l = length(p)-0.5;
   float m = length(p-c*clamp(dot(p,c),0.0,0.5));
   float sdf = max(l,m*sign(c.y*p.x-c.x*p.y));
-  float dsdf = fwidth(sdf)*0.5;
+  float dsdf = fwidth(sdf)*0.5*(feather+1);
   sdf = smoothstep(dsdf, -dsdf, sdf);
   out_color = color*sdf;
   if(out_color.w <= 0.0) discard;

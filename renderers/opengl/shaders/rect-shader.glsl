@@ -4,6 +4,7 @@ layout (location=1) in vec2 weight;
 uniform mat3 transform;
 uniform float corner_radius[5];
 uniform vec2 size;
+out vec2 uv;
 
 void main(){
   vec2 position = pos*size;
@@ -12,12 +13,18 @@ void main(){
   vec2 offset = vec2(corner_radius[corner_idx.x], corner_radius[corner_idx.y]);
 
   gl_Position = vec4(transform*vec3(position+offset*offset_dir, 1.0), 1.0);
+  uv = 1-sign(weight);
 }
 
 //FRAG
 out vec4 out_color;
 uniform vec4 color;
+uniform float feather = 0.0;
+in vec2 uv;
 
 void main(){
-  out_color = vec4(color.rgb*color.a, color.a);
+  float sdf = max(uv.x,uv.y)-1.0;
+  float dsdf = fwidth(sdf)*0.5*(feather+1);
+  sdf = smoothstep(dsdf, -dsdf, sdf);
+  out_color = color*sdf;
 }
