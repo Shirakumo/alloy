@@ -532,8 +532,8 @@
 
 (defmethod render-direct ((shape simple:filled-rectangle) renderer color)
   (let* ((corner-radii (simple:corner-radii shape))
-         (round-p (loop for radius in corner-radii
-                        thereis (/= 0 (alloy:to-px 0))))
+         (round-p (loop for radius across corner-radii
+                        thereis (/= 0 (alloy:to-px radius))))
          (extent (alloy:ensure-extent (simple:bounds shape))))
     (flet ((prepare (shader)
              (bind shader)

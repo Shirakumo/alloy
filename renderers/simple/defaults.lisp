@@ -98,7 +98,7 @@
   (setf (feather-radius shape) (alloy:px 0)))
 
 (defmethod (setf feather-radius) ((value real) (shape filled-shape))
-  (setf (feather-radius shape) (alloy:px vvalue)))
+  (setf (feather-radius shape) (alloy:un value)))
 
 (defclass outlined-shape (patterned-shape)
   ((line-width :initarg :line-width :initform (alloy:un 1) :accessor line-width)
@@ -108,7 +108,7 @@
 
 (defclass rectangle (shape)
   ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
-   (corner-radii :initform (make-array 4 :element-type T :initial-value (alloy:px 0)) :reader corner-radii)))
+   (corner-radii :initform (make-array 4 :initial-element (alloy:px 0)) :reader corner-radii)))
 
 (defmethod shared-initialize :after ((rectangle rectangle) slots &key (corner-radii NIL corner-radii-p))
   (when corner-radii-p
@@ -142,7 +142,7 @@
   (fill (corner-radii rectangle) value))
 
 (defmethod (setf corner-radii) ((value real) (rectangle rectangle))
-  (fill (corner-radii rectangle) (alloy:px value)))
+  (fill (corner-radii rectangle) (alloy:un value)))
 
 (defmethod (setf corner-radii) ((null null) (rectangle rectangle))
   (fill (corner-radii rectangle) (alloy:px 0)))
