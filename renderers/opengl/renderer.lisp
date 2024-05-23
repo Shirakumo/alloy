@@ -588,6 +588,7 @@
         (simple:translate renderer (simple:bounds shape))
         (simple:scale renderer (alloy:px-size w h)))
       (setf (uniform shader "transform") (simple:transform-matrix renderer)))
+    (setf (uniform shader "size") (alloy:size (alloy:w extent) (alloy:h extent)))
     (setf (uniform shader "start_angle") (simple:start-angle shape))
     (setf (uniform shader "end_angle") (simple:end-angle shape))
     (setf (uniform shader "color") color)

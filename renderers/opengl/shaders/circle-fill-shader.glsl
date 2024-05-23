@@ -3,12 +3,14 @@ layout (location=0) in vec2 pos;
 uniform mat3 transform;
 uniform float start_angle;
 uniform float end_angle;
+uniform vec2 size;
+uniform float feather = 0.0;
 out vec2 uv;
 
 #define PI_2 1.5707963267948966
 
 void main(){
-  uv = pos-0.5;
+  uv = pos+vec2(feather)/size-0.5;
   gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
 }
 

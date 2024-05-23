@@ -3,13 +3,15 @@ layout (location=0) in vec2 pos;
 uniform mat3 transform;
 uniform float start_angle;
 uniform float end_angle;
+uniform vec2 size;
+uniform float feather = 0.0;
 out vec2 uv;
 out vec2 c;
 
 #define PI_2 1.5707963267948966
 
 void main(){
-  uv = pos-0.5;
+  uv = pos+vec2(feather)/size-0.5;
   float start = start_angle-PI_2;
   float aperture = abs(end_angle-start_angle)*0.5;
   if(end_angle < start_angle){
