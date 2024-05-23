@@ -4,6 +4,7 @@ layout (location=1) in vec2 weight;
 uniform mat3 transform;
 uniform float corner_radius[5];
 uniform vec2 size;
+uniform float feather = 0.0;
 out vec2 uv;
 
 void main(){
@@ -13,7 +14,7 @@ void main(){
   vec2 offset = vec2(corner_radius[corner_idx.x], corner_radius[corner_idx.y]);
 
   gl_Position = vec4(transform*vec3(position+offset*offset_dir, 1.0), 1.0);
-  uv = 1-sign(weight);
+  uv = 1+vec2(feather)/size-sign(weight);
 }
 
 //FRAG
