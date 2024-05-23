@@ -34,9 +34,10 @@
     (values (+ o1x (* d1x u))
             (+ o1y (* d1y u)))))
 
-(defun make-shader-from-file (renderer name &optional (file (make-pathname :name (string-downcase name) :type "glsl" :defaults *shaders-directory*)))
-  (unless (resource name renderer NIL)
-    (let* ((contents (alexandria:read-file-into-string file))
+(defun make-shader-from-file (renderer name &key force)
+  (when (or force (null (resource name renderer NIL)))
+    (let* ((file (make-pathname :name (string-downcase name) :type "glsl" :defaults *shaders-directory*))
+           (contents (alexandria:read-file-into-string file))
            (vert-start (search "//VERT" contents))
            (frag-start (search "//FRAG" contents))
            (vert (subseq contents vert-start (if (< vert-start frag-start) frag-start (length contents))))
