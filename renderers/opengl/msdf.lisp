@@ -376,10 +376,18 @@
                (declare (type (unsigned-byte 32) c))
                (loop while (<= (the (unsigned-byte 32) (or (caar markup) #xFFFFFFFF)) c)
                      do (setf styles (cdr (pop markup))))
-               (setf minx (min minx x-))
-               (setf miny (min miny y-))
-               (setf maxx (max maxx x+))
-               (setf maxy (max maxy y+))
+               ;; Overwrite the initial 0.0 values. The initial values must be
+               ;; 0.0 instead of some extreme value since THUNK may not be
+               ;; called at all. In addition, THUNK is called with fake
+               ;; coordinates for space and linefeed characters so don't update
+               ;; in such cases.
+               (cond ((zerop i)
+                      (setf minx x- miny y- maxx x+ maxy y+))
+                     ((not (member (aref text c) '(#\Space #\Linefeed)))
+                      (setf minx (min minx x-))
+                      (setf miny (min miny y-))
+                      (setf maxx (max maxx x+))
+                      (setf maxy (max maxy y+))))
                (let* ((boldp (style-property :bold styles))
                       (italicp (style-property :italic styles))
                       (tx (if italicp
