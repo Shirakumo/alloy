@@ -156,11 +156,11 @@
   (with-unit-parent element
     (multiple-value-bind (x y) (compute-global-position element)
       (let* ((parent-x (- x (pxx element)))
-             (parent-y (- y (pyy element)))
+             (parent-y (- y (pxy element)))
              (new-parent-x (- (pxx location) parent-x))
              (new-parent-y (- (pxy location) parent-y)))
         (setf (extent-x (bounds element)) (px new-parent-x))
-        (setf (extent-y (bounds element)) (py new-parent-y))
+        (setf (extent-y (bounds element)) (px new-parent-y))
         location))))
 
 (defmethod contained-p (thing (element layout-element))
