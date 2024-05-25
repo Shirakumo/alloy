@@ -410,26 +410,25 @@
    :pattern (colored:color 0.2 0.2 0.2)))
 
 ;; KLUDGE: Bad, spilling protocol
-;; FIXME: The widen is also /wrong/. We should properly consider the actual shape size instead...
 (defmethod alloy:suggest-size ((size alloy:size) (element alloy:tab-button))
   (or (alloy:ideal-size element)
       (let ((shape (find-shape :label element)))
         (if shape
-            (alloy:widen (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape) (alloy:margins 2))
+            (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape)
             size))))
 
 (defmethod alloy:suggest-size ((size alloy:size) (element alloy:button))
   (or (alloy:ideal-size element)
       (let ((shape (find-shape :label element)))
         (if shape
-            (alloy:widen (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape) (alloy:margins 2))
+            (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape)
             size))))
 
 (defmethod alloy:suggest-size ((size alloy:size) (element alloy:label))
   (or (alloy:ideal-size element)
       (let ((shape (find-shape :label element)))
         (if shape
-            (alloy:widen (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape) (alloy:margins 2))
+            (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape)
             size))))
 
 (defmethod alloy:ideal-size ((element alloy:label))
@@ -441,5 +440,5 @@
 (defmethod alloy:suggest-size ((size alloy:size) (element alloy:tooltip))
   (let ((shape (find-shape :label element)))
     (if shape
-        (alloy:widen (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape) (alloy:margins 2))
+        (alloy:suggest-size (alloy:ensure-extent (simple:bounds shape) size) shape)
         size)))
