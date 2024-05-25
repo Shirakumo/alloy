@@ -246,6 +246,9 @@
      (size (u+ (w extent) (l margins) (r margins))
            (u+ (h extent) (b margins) (u margins))))))
 
+;;; Return an EXTENT instance based on EXTENT-ISH. If EXTENT-ISH lacks
+;;; information (for example, if EXTENT-ISH is a SIZE, it does not have a
+;;; position) and BASE is supplied, use BASE to add the missing information.
 (defun ensure-extent (extent-ish &optional base)
   (etypecase extent-ish
     (extent

@@ -31,7 +31,8 @@
 ;;       that are actively affected by the change.
 (defmethod notice-size ((element layout-element) (layout linear-layout))
   (let* ((old (bounds layout))
-         (new (fit-linear-layout-contents layout old)))
+         (temp (suggest-size old layout))
+         (new (fit-linear-layout-contents layout temp)))
     (when (or (/= (pxh old) (pxh new))
               (/= (pxw old) (pxw new)))
       (unless (eq layout (layout-parent layout))
