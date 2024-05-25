@@ -13,6 +13,7 @@
   (:export
    #:simple-window
    #:fonts
-   #:grid-bag-layout))
+   #:grid-bag-layout
+   #:sizing))
 
 (in-package #:org.shirakumo.alloy.examples)

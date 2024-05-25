@@ -17,6 +17,7 @@
                (:file "fonts")
                (:file "canvas")
                (:file "gradient")
-               (:file "grid-bag-layout"))
+               (:file "grid-bag-layout")
+               (:file "sizing"))
   :depends-on (:alloy-glfw
                :alloy-constraint))
