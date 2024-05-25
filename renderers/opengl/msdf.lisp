@@ -419,7 +419,8 @@
 (defclass text (simple:text)
   ((vertex-data :accessor vertex-data)
    (font-sequence :initform (make-array 1) :accessor font-sequence)
-   (location :initform (alloy:px-point 0 0) :accessor location)
+   (ideal-size :reader alloy:ideal-size :writer (setf size))
+   (location :accessor location)
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
    (cached-markup :initform () :accessor markup)
@@ -468,9 +469,10 @@
 (defmethod shared-initialize :after ((text text) slots &key)
   ;; TODO: Only update the size and internal data if any of the relevant slots actually changed (text, extent, markup).
   (alloy:allocate (simple:font text))
-  (multiple-value-bind (bounds array font-sequence breaks markup) (alloy:suggest-size (alloy:ensure-extent (simple:bounds text)) text)
+  (multiple-value-bind (size location array font-sequence breaks markup) (alloy:suggest-size (alloy:ensure-extent (simple:bounds text)) text)
     (setf (vertex-data text) array)
     (setf (location text) location)
+    (setf (size text) size)
     (setf (line-breaks text) breaks)
     (setf (markup text) markup)
     (setf (font-sequence text) font-sequence)))
@@ -505,7 +507,8 @@
                      (return))))))))
 
 (defmethod alloy:suggest-size (size (text text))
-  (let ((scale (alloy:to-px (simple:size text)))
+  (let ((margins (simple:bounds text))
+        (scale (alloy:to-px (simple:size text)))
         (markup (simple::flatten-markup (simple:markup text))))
     (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) size scale (simple:wrap text) markup (simple:halign text))
       (declare (ignore y- y+))
@@ -515,12 +518,12 @@
              (h (* line (max 1 (length breaks))))
              (p (simple:resolve-alignment (simple:bounds text) :start (simple:valign text)
                                           (alloy:px-size w h))))
-        (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p))
-                                 w (if (<= (length breaks) 1) h (+ h (* scale 0.5))))
+        ;; The additional return values are not used for the layout protocol but
+        ;; in the SHARED-INITIALIZE method for the TEXT class.
+        (values (alloy:px-size (+ w (alloy:pxl margins) (alloy:pxr margins))
+                               (+ h (alloy:pxu margins) (alloy:pxb margins)))
+                (alloy:px-point (alloy:pxx p) (+ (- h line) (alloy:pxy p)))
                 array font-sequence breaks markup)))))
-
-(defmethod alloy:ideal-size ((text text))
-  (dimensions text))
 
 (defclass cursor (simple:cursor) ())
 
