@@ -10,7 +10,7 @@
                                 :row-sizes '(30 50 T 30 30)
                                 :col-sizes '(50 50 50 T)))
          ;; Growth direction
-         (label (alloy:represent "Grow" 'alloy:label) )
+         (label (alloy:represent "Grow" 'alloy:label))
          (growth (alloy:represent (alloy::growth-policy layout) 'alloy:combo-set
                                   :value-set '(nil :horizontal :vertical :both)
                                   :focus-parent focus))
