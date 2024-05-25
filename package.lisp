@@ -317,6 +317,7 @@
    #:size-h
    #:size=
    #:margins
+   #:px-margins
    #:margins-p
    #:margins-l
    #:margins-u
