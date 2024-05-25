@@ -205,14 +205,13 @@
         (next-break 0)
         (next-mandatory NIL)
         (last-break 0)
-        (last-width 0.0)
         (base-scale (float scale 0f0))
         (scale (float scale 0f0))
         f (w 0.0) (h 0.0) (line -1.0) (space 0.0) chars kernings
         (%k (cons NIL NIL))
         (i (or start 0)) (si 0)
         (end (or end (length string))))
-    (declare (type single-float x y max-width last-width w h space line scale base-scale))
+    (declare (type single-float x y max-width w h space line scale base-scale))
     (declare (type (unsigned-byte 32) line-start next-break last-break i end si))
     (declare (type simple-vector font-sequence))
     (declare (optimize speed))
@@ -290,9 +289,10 @@
                  (decf y line))
                (setf line-start at)))
       (select-font (cdr (aref font-sequence 0)))
-      ;; This first loops through, only computing the width. Then, when a line break
-      ;; is encountered or the line is full, it calls INSERT-BREAK to emit
-      ;; the complete line before starting on the next line.
+      ;; This first loops through, only computing the width after each
+      ;; character. Then, when a line break is encountered or the line is full,
+      ;; it calls INSERT-BREAK to emit the complete line before starting on the
+      ;; next line.
       ;;
       ;; This is obviously stupid, and could be improved a lot by backtracking instead
       ;; when line breaks are needed. But I'm lazy.
@@ -300,36 +300,40 @@
       ;; FIXME: This model inherently assumes a LTR system and will not deal with
       ;;        RTL, TTB, BTT orientations correctly. We also don't use UAX-9 yet.
       (when (< i end)
-        (loop for p = nil then c
+        (loop with line-widths of-type (array single-float 1)
+                 = (make-array 1 :element-type 'single-float :adjustable T :fill-pointer 1 :initial-element 0.0)
+              for p = NIL then c
               for c = (aref string i)
               do (find-font i)
                  (when (and next-mandatory (= next-break i))
-                   (insert-break i x))
+                   (insert-break i x)) ; TODO is X correct?
                  (case c
                    (#\linefeed)
                    (#\space
-                    (incf x space))
+                    (incf x space)
+                    (vector-push-extend (+ (aref line-widths (1- (length line-widths))) space) line-widths))
                    (t
                     (let* ((char (gethash c chars +default-char+))
                            (x+ (+ x (* scale (+ (3b-bmfont:glyph-xoffset char)
                                                 (3b-bmfont:glyph-width char))))))
-                      (cond ((< x+ max-width))
-                            ((null wrap))
+                      (cond ((or (< x+ max-width) (null wrap))
+                             (vector-push-extend x+ line-widths)
+                             (incf x (* scale (+ (kerning p c)
+                                                 (3b-bmfont:glyph-xadvance char)))))
                             ((< line-start last-break)
-                             (insert-break last-break last-width)
-                             (setf i last-break))
+                             (insert-break last-break (aref line-widths (- last-break line-start 1)))
+                             (setf (fill-pointer line-widths) 1)
+                             (setf i (1- last-break)))
                             ((< line-start i)
-                             (insert-break (1- i) x)))
-                      (incf x (* scale (+ (kerning p c)
-                                          (3b-bmfont:glyph-xadvance char)))))))
+                             (insert-break (1- i) (aref line-widths (1- i)))
+                             (setf (fill-pointer line-widths) 1))))))
                  (when (<= next-break i)
                    (multiple-value-bind (pos mandatory) (uax-14:next-break breaker)
                      (setf next-mandatory mandatory)
-                     (shiftf last-break next-break (or pos (1+ end)))
-                     (setf last-width x)))
+                     (shiftf last-break next-break (or pos (1+ end)))))
                  (incf i)
-              while (< i end)))
-      (insert-break end x)
+              while (< i end)
+              finally (insert-break end (aref line-widths (1- (length line-widths))))))
       breaks)))
 
 (declaim (inline style-property))
