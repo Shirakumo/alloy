@@ -333,6 +333,14 @@
       (insert-break end x)
       breaks)))
 
+(declaim (inline style-property))
+(defun style-property (name styles)
+  (loop for style in styles
+        do (cond ((eq style name) ; simple style
+                  (return '(t)))
+                 ((and (consp style) (eq (car style) name)) ; complex style
+                  (return (rest style))))))
+
 (defun compute-text (font text extent scale wrap markup halign)
   (declare (optimize speed))
   (declare (type string text))
@@ -343,11 +351,7 @@
         (styles ()))
     (declare (type (unsigned-byte 32) i))
     (declare (type single-float minx miny maxx maxy scale))
-    (labels ((prop (prop styles)
-               (loop for style in styles
-                     do (when (eq (car style) prop)
-                          (return (rest style)))))
-             (vertex (x y u v c o oc)
+    (labels ((vertex (x y u v c o oc)
                (setf (aref array (+ i 0)) (float x))
                (setf (aref array (+ i 1)) (float y))
                (setf (aref array (+ i 2)) (float u))
@@ -373,30 +377,30 @@
                (setf miny (min miny y-))
                (setf maxx (max maxx x+))
                (setf maxy (max maxy y+))
-               (let ((tx (if (prop :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
-                     (off (if (prop :bold styles) (* scale 0.2) 0.0))
+               (let ((tx (if (style-property :italic styles) (* (/ (- y+ y-) base) 15.0) 0.0))
+                     (off (if (style-property :bold styles) (* scale 0.2) 0.0))
                      (color NIL)
                      (outline-color colors:black)
                      (outline 0.0))
-                 (when (and (prop :italic styles) (/= 0 (- y+ y-)))
+                 (when (and (style-property :italic styles) (/= 0 (- y+ y-)))
                    (let ((skew (* (/ (- y y-) (- y+ y-)) tx)))
                      ;; KLUDGE: Dunno if the base shift of base/16 is good?
                      (incf x- (- (/ base 16) skew))
                      (incf x+ (- (/ base 16) skew))))
-                 (let ((prop (prop :color styles)))
+                 (let ((prop (style-property :color styles)))
                    (when prop
                      (setf color (first prop))))
-                 (let ((prop (prop :rainbow styles)))
+                 (let ((prop (style-property :rainbow styles)))
                    (when prop
                      (setf color (colored:convert (colored:hsv (* 10 c) 1 1) 'colored:rgb))))
-                 (let ((prop (prop :outline styles)))
+                 (let ((prop (style-property :outline styles)))
                    (when prop
                      (setf outline (float (first prop) 0f0))
                      (when (second prop)
                        (setf outline-color (second prop)))))
                  ;; This can't work because the offsets we get are absolute and we don't know the cursor pos.
                  #++
-                 (let ((prop (first (prop :size styles))))
+                 (let ((prop (first (style-property :size styles))))
                    (when prop
                      (setf x+ (* x+ prop))
                      (setf x- (* x- prop))
@@ -430,37 +434,33 @@
     (when markup
       (incf clock dt)
       (setf (clock text) (mod clock 36.0))
-      (flet ((prop (prop style)
-               (loop for thing in style
-                     do (when (eq prop (car thing))
-                          (return (rest thing))))))
-        (macrolet ((fill-glyph (&body body)
-                     `(loop for j from 0 below 6
-                            do ,@(loop for (i val) on body by #'cddr
-                                       collect `(setf (aref data (+ ,i (* 15 (+ j (* 6 i))))) ,val)))))
-          (loop with i = 0
-                for c from 0 below (length string)
-                do (when (<= (or (caar markup) (length data)) c)
-                     (setf style (pop markup)))
-                   (when (prop :rainbow (rest style))
-                     (let ((color (colored:convert (colored:hsv (mod (+ (* 10 c) (* 200 clock)) 360.0) 1 1) 'colored:rgb)))
-                       (fill-glyph 4 (colored:r color)
-                                   5 (colored:g color)
-                                   6 (colored:b color)
-                                   7 1.0)))
-                   (when (prop :wave (rest style))
-                     (let* ((s (scale text))
-                            (off (* s 10 (sin (+ (* 0.5 c) (* 10 clock))))))
-                       (fill-glyph 9 off)))
-                   (when (prop :shake (rest style))
-                     (let* ((s (* 0.02 (scale text)))
-                            (time (mod (floor (* clock 50)) 1000))
-                            (xoff (* s (logand #xFF (sxhash (+ (* 97 c) time)))))
-                            (yoff (* s (logand #xFF (sxhash (+ (* 11 c) time))))))
-                       (fill-glyph 8 xoff
-                                   9 yoff)))
-                   (unless (find (char string c) '(#\Linefeed))
-                     (incf i))))))))
+      (macrolet ((fill-glyph (&body body)
+                   `(loop for j from 0 below 6
+                          do ,@(loop for (i val) on body by #'cddr
+                                     collect `(setf (aref data (+ ,i (* 15 (+ j (* 6 i))))) ,val)))))
+        (loop with i = 0
+              for c from 0 below (length string)
+              do (when (<= (or (caar markup) (length data)) c)
+                   (setf style (pop markup)))
+                 (when (style-property :rainbow (rest style))
+                   (let ((color (colored:convert (colored:hsv (mod (+ (* 10 c) (* 200 clock)) 360.0) 1 1) 'colored:rgb)))
+                     (fill-glyph 4 (colored:r color)
+                                 5 (colored:g color)
+                                 6 (colored:b color)
+                                 7 1.0)))
+                 (when (style-property :wave (rest style))
+                   (let* ((s (scale text))
+                          (off (* s 10 (sin (+ (* 0.5 c) (* 10 clock))))))
+                     (fill-glyph 9 off)))
+                 (when (style-property :shake (rest style))
+                   (let* ((s (* 0.02 (scale text)))
+                          (time (mod (floor (* clock 50)) 1000))
+                          (xoff (* s (logand #xFF (sxhash (+ (* 97 c) time)))))
+                          (yoff (* s (logand #xFF (sxhash (+ (* 11 c) time))))))
+                     (fill-glyph 8 xoff
+                                 9 yoff)))
+                 (unless (find (char string c) '(#\Linefeed))
+                   (incf i)))))))
 
 (defmethod scale ((text text))
   (/ (alloy:to-px (simple:size text)) (3b-bmfont:base (data (simple:font text)))))
