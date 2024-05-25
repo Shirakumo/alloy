@@ -392,11 +392,11 @@
    (x element-info) (y element-info) (w element-info) (h element-info)))
 
 (defun update-grid (cells element-infos layout)
-  ;; Update the two-dimensional array CELLS so that the grid covers both, the
-  ;; grid spanned by ROW-SIZES and COLS-SIZES as well the occupied cells
-  ;; according to ELEMENT-INFOS. If the latter implicit grid is larger than the
-  ;; former implicit grit, extend COL-SIZES and/or ROW-SIZES to that larger size
-  ;; (if allowed).
+  ;; Update the two-dimensional array CELLS so that the index space of the grid
+  ;; covers both, the grid spanned by ROW-SIZES and COLS-SIZES as well the
+  ;; occupied cells according to ELEMENT-INFOS. If the latter implicit grid is
+  ;; larger than the former implicit grit, extend COL-SIZES and/or ROW-SIZES to
+  ;; that larger size (if allowed).
   ;;
   ;; Origin is at cell index (0, 0) even if all elements use higher indices.
   (let* ((growth-policy (growth-policy layout))
