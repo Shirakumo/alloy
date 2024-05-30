@@ -418,7 +418,7 @@
    (dimensions :initform (alloy:px-extent 0 0 0 0) :accessor dimensions)
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
-   (markup :initform () :accessor markup)
+   (cached-markup :initform () :accessor markup)
    (clock :initform 0f0 :accessor clock)))
 
 (defmethod org.shirakumo.alloy.animation:update :after ((text text) dt)
