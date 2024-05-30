@@ -2,6 +2,7 @@
 
 (defvar *shaders-directory*
   #.(merge-pathnames "shaders/" (or *compile-file-pathname* *load-pathname*)))
+(defvar *shader-source-cache* (make-hash-table :test 'equal))
 (defvar *clip-depth* 0)
 (defvar *clip-region*)
 
@@ -34,19 +35,31 @@
     (values (+ o1x (* d1x u))
             (+ o1y (* d1y u)))))
 
+(defun shader-source-from-file (name)
+  (alexandria:read-file-into-string (make-pathname :name (string-downcase name) :type "glsl" :defaults *shaders-directory*)))
+
+(defun cache-shader-source-files ()
+  (dolist (file (directory (make-pathname :name :wild :type "glsl" :defaults *shaders-directory*)))
+    (setf (gethash (string-downcase (pathname-name file)) *shader-source-cache*)
+          (alexandria:read-file-into-string file))))
+
+(defun shader-source-from-cache (name)
+  (or (gethash (string-downcase name) *shader-source-cache*)
+      (error "No shader named ~s" name)))
+
+(defun shader-source (name)
+  (shader-source-from-file name))
+
 (defun make-shader-from-file (renderer name &key force)
   (when (or force (null (resource name renderer NIL)))
-    (let* ((file (make-pathname :name (string-downcase name) :type "glsl" :defaults *shaders-directory*))
-           (contents (alexandria:read-file-into-string file))
+    (let* ((contents (shader-source name))
            (vert-start (search "//VERT" contents))
            (frag-start (search "//FRAG" contents))
            (vert (subseq contents vert-start (if (< vert-start frag-start) frag-start (length contents))))
            (frag (subseq contents frag-start (if (< frag-start vert-start) vert-start (length contents)))))
       (gl-extension-case
         (:GL-KHR-BLEND-EQUATION-ADVANCED
-         (setf frag (concatenate 'string (alexandria:read-file-into-string (make-pathname :name "blend-equation" :type "glsl" :defaults *shaders-directory*))
-                                 (string #\Linefeed)
-                                 frag))))
+         (setf frag (concatenate 'string (shader-source "blend-equation") (string #\Linefeed) frag))))
       (setf (resource name renderer) (make-shader renderer :vertex-shader vert :fragment-shader frag)))))
 
 (defun make-line-array (points width cap-style join-style &key closed)
