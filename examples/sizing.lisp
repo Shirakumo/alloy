@@ -16,13 +16,21 @@
                                        'alloy:label :wrap t :focus-parent focus))
          ;; Four margins for the selected component.
          (margin-l 0)
-         (select-margin-l (alloy:represent margin-l 'alloy:ranged-wheel :range '(0 . 100) :focus-parent focus))
+         (select-margin-l (alloy:represent margin-l 'alloy:ranged-wheel :range '(0 . 100)
+                                                                        :placeholder "margin left"
+                                                                        :focus-parent focus))
          (margin-u 0)
-         (select-margin-u (alloy:represent margin-u 'alloy:ranged-wheel :range '(0 . 100) :focus-parent focus))
+         (select-margin-u (alloy:represent margin-u 'alloy:ranged-wheel :range '(0 . 100)
+                                                                        :placeholder "margin top"
+                                                                        :focus-parent focus))
          (margin-r 0)
-         (select-margin-r (alloy:represent margin-r 'alloy:ranged-wheel :range '(0 . 100) :focus-parent focus))
+         (select-margin-r (alloy:represent margin-r 'alloy:ranged-wheel :range '(0 . 100)
+                                                                        :placeholder "margin right"
+                                                                        :focus-parent focus))
          (margin-b 0)
-         (select-margin-b (alloy:represent margin-b 'alloy:ranged-wheel :range '(0 . 100) :focus-parent focus))
+         (select-margin-b (alloy:represent margin-b 'alloy:ranged-wheel :range '(0 . 100)
+                                                                        :placeholder "margin bottom"
+                                                                        :focus-parent focus))
          ;; Horizontal and vertical alignment for the selected component.
          (h-align :middle)
          (select-h-align (alloy:represent h-align 'alloy:combo-set
@@ -37,7 +45,9 @@
                                              :value-set '(NIL :italic :bold :strike :underline :fixed)
                                              :focus-parent focus))
          (text-size 16)
-         (select-text-size (alloy:represent text-size 'alloy:ranged-wheel :range '(1 . 60) :focus-parent focus))
+         (select-text-size (alloy:represent text-size 'alloy:ranged-wheel :range '(1 . 60)
+                                                                          :placeholder "font size"
+                                                                          :focus-parent focus))
          ;; Components whose style can be changed.
          (vertical (make-instance 'org.shirakumo.alloy:vertical-linear-layout))
          (button-v1 (alloy:represent "ButtonV1" 'alloy:button :focus-parent focus))
