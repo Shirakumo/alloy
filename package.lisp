@@ -12,8 +12,7 @@
    #:tooltip
    #:component-class-for-object
    #:represent-with
-   #:represent
-   #:ideal-size)
+   #:represent)
   ;; conditions.lisp
   (:export
    #:alloy-condition
@@ -343,13 +342,20 @@
    #:set-layout-tree
    #:notice-size
    #:suggest-size
-   #:preferred-size
+   #:sizing-strategy
+   #:compute-ideal-size
    #:ensure-visible
    #:bounds
    #:resize
    #:refit
    #:location
    #:global-location
+   #:sizing-strategy
+   #:fixed-size
+   #:dont-care
+   #:at-least
+   #:minimum-size
+   #:fit-to-content
    #:layout-element
    #:layout-parent
    #:layout

@@ -2,20 +2,12 @@
 
 (defclass component (observable layout-element focus-element renderable)
   ((data :initarg :data :initform (arg! :data) :accessor data)
-   (ideal-size :initarg :ideal-size :initform NIL :accessor ideal-size)
    (tooltip :initarg :tooltip :initform NIL :accessor tooltip)
    (%tooltip :initform NIL :accessor %tooltip)))
 
 (defmethod print-object ((element component) stream)
   (print-unreadable-object (element stream :type T :identity T)
     (format stream "~a ~a" (bounds element) (focus element))))
-
-(defmethod suggest-size ((size size) (component component))
-  (or (preferred-size component)
-      size))
-
-(defmethod preferred-size ((component component))
-  (ideal-size component))
 
 (defmethod handle ((event pointer-down) (component component))
   (unless (and (slot-boundp component 'focus-parent)

@@ -4,7 +4,9 @@
 (defgeneric layout-parent (layout-element))
 (defgeneric notice-size (changed parent))
 (defgeneric suggest-size (size layout-element))
-(defgeneric preferred-size (layout-element))
+(defgeneric sizing-strategy (layout-element))
+(defgeneric (setf sizing-strategy) (new-strategy layout-element))
+(defgeneric compute-ideal-size (layout-element sizing-strategy size))
 (defgeneric ensure-visible (element parent))
 (defgeneric bounds (layout-element))
 (defgeneric (setf bounds) (extent layout-element))
@@ -15,10 +17,65 @@
 (defgeneric global-location (layout-element))
 (defgeneric (setf global-location) (extent layout-element))
 
+;;; Sizing strategies
+
+;;; Subclasses indicate strategies for computing the size of a given layout
+;;; element (for example, for the presentations-based renderer, the size maybe
+;;; be derived from a single or multiple shapes). Specific strategies should be
+;;; defined in the module of the respective renderer and installed via
+;;; (setf (sizing-strategy layout-element) strategy) when the renderer
+;;; "realizes" the component.
+(defclass sizing-strategy () ())
+
+;;; Returns a user-supplied fixed sized, ignoring the sized suggested by the
+;;; layout parent.
+(defclass fixed-size (sizing-strategy)
+  ((fixed-size :initform (arg! :fixed-size) :initarg :fixed-size :reader fixed-size)))
+
+(defmethod compute-ideal-size ((layout-element T) (sizing-strategy fixed-size) (size size))
+  (fixed-size sizing-strategy))
+
+;;; Just accept and use the size suggested by the parent element.
+(defclass dont-care (sizing-strategy) ())
+
+(defmethod compute-ideal-size ((layout-element T) (sizing-strategy dont-care) (size size))
+  size)
+
+;;; Since the strategy has no state, there is no need for more than instance.
+(defvar *dont-care* (make-instance 'dont-care))
+
+;;; If the size suggested by the layout parent is smaller than a user-supplied
+;;; minimum, enlarge the suggested size to the minimum size. The supplied
+;;; minimum can be either a SIZE or a SIZING-STRATEGY.
+(defclass at-least (sizing-strategy)
+  ((minimum-size :initform (arg! :minimum-size) :initarg :minimum-size :reader minimum-size)))
+
+(defmethod compute-ideal-size ((layout-element T) (sizing-strategy at-least) (size size))
+  (let* ((minimum-size (minimum-size sizing-strategy))
+         (minimum (etypecase minimum-size
+                    (size minimum-size)
+                    (sizing-strategy (compute-ideal-size layout-element minimum-size size)))))
+    (px-size (max (pxw minimum) (pxw size)) (max (pxh minimum) (pxh size)))))
+
+;;; This is a superclass for strategies that compute the size of the layout
+;;; element based on the displayed content that the renderer uses to realize the
+;;; component.
+(defclass fit-to-content (sizing-strategy) ())
+
+(defmethod compute-ideal-size ((layout-element T) (sizing-strategy fit-to-content) (size size))
+  (error "Renderer must implement this"))
+
+;;; Layout element
+
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree :writer set-layout-tree)
    (layout-parent :reader layout-parent)
-   (bounds :initform (%extent (px 0) (px 0) (px 0) (px 0)) :reader bounds)))
+   (bounds :initform (%extent (px 0) (px 0) (px 0) (px 0)) :reader bounds)
+   ;; An instance of (a subclass) of SIZING-STRATEGY that gets passed to
+   ;; COMPUTE-IDEAL-SIZE along with the layout element. The idea is that a
+   ;; renderer can put a specialized sizing strategy object that considers the
+   ;; presentation and look and feel used by that renderer into this slot.
+   (sizing-strategy :initform *dont-care* :accessor sizing-strategy)))
 
 (defmethod initialize-instance :after ((element layout-element) &key layout-parent)
   (when layout-parent
@@ -102,6 +159,16 @@
            (u= (size-h size) (extent-h (bounds element))))
       size
       (call-next-method)))
+
+;; KLUDGE: The specializer for the SIZE parameter used to be SIZE. We changed it
+;;         to T so that this method does not take precedence over
+;;         element-specific methods (that is more specialized in the ELEMENT
+;;         parameter) which use (size T) for the first parameter.
+(defmethod suggest-size ((size T) (element layout-element))
+  (compute-ideal-size element (sizing-strategy element) size))
+
+(defmethod (setf sizing-strategy) :after ((new-strategy T) (element layout-element))
+  (notice-size element T))
 
 (defmethod (setf bounds) :around ((extent extent) (element layout-element))
   ;; No need to actually pass through if we're re-using the current size,

@@ -13,7 +13,7 @@
 ;;;         we'd instead create subclasses of all shapes with our extra stuff as a mixin.
 ;;;         However, that's a bit troublesome with user-extensions, as those would not
 ;;;         automatically be presentations-ready.
-;;;         
+;;;
 ;;;         The same problem exists for renderables, though there it is arguably worse,
 ;;;         as then the user would always have to use the extra subclasses from presentations
 ;;;         to construct all their UI, rather than the standard ones from core.
@@ -34,6 +34,7 @@
    (update-overrides :initform () :accessor update-overrides)))
 
 (defgeneric realize-renderable (renderer renderable))
+(defgeneric compute-sizing-strategy (renderer renderable))
 (defgeneric update-shape (renderer renderable name argtable)
   (:method-combination progn :most-specific-last))
 (defgeneric clear-shapes (renderable))
@@ -120,11 +121,10 @@
   ;; Need to update shape immediately, as update methods may change shape sizing and
   ;; other things, that would otherwise be deferred.
   (update-shape renderer renderable T NIL)
-  ;; The renderable's preferred size may depend on the shapes, such as text, so we should
-  ;; notify the layout mechanism that we need to update, now that the shapes are there.
-  (when (loop for (id . shape) across (shapes renderable)
-              thereis (typep shape 'simple:text))
-    (alloy:notice-size renderable T)))
+  ;; Replace the fallback sizing strategy that is currently installed in
+  ;; RENDERABLE with one that takes into visual representation produced by
+  ;; RENDERER.
+  (setf (alloy:sizing-strategy renderable) (compute-sizing-strategy renderer renderable)))
 
 (defmethod alloy:refresh :after ((renderable renderable))
   (setf (realized-p renderable) NIL))

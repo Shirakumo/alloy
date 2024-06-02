@@ -164,9 +164,6 @@
         (list (loop for item in items do (add item)))
         (vector (loop for item across items do (add item)))))))
 
-(defmethod suggest-size (size (combo combo))
-  (suggest-size size (combo-list combo)))
-
 (defmethod register :after ((combo combo) (renderer renderer))
   (register (combo-list combo) renderer))
 

@@ -437,7 +437,7 @@
 (defclass text (simple:text)
   ((vertex-data :accessor vertex-data)
    (font-sequence :initform (make-array 1) :accessor font-sequence)
-   (ideal-size :reader alloy:ideal-size :writer (setf size))
+   (size :reader size :writer (setf size))
    (location :accessor location)
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
@@ -551,7 +551,7 @@
 
 (defun estimate-cursor-pos (text point offset)
   (let* ((location (location text))
-         (size (alloy:ideal-size text))
+         (size (size text))
          (font (data (simple:font text)))
          (line-height (3b-bmfont:line-height font))
          (breaks (line-breaks text))

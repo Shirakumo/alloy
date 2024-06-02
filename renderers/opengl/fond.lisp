@@ -122,9 +122,6 @@ void main(){
 (defmethod simple:request-font ((renderer renderer) (default (eql :default)) &key)
   (simple:request-font renderer "Arial"))
 
-(defmethod alloy:suggest-size (size (text simple:text))
-  (alloy:ideal-size text))
-
 (defun text-point (text scale)
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
     (declare (ignore gap))
@@ -153,15 +150,12 @@ void main(){
       (opengl:draw-vertex-array (opengl:resource 'text-vao renderer) :triangles 0 count))))
 
 ;; FIXME: bad
-(defmethod alloy:ideal-size ((text simple:text))
+(defmethod alloy:suggest-size (size (text simple:text))
   (alloy:allocate (simple:font text))
   (destructuring-bind (&key l r ((:t u)) b gap) (cl-fond:compute-extent (atlas (simple:font text)) (alloy:text text))
     (declare (ignore gap))
     (let ((s (* (/ (alloy:to-px (simple:size text)) (cl-fond:size (atlas (simple:font text)))))))
       (alloy:px-extent (* s (+ l r)) (* s (+ u b))))))
-
-(defmethod alloy:suggest-size (size (text simple:text))
-  (alloy:ideal-size text))
 
 (defclass cursor (simple:filled-rectangle)
   ((text :initarg :text :accessor text)
