@@ -57,13 +57,21 @@
          (horizontal (make-instance 'org.shirakumo.alloy:horizontal-linear-layout))
          (button-h1 (alloy:represent "ButtonH1" 'alloy:button :focus-parent focus))
          (button-h2 (alloy:represent "ButtonH2" 'alloy:button :focus-parent focus))
-         (button-h3 (alloy:represent #.(format NIL "Button~%H3") 'alloy:button :focus-parent focus)))
+         (button-h3 (alloy:represent #.(format NIL "Button~%H3") 'alloy:button :focus-parent focus))
+         (value1 NIL)
+         (switch1 (alloy:represent value1 'alloy:switch :focus-parent focus))
+         (value2 NIL)
+         (switch2 (alloy:represent value2 'alloy:checkbox :focus-parent focus))
+         (value3 NIL)
+         (switch3 (alloy:represent value3 'alloy:labelled-switch :focus-parent focus
+                                                                 :text "This is a long label tbh")))
+    ;; Overall layout hierarchy
     (alloy:enter layout window)
     (alloy:enter explanation layout)
     (alloy:enter style layout)
     (alloy:enter vertical layout)
     (alloy:enter horizontal layout)
-
+    ;; Style logic and changing components
     (labels ((set-style ()
                (when selected
                  (let ((text (alloy:value selected)))
@@ -90,7 +98,7 @@
       (add-style-aspect select-margin-b 1 2 :w 2)
       (add-style-aspect select-h-align 0 2)
       (add-style-aspect select-v-align 3 2))
-
+    ;; Components which can be selected and for which the style can be changed.
     (labels ((make-selectable (component)
                (alloy:on alloy:activate (component)
                  (setf selected component)))
@@ -100,5 +108,6 @@
       (make-selectable explanation)
       (loop for button in (list button-v1 button-v2 button-v3)
             do (add-button button vertical))
-      (loop for button in (list button-h1 button-h2 button-h3)
+      (loop for button in (list button-h1 button-h2 button-h3
+                                switch1 switch2 switch3)
             do (add-button button horizontal)))))
