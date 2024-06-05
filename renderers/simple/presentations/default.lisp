@@ -46,7 +46,8 @@
 
 (define-update (default-look-and-feel alloy:label)
   (:label
-   :text alloy:text))
+   :text alloy:text
+   :pattern colors:white)) ; overwrite inherited behavior
 
 (define-realization (default-look-and-feel alloy::list-label)
   ((:background simple:rectangle)
