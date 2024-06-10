@@ -87,7 +87,7 @@
                                         (ecase (align layout)
                                           (:start y)
                                           (:end (- y (+ eh u b))))
-                                        (max mw (if (stretch layout) (- w l r) (min (- w l r) ew)))
+                                        (min (- w l r) ew)
                                         eh))
                        (setf eh (+ u b (pxh (bounds element)))))
                       (T
@@ -142,7 +142,7 @@
                                         (:end (- x (+ ew l r))))
                                       y
                                       ew
-                                      (max mh (if (stretch layout) (- h u b) (min (- h u b) eh)))))
+                                      (min (- h u b) eh)))
                      (setf ew (+ l r (pxw (bounds element)))))
                     (T
                      (setf (bounds element) (px-extent 0 0 0 0))))
