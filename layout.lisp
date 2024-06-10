@@ -35,6 +35,13 @@
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy fixed-size) (size size))
   (fixed-size sizing-strategy))
 
+;;; Calls a user-supplied function to perform the size computation.
+(defclass dynamic-size (sizing-strategy)
+  ((size-function :initform (arg! :size-function) :initarg :size-function :reader size-function)))
+
+(defmethod compute-ideal-size ((layout-element T) (sizing-strategy dynamic-size) (size size))
+  (funcall (size-function sizing-strategy) layout-element size))
+
 ;;; Just accept and use the size suggested by the parent element.
 (defclass dont-care (sizing-strategy) ())
 
@@ -80,12 +87,19 @@
    ;; renderer can put a specialized sizing strategy object that considers the
    ;; presentation and look and feel used by that renderer into this slot.
    (sizing-strategy :initform *fallback-sizing-strategy*
-                    :initarg :sizing-strategy
                     :accessor sizing-strategy)))
 
 (defmethod initialize-instance :after ((element layout-element) &key layout-parent)
   (when layout-parent
     (enter element layout-parent)))
+
+(defmethod shared-initialize :after ((element layout-element) (slot-names T)
+                                     &key sizing-strategy)
+  (when sizing-strategy
+    (setf (sizing-strategy element)
+          (typecase sizing-strategy
+            (function (make-instance 'dynamic-size :size-function sizing-strategy))
+            (T sizing-strategy)))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
