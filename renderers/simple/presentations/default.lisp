@@ -114,14 +114,15 @@
 
 (define-realization (default-look-and-feel alloy:labelled-switch T)
   ((:label simple:text)
-   (alloy:margins)
+   (alloy:margins 1)
    alloy:text
    :halign :middle
    :valign :middle))
 
 (define-update (default-look-and-feel alloy:labelled-switch)
   (:label
-   :text alloy:text))
+   :text alloy:text
+   :pattern colors:white)) ; override inherited behavior
 
 (define-realization (default-look-and-feel alloy:checkbox)
   ((:background simple:rectangle)
