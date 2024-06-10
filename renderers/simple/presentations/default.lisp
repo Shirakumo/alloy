@@ -108,8 +108,9 @@
                             (alloy:pw 0.7)
                             0))
    :pattern (case alloy:focus
-                 (:strong colors:white)
-                 (T (colored:color 0.25 0.2 0.8)))))
+              (:strong (colored:color 0.9 0.9 0.9))
+              (:weak (colored:color 0.7 0.7 0.7))
+              (T (colored:color 0.25 0.2 0.8)))))
 
 (define-realization (default-look-and-feel alloy:labelled-switch T)
   ((:label simple:text)
