@@ -73,7 +73,9 @@
 ;;; single instance can be shared by all users.
 (defvar *fit-to-all-shapes* (make-instance 'fit-to-shapes))
 
-(defvar *fit-to-label* (make-instance 'fit-to-shapes :shapes :label))
+(defvar *fit-to-label* (make-instance 'alloy:at-least
+                                      :minimum-size (make-instance 'fit-to-shapes
+                                                                   :shapes :label)))
 
 ;;; Defaults
 
