@@ -67,6 +67,10 @@
 
 ;;; Layout element
 
+;;; Renderers can recognize this specific object as indicating the absence of a
+;;; user-supplied sizing strategy.
+(defvar *fallback-sizing-strategy* (make-instance 'dont-care))
+
 (defclass layout-element (element)
   ((layout-tree :initform NIL :reader layout-tree :writer set-layout-tree)
    (layout-parent :reader layout-parent)
@@ -75,7 +79,9 @@
    ;; COMPUTE-IDEAL-SIZE along with the layout element. The idea is that a
    ;; renderer can put a specialized sizing strategy object that considers the
    ;; presentation and look and feel used by that renderer into this slot.
-   (sizing-strategy :initform *dont-care* :accessor sizing-strategy)))
+   (sizing-strategy :initform *fallback-sizing-strategy*
+                    :initarg :sizing-strategy
+                    :accessor sizing-strategy)))
 
 (defmethod initialize-instance :after ((element layout-element) &key layout-parent)
   (when layout-parent

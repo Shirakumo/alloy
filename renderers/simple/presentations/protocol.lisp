@@ -121,10 +121,12 @@
   ;; Need to update shape immediately, as update methods may change shape sizing and
   ;; other things, that would otherwise be deferred.
   (update-shape renderer renderable T NIL)
-  ;; Replace the fallback sizing strategy that is currently installed in
-  ;; RENDERABLE with one that takes into visual representation produced by
-  ;; RENDERER.
-  (setf (alloy:sizing-strategy renderable) (compute-sizing-strategy renderer renderable)))
+  ;; If RENDERABLE uses the fallback sizing strategy, replace that strategy with
+  ;; one that takes into visual representation produced by RENDERER. Otherwise
+  ;; the sizing strategy in RENDERABLE must a user-supplied one, so leave it
+  ;; alone in that case.
+  (when (eq (alloy:sizing-strategy renderable) alloy::*fallback-sizing-strategy*)
+    (setf (alloy:sizing-strategy renderable) (compute-sizing-strategy renderer renderable))))
 
 (defmethod alloy:refresh :after ((renderable renderable))
   (setf (realized-p renderable) NIL))
