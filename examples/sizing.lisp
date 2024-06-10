@@ -10,7 +10,7 @@
          (style (make-instance 'org.shirakumo.alloy:grid-bag-layout :row-sizes #(30 30 30)
                                                                     :col-sizes #(T T T T)))
          ;; Explanatory label.
-         (explanation (alloy:represent #.(format NIL "Click a button (or this label), ~
+         (explanation (alloy:represent #.(format NIL "Click a blue button or switch (or this label), ~
                                                       then use the widgets to change ~
                                                       its properties.")
                                        'alloy:label :wrap t :focus-parent focus))
@@ -64,13 +64,38 @@
          (switch2 (alloy:represent value2 'alloy:checkbox :focus-parent focus))
          (value3 NIL)
          (switch3 (alloy:represent value3 'alloy:labelled-switch :focus-parent focus
-                                                                 :text "This is a long label tbh")))
+                                                                 :text "This is a long label tbh"))
+         ;; User-supplied sizing strategies
+         (horizontal2 (make-instance 'org.shirakumo.alloy:horizontal-linear-layout))
+         (fixed (alloy:represent "fixed" 'alloy:button :style `((:background . (:pattern ,colors:deep-pink)))
+                                                       :sizing-strategy (make-instance 'alloy:fixed-size
+                                                                                       :fixed-size (alloy:px-size 80 80))
+                                                       :focus-parent focus))
+         (height 200)
+         (custom-height (alloy:represent height 'alloy:ranged-wheel
+                                         :range '(1 . 300)
+                                         :placeholder "height"
+                                         :style `((:background . (:pattern ,colors:deep-pink)))
+                                         :sizing-strategy (lambda (component suggested-size)
+                                                            (declare (ignore component suggested-size))
+                                                            (alloy:px-size 80 height))
+                                         :focus-parent focus))
+         (square (alloy:represent "square" 'alloy:button
+                                  :style `((:background . (:pattern ,colors:deep-pink)))
+                                  :sizing-strategy (lambda (component suggested-size)
+                                                     (declare (ignore component))
+                                                     (let ((max (max (alloy:pxw suggested-size)
+                                                                     (alloy:pxh suggested-size))))
+                                                       (alloy:px-size max max)))
+                                  :focus-parent focus)))
+    (:inspect window)
     ;; Overall layout hierarchy
     (alloy:enter layout window)
     (alloy:enter explanation layout)
     (alloy:enter style layout)
     (alloy:enter vertical layout)
     (alloy:enter horizontal layout)
+    (alloy:enter horizontal2 layout)
     ;; Style logic and changing components
     (labels ((set-style ()
                (when selected
@@ -110,4 +135,11 @@
             do (add-button button vertical))
       (loop for button in (list button-h1 button-h2 button-h3
                                 switch1 switch2 switch3)
-            do (add-button button horizontal)))))
+            do (add-button button horizontal)))
+    ;;
+    (alloy:enter fixed horizontal2)
+    (alloy:enter custom-height horizontal2)
+    (alloy:on alloy:value (new-value custom-height)
+      (declare (ignore new-value))
+      (alloy:notice-size custom-height T))
+    (alloy:enter square horizontal2)))
