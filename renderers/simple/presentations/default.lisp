@@ -143,9 +143,6 @@
   ((:border simple:rectangle)
    (alloy:margins -3)
    :line-width (alloy:un 1))
-  ((:placeholder simple:text)
-   (alloy:margins 1)
-   (alloy:placeholder alloy:renderable))
   ((:label simple:text)
    (alloy:margins 1)
    alloy:text)
@@ -156,7 +153,10 @@
    :pattern colors:black)
   ((:selection simple:selection)
    (find-shape :label alloy:renderable)
-   0 0))
+   0 0)
+  ((:placeholder simple:text)
+   (alloy:margins 1)
+   (alloy:placeholder alloy:renderable)))
 
 (define-update (default-look-and-feel alloy:text-input-component)
   (:background
@@ -164,6 +164,8 @@
               (:strong (colored:color 0.9 0.9 0.9))
               (:weak (colored:color 0.7 0.7 0.7))
               (T (colored:color 0.2 0.2 0.2))))
+  (:label
+   :text alloy:text)
   (:cursor
    :hidden-p (null alloy:focus)
    :start (alloy:pos (alloy:cursor alloy:renderable)))
@@ -176,9 +178,7 @@
   (:placeholder
    :text (alloy:placeholder alloy:renderable)
    :hidden-p (/= 0 (length alloy:text))
-   :pattern (colored:color 1 1 1 0.5))
-  (:label
-   :text alloy:text))
+   :pattern (colored:color 1 1 1 0.5)))
 
 (define-update (default-look-and-feel alloy:input-box)
   (:label
