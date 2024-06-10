@@ -5,7 +5,47 @@
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (layout (make-instance 'org.shirakumo.alloy.layouts.constraint:layout :layout-parent window))
          (button (alloy:represent "Greet" 'alloy:button))
-         (button2 (alloy:represent "Hi" 'alloy:button)))
+         (button2 (alloy:represent "Hi" 'alloy:button))
+         ;;
+         (fixed (alloy:represent "fixed" 'alloy:button :style `((:background . (:pattern ,colors:deep-pink)))
+                                                       :sizing-strategy (make-instance 'alloy:fixed-size
+                                                                                       :fixed-size (alloy:px-size 80 80))
+                                                       :focus-parent focus))
+         (height 200)
+         (custom-height (alloy:represent height 'alloy:ranged-wheel
+                                         :range '(1 . 300)
+                                         :placeholder "height"
+                                         :style `((:background . (:pattern ,colors:deep-pink)))
+                                         :sizing-strategy (lambda (component suggested-size)
+                                                            (declare (ignore component suggested-size))
+                                                            (alloy:px-size 80 height))
+                                         :focus-parent focus))
+         (square (alloy:represent "square" 'alloy:button
+                                  :style `((:background . (:pattern ,colors:deep-pink)))
+                                  :sizing-strategy (lambda (component suggested-size)
+                                                     (declare (ignore component))
+                                                     (let ((min (/ (+ (alloy:pxw suggested-size)
+                                                                      (alloy:pxh suggested-size))
+                                                                   2)))
+                                                       (alloy:px-size min min)))
+                                  :focus-parent focus))
+
+         (center (alloy:represent "center" 'alloy:button :focus-parent focus)))
+    ;; one case you might want to add is a centered element that has a maximum size
     (alloy:enter button layout :constraints '(:contained (:left 0) (:top 0) (:width 100) (:height 100)))
     (alloy:enter button2 layout :constraints `((:chain :right ,button 10) (:width 100)))
-    (alloy:enter button focus)))
+    (alloy:enter button focus)
+
+    (alloy:enter fixed layout :constraints `((= :x 0)
+                                             (= (+ :y :h) (- (:y ,button) 10))))
+    (alloy:enter custom-height layout :constraints `((= :x (+ (:x ,fixed) (:w ,fixed) 10))
+                                                     (= (+ :y :h) (+ (:y ,fixed) (:h ,fixed)))))
+    (alloy:on alloy:value (new-value custom-height)
+      (alloy:notice-size custom-height T)
+      (alloy:notice-size center T))
+    (alloy:enter square layout :constraints `((:chain :right ,custom-height 10)))
+
+    ;; centering example
+    (alloy:enter center layout :constraints `((:required (:center :w))
+                                              (:bottom 10)
+                                              (:height 50)))))
