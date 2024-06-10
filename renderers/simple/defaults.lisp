@@ -110,6 +110,16 @@
   ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
    (corner-radii :initform (make-array 4 :initial-element (alloy:px 0)) :reader corner-radii)))
 
+(defmethod alloy:suggest-size ((size T) (component rectangle))
+  (let ((bounds (bounds component)))
+    (typecase bounds
+      (alloy:size (alloy:px-size (alloy:pxw bounds) (alloy:pxh bounds)))
+      ;; Require enough space for the combined margins.
+      (alloy:margins (alloy:px-size
+                      (max (alloy:pxw size) (+ (alloy:pxl bounds) (alloy:pxr bounds)))
+                      (max (alloy:pxh size) (+ (alloy:pxu bounds) (alloy:pxb bounds)))))
+      (T size))))
+
 (defmethod shared-initialize :after ((rectangle rectangle) slots &key (corner-radii NIL corner-radii-p))
   (when corner-radii-p
     (setf (corner-radii rectangle) corner-radii)))
