@@ -212,7 +212,8 @@
 
 (defun flatten-markup (markup)
   (let ((results ())
-        (styles ()))
+        (styles ())
+        (markup (sort-markup markup)))
     ;; We do a dual-stack approach: the markup has to be sorted in sequence
     ;; without overlaps. We then scan through this sequence by iterating an
     ;; index and matching against possible starting markups (second WHEN).
