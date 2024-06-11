@@ -162,26 +162,33 @@ Descriptive events allow you to write the user interface interaction in a more a
 ## Layout
 Layouting in Alloy refers to the decisions made to determine where elements are positioned in space and how large they are. In other words, it's the mechanism to determine the ``extent`` of each element that should be rendered. Similar to focus trees, there are "layout trees" in Alloy -- hierarchies of elements that govern the layouting decisions.
 
-Every element in a layout tree has exactly one parent, with the element at the root having itself as its own parent. Every element also has a ``bounds`` that determines its axis aligned bounding box. When rendered, the visual representation of the element should not exceed this extent.
+Every element in a layout tree has exactly one parent, with the element at the root having itself as its own parent. Every element also has a ``bounds`` that determines its axis aligned bounding box. When rendered, the visual representation of the element should not exceed this extent. An element may only be contained in one layout at a time. Attempting to ``enter`` an element into multiply layouts before ``leave``ing it will signal an error.
 
-Layout decisions are primarily made by ``layout`` instances, for which Alloy specifies a protocol to communicate an agreeable layouting between elements. The actual layout decisions are left up completely to the layout implementation.
+### Layout Nodes
 
-When an element's bounds change, it must call ``notice-size`` in order to notify its parent of the updated bounds. If an element decides that it needs more space, it should call ``notice-size`` to ensure a consistent layout. Typically this will result in a standard layout update being run, same as when the layout instance itself changes bounds.
+Layout decisions are primarily made by nodes in the layout tree that are ``layout`` instances. For such objects, Alloy specifies a protocol to communicate an agreeable layouting between layouts and contained elements. While elements contained in a layout can report a preferred size, the actual layout decisions are left up completely to the respective layout implementation.
 
-When a layout's bounds change it may recompute the bounds of its direct children. It must do so in the following steps for each of its child elements:
+When a layout node has to recompute the bounds of its direct children, for example because its own bounds have changed, the following steps must be performed for each child element of the layout:
 
-1. Compute the new bounds for one element.
-2. Call ``suggest-size`` with the new bounds for the element. The element must then extend, contract, or otherwise change the suggested event and return a new extent that it finds more agreeable than the last.
-3. Adjust the layouting decisions to account for the element's preferred extent.
-4. Force the final computed extent on the element by calling ``(setf bounds)``.
+1. The layout computes a suggested new size for the element according to the bounds of the layout node and its associated layouting strategy.
+2. The layout calls ``suggest-size`` with the new size for the element. The element must then extend, contract, or otherwise change the suggested size as follows:
+   1. The element retrieves its sizing strategy object by calling ``sizing-strategy``.
+   2. The element calls ``compute-ideal-size`` with the sizing strategy object, the element and the suggested size to compute preferred or at least more agreeable size based o the suggested size.
+   3. The element returns the result of the above call as its response to the size suggestion.
+3. The layout possibly adjust the layouting decisions to account for the element's preferred size.
+4. The layout installs the final computed extent on the element by calling ``(setf bounds)``.
 
-A layout may perform steps 2 and 3 multiple times before settling on a final extent, though it must guarantee to reach step 4 eventually. ``suggest-size`` is primarily used to handle the case of nested layouts or other kinds of elements that may need to shrink or expand to fit their contents. Whether the element's preferred extent is used at all or not however is still up to the layout.
+A layout implementation may perform steps 2 and 3 multiple times before settling on a final extent, though it must guarantee to reach step 4 eventually. ``suggest-size`` is primarily used to handle the case of nested layouts or other kinds of elements that may need to shrink or expand to fit their contents. Whether the element's preferred size is used at all or not however is still up to the layout.
 
-A layout //must// deal in ``px`` units. The extent supplied to ``suggest-size`` and ``(setf bounds)`` must only contain ``px`` units. An element is however allowed to use other units for the extent returned from ``suggest-size``. However, be aware that the absolute size of units depends on the currently bound unit parent (See "Units"(link #units)). The layout //must// set this parent to itself when resolving units.
+A layout //must// deal in ``px`` units. The size supplied to ``suggest-size`` and the extent supplied to ``(setf bounds)`` must only contain ``px`` units. An element is however allowed to use other units for the size returned from ``suggest-size``. However, be aware that the absolute size of units depends on the currently bound unit parent (See "Units"(link #units)). The layout //must// set this parent to itself when resolving units.
 
 Some layouts may temporarily hide elements or regions from view. In order to force a region to be visible, the function ``ensure-visible`` can be used. This function will traverse upwards to ensure that every layout along the way makes the desired region visible as best possible.
 
-An element may only be contained in one layout at a time. Attempting to ``enter`` an element into multiply layouts before ``leave``ing it will signal an error.
+### Element Nodes
+
+When an element's space requirements change, it must call ``notice-size`` in order to notify its parent of the change. For example, if an element decides that it needs more space, it should call ``notice-size`` to ensure a consistent layout. Typically this will result in a standard layout update being run, same as when the layout instance itself changes bounds.
+
+For some elements, the preferred size depends on the visual representation of the respective element. For example, a button that is represented as a label text surrounded by a border needs a total amount of space that consists of space for the text at the configured font style and space for the border with the chosen thickness and margins. The visual representation of elements in turn depends on the selected renderer since each renderer freely chooses representations for components. Furthermore, the layout module does not (by design) know anything about renderers and visual representations. These requirements are the reason for equipping elements with a (mutable) sizing strategy slot: Typically, the renderer installs a sizing strategy that works in conjunction with the visual representation into the slot when it realizes the visual representation of a given component. This way, the renderer can supply an appropriate strategy and layouts can query elements for the preferred size without undue coupling between the two.
 
 ## UI
 Since layout trees and focus trees are disjoint, there needs to be a way to tie them together, including any other global information necessary. For this, Alloy has the ``UI`` object, the main entry point once the interface has been constructed. It has a ``layout-tree`` and ``focus-tree``, as well as provides access to the global unit scaling factors, ``dots-per-cm``, ``target-resolution``, ``resolution-scale``, and ``base-scale``.
