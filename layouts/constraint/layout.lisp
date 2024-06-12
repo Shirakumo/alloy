@@ -36,16 +36,16 @@
     (cass:suggest (element-var layout element var) (alloy:to-un size) :make-suggestable)
     (cass:update-variables (solver layout))
     (alloy:do-elements (element layout)
-      (update layout element))))
+      (install-bounds layout element))))
 
 (defun constrain (layout element var value &key (strength :required))
   (alloy:with-unit-parent layout
     (prog1 (cass:constrain-with (solver layout) `(= ,(element-var layout element var) ,(alloy:to-un value)) :strength strength)
       (cass:update-variables (solver layout))
       (alloy:do-elements (element layout)
-        (update layout element)))))
+        (install-bounds layout element)))))
 
-(defun update (layout element)
+(defun install-bounds (layout element)
   (with-vars (x y w h layout) element
     (setf (alloy:bounds element)
           (alloy:px-extent (alloy:un (cass:value x)) (alloy:un (cass:value y))
@@ -59,8 +59,29 @@
     (apply-constraints constraints element layout)
     (when (alloy:layout-tree layout)
       (alloy:with-unit-parent layout
-        (suggest-size layout layout (alloy:bounds layout))
-        (update layout element)))))
+        (with-vars (x y w h layout) element
+          (declare (ignore x y))
+          (let ((min-size (alloy:suggest-size (alloy:size) element)))
+            (cass:constrain-with (solver layout) `(>= ,w ,(alloy:to-un (alloy:w min-size))) :strength :weak)
+            (cass:constrain-with (solver layout) `(>= ,h ,(alloy:to-un (alloy:h min-size))) :strength :weak))
+          (suggest-size layout layout (alloy:bounds layout))
+
+          (let* ((preferred-size (alloy:suggest-size
+                                  (alloy:size (alloy:un (cass:value w))
+                                              (alloy:un (cass:value h)))
+                                  element))
+                 (constraint1 (cass:constrain-with
+                               (solver layout)
+                               `(= ,w ,(alloy:to-un (alloy:w preferred-size)))
+                               :strength :weak))
+                 (constraint2 (cass:constrain-with
+                               (solver layout)
+                               `(= ,h ,(alloy:to-un (alloy:h preferred-size)))
+                               :strength :weak)))
+            (suggest-size layout layout (alloy:bounds layout))
+            (install-bounds layout element)
+            (cass:remove-constraint constraint1)
+            (cass:remove-constraint constraint2)))))))
 
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
   (dolist (constraint (gethash element (constraints layout)))
@@ -73,7 +94,26 @@
       (cass:delete-constraint constraint)))
   (apply-constraints constraints element layout))
 
-(defmethod alloy:notice-size ((element alloy:layout-element) (layout layout)))
+(defmethod alloy:notice-size ((element alloy:layout-element) (layout layout))
+  (alloy:with-unit-parent layout
+    (with-vars (x y w h layout) element
+      (suggest-size layout layout (alloy:bounds layout))
+      (let* ((preferred-size (alloy:suggest-size
+                              (alloy:size (alloy:un (cass:value w))
+                                          (alloy:un (cass:value h)))
+                              element))
+             (constraint1 (cass:constrain-with
+                           (solver layout)
+                           `(= ,w ,(alloy:to-un (alloy:w preferred-size)))
+                           :strength :weak))
+             (constraint2 (cass:constrain-with
+                           (solver layout)
+                           `(= ,h ,(alloy:to-un (alloy:h preferred-size)))
+                           :strength :weak)))
+        (cass:update-variables (solver layout))
+        (install-bounds layout element)
+        (cass:remove-constraint constraint1)
+        (cass:remove-constraint constraint2)))))
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
   (alloy:refit layout))
@@ -82,7 +122,7 @@
   (alloy:with-unit-parent layout
     (suggest-size layout layout (alloy:bounds layout))
     (alloy:do-elements (element layout)
-      (update layout element))))
+      (install-bounds layout element))))
 
 (defmethod alloy:suggest-size (size (layout layout))
   (alloy:with-unit-parent layout
