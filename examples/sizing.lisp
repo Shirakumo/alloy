@@ -87,7 +87,9 @@
                                                      (let ((max (max (alloy:pxw suggested-size)
                                                                      (alloy:pxh suggested-size))))
                                                        (alloy:px-size max max)))
-                                  :focus-parent focus)))
+                                  :focus-parent focus))
+         (text #.(format nil "foo~%bar~%baz"))
+         (text-input (alloy:represent text 'alloy:input-box :focus-parent focus)))
     (:inspect window)
     ;; Overall layout hierarchy
     (alloy:enter layout window)
@@ -133,6 +135,7 @@
       (make-selectable explanation)
       (loop for button in (list button-v1 button-v2 button-v3)
             do (add-button button vertical))
+      (alloy:enter text-input vertical)
       (loop for button in (list button-h1 button-h2 button-h3
                                 switch1 switch2 switch3)
             do (add-button button horizontal)))
