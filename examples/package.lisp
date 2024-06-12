@@ -13,6 +13,7 @@
   (:export
    #:simple-window
    #:fonts
+   #:constraint-layout
    #:grid-bag-layout
    #:sizing))
 
