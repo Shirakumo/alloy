@@ -529,7 +529,13 @@
 
 (defmethod alloy:suggest-size (size (text text))
   (let* ((margins (simple:bounds text))
-         (free-size (alloy:px-extent 0 0 (alloy:pxw size) (alloy:pxh size)))
+         (suggested-width (alloy:pxw size))
+         ;; If SIZE suggests a particular non-zero width, we try to insert
+         ;; linebreaks into our text as necessary to achieve that width. If
+         ;; however SIZE suggests a width of zero, we just compute the minimal
+         ;; required width for our text without added linebreaks.
+         (free-width (if (zerop suggested-width) most-positive-fixnum suggested-width))
+         (free-size (alloy:px-extent 0 0 free-width (alloy:pxh size)))
          (scale (alloy:to-px (simple:size text)))
          (markup (simple::flatten-markup (simple:markup text))))
     (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) free-size scale (simple:wrap text) markup (simple:halign text))
