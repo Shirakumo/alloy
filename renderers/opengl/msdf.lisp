@@ -550,24 +550,30 @@
   (apply #'make-instance 'cursor :text text :start start initargs))
 
 (defun estimate-cursor-pos (text point offset)
+  ;; FIXME: this does not consider the font fallback sequence.
   (let* ((location (location text))
          (size (size text))
          (font (data (simple:font text)))
          (line-height (3b-bmfont:line-height font))
          (breaks (line-breaks text))
          (scale (alloy:to-px (simple:size text)))
+         ;; FIXME: the scalar factor magic constant obviously sucks here. Idk what's going on with that.
          (x (* (- (alloy:pxx point) (+ (alloy:pxx location) (alloy:pxx offset)))
                (/ 32.0 35.0)))
-         (line (min (length breaks) (max 0 (floor (- (+ (alloy:pxy offset) (alloy:pxy location)) (alloy:pxy point)) line-height)))))
+         ;; FIXME: this does not compute the proper line. It seems offset by some scaling factor.
+         (line (1+ (floor (- (+ (alloy:pxy offset) (alloy:pxy location)) (alloy:pxy point)) line-height)))
+         (line (min (length breaks) (max 0 line))))
     (multiple-value-bind (start end)
         (loop for line-start = 0 then line-end
               for line-end across breaks
-              do (when (<= line-start line line-end) (return (values line-start line-end)))
+              for i from 0
+              do (when (= i line) (return (values line-start line-end)))
               finally (return (values line-start line-end)))
       (block NIL
         (flet ((thunk (i _x _y x- y- x+ y+ u- v- u+ v+)
                  (declare (ignore _x _y y- y+ u- v- u+ v+))
                  (when (< x- x x+)
+                   (incf i start)
                    (return
                      (if (< (- (alloy:pxx point) x-)
                             (- x+ (alloy:pxx point)))
