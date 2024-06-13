@@ -1,5 +1,5 @@
 # Alloy Todo
-It is highly recommended to use a tool like the "magit-todos"(https://github.com/alphapapa/magit-todos) package to track comments in the code base that mark problems in the implementation. These are typically comments starting with ``KLUDGE``, ``TODO``, or ``FIXME``.
+It is highly recommended to use a tool like the ''magit-todos''(https://github.com/alphapapa/magit-todos) package to track comments in the code base that mark problems in the implementation. These are typically comments starting with ``KLUDGE``, ``TODO``, or ``FIXME``.
 
 Bigger tasks that do not fit onto a specific location in the code are described in individual sections here. The tasks are roughly divided up according to estimated amount of effort/time investment required.
 
@@ -9,12 +9,26 @@ Bigger tasks that do not fit onto a specific location in the code are described 
 ### UBOs for the OpenGL Backend
 Using Uniform Buffer Objects would allow us to avoid having to re-set common uniform parameters for every draw call, increasing performance.
 
+### Additional Component Types
+The following component types would be very nice to offer as well:
+
+- ``range``
+  Allow selecting a range on a slider
+- ``date``, ``time``, ``datetime``
+  Allow selecting date-like things, with a convenient way to enter that information
+- ``color``
+  Present a color picker popup with an HSV arrangement
+- ``file``
+  Opens the file dialog. This either requires the ''file-select''(https://shinmera.github.io/file-select) library which introduces a CFFI dependency, or implementing our own dialog. The former is problematic due to dependency chains, so should be an optional system, and the latter is a lot of effort to implement.
+- ``password``
+  A simple variation on the standard ``input-line`` that optionally hides the input with a toggle-button to show it.
+
+## Medium Effort Tasks
 ### Gradients in the OpenGL Backend
 Currently gradients only exist as a protocol, but are not actually implemented. A gradient should create a vertex buffer with the correct geometry (2D verts + colors). This geometry only needs to be created once per gradient, and can then be scaled and transformed to fit sizes.
 
-## Medium Effort Tasks
 ### Using Cluffer for Text Buffers
-The "Cluffer"(https://github.com/robert-strandh/Cluffer) library implements a protocol suited for text editor buffers. We should make use of it to implement our text editor components instead of rolling our own ad-hoc buffer system.
+The ''Cluffer''(https://github.com/robert-strandh/Cluffer) library implements a protocol suited for text editor buffers. We should make use of it to implement our text editor components instead of rolling our own ad-hoc buffer system.
 
 ### Query System DPI Information
 Currently we rely on the user to supply actual DPI information about the real system we are running on. It would be great if there was an Alloy extension that allowed querying the DPI information from the system. Several challenges exist here:
@@ -24,8 +38,11 @@ Currently we rely on the user to supply actual DPI information about the real sy
 - A window may potentially exist on two separate monitors with different DPI values at once. In this case the system should offer some kind of conflict resolution.
 - Ideally this would be integrated into the alloy-windowing protocol to automatically track and update the DPI of a window.
 
-### Grid-Bag Layout
-A grid-bag layout is like a grid layout, but allows certain elements to span multiple rows and columns at once.
+### Software Rasteriser for the Simple Protocol
+An implementation of the Simple shape drawing protocol using a native Lisp software rasteriser (outputting to an UB8 packed array) would be great as a step-in for direct rendering interfaces. Libraries like Vecto and cl-vectors should aid in this. One concern is the ultimate rendering performance since Alloy's partial redrawing protocol is underbaked atm.
+
+### Framebuffer Backend
+With the new ''Framebuffers''(https://shirakumo.github.io/framebuffers) library and the above software rasteriser we should have the path cleared for a fully lisp-native backend. This extension would implement the windowing protocol similar to alloy-glfw and tie it into the software rasteriser backend.
 
 ## High Effort Tasks
 ### Cocoa Backend
@@ -57,3 +74,36 @@ This would be done in two steps:
 
 ### X11 Backend
 Implement a backend similar to the opengl backend that implements the drawing primitives of the Simple protocol and the input primitives of base Alloy. This would allow rendering to and interacting with Alloy UI from a native X11 window.
+
+### Code Editor
+A fully-fledged code editor component based on the input-box with support for syntax highlighting and all that stuff. I'm sure you can come up with a whole pile of features this should have yourself. Should probably also be an optional system like alloy-editor.
+
+### New Text Layouter
+This should probably be an independent library that implements a general text layouting algorithm while letting the user hook in to provide font information like glyph sizing, advancement, spacing, fallback chains, etc, and then based on a portable styling protocol, invoke a function with the necessary glyph information to "emit" a fully layouted glyph.
+
+So given a box to fit the text in and a string, the layouter should take care of:
+
+- Line breaking (See 'UAX-14''(https://shinmera.github.io/uax-14))
+- LtR, RtL, TtB, BtT orientations
+- Start/End/Middle alignment in both directions
+- BiDi text flipping (See ''UAX-9''(https://shinmera.github.io/uax-9))
+- Combining diacritics
+- Switching and combining of text styling (bold, italic, supertext, subtext, strike, underline, monospace, outline, etc)
+- Selecting the correct font for any particular glyph based on a fallback chain
+- Offering a callback to provide information about a particular font:
+  - line-height
+  - space-size
+  - base-scale
+- During layouting, invoking a user function for each glyph to get its characteristics under a particular font:
+  - x/y-offset
+  - w/h
+  - xadvance
+  - kerning between two glyphs
+- Once layouted, invoking a user function with all necessary information to emit the glyph:
+  - glyph X-/Y-/X+/Y+
+  - anxilliary information the user requires like:
+    - U-/V-/U+/V+
+  - properties derived from the styling like:
+    - color
+    - outline
+    - ...
