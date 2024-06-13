@@ -180,7 +180,7 @@
                       (unless (eq font previous)
                         (vector-push-extend (cons i font) result)
                         (setf previous font))))
-               (unless (eql c #\Space) ;; Special provision for space to avoid frequent switching.
+               (progn #++(eql c #\Space) ;; Special provision for space to avoid frequent switching.
                  (loop for font across font-fallback-chain
                        do (unless (alloy:allocated-p font)
                             (alloy:allocate font))
@@ -325,7 +325,7 @@
                              (setf (fill-pointer line-widths) 1)
                              (setf i (1- last-break)))
                             ((< line-start i)
-                             (insert-break (1- i) (aref line-widths (1- i)))
+                             (insert-break (1- i) (aref line-widths (min (1- (length line-widths)) (1- i))))
                              (setf (fill-pointer line-widths) 1))))))
                  (when (<= next-break i)
                    (multiple-value-bind (pos mandatory) (uax-14:next-break breaker)
