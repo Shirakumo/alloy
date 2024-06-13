@@ -7,7 +7,7 @@
 
 (defmethod print-object ((element component) stream)
   (print-unreadable-object (element stream :type T :identity T)
-    (format stream "~a ~a" (bounds element) (focus element))))
+    (format stream " ~a~@[ focus ~a~]" (bounds element) (focus element))))
 
 (defmethod handle ((event pointer-down) (component component))
   (unless (and (slot-boundp component 'focus-parent)

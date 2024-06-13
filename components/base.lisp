@@ -13,6 +13,19 @@
              (value-changed component))
            component))
 
+(defmethod print-object ((element value-component) stream)
+  (print-unreadable-object (element stream :type T :identity T)
+    (handler-case
+        (let ((*print-pretty* t)
+              (*print-circle* t)
+              (*print-length* 3)
+              (*print-level* 3)
+              (*print-lines* 3))
+          (princ (value element) stream))
+      (error ()
+        (write-string "<error printing component value>" stream)))
+    (format stream " ~a~@[ focus ~a~]" (bounds element) (focus element))))
+
 (defmethod value-changed ((component value-component))
   (mark-for-render component))
 
