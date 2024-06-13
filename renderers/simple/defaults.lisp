@@ -177,6 +177,16 @@
   (when end-angle-p
     (setf (end-angle ellipse) end-angle)))
 
+(defmethod alloy:suggest-size ((size T) (component ellipse))
+  (let ((bounds (bounds component)))
+    (typecase bounds
+      (alloy:size (alloy:px-size (alloy:pxw bounds) (alloy:pxh bounds)))
+      ;; Require enough space for the combined margins.
+      (alloy:margins (alloy:px-size
+                      (max (alloy:pxw size) (+ (alloy:pxl bounds) (alloy:pxr bounds)))
+                      (max (alloy:pxh size) (+ (alloy:pxu bounds) (alloy:pxb bounds)))))
+      (T size))))
+
 (defmethod (setf start-angle) ((value real) (ellipse ellipse))
   (setf (slot-value ellipse 'start-angle) (float value 0f0)))
 
