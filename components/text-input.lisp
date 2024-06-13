@@ -53,7 +53,7 @@
     (move-to :line-start cursor)
     (when (< 0 (pos cursor))
       (let ((line-end (pos cursor))
-            (col (- (pos cursor) pos)))
+            (col (- pos (pos cursor))))
         (set-pos (1- (pos cursor)) cursor)
         (move-to :line-start cursor)
         (set-pos (min (1- line-end) (+ (pos cursor) col)) cursor)))))
@@ -61,12 +61,11 @@
 (defmethod move-to ((_ (eql :next-line)) (cursor cursor))
   (let ((pos (pos cursor)))
     (move-to :line-start cursor)
-    (let ((col (- (pos cursor) pos)))
+    (let ((col (- pos (pos cursor))))
       (move-to :line-end cursor)
       (when (< (pos cursor) (length (text (component cursor))))
-        (let ((start (1+ (pos cursor))))
-          (move-to :line-end cursor)
-          (set-pos (min (+ start col) (pos cursor)) cursor))))))
+        (set-pos (1+ (pos cursor)))
+        (set-pos (+ (pos cursor) col) cursor)))))
 
 (defmethod move-to ((_ (eql :line-start)) (cursor cursor))
   (let ((string (text (component cursor))))
@@ -207,9 +206,9 @@
         (:down
          (move :next-line))
         (:home
-         (move :start))
+         (move :line-start))
         (:end
-         (move :end))
+         (move :line-end))
         (:insert
          (setf (insert-mode component)
                (ecase (insert-mode component)
