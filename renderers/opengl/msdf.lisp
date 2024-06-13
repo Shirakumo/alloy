@@ -308,7 +308,8 @@
                  (when (and next-mandatory (= next-break i))
                    (insert-break i x)) ; TODO is X correct?
                  (case c
-                   (#\linefeed)
+                   (#\linefeed
+                    (vector-push-extend (aref line-widths (1- (length line-widths))) line-widths))
                    (#\space
                     (incf x space)
                     (vector-push-extend (+ (aref line-widths (1- (length line-widths))) space) line-widths))
@@ -316,7 +317,8 @@
                     (let* ((char (gethash c chars +default-char+))
                            (x+ (+ x (* scale (+ (3b-bmfont:glyph-xoffset char)
                                                 (3b-bmfont:glyph-width char))))))
-                      (cond ((or (< x+ max-width) (null wrap))
+                      (cond ((or (< x+ max-width) (null wrap)
+                                 (<= i (1+ line-start))) ; force out at least one character to prevent infinite loop
                              (vector-push-extend x+ line-widths)
                              (incf x (* scale (+ (kerning p c)
                                                  (3b-bmfont:glyph-xadvance char)))))
@@ -325,8 +327,9 @@
                              (setf (fill-pointer line-widths) 1)
                              (setf i (1- last-break)))
                             ((< line-start i)
-                             (insert-break (1- i) (aref line-widths (1- i)))
-                             (setf (fill-pointer line-widths) 1))))))
+                             (insert-break (1- i) (aref line-widths (- i line-start 1)))
+                             (setf (fill-pointer line-widths) 1)
+                             (decf i))))))
                  (when (<= next-break i)
                    (multiple-value-bind (pos mandatory) (uax-14:next-break breaker)
                      (setf next-mandatory mandatory)
