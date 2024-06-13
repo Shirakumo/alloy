@@ -65,7 +65,10 @@
       (move-to :line-end cursor)
       (when (< (pos cursor) (length (text (component cursor))))
         (set-pos (1+ (pos cursor)) cursor)
-        (set-pos (+ (pos cursor) col) cursor)))))
+        (let ((line-start (pos cursor)))
+          (move-to :line-end cursor)
+          (let ((line-end (pos cursor)))
+            (set-pos (min (+ line-start col) line-end) cursor)))))))
 
 (defmethod move-to ((_ (eql :line-start)) (cursor cursor))
   (let ((string (text (component cursor))))
