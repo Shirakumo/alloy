@@ -19,30 +19,20 @@
 
 ;;; Sizing strategies
 
-;;; Subclasses indicate strategies for computing the size of a given layout
-;;; element (for example, for the presentations-based renderer, the size maybe
-;;; be derived from a single or multiple shapes). Specific strategies should be
-;;; defined in the module of the respective renderer and installed via
-;;; (setf (sizing-strategy layout-element) strategy) when the renderer
-;;; "realizes" the component.
 (defclass sizing-strategy () ())
 
-;;; Returns a user-supplied fixed sized, ignoring the sized suggested by the
-;;; layout parent.
 (defclass fixed-size (sizing-strategy)
   ((fixed-size :initform (arg! :fixed-size) :initarg :fixed-size :reader fixed-size)))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy fixed-size) (size size))
   (fixed-size sizing-strategy))
 
-;;; Calls a user-supplied function to perform the size computation.
 (defclass dynamic-size (sizing-strategy)
   ((size-function :initform (arg! :size-function) :initarg :size-function :reader size-function)))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy dynamic-size) (size size))
   (funcall (size-function sizing-strategy) layout-element size))
 
-;;; Just accept and use the size suggested by the parent element.
 (defclass dont-care (sizing-strategy) ())
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy dont-care) (size size))
@@ -51,9 +41,6 @@
 ;;; Since the strategy has no state, there is no need for more than instance.
 (defvar *dont-care* (make-instance 'dont-care))
 
-;;; If the size suggested by the layout parent is smaller than a user-supplied
-;;; minimum, enlarge the suggested size to the minimum size. The supplied
-;;; minimum can be either a SIZE or a SIZING-STRATEGY.
 (defclass at-least (sizing-strategy)
   ((minimum-size :initform (arg! :minimum-size) :initarg :minimum-size :reader minimum-size)))
 
@@ -64,9 +51,6 @@
                     (sizing-strategy (compute-ideal-size layout-element minimum-size size)))))
     (px-size (max (pxw minimum) (pxw size)) (max (pxh minimum) (pxh size)))))
 
-;;; This is a superclass for strategies that compute the size of the layout
-;;; element based on the displayed content that the renderer uses to realize the
-;;; component.
 (defclass fit-to-content (sizing-strategy) ())
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy fit-to-content) (size size))
@@ -82,10 +66,6 @@
   ((layout-tree :initform NIL :reader layout-tree :writer set-layout-tree)
    (layout-parent :reader layout-parent)
    (bounds :initform (%extent (px 0) (px 0) (px 0) (px 0)) :reader bounds)
-   ;; An instance of (a subclass) of SIZING-STRATEGY that gets passed to
-   ;; COMPUTE-IDEAL-SIZE along with the layout element. The idea is that a
-   ;; renderer can put a specialized sizing strategy object that considers the
-   ;; presentation and look and feel used by that renderer into this slot.
    (sizing-strategy :initform *fallback-sizing-strategy*
                     :accessor sizing-strategy)))
 

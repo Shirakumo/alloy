@@ -172,7 +172,7 @@ When a layout node has to recompute the bounds of its direct children, for examp
 
 1. The layout computes a suggested new size for the element according to the bounds of the layout node and its associated layouting strategy.
 2. The layout calls ``suggest-size`` with the new size for the element. The element must then extend, contract, or otherwise change the suggested size as follows:
-   1. The element retrieves its sizing strategy object by calling ``sizing-strategy``.
+   1. The element retrieves its sizing strategy object by calling ``sizing-strategy`` (See ''Sizing Strategies''(#sizing-strategies)).
    2. The element calls ``compute-ideal-size`` with the sizing strategy object, the element and the suggested size to compute preferred or at least more agreeable size based o the suggested size.
    3. The element returns the result of the above call as its response to the size suggestion.
 3. The layout possibly adjust the layouting decisions to account for the element's preferred size.
@@ -188,7 +188,29 @@ Some layouts may temporarily hide elements or regions from view. In order to for
 
 When an element's space requirements change, it must call ``notice-size`` in order to notify its parent of the change. For example, if an element decides that it needs more space, it should call ``notice-size`` to ensure a consistent layout. Typically this will result in a standard layout update being run, same as when the layout instance itself changes bounds.
 
-For some elements, the preferred size depends on the visual representation of the respective element. For example, a button that is represented as a label text surrounded by a border needs a total amount of space that consists of space for the text at the configured font style and space for the border with the chosen thickness and margins. The visual representation of elements in turn depends on the selected renderer since each renderer freely chooses representations for components. Furthermore, the layout module does not (by design) know anything about renderers and visual representations. These requirements are the reason for equipping elements with a (mutable) sizing strategy slot: Typically, the renderer installs a sizing strategy that works in conjunction with the visual representation into the slot when it realizes the visual representation of a given component. This way, the renderer can supply an appropriate strategy and layouts can query elements for the preferred size without undue coupling between the two.
+For some elements, the preferred size depends on the visual representation of the respective element. For example, a button that is represented as a label text surrounded by a border needs a total amount of space that consists of space for the text at the configured font style and space for the border with the chosen thickness and margins. The visual representation of elements in turn depends on the selected renderer since each renderer freely chooses representations for components. Furthermore, the layout module does not (by design) know anything about renderers and visual representations. These requirements are the reason for equipping elements with a (mutable) sizing strategy slot: Typically, the renderer installs a sizing strategy that works in conjunction with the visual representation into the slot when it realizes the visual representation of a given component. This way, the renderer can supply an appropriate strategy and layouts can query elements for the preferred size without undue coupling between the two. The sizing strategy of an element node can be read using ``sizing-strategy`` and written using ``(setf sizing-strategy)``. The sizing strategy object must be an instance of a subclass of ``sizing-strategy``.
+
+### Sizing Strategies
+! label sizing-strategies
+
+Sizing strategies are subclasses of ``sizing-strategy`` for which a specialized method on the ``compute-ideal-size`` generic function is defined. Sizing strategies will often be specific to a particular renderer. For example, for the presentations-based renderer, the size of a layout element may be derived from a single or multiple shapes. Specific strategies should be defined in the module of the respective renderer and installed via ``(setf (sizing-strategy layout-element) strategy)`` when the renderer "realizes" the component.
+
+The following basic sizing strategies and strategy combinators are built-in:
+
+- ``fixed-size``
+  Returns a user-supplied fixed sized, ignoring the size suggested by the layout parent. The fixed size must be specified using the ``:fixed-size`` initarg and can be read using the ``fixed-size`` reader.
+
+- ``dynamic-size``
+  Calls a user-supplied function to perform the size computation. The function must be specified using the ``:size-function`` initarg and can be read using the ``size-function`` reader.
+
+- ``dont-care``
+  Just accept and use the size suggested by the parent element.
+
+- ``at-least``
+  If the size suggested by the layout parent is smaller than a user-supplied minimum, enlarge the suggested size to the minimum size. The supplied minimum can be either a ``size`` or a ``sizing-strategy``. The minimum size must be specified using the ``:minimum-size`` initarg and can be read using the ``minimum-size`` reader.
+
+- ``fit-to-content``
+  This is a superclass for strategies that compute the size of the layout element based on the displayed content that the renderer uses to realize the component. Specialized methods on ``compute-ideal-size`` must be defined for subclasses since this class does not (and cannot) provide any default behavior.
 
 ## UI
 Since layout trees and focus trees are disjoint, there needs to be a way to tie them together, including any other global information necessary. For this, Alloy has the ``UI`` object, the main entry point once the interface has been constructed. It has a ``layout-tree`` and ``focus-tree``, as well as provides access to the global unit scaling factors, ``dots-per-cm``, ``target-resolution``, ``resolution-scale``, and ``base-scale``.
