@@ -170,9 +170,15 @@
           (call-with-tracked-changes renderable shape #'update))))))
 
 (defmethod update-shape progn ((renderer renderer) (renderable renderable) (all (eql T)) argtable)
-  (alloy:with-unit-parent renderable
-    (loop for (name . shape) across (shapes renderable)
-          do (update-shape renderer renderable shape argtable))))
+  (let ((shapes (shapes renderable)))
+    (when (loop for previous-index = NIL then current-index
+                for current across shapes
+                for current-index = (z-index (cdr current))
+                thereis (and previous-index (< current-index previous-index)))
+      (stable-sort shapes #'< :key (lambda (cell) (z-index (cdr cell)))))
+    (alloy:with-unit-parent renderable
+      (loop for (name . shape) across shapes
+            do (update-shape renderer renderable shape argtable)))))
 
 ;;; Defer updating the shapes until we have a dirty render.
 ;;; Might cause hiccups during render if there's many updates, but we save
