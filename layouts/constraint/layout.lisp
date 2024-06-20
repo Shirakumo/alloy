@@ -124,26 +124,28 @@
   )
 
 (defmethod alloy:update ((element alloy:layout-element) (layout layout) &key constraints clear)
-  (when clear
-    (let ((element-constraints (find-element-constraints element layout)))
-      (mapc (lambda (c)
-              (format *trace-output* "Deleting constraint ~A~%" c)
-              (cass:delete-constraint c))
-            (car element-constraints))
-      (setf (car element-constraints) '())))
-  (when constraints
-    (install-user-constraints constraints element layout))
+  ;; FIXME: This is require to actually apply the new constraints but this
+  ;; currently causes the solver to break.
+  ;; (when clear
+  ;;   (let ((element-constraints (find-element-constraints element layout)))
+  ;;     (mapc (lambda (c)
+  ;;             (format *trace-output* "Deleting constraint ~A~%" c)
+  ;;             (cass:delete-constraint c))
+  ;;           (car element-constraints))
+  ;;     (setf (car element-constraints) '())))
+  ;; (when constraints
+  ;;   (install-user-constraints constraints element layout))
   ;; An :AFTER method calls NOTICE-SIZE which will trigger all the updates.
-  ; (update-and-install-all-bounds layout)
   )
 
 (defmethod alloy:notice-size ((element alloy:layout-element) (layout layout))
+  ;; FIXME: The following update is needed in case ELEMENT changed its required
+  ;; minimum size but this currently causes the solver to break.
   ;; Update constraints for minimal size.
-  (let ((element-constraints (find-element-constraints element layout)))
-    (mapc #'cass:delete-constraint (cdr element-constraints))
-    (setf (cdr element-constraints) '()))
-  (install-minimum-size-constraints element layout)
-  ;; (update-and-install-all-bounds layout)
+  ;; (let ((element-constraints (find-element-constraints element layout)))
+  ;;   (mapc #'cass:delete-constraint (cdr element-constraints))
+  ;;   (setf (cdr element-constraints) '()))
+  ;; (install-minimum-size-constraints element layout)
   (alloy:refit layout))
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
