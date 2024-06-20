@@ -39,6 +39,11 @@
 
 (defun update-and-install-all-bounds (layout)
   (cass:update-variables (solver layout))
+  (let ((solver (solver layout)))
+    (format *trace-output* "~D variables, ~D constraints, ~D expressions~%"
+            (hash-table-count (slot-value solver 'cass::variables))
+            (hash-table-count (slot-value solver 'cass::constraints))
+            (hash-table-count (slot-value solver 'cass::expressions))))
   (alloy:do-elements (element layout)
     (suggest-size-and-install-bounds layout element)))
 
@@ -46,26 +51,52 @@
   (alloy:with-unit-parent layout
     (with-vars (x y w h layout) element
       (let* ((preferred-size (alloy:suggest-size
-                              (alloy:size (alloy:un (cass:value w))
-                                          (alloy:un (cass:value h)))
+                              (alloy:px-size (alloy:to-px (alloy:un (cass:value w)))
+                                             (alloy:to-px (alloy:un (cass:value h))))
                               element)))
-        (format *trace-output* "Preferred size~%  ~A~%=>~A~%" element preferred-size)
-        (cass:suggest w (alloy:to-un (alloy:w preferred-size)))
-        (cass:suggest h (alloy:to-un (alloy:h preferred-size)))
+        (format *trace-output* "Preferred size~%  ~A~%  variables     ~A ~A~%  suggest-size  ~A ~A~%  =>            ~A~%"
+                element
+                (cass:value w) (cass:value h)
+                (alloy:to-px (alloy:un (cass:value w))) (alloy:to-px (alloy:un (cass:value h)))
+                preferred-size)
+        (cass:suggest w (alloy:to-un (alloy:px (alloy:w preferred-size))))
+        (cass:suggest h (alloy:to-un (alloy:px (alloy:h preferred-size))))
         (cass:update-variables (solver layout))
+        (format *trace-output* "  new variables ~A ~A~%"
+                (cass:value w) (cass:value h))
         (install-bounds layout element)))))
 
-#+unused (defun suggest (layout element var size)
-  (alloy:with-unit-parent layout
-    (cass:suggest (element-var layout element var) (alloy:to-un size) :make-suggestable)
-    (cass:update-variables (solver layout))
-    (alloy:do-elements (element layout)
-      (install-bounds layout element))))
+(defun find-element-constraints (element layout)
+  (let ((all-constraints (constraints layout)))
+    (or (gethash element all-constraints)
+        (setf (gethash element all-constraints) (cons '() '())))))
 
-#+no (defun constrain (layout element var value &key (strength :required))
-  (alloy:with-unit-parent layout
-    (prog1 (cass:constrain-with (solver layout) `(= ,(element-var layout element var) ,(alloy:to-un value)) :strength strength)
-      (update-and-install-all-bounds layout))))
+(defun install-user-constraints (constraints element layout)
+  (let ((solver (solver layout))
+        (element-constraints (find-element-constraints element layout)))
+    (dolist (expression constraints layout)
+      (multiple-value-bind (expressions strength) (transform-expression expression)
+        (dolist (expression expressions)
+          (let ((constraint (cass:constrain-with solver (rewrite-expression expression element layout)
+                                                 :strength (or strength :strong))))
+            (format *trace-output* "Adding constraint ~A~%" constraint)
+            (push constraint (car element-constraints))))))))
+
+(defun install-minimum-size-constraints (element layout)
+  (let ((solver (solver layout))
+        (element-constraints (find-element-constraints element layout)))
+    (flet ((add-constraint (expression)
+             (let ((constraint (cass:constrain-with solver expression
+                                                    :strength :strong)))
+               (push constraint (cdr element-constraints)))))
+      (alloy:with-unit-parent layout
+        (with-vars (x y w h layout) element
+          (declare (ignore x y))
+          (let* ((min-size (alloy:suggest-size (alloy:size) element))
+                 (min-width (alloy:to-un (alloy:px (alloy:w min-size))))
+                 (min-height (alloy:to-un (alloy:px (alloy:h min-size)))))
+            (add-constraint `(>= ,w ,min-width))
+            (add-constraint `(>= ,h ,min-height))))))))
 
 (defmethod alloy:enter ((element alloy:layout-element) (layout layout) &key constraints)
   (call-next-method)
@@ -74,32 +105,44 @@
           (list (cass:make-variable solver :name (format NIL "X ~a" element))
                 (cass:make-variable solver :name (format NIL "Y ~a" element))
                 (cass:make-variable solver :name (format NIL "W ~a" element) :strength :medium)
-                (cass:make-variable solver :name (format NIL "H ~a" element) :strength :medium))))
-  (when constraints
-    (apply-constraints constraints element layout))
-  (when (alloy:layout-tree layout)
-    (alloy:with-unit-parent layout
-      (with-vars (x y w h layout) element
-        (declare (ignore x y))
-        (let ((min-size (alloy:suggest-size (alloy:size) element)))
-          (cass:constrain-with (solver layout) `(>= ,w ,(alloy:to-un (alloy:w min-size))) :strength :strong)
-          (cass:constrain-with (solver layout) `(>= ,h ,(alloy:to-un (alloy:h min-size))) :strength :strong))
-        ;; (suggest-size layout layout (alloy:bounds layout))
-        ))
-    (update-and-install-all-bounds layout)))
+                (cass:make-variable solver :name (format NIL "H ~a" element) :strength :medium)))
+    (when constraints
+      (install-user-constraints constraints element layout))
+    (when (alloy:layout-tree layout)
+      (install-minimum-size-constraints element layout)
+      (update-and-install-all-bounds layout))))
 
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
-  (dolist (constraint (gethash element (constraints layout)))
-    (cass:delete-constraint constraint)) ; TODO update
-  (remhash element (variables layout)))
+  (let ((element-constraints (find-element-constraints element layout)))
+    (mapc #'cass:delete-constraint (car element-constraints))
+    (mapc #'cass:delete-constraint (cdr element-constraints)))
+  (remhash element (constraints layout))
+  (let ((variables (variables layout)))
+    (mapc #'cass:delete-variable (gethash element variables))
+    (remhash element variables))
+  ;; TODO update
+  )
 
 (defmethod alloy:update ((element alloy:layout-element) (layout layout) &key constraints clear)
   (when clear
-    (dolist (constraint (gethash element (constraints layout)))
-      (cass:delete-constraint constraint)))
-  (apply-constraints constraints element layout))
+    (let ((element-constraints (find-element-constraints element layout)))
+      (mapc (lambda (c)
+              (format *trace-output* "Deleting constraint ~A~%" c)
+              (cass:delete-constraint c))
+            (car element-constraints))
+      (setf (car element-constraints) '())))
+  (when constraints
+    (install-user-constraints constraints element layout))
+  ;; An :AFTER method calls NOTICE-SIZE which will trigger all the updates.
+  ; (update-and-install-all-bounds layout)
+  )
 
 (defmethod alloy:notice-size ((element alloy:layout-element) (layout layout))
+  ;; Update constraints for minimal size.
+  (let ((element-constraints (find-element-constraints element layout)))
+    (mapc #'cass:delete-constraint (cdr element-constraints))
+    (setf (cdr element-constraints) '()))
+  (install-minimum-size-constraints element layout)
   ;; (update-and-install-all-bounds layout)
   (alloy:refit layout))
 
@@ -128,11 +171,4 @@
     (suggest-size layout layout size)
     (with-vars (x y w h layout) layout
       (declare (ignore x y))
-      (alloy:size (cass:value w) (cass:value h)))))
-
-(defun apply-constraints (constraints element layout)
-  (dolist (expression constraints layout)
-    (multiple-value-bind (expressions strength) (transform-expression expression)
-      (dolist (expression expressions)
-        (push (cass:constrain-with (solver layout) (rewrite-expression expression element layout) :strength (or strength :strong))
-              (gethash element (constraints layout)))))))
+      (alloy:size (alloy:un (cass:value w)) (alloy:un (cass:value h))))))
