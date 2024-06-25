@@ -7,7 +7,6 @@
   :homepage "https://github.com/Shirakumo/alloy"
   :serial T
   :components ((:file "package")
-               (:file "renderer")
                (:file "windowing")
                (:file "documentation"))
   :depends-on (:documentation-utils
