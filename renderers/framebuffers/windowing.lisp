@@ -57,6 +57,16 @@
 (defmethod initialize-instance :after ((window window) &key)
   (setf (slot-value window 'cursor) (make-instance 'cursor :window native)))
 
+(defmethod alloy:render ((screen screen) (window window))
+  (setf (buffer screen) (fb:buffer (native window)))
+  (call-next-method)
+  (fb:swap-buffers (native window)))
+
+(defmethod alloy:maybe-render ((screen screen) (window window))
+  (setf (buffer screen) (fb:buffer (native window)))
+  (call-next-method)
+  (fb:swap-buffers (native window)))
+
 ;;;; Window control
 (defmethod window:close ((window window))
   (fb:close (native window)))
