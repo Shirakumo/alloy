@@ -25,17 +25,13 @@
 (defmethod (setf alloy:cursor) (value (screen screen))
   value)
 
-(defmethod make-window ((screen screen) &rest args &allow-other-keys)
+(defmethod make-window ((screen screen) &rest args &key &allow-other-keys)
   (apply #'make-instance 'window :screen screen args))
 
-(defmethod process-events ((screen screen))
-  (let ((to-delete ()))
-    (loop for window in (windows screen)
-          do (fb:process-events window)
-             (when (fb:close-requested-p window)
-               (push window to-delete)))
-    (when to-delete
-      (setf (windows screen) (set-difference (windows screen) to-delete)))))
+(defmethod process-events ((screen screen) &key timeout)
+  (fb:process-events (windows screen) :timeout timeout)
+  (setf (windows screen) (remove-if #'fb:close-requested-p (windows screen)))
+  screen)
 
 (defclass cursor (window:cursor)
   ((native :initarg :native :accessor native)
@@ -138,13 +134,13 @@
 
 (defmethod (setf window:state) (state (window window))
   (ecase state
-    (:minimized (setf (fb:minimized-p (native window)) T))
+    (:minimized (setf (fb:iconified-p (native window)) T))
     (:maximized (setf (fb:maximized-p (native window)) T))
     (:fullscreen (setf (fb:fullscreen-p (native window)) T))
     (:hidden (setf (fb:visible-p (native window)) NIL))
     (:normal
      (setf (fb:maximized-p (native window)) NIL)
-     (setf (fb:minimized-p (native window)) NIL)
+     (setf (fb:iconified-p (native window)) NIL)
      (setf (fb:fullscreen-p (native window)) NIL)
      (setf (fb:visible-p (native window)) T)))
   state)
