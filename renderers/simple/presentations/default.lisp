@@ -119,14 +119,20 @@
   *fit-to-label*)
 
 (define-realization (default-look-and-feel alloy:label)
+  ((:background simple:rectangle)
+   (alloy:margins)
+   :pattern colors:transparent)
   ((:label simple:text)
    (alloy:margins)
    alloy:text
    :pattern colors:white
    :wrap (alloy:wrap alloy:renderable)
-   :halign :start :valign :middle))
+   :halign :start :valign :middle
+   :z-index 1))
 
 (define-update (default-look-and-feel alloy:label)
+  (:background
+   :pattern colors:transparent) ; overwrite inherited behavior
   (:label
    :text alloy:text
    :pattern colors:white)) ; overwrite inherited behavior
