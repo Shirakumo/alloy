@@ -87,8 +87,13 @@
                                                      (let ((max (max (alloy:pxw suggested-size)
                                                                      (alloy:pxh suggested-size))))
                                                        (alloy:px-size max max)))
-                                  :focus-parent focus)))
-    (:inspect window)
+                                  :focus-parent focus))
+         (forced-text-size (alloy:represent "much too long" 'alloy:label
+                                            :style `((:label . (:bounds ,(alloy:extent 20 20 20 20)))
+                                                     (:background . (:pattern ,colors:deep-pink)))))
+         (outside-text (alloy:represent "text outside" 'alloy:label
+                                        :style `((:label . (:bounds ,(alloy:point -20 -20)))
+                                                 (:background . (:pattern ,colors:deep-pink))))))
     ;; Overall layout hierarchy
     (alloy:enter layout window)
     (alloy:enter explanation layout)
@@ -142,4 +147,6 @@
     (alloy:on alloy:value (new-value custom-height)
       (declare (ignore new-value))
       (alloy:notice-size custom-height T))
-    (alloy:enter square horizontal2)))
+    (alloy:enter square horizontal2)
+    (alloy:enter forced-text-size horizontal2)
+    (alloy:enter outside-text horizontal2)))
