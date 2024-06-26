@@ -35,7 +35,7 @@
 
 (macrolet ((wrap (&rest funcs)
              `(progn ,@(loop for func in funcs
-                             collect `(defmethod ,func ((canvas canvas)) 
+                             collect `(defmethod ,func ((canvas canvas))
                                         (,func (style canvas)))
                              collect `(defmethod (setf ,func) (value (canvas canvas))
                                         (setf (,func (style canvas)) value))))))
@@ -102,7 +102,7 @@
 
 (defmethod draw-text ((canvas canvas) x y string &optional size)
   (let ((style (style canvas)))
-    (draw-shape canvas 'text (alloy:extent x y MOST-POSITIVE-SINGLE-FLOAT (size style)) string
+    (draw-shape canvas 'text (alloy:point x y) string
                 :pattern (pattern style)
                 :size (or size (size style))
                 :font (family style))))
@@ -173,7 +173,7 @@
   (let ((matrix-stack ()))
     (loop for (action . arg) across (alloy:value (alloy:data canvas))
           do (ecase action
-               (alloy:render 
+               (alloy:render
                 (alloy:render renderer arg))
                (clip
                 (clip renderer arg))
