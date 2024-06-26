@@ -295,7 +295,10 @@
   (call-next-method (sort-markup markup) text))
 
 (defmethod alloy:render :before ((renderer renderer) (text text))
-  (alloy:constrain-visibility (alloy:ensure-extent (bounds text)) renderer))
+  (let ((bounds (bounds text)))
+    (typecase bounds
+      (alloy:point)
+      (t (alloy:constrain-visibility (alloy:ensure-extent bounds) renderer)))))
 
 (defclass icon (shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)

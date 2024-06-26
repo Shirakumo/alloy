@@ -528,24 +528,56 @@
                      (return))))))))
 
 (defmethod alloy:suggest-size (size (text text))
-  (let* ((margins (simple:bounds text))
-         (free-size (alloy:px-extent 0 0 (alloy:pxw size) (alloy:pxh size)))
-         (scale (alloy:to-px (simple:size text)))
-         (markup (simple::flatten-markup (simple:markup text))))
-    (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) free-size scale (simple:wrap text) markup (simple:halign text))
-      (declare (ignore y- y+))
-      (let* ((data (data (simple:font text)))
-             (w (- x+ x-))
-             (line (* (/ scale (3b-bmfont:base data)) (3b-bmfont:line-height data)))
-             (h (* line (length breaks)))
-             (p (simple:resolve-alignment margins :start (simple:valign text)
-                                          (alloy:px-size w h))))
-        ;; The additional return values are not used for the layout protocol but
-        ;; in the SHARED-INITIALIZE method for the TEXT class.
-        (values (alloy:px-size (+ w (alloy:pxl margins) (alloy:pxr margins))
-                               (+ h (alloy:pxu margins) (alloy:pxb margins)))
-                (alloy:px-point (alloy:pxx p) (+ (- h line) (alloy:pxy p)))
-                array font-sequence breaks markup)))))
+  (let ((bounds (simple:bounds text))
+        (scale (alloy:to-px (simple:size text)))
+        (markup (simple::flatten-markup (simple:markup text))))
+    (etypecase bounds
+      (alloy:point
+       (let ((bounds (alloy:px-extent (alloy:pxx bounds) (alloy:pxy bounds) MOST-POSITIVE-SINGLE-FLOAT 1.0)))
+         (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) bounds scale (simple:wrap text) markup (simple:halign text))
+           (declare (ignore y- y+))
+           (let* ((data (data (simple:font text)))
+                  (w (- x+ x-))
+                  (line (* (/ scale (3b-bmfont:base data)) (3b-bmfont:line-height data)))
+                  (h (* line (length breaks)))
+                  (p (simple:resolve-alignment bounds :start (simple:valign text)
+                                               (alloy:px-size w h))))
+             ;; The additional return values are not used for the layout protocol but
+             ;; in the SHARED-INITIALIZE method for the TEXT class.
+             (values (alloy:px-extent (alloy:pxx p) (+ (- h line) (alloy:pxy p)) w h)
+                     (alloy:px-point (alloy:pxx p) (+ (- h line) (alloy:pxy p)))
+                     array font-sequence breaks markup)))))
+      (alloy:extent
+       (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) bounds scale (simple:wrap text) markup (simple:halign text))
+         (declare (ignore y- y+))
+         (let* ((data (data (simple:font text)))
+                (w (- x+ x-))
+                (line (* (/ scale (3b-bmfont:base data)) (3b-bmfont:line-height data)))
+                (h (* line (length breaks)))
+                (p (simple:resolve-alignment bounds :start (simple:valign text)
+                                             (alloy:px-size w h))))
+           ;; The additional return values are not used for the layout protocol but
+           ;; in the SHARED-INITIALIZE method for the TEXT class.
+           (values bounds
+                   (alloy:px-point (alloy:pxx p) (+ (- h line) (alloy:pxy p)))
+                   array font-sequence breaks markup))))
+      (alloy:margins
+       (let* ((margins bounds)
+              (free-size (alloy:px-extent 0 0 (alloy:pxw size) (alloy:pxh size))))
+         (multiple-value-bind (breaks array font-sequence x- y- x+ y+) (compute-text (simple:font text) (alloy:text text) free-size scale (simple:wrap text) markup (simple:halign text))
+           (declare (ignore y- y+))
+           (let* ((data (data (simple:font text)))
+                  (w (- x+ x-))
+                  (line (* (/ scale (3b-bmfont:base data)) (3b-bmfont:line-height data)))
+                  (h (* line (length breaks)))
+                  (p (simple:resolve-alignment margins :start (simple:valign text)
+                                               (alloy:px-size w h))))
+             ;; The additional return values are not used for the layout protocol but
+             ;; in the SHARED-INITIALIZE method for the TEXT class.
+             (values (alloy:px-size (+ w (alloy:pxl margins) (alloy:pxr margins))
+                                    (+ h (alloy:pxu margins) (alloy:pxb margins)))
+                     (alloy:px-point (alloy:pxx p) (+ (- h line) (alloy:pxy p)))
+                     array font-sequence breaks markup))))))))
 
 (defclass cursor (simple:cursor) ())
 
