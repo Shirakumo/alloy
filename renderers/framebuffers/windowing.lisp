@@ -25,13 +25,22 @@
 (defmethod (setf alloy:cursor) (value (screen screen))
   value)
 
-(defmethod make-window ((screen screen) &rest args &key &allow-other-keys)
+(defmethod window:make-window ((screen screen) &rest args &key &allow-other-keys)
   (apply #'make-instance 'window :screen screen args))
 
 (defmethod process-events ((screen screen) &key timeout)
   (fb:process-events (windows screen) :timeout timeout)
   (setf (windows screen) (remove-if #'fb:close-requested-p (windows screen)))
   screen)
+
+(defmacro with-screen ((screen &optional (type ''screen) &rest initargs) &body body)
+  (let ((thunk (gensym "THUNK")))
+    `(let ((,screen (make-instance ,type ,@initargs)))
+       (locally ,@body)
+       (loop do (dolist (window (windows ,screen))
+                  (alloy:maybe-render ,screen window))
+                (process-events ,screen :timeout T)
+             while (windows ,screen)))))
 
 (defclass cursor (window:cursor)
   ((native :initarg :native :accessor native)
@@ -46,7 +55,8 @@
           (symbol icon)))
   (setf (icon cursor) icon))
 
-(defclass window (alloy:ui fb:event-handler
+(defclass window (window:window
+                  fb:event-handler
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ((native :accessor native)
    (screen :initarg :screen :reader window:screen)
@@ -55,7 +65,11 @@
    (cursor :reader window:cursor)))
 
 (defmethod initialize-instance :after ((window window) &key)
-  (setf (slot-value window 'cursor) (make-instance 'cursor :window native)))
+  (setf (native window) (fb:open))
+  #++
+  (setf (slot-value window 'cursor) (make-instance 'cursor :window native))
+  (push window (windows (window:screen window)))
+  (setf (fb:close-requested-p (native window)) NIL))
 
 (defmethod alloy:render ((screen screen) (window window))
   (setf (buffer screen) (fb:buffer (native window)))

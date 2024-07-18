@@ -29,7 +29,8 @@
     `(progn (defun ,name (,@(rest args))
               (flet ((,thunk (,(first args))
                        ,@body))
-                (unless *screen*
-                  (setf *screen* (make-instance 'screen)))
-                (,thunk *screen*)))
+                (if (boundp '*screen*)
+                    (,thunk *screen*)
+                    (framebuffers:with-screen (*screen* 'screen)
+                      (thunk *screen*)))))
             (pushnew ',name *examples*))))
