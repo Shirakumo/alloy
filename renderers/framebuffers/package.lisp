@@ -7,7 +7,8 @@
    (#:animation #:org.shirakumo.alloy.animation)
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors)
-   (#:fb #:org.shirakumo.framebuffers))
+   (#:fb #:org.shirakumo.framebuffers)
+   (#:raster #:org.shirakumo.raster))
   (:export
    #:renderer
    #:cursor

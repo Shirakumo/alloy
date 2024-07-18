@@ -12,6 +12,21 @@
              collect `(setf (aref ,mat ,i) (float ,el 0f0)))
      ,@body))
 
+(declaim (inline mat*p mat*v))
+(defun mat*p (mat x y)
+  (declare (type (simple-array single-float (9)) mat))
+  (declare (type single-float x y))
+  (declare (optimize speed (safety 1)))
+  (values (+ (* (aref mat 0) x) (* (aref mat 1) y) (aref mat 2))
+          (+ (* (aref mat 3) x) (* (aref mat 4) y) (aref mat 5))))
+
+(defun mat*v (mat x y)
+  (declare (type (simple-array single-float (9)) mat))
+  (declare (type single-float x y))
+  (declare (optimize speed (safety 1)))
+  (values (+ (* (aref mat 0) x) (* (aref mat 1) y))
+          (+ (* (aref mat 3) x) (* (aref mat 4) y))))
+
 (declaim (ftype (function () (simple-array single-float (9))) matrix-identity))
 (defun matrix-identity ()
   (matrix 1 0 0

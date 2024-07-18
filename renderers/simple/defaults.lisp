@@ -302,6 +302,7 @@
 
 (defclass icon (shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)
+   ;; TODO: rename to SCALING and OFFSET for consistency
    (size :initarg :size :initform (alloy:px-size 1 1) :accessor size)
    (shift :initarg :shift :initform (alloy:px-point 0 0) :accessor shift)
    (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)

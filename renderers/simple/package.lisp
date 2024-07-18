@@ -131,6 +131,8 @@
   (:export
    #:matrix
    #:matrix-identity
+   #:mat*p
+   #:mat*v
    #:mat*
    #:transform
    #:clip-mask

@@ -8,7 +8,7 @@
     (destructuring-bind (x y) (fb:location (native monitor))
       (alloy:px-extent x y w h))))
 
-(defclass screen (window:screen)
+(defclass screen (window:screen renderer)
   ((monitors :initform () :accessor monitors :reader window:list-monitors)
    (windows :initform () :accessor windows :reader window:list-windows)))
 
@@ -59,11 +59,13 @@
 
 (defmethod alloy:render ((screen screen) (window window))
   (setf (buffer screen) (fb:buffer (native window)))
+  (setf (buffer-size screen) (fb:size (native window)))
   (call-next-method)
   (fb:swap-buffers (native window)))
 
 (defmethod alloy:maybe-render ((screen screen) (window window))
   (setf (buffer screen) (fb:buffer (native window)))
+  (setf (buffer-size screen) (fb:size (native window)))
   (call-next-method)
   (fb:swap-buffers (native window)))
 

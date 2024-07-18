@@ -7,6 +7,7 @@
   :homepage "https://github.com/Shirakumo/alloy"
   :serial T
   :components ((:file "package")
+               (:file "renderer")
                (:file "windowing")
                (:file "documentation"))
   :depends-on (:documentation-utils
@@ -14,5 +15,6 @@
                :alloy-simple-presentations
                :alloy-windowing
                :framebuffers
+               :raster
                :colored)
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))
