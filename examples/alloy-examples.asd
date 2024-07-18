@@ -20,4 +20,4 @@
                (:file "grid-bag-layout")
                (:file "sizing"))
   :depends-on (:alloy-glfw
-               :alloy-constraint))
+               :font-discovery))

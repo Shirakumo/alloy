@@ -7,8 +7,11 @@
 (defun file (path)
   (merge-pathnames path *here*))
 
-(defclass screen (glfw:screen) ())
+(defclass screen (#+alloy-glfw glfw:screen
+                  #+alloy-framebuffers framebuffers:screen)
+  ())
 
+#+alloy-glfw
 (defmacro define-example (name args &body body)
   (let ((thunk (gensym "THUNK")))
     `(progn (defun ,name (,@(rest args))
@@ -18,4 +21,15 @@
                     (,thunk *screen*)
                     (glfw:with-screen (*screen* 'screen :base-scale 2.0)
                       (,thunk *screen*)))))
+            (pushnew ',name *examples*))))
+
+#+alloy-framebuffers
+(defmacro define-example (name args &body body)
+  (let ((thunk (gensym "THUNK")))
+    `(progn (defun ,name (,@(rest args))
+              (flet ((,thunk (,(first args))
+                       ,@body))
+                (unless *screen*
+                  (setf *screen* (make-instance 'screen)))
+                (,thunk *screen*)))
             (pushnew ',name *examples*))))

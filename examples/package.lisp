@@ -2,7 +2,8 @@
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
-   (#:glfw #:org.shirakumo.alloy.renderers.glfw)
+   #+alloy-glfw (#:glfw #:org.shirakumo.alloy.renderers.glfw)
+   #+alloy-framebuffers (#:framebuffers #:org.shirakumo.alloy.renderers.framebuffers)
    (#:simple #:org.shirakumo.alloy.renderers.simple)
    (#:presentations #:org.shirakumo.alloy.renderers.simple.presentations)
    (#:windowing #:org.shirakumo.alloy.windowing)

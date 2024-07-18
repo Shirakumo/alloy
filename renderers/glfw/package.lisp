@@ -17,3 +17,5 @@
    #:screen
    #:with-screen
    #:window))
+
+(push :alloy-glfw *features*)

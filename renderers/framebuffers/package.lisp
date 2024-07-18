@@ -14,5 +14,6 @@
    #:cursor
    #:monitor
    #:screen
-   #:with-screen
    #:window))
+
+(push :alloy-framebuffers *features*)

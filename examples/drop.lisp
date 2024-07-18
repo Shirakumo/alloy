@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
-(defclass custom-window (glfw:window)
+(defclass custom-window (#+alloy-glfw glfw:window
+                         #+alloy-framebuffers framebuffers:window)
   ((label :reader label)))
 
 (defmethod alloy:handle ((ev alloy:drop-event) (window custom-window))
