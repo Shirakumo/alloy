@@ -1,4 +1,5 @@
 (defpackage #:org.shirakumo.alloy.examples
+  (:nicknames #:alloy-examples)
   (:use #:cl)
   (:local-nicknames
    (#:alloy #:org.shirakumo.alloy)
