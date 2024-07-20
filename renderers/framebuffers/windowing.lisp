@@ -8,7 +8,7 @@
     (destructuring-bind (x . y) (fb:location (native monitor))
       (alloy:px-extent x y w h))))
 
-(defclass screen (window:screen renderer)
+(defclass screen (window:screen)
   ((monitors :initform () :accessor monitors :reader window:list-monitors)
    (windows :initform () :accessor windows :reader window:list-windows)))
 
@@ -43,9 +43,7 @@
      (unwind-protect
           (loop initially (let ((,screen ,screen))
                             ,@body)
-                do (dolist (window (windows ,screen))
-                     (alloy:render ,screen window))
-                   (process-events ,screen :timeout T)
+                do (process-events ,screen :timeout T)
                 while (windows ,screen))
        (dolist (window (windows ,screen))
          (fb:close (native window)))
@@ -64,8 +62,10 @@
           (symbol icon)))
   (setf (icon cursor) icon))
 
-(defclass window (window:window
+(defclass window (alloy:ui
+                  window:window
                   fb:event-handler
+                  renderer
                   org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
   ((native :accessor native)
    (screen :initarg :screen :reader window:screen)
@@ -84,16 +84,16 @@
   (or (null (native window))
       (fb:close-requested-p (native window))))
 
-(defmethod alloy:render ((screen screen) (window window))
-  (setf (buffer screen) (fb:buffer (native window)))
-  (setf (buffer-size screen) (fb:size (native window)))
-  (call-next-method)
+(defmethod buffer ((window window))
+  (fb:buffer (native window)))
+
+(defmethod buffer-size ((window window))
+  (fb:size (native window)))
+
+(defmethod alloy:render :after ((renderer renderer) (window window))
   (fb:swap-buffers (native window)))
 
-(defmethod alloy:maybe-render ((screen screen) (window window))
-  (setf (buffer screen) (fb:buffer (native window)))
-  (setf (buffer-size screen) (fb:size (native window)))
-  (call-next-method)
+(defmethod alloy:maybe-render :after ((renderer renderer) (window window))
   (fb:swap-buffers (native window)))
 
 ;;;; Window control
@@ -194,7 +194,7 @@
   (alloy:notice-size (alloy:px-size width height) window))
 
 (defmethod fb:window-refreshed ((window window))
-  (alloy:render (window:screen window) window))
+  (alloy:render window window))
 
 (defmethod fb:window-focused ((window window) focused-p))
 

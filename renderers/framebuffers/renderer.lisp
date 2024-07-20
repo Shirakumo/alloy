@@ -1,8 +1,7 @@
 (in-package #:org.shirakumo.alloy.renderers.framebuffers)
 
 (defclass renderer (simple:transformed-renderer)
-  ((buffer :accessor buffer)
-   (buffer-size :accessor buffer-size)))
+  ())
 
 (defclass raster-shape (simple:shape)
   ((sampler :initform (raster:ensure-sampler NIL) :accessor sampler)))
@@ -94,7 +93,7 @@
   (let ((x (alloy:pxx extent)) (y (alloy:pxy extent))
         (w (alloy:pxw extent)) (h (alloy:pxh extent)))
     ;; FIXME: this is not correct
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-rectangle x y w h (buffer renderer) bw bh))))
 
 (defmethod alloy:render ((renderer renderer) (shape simple:icon))
@@ -107,7 +106,7 @@
     ;; FIXME: consider transform matrix rotations properly
     (multiple-value-setq (x y) (simple:mat*p (simple:transform-matrix renderer) x y))
     (multiple-value-setq (w h) (simple:mat*v (simple:transform-matrix renderer) w h))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-image image x y (buffer renderer) bw bh
                          :w w :h h :transform (convert-transform scale offset)
                          :sizing (simple:sizing shape)
@@ -142,7 +141,7 @@
     ;; FIXME: consider transform matrix rotations properly
     (multiple-value-setq (x y) (simple:mat*p (simple:transform-matrix renderer) x y))
     (multiple-value-setq (w h) (simple:mat*v (simple:transform-matrix renderer) w h))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-rectangle x y w h (buffer renderer) bw bh :sampler (sampler shape) :line-width lw))))
 
 (defclass filled-rectangle (simple:filled-rectangle raster-shape) ())
@@ -154,7 +153,7 @@
     ;; FIXME: consider transform matrix rotations properly
     (multiple-value-setq (x y) (simple:mat*p (simple:transform-matrix renderer) x y))
     (multiple-value-setq (w h) (simple:mat*v (simple:transform-matrix renderer) w h))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-rectangle x y w h (buffer renderer) bw bh :sampler (sampler shape)))))
 
 (defclass outlined-ellipse (simple:outlined-ellipse raster-shape) ())
@@ -167,7 +166,7 @@
     ;; FIXME: consider transform matrix rotations properly
     (multiple-value-setq (x y) (simple:mat*p (simple:transform-matrix renderer) x y))
     (multiple-value-setq (w h) (simple:mat*v (simple:transform-matrix renderer) w h))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-ellipse x y w h (buffer renderer) bw bh :sampler (sampler shape) :line-width lw :start (simple:start-angle shape) :end (simple:end-angle shape)))))
 
 (defclass filled-ellipse (simple:filled-ellipse raster-shape) ())
@@ -179,7 +178,7 @@
     ;; FIXME: consider transform matrix rotations properly
     (multiple-value-setq (x y) (simple:mat*p (simple:transform-matrix renderer) x y))
     (multiple-value-setq (w h) (simple:mat*v (simple:transform-matrix renderer) w h))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-ellipse x y w h (buffer renderer) bw bh :sampler (sampler shape) :start (simple:start-angle shape) :end (simple:end-angle shape)))))
 
 (defclass polygon (simple:polygon raster-shape) ())
@@ -192,7 +191,7 @@
           do (multiple-value-bind (x y) (simple:mat*p (simple:transform-matrix renderer) (alloy:pxx point) (alloy:pxy point))
                (setf (aref points (+ 0 i)) x)
                (setf (aref points (+ 1 i)) y)))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-polygon points (buffer renderer) bw bh :sampler (sampler shape)))))
 
 (defclass line-strip (simple:line-strip raster-shape) ())
@@ -206,7 +205,7 @@
           do (multiple-value-bind (x y) (simple:mat*p (simple:transform-matrix renderer) (alloy:pxx point) (alloy:pxy point))
                (setf (aref points (+ 0 i)) x)
                (setf (aref points (+ 1 i)) y)))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-lines points (buffer renderer) bw bh
                          :sampler (sampler shape) :line-width lw
                          :line-style (simple:line-style shape)
@@ -224,7 +223,7 @@
           do (multiple-value-bind (x y) (simple:mat*p (simple:transform-matrix renderer) (alloy:pxx point) (alloy:pxy point))
                (setf (aref points (+ 0 i)) x)
                (setf (aref points (+ 1 i)) y)))
-    (destructuring-bind (bw bh) (buffer-size renderer)
+    (destructuring-bind (bw . bh) (buffer-size renderer)
       (raster:draw-curves points (buffer renderer) bw bh
                          :sampler (sampler shape) :line-width lw
                          :line-style (simple:line-style shape)

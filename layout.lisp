@@ -411,11 +411,13 @@
   (deregister (popups tree) renderer))
 
 (defmethod render ((renderer renderer) (tree layout-tree))
-  (render renderer (root tree))
+  (when (root tree)
+    (render renderer (root tree)))
   (render renderer (popups tree)))
 
 (defmethod maybe-render ((renderer renderer) (tree layout-tree))
-  (maybe-render renderer (root tree))
+  (when (root tree)
+    (maybe-render renderer (root tree)))
   (maybe-render renderer (popups tree)))
 
 (defmethod handle ((event layout-event) (tree layout-tree))
