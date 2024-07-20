@@ -32,5 +32,5 @@
                 (if (boundp '*screen*)
                     (,thunk *screen*)
                     (framebuffers:with-screen (*screen* 'screen)
-                      (thunk *screen*)))))
+                      (,thunk *screen*)))))
             (pushnew ',name *examples*))))

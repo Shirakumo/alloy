@@ -95,9 +95,8 @@
     (focus-parent element)))
 
 (defmethod handle :around ((event event) (element focus-element))
-  (if (focus-tree element)
-      (call-next-method)
-      (decline)))
+  (when (focus-tree element)
+    (call-next-method)))
 
 (defmethod handle ((event event) (element focus-element))
   (if (eq element (focus-parent element))

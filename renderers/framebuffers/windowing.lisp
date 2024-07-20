@@ -4,8 +4,8 @@
   ((native :initarg :native :accessor native)))
 
 (defmethod alloy:bounds ((monitor monitor))
-  (destructuring-bind (w h) (fb:size (native monitor))
-    (destructuring-bind (x y) (fb:location (native monitor))
+  (destructuring-bind (w . h) (fb:size (native monitor))
+    (destructuring-bind (x . y) (fb:location (native monitor))
       (alloy:px-extent x y w h))))
 
 (defclass screen (window:screen renderer)
@@ -29,18 +29,27 @@
   (apply #'make-instance 'window :screen screen args))
 
 (defmethod process-events ((screen screen) &key timeout)
-  (fb:process-events (windows screen) :timeout timeout)
-  (setf (windows screen) (remove-if #'fb:close-requested-p (windows screen)))
+  (fb:process-events (mapcar #'native (windows screen)) :timeout timeout)
+  (let ((windows ()))
+    (dolist (window (windows screen))
+      (if (fb:close-requested-p (native window))
+          (fb:close (native window))
+          (push window windows)))
+    (setf (windows screen) (nreverse windows)))
   screen)
 
 (defmacro with-screen ((screen &optional (type ''screen) &rest initargs) &body body)
-  (let ((thunk (gensym "THUNK")))
-    `(let ((,screen (make-instance ,type ,@initargs)))
-       (locally ,@body)
-       (loop do (dolist (window (windows ,screen))
-                  (alloy:maybe-render ,screen window))
-                (process-events ,screen :timeout T)
-             while (windows ,screen)))))
+  `(let ((,screen (make-instance ,type ,@initargs)))
+     (unwind-protect
+          (loop initially (let ((,screen ,screen))
+                            ,@body)
+                do (dolist (window (windows ,screen))
+                     (alloy:render ,screen window))
+                   (process-events ,screen :timeout T)
+                while (windows ,screen))
+       (dolist (window (windows ,screen))
+         (fb:close (native window)))
+       (process-events ,screen :timeout NIL))))
 
 (defclass cursor (window:cursor)
   ((native :initarg :native :accessor native)
@@ -65,11 +74,15 @@
    (cursor :reader window:cursor)))
 
 (defmethod initialize-instance :after ((window window) &key)
-  (setf (native window) (fb:open))
+  (setf (native window) (fb:open :event-handler window))
   #++
   (setf (slot-value window 'cursor) (make-instance 'cursor :window native))
   (push window (windows (window:screen window)))
   (setf (fb:close-requested-p (native window)) NIL))
+
+(defmethod fb:close-requested-p ((window window))
+  (or (null (native window))
+      (fb:close-requested-p (native window))))
 
 (defmethod alloy:render ((screen screen) (window window))
   (setf (buffer screen) (fb:buffer (native window)))
@@ -95,8 +108,8 @@
 (defmethod window:move-to-back ((window window)))
 
 (defmethod alloy:bounds ((window window))
-  (destructuring-bind (w h) (fb:size (native window))
-    (destructuring-bind (x y) (fb:location (native window))
+  (destructuring-bind (w . h) (fb:size (native window))
+    (destructuring-bind (x . y) (fb:location (native window))
       (alloy:px-extent x y w h))))
 
 (defmethod (setf alloy:bounds) (bounds (window window))
@@ -105,7 +118,7 @@
   bounds)
 
 (defmethod window:max-size ((window window))
-  (destructuring-bind (w h) (fb:maximum-size (native window))
+  (destructuring-bind (w . h) (fb:maximum-size (native window))
     (alloy:px-size (or w 0) (or h 0))))
 
 (defmethod (setf window:max-size) (size (window window))
@@ -114,7 +127,7 @@
       (setf (fb:maximum-size (native window)) NIL)))
 
 (defmethod window:min-size ((window window))
-  (destructuring-bind (w h) (fb:minimum-size (native window))
+  (destructuring-bind (w . h) (fb:minimum-size (native window))
     (alloy:px-size (or w 0) (or h 0))))
 
 (defmethod (setf window:min-size) (size (window window))
@@ -194,6 +207,10 @@
 (defmethod fb:window-closed ((window window))
   (alloy:handle (make-instance 'window:close) window))
 
+(defmethod pointer-location ((window window))
+  (destructuring-bind (x . y) (fb:mouse-location (native window))
+    (alloy:point x y)))
+
 (defmethod fb:mouse-button-changed ((window window) button action modifiers)
   (let ((location (pointer-location window)))
     (case action
@@ -201,12 +218,12 @@
       (:release (alloy:handle (make-instance 'alloy:pointer-up :kind button :location location) window)))))
 
 (defmethod fb:mouse-moved ((window window) xpos ypos)
-  (let ((location (pointer-location window)))
-    (alloy:handle (make-instance 'alloy:pointer-move :old-location location :location new) window)
-    (setf (pointer-location window) new)))
+  (let ((old (pointer-location window))
+        (new (alloy:point xpos ypos)))
+    (alloy:handle (make-instance 'alloy:pointer-move :old-location old :location new) window)))
 
 (defmethod fb:mouse-entered ((window window) entered-p)
-  (alloy:handle (make-instance (if entered-p 'window:pointer-enter 'window:pointer-leave)) window))
+  (alloy:handle (make-instance (if entered-p 'window:pointer-enter 'window:pointer-leave) :location (pointer-location window)) window))
 
 (defmethod fb:mouse-scrolled ((window window) xoffset yoffset)
   (alloy:handle (make-instance 'alloy:scroll :dx xoffset :dy yoffset :location (pointer-location window)) window))
@@ -225,5 +242,5 @@
 
 (defmethod fb:display-connected ((window window) display connected-p)
   (if connected-p
-      (push (make-instance 'monitor :native display) (displays (window:screen window)))
-      (setf (displays (window:screen window)) (remove display (displays (window:screen window)) :key #'native))))
+      (push (make-instance 'monitor :native display) (monitors (window:screen window)))
+      (setf (monitors (window:screen window)) (remove display (monitors (window:screen window)) :key #'native))))
