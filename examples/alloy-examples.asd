@@ -19,6 +19,6 @@
                (:file "gradient")
                (:file "grid-bag-layout")
                (:file "sizing"))
-  :depends-on (:alloy-framebuffers
+  :depends-on (:alloy-glfw
                :alloy-constraint
                :font-discovery))
