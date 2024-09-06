@@ -95,12 +95,12 @@
     (render renderer (inner layout))))
 
 (defmethod ensure-visible ((element layout-element) (layout clip-view))
+  ;; FIXME: This does not work at all
+  #++
   (let* ((view (bounds layout))
          (element (bounds element))
          (vyb (- (pxy (offset layout))))
          (vyt (- (pxh view) (pxy (offset layout)))))
-    ;; FIXME: This does **not** work correctly for nested layouts.
-    ;; KLUDGE: terrible kludge for Y only for now.
     (cond ((< (pxy element) vyb)
            (setf (offset layout) (px-point 0.0 (- (pxy element)))))
           ((< vyt (+ (pxy element) (pxh element)))
