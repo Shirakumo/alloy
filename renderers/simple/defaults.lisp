@@ -205,6 +205,18 @@
 (defmethod polygon ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'polygon :points points initargs))
 
+(defmethod bounds ((polygon polygon))
+  (destructuring-bind (a . points) (points polygon)
+    (let* ((x- (alloy:pxx a)) (y- (alloy:pxy a))
+           (x+ x-) (y+ y-))
+      (dolist (p points (alloy:px-extent x- y- (- x+ x-) (- y+ y-)))
+        (let ((x (alloy:pxx p)) (y (alloy:pxy p)))
+          (setf x- (min x- x) y- (min y- y)
+                x+ (max x+ x) y+ (max y+ y)))))))
+
+(defmethod alloy:suggest-size ((size alloy:size) (polygon polygon))
+  size)
+
 (defclass line-strip (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
