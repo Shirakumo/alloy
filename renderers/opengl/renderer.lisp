@@ -311,12 +311,12 @@
 
 (let ((rect (make-instance 'simple:filled-rectangle :bounds (alloy:extent))))
   (defmethod simple:clip ((renderer renderer) (extent alloy:extent))
-    (setf (simple:bounds rect) extent)
+    (setf (simple:bounds rect) (alloy:px-extent (alloy:pxx extent) (alloy:pxy extent) (alloy:pxw extent) (alloy:pxh extent)))
     (simple:clip renderer rect))
 
   (defmethod simple:clip ((renderer renderer) (extent alloy:size))
     ;; TODO: make this not cons
-    (setf (simple:bounds rect) (alloy:extent 0 0 (alloy:size-w extent) (alloy:size-h extent)))
+    (setf (simple:bounds rect) (alloy:px-extent 0 0 (alloy:pxw extent) (alloy:pxh extent)))
     (simple:clip renderer rect))
 
   (defmethod simple:call-with-pushed-transforms :around (function (renderer renderer) &key clear)
