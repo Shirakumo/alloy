@@ -235,8 +235,7 @@
     (contained-p thing bounds)))
 
 (defmethod constrain-visibility ((element layout-element) (renderer renderer))
-  (let ((bounds (%extent (px 0) (px 0) (w element) (h element))))
-    ;(declare (dynamic-extent bounds))
+  (with-global-bounds (bounds element)
     (constrain-visibility bounds renderer)))
 
 (defmethod set-layout-tree :before (tree (element layout-element))
