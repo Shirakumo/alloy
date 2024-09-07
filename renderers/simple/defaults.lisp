@@ -215,7 +215,7 @@
                 x+ (max x+ x) y+ (max y+ y)))))))
 
 (defmethod alloy:suggest-size ((size alloy:size) (polygon polygon))
-  size)
+  (bounds polygon))
 
 (defclass line-strip (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
@@ -223,11 +223,30 @@
 (defmethod line-strip ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'line-strip :points points initargs))
 
+(defmethod bounds ((line-strip line-strip))
+  (destructuring-bind (a . points) (points line-strip)
+    (let* ((x- (alloy:pxx a)) (y- (alloy:pxy a))
+           (x+ x-) (y+ y-))
+      (dolist (p points (alloy:px-extent x- y- (- x+ x-) (- y+ y-)))
+        (let ((x (alloy:pxx p)) (y (alloy:pxy p)))
+          (setf x- (min x- x) y- (min y- y)
+                x+ (max x+ x) y+ (max y+ y)))))))
+
+(defmethod alloy:suggest-size ((size alloy:size) (line-strip line-strip))
+  (bounds line-strip))
+
 (defclass curve (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
 (defmethod curve ((renderer renderer) points &rest initargs)
   (apply #'make-instance 'curve :points points initargs))
+
+(defmethod bounds ((curve curve))
+  ;; TODO: implement
+  (error "IMPLEMENT ME"))
+
+(defmethod alloy:suggest-size ((size alloy:size) (curve curve))
+  (bounds curve))
 
 ;; TODO: changing styles and size, multiple styles and size per text
 ;;       Might be too much for a simple interface though. Maybe could be
@@ -328,6 +347,17 @@
 (defmethod reinitialize-instance :after ((icon icon) &key (image NIL image-p) renderer)
   (when (and image-p (not (typep image 'image)))
     (setf (image icon) (request-image renderer image))))
+
+(defmethod alloy:bounds ((icon icon))
+  (alloy:ensure-extent
+   (bounds icon)
+   (alloy:extent (alloy:pxx (shift icon))
+                 (alloy:pxy (shift icon))
+                 (* (alloy:pxw (size icon)) (alloy:pxw (size (image icon))))
+                 (* (alloy:pxh (size icon)) (alloy:pxh (size (image icon)))))))
+
+(defmethod alloy:suggest-size ((size alloy:size) (icon icon))
+  (alloy:bounds icon))
 
 (defclass cursor (filled-rectangle)
   ((text-object :initarg :text :accessor text-object)
