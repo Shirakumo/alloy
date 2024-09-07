@@ -43,11 +43,6 @@
   (setf (extent-w (visible-bounds renderer)) (px float-features:single-float-positive-infinity))
   (setf (extent-h (visible-bounds renderer)) (px float-features:single-float-positive-infinity)))
 
-(defmethod translate :before ((renderer renderer) (point point))
-  (let ((bounds (visible-bounds renderer)))
-    (setf (extent-x bounds) (px (- (to-px (extent-x bounds)) (to-px (point-x point)))))
-    (setf (extent-y bounds) (px (- (to-px (extent-y bounds)) (to-px (point-y point)))))))
-
 (defmethod extent-visible-p ((extent extent) (renderer renderer))
   (overlapping-p extent (visible-bounds renderer)))
 
