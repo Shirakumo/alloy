@@ -60,18 +60,20 @@
   (refit layout))
 
 (defmethod compute-global-position ((element clip-view))
-  (with-unit-parent element
-    (let ((x 0f0) (y 0f0))
-      (loop for current = element then parent
-            for parent = (layout-parent current)
-            do (incf x (pxx (bounds current)))
-               (incf y (pxy (bounds current)))
-               (when (typep current 'clip-view)
-                 (incf x (pxx (offset current)))
-                 (incf y (pxy (offset current))))
-            until (eql current parent))
-      (values (- x (pxx (offset element)))
-              (- y (pxy (offset element)))))))
+  (let ((x 0f0) (y 0f0))
+    (when (layout-tree element)
+      (with-unit-parent element
+        (loop for current = element then parent
+              for parent = (layout-parent current)
+              do (incf x (pxx (bounds current)))
+                 (incf y (pxy (bounds current)))
+                 ;; KLUDGE: wish this didn't have to be like this.
+                 (when (typep current 'clip-view)
+                   (incf x (pxx (offset current)))
+                   (incf y (pxy (offset current))))
+              until (eql current parent))))
+    (values (- x (pxx (offset element)))
+            (- y (pxy (offset element))))))
 
 (defmethod handle ((event scroll) (layout clip-view))
   (restart-case (call-next-method)
