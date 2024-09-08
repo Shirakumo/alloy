@@ -129,7 +129,8 @@
     (setf (alloy:sizing-strategy renderable) (compute-sizing-strategy renderer renderable))))
 
 (defmethod alloy:refresh :after ((renderable renderable))
-  (setf (realized-p renderable) NIL))
+  (setf (realized-p renderable) NIL)
+  (alloy:mark-for-render renderable))
 
 (defmethod clear-shapes ((renderable renderable))
   (setf (fill-pointer (shapes renderable)) 0))
