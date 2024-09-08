@@ -51,4 +51,5 @@
    #:lerp)
   ;; change.lisp
   (:export
-   #:compile-change-tracker))
+   #:compile-change-tracker
+   #:smooth-scrolling-clip-view))
