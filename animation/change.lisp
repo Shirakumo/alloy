@@ -35,7 +35,7 @@
 
 (defclass smooth-scrolling-clip-view (alloy:clip-view)
   ((real-offset :initform (alloy:px-point 0 0) :accessor real-offset)
-   (scroll-delay :initarg :scroll-delay :initform 0.1 :accessor scroll-delay)
+   (scroll-delay :initarg :scroll-delay :initform 0.2 :accessor scroll-delay)
    (scroll-time :initform 0.0 :accessor scroll-time)))
 
 (defmethod (setf alloy:offset) (value (layout smooth-scrolling-clip-view))
