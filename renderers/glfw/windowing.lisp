@@ -192,7 +192,7 @@
 (defmethod (setf window:min-size) (value (window window))
   (let ((limits (glfw:size-limits window)))
     (setf (glfw:size-limits window) (list (when value (round (alloy:pxw value)))
-                                          (when value (round (alloy:pxw value)))
+                                          (when value (round (alloy:pxh value)))
                                           (third limits)
                                           (fourth limits)))
     value))
@@ -206,7 +206,7 @@
     (setf (glfw:size-limits window) (list (first limits)
                                           (second limits)
                                           (when value (round (alloy:pxw value)))
-                                          (when value (round (alloy:pxw value)))))
+                                          (when value (round (alloy:pxh value)))))
     value))
 
 (defmethod alloy:suggest-size (size (window window))
