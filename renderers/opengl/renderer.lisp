@@ -629,7 +629,7 @@
                                    (T 0.0)))
     ;; KLUDGE: I don't think this is quite right yet but whatever.
     (setf (uniform shader "line_width") (/ (alloy:to-px (simple:line-width shape))
-                                           (max w h)))
+                                           (max w h 0.00001)))
     (setf (uniform shader "view_size") (view-size renderer))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
 
