@@ -1,8 +1,5 @@
 (in-package #:org.shirakumo.alloy)
 
-(defclass icon (component)
-  ())
-
 (defclass value-component (component)
   ((value-function :initarg :value-function :initform 'value :reader value-function)))
 
@@ -63,3 +60,8 @@
 
 (defmethod enter ((string string) (layout layout) &rest args)
   (apply #'enter (make-instance 'label* :value string) layout args))
+
+(defclass icon (value-component)
+  ())
+
+(defclass icon* (icon direct-value-component) ())
