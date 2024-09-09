@@ -325,12 +325,6 @@
 (defmethod (setf markup) :around ((markup cons) (text text))
   (call-next-method (sort-markup markup) text))
 
-(defmethod alloy:render :before ((renderer renderer) (text text))
-  (let ((bounds (bounds text)))
-    (typecase bounds
-      (alloy:point)
-      (t (alloy:constrain-visibility (alloy:ensure-extent bounds) renderer)))))
-
 (defclass icon (shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)
    ;; TODO: rename to SCALING and OFFSET for consistency
