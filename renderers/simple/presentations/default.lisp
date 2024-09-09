@@ -418,6 +418,9 @@
               (:strong (colored:color 0.5 0.5 0.5))
               (T (colored:color 0.2 0.2 0.2)))))
 
+(defmethod compute-sizing-strategy ((renderer default-look-and-feel) (renderable alloy:scrollbar))
+  (load-time-value (make-instance 'alloy:at-least :minimum-size (alloy:size 10 10))))
+
 (defmethod alloy:render :before ((renderer renderer) (component alloy:scrollbar))
   (alloy:constrain-visibility component renderer))
 
