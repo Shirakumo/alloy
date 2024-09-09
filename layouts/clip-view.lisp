@@ -1,7 +1,7 @@
 (in-package #:org.shirakumo.alloy)
 
 (defclass clip-view (layout single-container observable)
-  ((offset :initarg :offset :initform (px-point 0 0) :accessor offset)
+  ((offset :initarg :offset :initform (px-point 0 most-negative-single-float) :accessor offset)
    (cell-margins :initarg :cell-margins :initform (margins) :accessor cell-margins)
    (stretch :initarg :stretch :initform T :accessor stretch)
    (limit :initarg :limit :initform NIL :accessor limit)))
@@ -43,7 +43,7 @@
              (< (pxw (bounds layout)) (pxw (bounds (inner layout)))))))))
 
 (defmethod refit ((layout clip-view))
-  (when (inner layout)
+  (when (and (inner layout) (layout-tree layout))
     (with-unit-parent layout
       (let* ((bounds (ensure-extent (cell-margins layout) (bounds layout)))
              (ideal (suggest-size bounds (inner layout))))
