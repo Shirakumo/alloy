@@ -336,7 +336,7 @@
 
 (define-realization (default-look-and-feel alloy:progress)
   ((:background simple:rectangle)
-   (alloy:margins))
+   (alloy:extent 0 0 0 (alloy:ph)))
   ((:bar simple:rectangle)
    (alloy:margins 3))
   ((:label simple:text)
@@ -348,8 +348,8 @@
 (define-update (default-look-and-feel alloy:progress)
   (:bar
    :pattern (colored:color 0.25 0.2 0.8)
-   :scale (let ((p (/ alloy:value (alloy:maximum alloy:renderable))))
-            (alloy:px-size p 1)))
+   :bounds (let ((p (/ alloy:value (alloy:maximum alloy:renderable))))
+             (alloy:extent 0 0 (alloy:pw p) (alloy:ph))))
   (:label
    :text (format NIL "~,1f%" (/ alloy:value (alloy:maximum alloy:renderable) 1/100))
    :pattern colors:white))
