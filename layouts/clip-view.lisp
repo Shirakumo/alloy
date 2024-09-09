@@ -46,7 +46,8 @@
   (when (and (inner layout) (layout-tree layout))
     (with-unit-parent layout
       (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
-        (let* ((bounds (px-size (- r l) (- u b)))
+        (let* ((bounds (bounds layout))
+               (bounds (px-size (- (pxw bounds) r l) (- (pxh bounds) u b)))
                (ideal (suggest-size bounds (inner layout))))
           (setf (bounds (inner layout)) (px-extent l b
                                                    (cond ((null (stretch layout)) (w ideal))
