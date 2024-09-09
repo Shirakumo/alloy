@@ -45,15 +45,16 @@
 (defmethod refit ((layout clip-view))
   (when (and (inner layout) (layout-tree layout))
     (with-unit-parent layout
-      (let* ((bounds (ensure-extent (cell-margins layout) (bounds layout)))
-             (ideal (suggest-size bounds (inner layout))))
-        (setf (bounds (inner layout)) (px-extent (x bounds) (y bounds)
-                                                 (cond ((null (stretch layout)) (w ideal))
-                                                       ((eq :x (limit layout)) (w bounds))
-                                                       (T (max (pxw ideal) (pxw bounds))))
-                                                 (cond ((null (stretch layout)) (h ideal))
-                                                       ((eq :y (limit layout)) (h bounds))
-                                                       (T (max (pxh ideal) (pxh bounds)))))))
+      (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
+        (let* ((bounds (px-size (- r l) (- u b)))
+               (ideal (suggest-size bounds (inner layout))))
+          (setf (bounds (inner layout)) (px-extent l b
+                                                   (cond ((null (stretch layout)) (w ideal))
+                                                         ((eq :x (limit layout)) (w bounds))
+                                                         (T (max (pxw ideal) (pxw bounds))))
+                                                   (cond ((null (stretch layout)) (h ideal))
+                                                         ((eq :y (limit layout)) (h bounds))
+                                                         (T (max (pxh ideal) (pxh bounds))))))))
       ;; Ensure we clamp the offset into valid bounds.
       (setf (offset layout) (offset layout)))))
 
