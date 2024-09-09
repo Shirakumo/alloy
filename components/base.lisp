@@ -64,4 +64,7 @@
 (defclass icon (value-component)
   ())
 
+(defmethod register ((icon icon) (renderer renderer))
+  (register (value icon) renderer))
+
 (defclass icon* (icon direct-value-component) ())
