@@ -217,7 +217,6 @@
 
 (defmethod (setf alloy:bounds) :after (extent (window window))
   (let ((target (simple:transform-matrix window)))
-    (setf (simple:identity-matrix window) target)
     (setf (aref target 0) (/ 2f0 (max 1f0 (alloy:pxw extent))))
     (setf (aref target 1) 0f0)
     (setf (aref target 2) -1f0)
@@ -228,7 +227,8 @@
 
     (setf (aref target 6) 0f0)
     (setf (aref target 7) 0f0)
-    (setf (aref target 8) 0.0001f0)))
+    (setf (aref target 8) 0.0001f0)
+    (setf (simple:identity-matrix window) (copy-seq target))))
 
 (defmethod alloy:dots-per-cm ((window window))
   (alloy:dots-per-cm (parent window)))

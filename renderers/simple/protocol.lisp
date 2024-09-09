@@ -35,7 +35,12 @@
 
 (defmethod alloy:constrain-visibility ((extent alloy:extent) (renderer renderer))
   (call-next-method)
-  (clip renderer extent))
+  ;; constrain-visibility's extent is in the global frame, so we need to
+  ;; temporarily reset the transforms to the identity while we do the clip.
+  (let ((old (transform-matrix renderer)))
+    (setf (transform-matrix renderer) (identity-matrix renderer))
+    (clip renderer extent)
+    (setf (transform-matrix renderer) old)))
 
 (defmethod alloy:render :around ((renderer renderer) (layout alloy:layout-element))
   (with-pushed-transforms (renderer)
