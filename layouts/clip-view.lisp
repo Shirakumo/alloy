@@ -2,6 +2,7 @@
 
 (defclass clip-view (layout single-container observable)
   ((offset :initarg :offset :initform (px-point 0 0) :accessor offset)
+   (cell-margins :initarg :cell-margins :initform (margins) :accessor cell-margins)
    (stretch :initarg :stretch :initform T :accessor stretch)
    (limit :initarg :limit :initform NIL :accessor limit)))
 
@@ -44,9 +45,9 @@
 (defmethod refit ((layout clip-view))
   (when (inner layout)
     (with-unit-parent layout
-      (let* ((bounds (bounds layout))
+      (let* ((bounds (ensure-extent (cell-margins layout) (bounds layout)))
              (ideal (suggest-size bounds (inner layout))))
-        (setf (bounds (inner layout)) (px-extent 0 0
+        (setf (bounds (inner layout)) (px-extent (x bounds) (y bounds)
                                                  (cond ((null (stretch layout)) (w ideal))
                                                        ((eq :x (limit layout)) (w bounds))
                                                        (T (max (pxw ideal) (pxw bounds))))
