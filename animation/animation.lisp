@@ -19,14 +19,15 @@
 (defgeneric apply-animation (animation animated))
 
 ;; TODO: fold tween into animation
-(defstruct (tween (:constructor make-tween (setter stops values easings &optional (loop NIL))))
+(defstruct (tween (:constructor make-tween (setter stops values easings &optional (loop NIL) (delay 0f0))))
   (setter NIL :type function)
   (stops NIL :type (simple-array single-float (*)))
   (values NIL :type simple-vector)
   (easings NIL :type simple-vector)
   (idx 0 :type (unsigned-byte 32))
   (clock 0f0 :type single-float)
-  (loop NIL :type T))
+  (loop NIL :type T)
+  (delay 0f0 :type single-float))
 
 (defun find-tween-idx (tween clock)
   ;; TODO: could speed this up with bin search, but not sure if worth it.
@@ -42,14 +43,14 @@
 
 (defmethod shared-initialize :after ((animated animated) slots &key (tweens NIL tweens-p))
   (when tweens-p
-    (let ((old (tweens animated)))
+    (let ((old-tweens (tweens animated)))
       (loop for i from 0 below (length tweens)
             for tween = (aref tweens i)
             for setter = (tween-setter tween)
-            for clock = (loop for tween across old
-                              do (when (eql setter (tween-setter tween))
-                                   (return (tween-clock tween)))
-                              finally (return 0f0))
+            for clock = (loop for old across old-tweens
+                              do (when (eql setter (tween-setter old))
+                                   (return (tween-clock old)))
+                              finally (return (- (tween-delay tween))))
             do (setf (tween-idx tween) (find-tween-idx tween clock))
                (setf (tween-clock tween) clock))
       (setf (tweens animated) tweens))))

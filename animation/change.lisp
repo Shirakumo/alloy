@@ -5,17 +5,18 @@
         (comparators ())
         (tween-infos ()))
     (dolist (tracker trackers (list extractors comparators tween-infos))
-      (destructuring-bind (extractor &key (duration 1.0) (easing 'linear) (comparison 'equalp)) tracker
+      (destructuring-bind (extractor &key (delay 0.0) (duration 1.0) (easing 'linear) (comparison 'equalp)) tracker
         (push extractor extractors)
         (push comparison comparators)
-        (push (list :duration duration :easing easing) tween-infos)))))
+        (push (list :delay delay :duration duration :easing easing) tween-infos)))))
 
 (defun compile-tween (extractor old-val new-val info)
-  (destructuring-bind (&key duration easing) info
+  (destructuring-bind (&key delay duration easing) info
     `(make-tween #'(setf ,extractor)
                  ,(%expand-array (list 0.0 duration) :element-type 'single-float)
                  ,(%expand-array (list old-val new-val))
-                 ,(%expand-array (list `(load-time-value (easing ',easing)))))))
+                 ,(%expand-array (list `(load-time-value (easing ',easing))))
+                 NIL (float ,delay 0f0))))
 
 (defun compile-change-tracker (animated tracked next-method)
   (destructuring-bind (extractors comparators tween-infos) (compile-trackers tracked)
