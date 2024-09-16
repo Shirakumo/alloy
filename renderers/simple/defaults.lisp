@@ -88,6 +88,18 @@
 (defmethod reinitialize-instance :after ((shape shape) &key renderer)
   (declare (ignore renderer)))
 
+(defgeneric bounds (shape))
+
+(defmethod alloy:suggest-size ((size T) (shape shape))
+  (let ((bounds (bounds shape)))
+    (typecase bounds
+      (alloy:size (alloy:px-size (alloy:pxw bounds) (alloy:pxh bounds)))
+      ;; Require enough space for the combined margins.
+      (alloy:margins (alloy:px-size
+                      (max (alloy:pxw size) (+ (alloy:pxl bounds) (alloy:pxr bounds)))
+                      (max (alloy:pxh size) (+ (alloy:pxu bounds) (alloy:pxb bounds)))))
+      (T size))))
+
 (defclass patterned-shape (shape)
   ((pattern :initarg :pattern :initform colors:black :accessor pattern)))
 
@@ -106,19 +118,11 @@
    (join-style :initarg :join-style :initform NIL :accessor join-style)
    (cap-style :initarg :cap-style :initform NIL :accessor cap-style)))
 
-(defclass rectangle (shape)
-  ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
-   (corner-radii :initform (make-array 4 :initial-element (alloy:px 0)) :reader corner-radii)))
+(defclass bounded-shape (shape)
+  ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)))
 
-(defmethod alloy:suggest-size ((size T) (component rectangle))
-  (let ((bounds (bounds component)))
-    (typecase bounds
-      (alloy:size (alloy:px-size (alloy:pxw bounds) (alloy:pxh bounds)))
-      ;; Require enough space for the combined margins.
-      (alloy:margins (alloy:px-size
-                      (max (alloy:pxw size) (+ (alloy:pxl bounds) (alloy:pxr bounds)))
-                      (max (alloy:pxh size) (+ (alloy:pxu bounds) (alloy:pxb bounds)))))
-      (T size))))
+(defclass rectangle (bounded-shape)
+  ((corner-radii :initform (make-array 4 :initial-element (alloy:px 0)) :reader corner-radii)))
 
 (defmethod shared-initialize :after ((rectangle rectangle) slots &key (corner-radii NIL corner-radii-p))
   (when corner-radii-p
@@ -166,9 +170,8 @@
 (defmethod rectangle ((renderer renderer) bounds &rest initargs &key line-width)
   (apply #'make-instance (if line-width 'outlined-rectangle 'filled-rectangle) :bounds bounds initargs))
 
-(defclass ellipse (shape)
-  ((bounds :initarg :bounds :initform (arg! :bounds) :accessor bounds)
-   (start-angle :initform 0.0 :accessor start-angle)
+(defclass ellipse (bounded-shape)
+  ((start-angle :initform 0.0 :accessor start-angle)
    (end-angle :initform #.(float (* 2 PI) 0f0) :accessor end-angle)))
 
 (defmethod shared-initialize :after ((ellipse ellipse) slots &key (start-angle NIL start-angle-p) (end-angle NIL end-angle-p))
@@ -176,16 +179,6 @@
     (setf (start-angle ellipse) start-angle))
   (when end-angle-p
     (setf (end-angle ellipse) end-angle)))
-
-(defmethod alloy:suggest-size ((size T) (component ellipse))
-  (let ((bounds (bounds component)))
-    (typecase bounds
-      (alloy:size (alloy:px-size (alloy:pxw bounds) (alloy:pxh bounds)))
-      ;; Require enough space for the combined margins.
-      (alloy:margins (alloy:px-size
-                      (max (alloy:pxw size) (+ (alloy:pxl bounds) (alloy:pxr bounds)))
-                      (max (alloy:pxh size) (+ (alloy:pxu bounds) (alloy:pxb bounds)))))
-      (T size))))
 
 (defmethod (setf start-angle) ((value real) (ellipse ellipse))
   (setf (slot-value ellipse 'start-angle) (float value 0f0)))
@@ -214,9 +207,6 @@
           (setf x- (min x- x) y- (min y- y)
                 x+ (max x+ x) y+ (max y+ y)))))))
 
-(defmethod alloy:suggest-size ((size alloy:size) (polygon polygon))
-  (bounds polygon))
-
 (defclass line-strip (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
@@ -232,9 +222,6 @@
           (setf x- (min x- x) y- (min y- y)
                 x+ (max x+ x) y+ (max y+ y)))))))
 
-(defmethod alloy:suggest-size ((size alloy:size) (line-strip line-strip))
-  (bounds line-strip))
-
 (defclass curve (outlined-shape)
   ((points :initarg :points :initform (arg! :points) :accessor points)))
 
@@ -244,9 +231,6 @@
 (defmethod bounds ((curve curve))
   ;; TODO: implement
   (error "IMPLEMENT ME"))
-
-(defmethod alloy:suggest-size ((size alloy:size) (curve curve))
-  (bounds curve))
 
 ;; TODO: changing styles and size, multiple styles and size per text
 ;;       Might be too much for a simple interface though. Maybe could be
@@ -296,17 +280,17 @@
           (unless (= (car style) (caar rresults))
             (push style rresults)))))))
 
-(defclass text (shape)
+(defclass text (bounded-shape)
   ((alloy:text :initarg :text :initform (arg! :text) :accessor alloy:text)
    (font :initarg :font :initform (arg! :font) :accessor font)
    (pattern :initarg :pattern :initform colors:black :accessor pattern)
    (size :initarg :size :initform (alloy:un 12) :accessor size)
-   (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
    (valign :initarg :valign :initform :bottom :accessor valign)
    (halign :initarg :halign :initform :start :accessor halign)
    (direction :initarg :direction :initform :right :accessor direction)
    (wrap :initarg :wrap :initform NIL :accessor wrap)
-   (markup :initarg :markup :initform NIL :accessor markup)))
+   (markup :initarg :markup :initform NIL :accessor markup)
+   (bounds :initform (alloy:margins))))
 
 (defmethod text ((renderer renderer) bounds (string string) &rest initargs)
   (apply #'make-instance 'text :text string :bounds bounds :markup (sort-markup (getf initargs :markup)) initargs))
@@ -325,15 +309,15 @@
 (defmethod (setf markup) :around ((markup cons) (text text))
   (call-next-method (sort-markup markup) text))
 
-(defclass icon (shape)
+(defclass icon (bounded-shape)
   ((image :initarg :image :initform (arg! :image) :accessor image)
    ;; TODO: rename to SCALING and OFFSET for consistency
    (size :initarg :size :initform (alloy:px-size 1 1) :accessor size)
    (shift :initarg :shift :initform (alloy:px-point 0 0) :accessor shift)
-   (bounds :initarg :bounds :initform (alloy:margins) :accessor bounds)
    (sizing :initarg :sizing :initform :fit :accessor sizing)
    (valign :initarg :valign :initform :middle :accessor valign)
-   (halign :initarg :halign :initform :left :accessor halign)))
+   (halign :initarg :halign :initform :left :accessor halign)
+   (bounds :initform (alloy:margins))))
 
 (defmethod icon ((renderer renderer) bounds (image image) &rest initargs)
   (apply #'make-instance 'icon :image image :bounds bounds initargs))
@@ -349,9 +333,6 @@
                  (alloy:pxy (shift icon))
                  (* (alloy:pxw (size icon)) (alloy:pxw (size (image icon))))
                  (* (alloy:pxh (size icon)) (alloy:pxh (size (image icon)))))))
-
-(defmethod alloy:suggest-size ((size alloy:size) (icon icon))
-  (alloy:bounds icon))
 
 (defclass cursor (filled-rectangle)
   ((text-object :initarg :text :accessor text-object)
