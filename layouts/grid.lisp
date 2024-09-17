@@ -59,7 +59,7 @@
                    do (vector-push (aref old oidx) new)))
     ;; Update if possible
     (setf (slot-value layout 'elements) new)
-    (when (slot-boundp layout 'layout-parent)
+    (when (layout-tree layout)
       (suggest-size (bounds layout) layout))))
 
 (defmethod enter :before ((element layout-element) (layout grid-layout) &key row col)
