@@ -555,7 +555,7 @@
                (simple:translate renderer extent)
                (setf (uniform shader "transform") (simple:transform-matrix renderer)))
              (setf (uniform shader "size") extent)
-             (let ((min (min (alloy:pxw extent) (alloy:pxh extent))))
+             (let ((min (* 0.5 (min (alloy:pxw extent) (alloy:pxh extent)))))
                (setf (uniform shader "corner_radius[0]") 0.0)
                (setf (uniform shader "corner_radius[1]") (if round-p (min min (alloy:to-px (aref corner-radii 0))) 0.0))
                (setf (uniform shader "corner_radius[2]") (if round-p (min min (alloy:to-px (aref corner-radii 1))) 0.0))
