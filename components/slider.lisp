@@ -22,7 +22,7 @@
 (defmethod slider-unit ((slider slider))
   (destructuring-bind (min . max) (range slider)
     (if (= min max)
-        0
+        1.0
         (max 0 (min 1 (/ (- (value slider) min) (- max min)))))))
 
 (defmethod (setf value) :around (value (slider slider))
