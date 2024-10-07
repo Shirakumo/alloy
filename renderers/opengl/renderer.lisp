@@ -164,7 +164,7 @@
                    (let* ((ax (alloy:pxx a)) (ay (alloy:pxy a))
                           (bx (alloy:pxx b)) (by (alloy:pxy b))
                           (ux (- (- by ay))) (uy (- bx ax))
-                          (len (sqrt (+ (* ux ux) (* uy uy)))))
+                          (len (max 0.00001 (sqrt (+ (* ux ux) (* uy uy))))))
                      (setf ux (/ ux len))
                      (setf uy (/ uy len))
                      (join ax ay bx by ux uy tt))
