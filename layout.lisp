@@ -74,12 +74,15 @@
     (enter element layout-parent)))
 
 (defmethod shared-initialize :after ((element layout-element) (slot-names T)
-                                     &key sizing-strategy)
-  (when sizing-strategy
-    (setf (sizing-strategy element)
-          (typecase sizing-strategy
-            (function (make-instance 'dynamic-size :size-function sizing-strategy))
-            (T sizing-strategy)))))
+                                     &key sizing-strategy ideal-size)
+  (cond (sizing-strategy
+         (setf (sizing-strategy element)
+               (typecase sizing-strategy
+                 (function (make-instance 'dynamic-size :size-function sizing-strategy))
+                 (T sizing-strategy))))
+        (ideal-size
+         (setf (sizing-strategy element)
+               (make-instance 'fixed-size :fixed-size ideal-size)))))
 
 (defmethod print-object ((element layout-element) stream)
   (print-unreadable-object (element stream :type T :identity T)
