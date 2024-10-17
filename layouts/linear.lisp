@@ -86,7 +86,7 @@
                              (px-extent x
                                         (ecase (align layout)
                                           (:start y)
-                                          (:end (- y (+ eh u b))))
+                                          (:end (- y eh)))
                                         (min (- w l r) ew)
                                         eh))
                        (setf eh (+ u b (pxh (bounds element)))))
@@ -139,7 +139,7 @@
                      (setf (bounds element)
                            (px-extent (ecase (align layout)
                                         (:start x)
-                                        (:end (- x (+ ew l r))))
+                                        (:end (- x ew)))
                                       y
                                       ew
                                       (min (- h u b) eh)))
