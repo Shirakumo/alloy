@@ -80,7 +80,7 @@
   (values
    (loop for expression in expressions
          append (transform-expression expression))
-   :medium))
+   :strong))
 
 (define-expression-transform :required (&rest expressions)
   (values
