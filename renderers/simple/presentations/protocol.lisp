@@ -192,8 +192,9 @@
 
 ;;; Animation stuff
 (defmethod animation:update :after ((renderable renderable) dt)
-  (loop for shape across (shapes renderable)
-        do (animation:update (cdr shape) dt)))
+  (when (alloy:layout-tree renderable)
+    (loop for shape across (shapes renderable)
+          do (animation:update (cdr shape) dt))))
 
 ;; When scale changed, recreate to ensure we flush shapes.
 (defmethod alloy:handle :before ((event alloy:scale-changed) (renderable renderable))
