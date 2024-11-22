@@ -1,5 +1,7 @@
 (defpackage #:org.shirakumo.alloy
   (:use #:cl)
+  (:local-nicknames
+   (#:sequences #:org.shirakumo.trivial-extensible-sequences))
   (:shadow #:count #:step #:structure #:close #:declaim #:proclaim)
   ;; builder.lisp
   (:export

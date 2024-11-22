@@ -3,7 +3,7 @@
 (defclass element ()
   ())
 
-(defclass container ()
+(defclass container (sequences:sequence)
   ())
 
 (defgeneric enter (element container &key &allow-other-keys))
@@ -15,6 +15,12 @@
 (defgeneric index-element (index container))
 (defgeneric call-with-elements (function container &key start end from-end))
 (defgeneric clear (container))
+
+(defmethod sequences:length ((container container))
+  (element-count container))
+
+(defmethod sequences:elt ((container container) index)
+  (index-element index container))
 
 (defmacro do-elements ((element container &key start end result from-end) &body body)
   (let ((thunk (gensym "THUNK")))

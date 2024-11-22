@@ -59,6 +59,7 @@
                (:file "widget")
                (:file "documentation"))
   :depends-on (:documentation-utils
+               :trivial-extensible-sequences
                :array-utils
                :float-features
                :global-vars
