@@ -110,7 +110,7 @@
 
 (defmethod (setf text) :after (value (component text-input-component))
   ;; Ensure we clamp the cursor.
-  (move-to (pos (cursor component)) (cursor component))
+  (move-to (or (pos (cursor component)) 0) (cursor component))
   (mark-for-render component))
 
 (defun maybe-enlarge (array size)
