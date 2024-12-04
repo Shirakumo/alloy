@@ -651,7 +651,9 @@
   (let ((label (presentations:find-shape :label component)))
     (when label
       (alloy:with-unit-parent component
-        (alloy:move-to (estimate-cursor-pos label (alloy:location event) (alloy:bounds component)) component)))))
+        (let ((pos (estimate-cursor-pos label (alloy:location event) (alloy:bounds component))))
+          (when pos
+            (alloy:move-to pos component)))))))
 
 (defclass selection (opengl::polygon simple:selection) ())
 
