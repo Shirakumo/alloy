@@ -259,18 +259,18 @@
         (px-extent
          (+ (pxx base) (pxl extent-ish))
          (+ (pxy base) (pxb extent-ish))
-         (- (pxw base) (pxr extent-ish) (pxl extent-ish))
-         (- (pxh base) (pxu extent-ish) (pxb extent-ish))))
+         (max 0.0 (- (pxw base) (pxr extent-ish) (pxl extent-ish)))
+         (max 0.0 (- (pxh base) (pxu extent-ish) (pxb extent-ish)))))
        (size
         (px-extent
          (pxl extent-ish) (pxb extent-ish)
-         (- (pxw base) (pxr extent-ish) (pxl extent-ish))
-         (- (pxh base) (pxu extent-ish) (pxb extent-ish))))
+         (max 0.0 (- (pxw base) (pxr extent-ish) (pxl extent-ish)))
+         (max 0.0 (- (pxh base) (pxu extent-ish) (pxb extent-ish)))))
        (null
         (px-extent
          (pxl extent-ish) (pxb extent-ish)
-         (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish))
-         (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish))))))
+         (max 0.0 (- (pxw *unit-parent*) (pxr extent-ish) (pxl extent-ish)))
+         (max 0.0 (- (pxh *unit-parent*) (pxu extent-ish) (pxb extent-ish)))))))
     (size
      (etypecase base
        (extent
