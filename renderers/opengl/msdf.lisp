@@ -440,7 +440,7 @@
 (defclass text (simple:text)
   ((vertex-data :accessor vertex-data)
    (font-sequence :initform (make-array 1) :accessor font-sequence)
-   (size :reader size :writer (setf size))
+   (real-size :reader size :writer (setf size))
    (location :accessor location)
    (line-breaks :accessor line-breaks)
    (vertex-count :initform NIL :accessor vertex-count)
