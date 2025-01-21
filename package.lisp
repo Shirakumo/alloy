@@ -354,6 +354,10 @@
    #:global-location
    #:sizing-strategy
    #:fixed-size
+   #:dynamic-size
+   #:size-function
+   #:proportional
+   #:aspect-ratio
    #:dont-care
    #:at-least
    #:minimum-size

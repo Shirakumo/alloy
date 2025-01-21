@@ -33,6 +33,15 @@
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy dynamic-size) (size size))
   (funcall (size-function sizing-strategy) layout-element size))
 
+(defclass proportional (sizing-strategy)
+  ((aspect-ratio :initform 1.0 :initarg :aspect-ratio :accessor aspect-ratio)))
+
+(defmethod compute-ideal-size ((layout-element T) (sizing-strategy proportional) (size size))
+  (let ((ratio (aspect-ratio sizing-strategy)))
+    (print (if (< 1.0 ratio)
+               (px-size (pxw size) (/ (pxw size) ratio))
+               (px-size (* (pxh size) ratio) (pxh size))))))
+
 (defclass dont-care (sizing-strategy) ())
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy dont-care) (size size))
