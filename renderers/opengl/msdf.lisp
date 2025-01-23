@@ -11,10 +11,12 @@
    (#:uax-14 #:org.shirakumo.alloy.uax-14))
   (:export
    #:fontcache-default-directory
+   #:fontcache-file
    #:renderer
    #:fontcache-directory
    #:font
    #:file
+   #:cache-font
    #:cached-font
    #:fontcache
    #:atlas
@@ -30,7 +32,7 @@
   #+win32 (merge-pathnames "AppData/Local/alloy/msdf/" (user-homedir-pathname))
   #-win32 (merge-pathnames ".cache/alloy/msdf/" (user-homedir-pathname)))
 
-(defun fontcache-file (path cache)
+(defun fontcache-file (path &optional (cache (fontcache-default-directory)))
   (cond ((or (string= (pathname-type path) "font")
              (string= (pathname-type path) "fnt")
              (string= (pathname-type path) "json"))
@@ -91,12 +93,16 @@
   (loop for font being the hash-values of (fontcache renderer)
         do (alloy:deallocate font)))
 
-(defun cached-font (renderer file &optional family)
+(defun cache-font (font-file &key (cache-file (fontcache-file font-file)) (size 32) (spread 8))
+  (sdf-bmfont:create-bmfont font-file cache-file :size size :mode :msdf+a :type :json :spread spread)
+  cache-file)
+
+(defun cached-font (renderer file &key family evict-cache)
   (let* ((cache-file (if family
                          (make-pathname :name family :type "json" :defaults (fontcache-directory renderer))
                          (fontcache-file file (fontcache-directory renderer))))
          (cache (gethash cache-file (fontcache renderer))))
-    (cond (cache
+    (cond ((and cache (not evict-cache))
            cache)
           (T
            (unless (probe-file cache-file)
@@ -104,7 +110,7 @@
                (error "Specified font file does not exist or is not accessible.~%  ~a" file))
              (ensure-directories-exist cache-file)
              (format T "~&Alloy: Caching font atlas from~%  ~a~%for~%  ~a~%This may take a while.~%" file cache-file)
-             (sdf-bmfont:create-bmfont file cache-file :size 32 :mode :msdf+a :type :json :spread 8))
+             (cache-font file :cache-file cache-file))
            (setf (gethash cache-file (fontcache renderer))
                  (make-instance 'font :family family :file cache-file :renderer renderer))))))
 
@@ -156,7 +162,7 @@
                   (setf (gethash family (font-name-cache renderer))
                         (font-discovery:file (or (apply #'font-discovery:find-font :family family args)
                                                  (error "No font named ~s found." family)))))))
-    (cached-font renderer font family)))
+    (cached-font renderer font :family family)))
 
 (defmethod simple:request-font ((renderer renderer) (file pathname) &key)
   (cached-font renderer file))
