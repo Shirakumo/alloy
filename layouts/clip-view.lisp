@@ -100,6 +100,7 @@
     (render renderer (inner layout))))
 
 (defmethod ensure-visible ((element layout-element) (layout clip-view))
+  ;; FIXME: still not right
   (let* ((element (bounds element))
          (view (bounds layout))
          (off (offset layout))
