@@ -209,38 +209,45 @@
   ((modifiers :initform () :accessor modifiers)
    (target :initform NIL :initarg :target :accessor target)))
 
-(defclass keyboard-layout (vertical-linear-layout)
+(defclass keyboard-layout (grid-bag-layout)
   ((colcount :initarg :colcount :accessor colcount)))
 
 (defmethod (setf bounds) :after (bounds (layout keyboard-layout))
-  (let ((rh (min (/ (pxh bounds) (element-count layout))
-                 (/ (pxw bounds) (* 2 (colcount layout))))))
-    (do-elements (row layout)
-      (setf (row-sizes row) (list rh))
-      (setf (col-sizes row) (loop for el across (col-sizes row)
-                                  collect (if (eql T el) T rh))))))
+  (let ((rh (min (/ (pxh bounds) (length (row-sizes layout)))
+                 (/ (pxw bounds) (length (col-sizes layout))))))
+    (setf (row-sizes layout) (loop for row across (row-sizes layout)
+                                   collect rh))))
 
 (defmethod initialize-instance :after ((keyboard virtual-keyboard) &key (keyboard-spec :100%))
   (let* ((keyboard-spec (ensure-keyboard-spec keyboard-spec))
-         (ratio (/ (loop for row in keyboard-spec maximize (length row))
-                   (length keyboard-spec)))
+         (cols (loop for row in keyboard-spec maximize (length row)))
+         (ratio (/ cols (length keyboard-spec)))
          (layout (make-instance 'keyboard-layout
-                                :cell-margins (px-margins)
-                                :colcount (loop for row in keyboard-spec maximize (length row))
+                                :col-sizes (loop repeat (* 2 cols) collect T)
+                                :row-sizes (loop repeat (length keyboard-spec) collect 50)
+                                :cell-margins (margins 1)
                                 :sizing-strategy (make-instance 'proportional :aspect-ratio ratio)))
          (focus (make-instance 'visual-focus-manager)))
-    (loop for row in keyboard-spec
-          for cols = (loop for (_ extended-p) in row
-                           collect (if extended-p T 50))
-          for lay = (make-instance 'grid-layout :col-sizes cols :row-sizes '(50) :cell-margins (margins 1)
-                                                :layout-parent layout)
-          do (loop for (key) in row
-                   do (if key
-                          (make-instance 'virtual-key :value key
-                                                      :keyboard keyboard
-                                                      :layout-parent lay
-                                                      :focus-parent focus)
-                          (make-instance 'component :layout-parent lay :data NIL))))
+    (loop for y from 0
+          for row in keyboard-spec
+          for flex-count = (cl:count T row :key #'second)
+          for flex-space = (* 2 (- cols (cl:count NIL row :key #'second)))
+          for flex = (floor flex-space flex-count)
+          do (loop for x = 0 then (+ x w)
+                   for (key extended-p) in row
+                   for w = (cond ((not extended-p)
+                                  2)
+                                 ((= 1 flex-count)
+                                  flex-space)
+                                 (T
+                                  (decf flex-count)
+                                  (decf flex-space flex)
+                                  flex))
+                   for component = (if key
+                                       (make-instance 'virtual-key :value key :keyboard keyboard :focus-parent focus)
+                                       (make-instance 'component :data NIL))
+                   do (print (list x y w key))
+                      (enter component layout :x x :y y :w w :h 1)))
     (finish-structure keyboard layout focus)))
 
 (defmethod (setf modifiers) :after (mods (keyboard virtual-keyboard))
