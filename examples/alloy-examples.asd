@@ -18,7 +18,8 @@
                (:file "canvas")
                (:file "gradient")
                (:file "grid-bag-layout")
-               (:file "sizing"))
+               (:file "sizing")
+               (:file "virtual-keyboard"))
   :depends-on (:alloy-glfw
                :alloy-constraint
                :font-discovery))

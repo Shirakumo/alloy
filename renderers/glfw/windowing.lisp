@@ -250,10 +250,10 @@
   (setf (window:icon (window:cursor window)) value))
 
 (defmethod alloy:key-text (key (window window))
-  (%glfw:get-key-name key 0))
+  (ignore-errors (%glfw:get-key-name key 0)))
 
 (defmethod alloy:key-text (key (screen screen))
-  (%glfw:get-key-name key 0))
+  (ignore-errors (%glfw:get-key-name key 0)))
 
 (defmethod window:notify ((window window))
   (glfw:request-attention window))

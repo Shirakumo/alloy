@@ -12,6 +12,8 @@
    (#:colored #:org.shirakumo.alloy.colored)
    (#:colors #:org.shirakumo.alloy.colored.colors))
   (:export
+   #:launch
+   #:list-examples
    #:simple-window
    #:fonts
    #:grid-bag-layout
