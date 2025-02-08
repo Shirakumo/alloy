@@ -213,17 +213,23 @@
   ((colcount :initarg :colcount :accessor colcount)))
 
 (defmethod (setf bounds) :after (bounds (layout keyboard-layout))
-  (let ((rh (min (/ (pxh bounds) (length (row-sizes layout)))
-                 (/ (pxw bounds) (length (col-sizes layout))))))
+  ;; FIXME: probably better to do this in suggest-size
+  (let* ((cols (length (col-sizes layout)))
+         (rows (length (row-sizes layout)))
+         (margin (cell-margins layout))
+         (c (min (/ (- (pxh bounds) (* (+ (pxu margin) (pxb margin)) rows)) rows)
+                 (/ (- (pxw bounds) (* (+ (pxl margin) (pxr margin)) cols)) cols))))
+    (setf (col-sizes layout) (loop for col across (col-sizes layout)
+                                   collect (if (eql T col) T (/ c 2))))
     (setf (row-sizes layout) (loop for row across (row-sizes layout)
-                                   collect rh))))
+                                   collect c))))
 
 (defmethod initialize-instance :after ((keyboard virtual-keyboard) &key (keyboard-spec :100%))
   (let* ((keyboard-spec (ensure-keyboard-spec keyboard-spec))
          (cols (loop for row in keyboard-spec maximize (length row)))
          (ratio (/ cols (length keyboard-spec)))
          (layout (make-instance 'keyboard-layout
-                                :col-sizes (loop repeat (* 2 cols) collect T)
+                                :col-sizes (append '(T) (loop repeat (* 2 cols) collect 25) '(T))
                                 :row-sizes (loop repeat (length keyboard-spec) collect 50)
                                 :cell-margins (margins 1)
                                 :sizing-strategy (make-instance 'proportional :aspect-ratio ratio)))
@@ -233,7 +239,7 @@
           for flex-count = (cl:count T row :key #'second)
           for flex-space = (* 2 (- cols (cl:count NIL row :key #'second)))
           for flex = (floor flex-space flex-count)
-          do (loop for x = 0 then (+ x w)
+          do (loop for x = 1 then (+ x w)
                    for (key extended-p) in row
                    for w = (cond ((not extended-p)
                                   2)
@@ -246,8 +252,7 @@
                    for component = (if key
                                        (make-instance 'virtual-key :value key :keyboard keyboard :focus-parent focus)
                                        (make-instance 'component :data NIL))
-                   do (print (list x y w key))
-                      (enter component layout :x x :y y :w w :h 1)))
+                   do (enter component layout :x x :y y :w w :h 1)))
     (finish-structure keyboard layout focus)))
 
 (defmethod (setf modifiers) :after (mods (keyboard virtual-keyboard))
