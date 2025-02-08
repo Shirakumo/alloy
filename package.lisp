@@ -462,6 +462,12 @@
    #:message
    #:confirm
    #:with-confirmation)
+  ;; structures/keyboard.lisp
+  (:export
+   #:keyboard-spec
+   #:define-keyboard-spec
+   #:virtual-key
+   #:virtual-keyboard)
   ;; structures/menu.lisp
   (:export
    #:separator
