@@ -160,17 +160,36 @@
         (mods (modifiers (keyboard key))))
     (when text
       (let ((caps (member :caps-lock mods))
-            (shift (or (member :left-shift mods) (member :right-shift mods) (member :shift mods))))
+            (shift (member :shift mods)))
         (if (and (or caps shift)
                    (not (and caps shift)))
             (string-upcase text)
             text)))))
+
+(defun key-modifier (value)
+  (case value
+    ((:caps-lock :scroll-lock :num-lock)
+     value)
+    ((:left-shift :right-shift)
+     :shift)
+    ((:left-alt :right-alt)
+     :alt)
+    ((:left-control :right-control)
+     :control)))
 
 (defmethod activate ((key virtual-key))
   (let ((ui (ui key))
         (value (value key))
         (mods (modifiers (keyboard key)))
         (target (target (keyboard key))))
+    (let ((mod (key-modifier value)))
+      (when mod
+        (cond ((find mod mods)
+               (setf (modifiers (keyboard key)) (setf mods (remove mod mods)))
+               (setf (pressed key) NIL))
+              (T
+               (setf (modifiers (keyboard key)) (setf mods (list* mod mods)))
+               (setf (pressed key) T)))))
     (when target
       (handle (make-instance 'key-down :key value :code 0 :modifiers mods) target)
       (handle (make-instance 'key-up :key value :code 0 :modifiers mods) target)
@@ -202,3 +221,8 @@
                                                   :layout-parent lay
                                                   :focus-parent focus)))
     (finish-structure keyboard layout focus)))
+
+(defmethod (setf modifiers) :after (mods (keyboard virtual-keyboard))
+  (do-elements (key (focus-element keyboard))
+    (let ((mod (key-modifier (value key))))
+      (when mod (setf (pressed key) (member mod mods))))))
