@@ -104,20 +104,20 @@
   `(setf (keyboard-spec ',name) (progn ,@spec)))
 
 (define-keyboard-spec :100%
-  "⎋ _ F1 F2 F3 F4 _ F5 F6 F7 F8 _ F9 F10 F11 F12 | ⎙ ⇳ ⎉ | F13 F14 F15 F16
-   $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ | ⌤ ⇱ ⇞ | ⇭ K/ K* K-
-   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ | ⌦ ⇲ ⇟ | K7 K8 K9 K+
-   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ | _ _ _ | K4 K5 K6 K+
-   L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_ | _ ↑ _ | K1 K2 K3 K↵
-   L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ | ← ↓ → | K0_   K. K↵")
+  "⎋ _ F1 F2 F3 F4 _ F5 F6 F7 F8 _ F9 F10 F11 F12 _ ⎙ ⇳ ⎉ _ F13 F14 F15 F16
+   $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ _ ⌤ ⇱ ⇞ _ ⇭ K/ K* K-
+   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ _ ⌦ ⇲ ⇟ _ K7 K8 K9 K+
+   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ _ _ _ _ _ K4 K5 K6 K+
+   L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_ _ _ ↑ _ _ K1 K2 K3 K↵
+   L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ _ ← ↓ → _ K0 K0 K. K↵")
 
 (define-keyboard-spec :80%
-  "⎋ _ F1 F2 F3 F4 _ F5 F6 F7 F8 _ F9 F10 F11 F12 | ⎙ ⇳ ⎉
-   $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ | ⌤ ⇱ ⇞
-   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ | ⌦ ⇲ ⇟
-   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ | _ _ _
-   L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_ | _ ↑ _
-   L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ | ← ↓ →")
+  "⎋ _ F1 F2 F3 F4 _ F5 F6 F7 F8 _ F9 F10 F11 F12_ ⎙ ⇳ ⎉
+   $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ _ ⌤ ⇱ ⇞
+   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ _ ⌦ ⇲ ⇟
+   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ _ _ _ _
+   L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_ _ _ ↑ _
+   L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ _ ← ↓ →")
 
 (define-keyboard-spec :75%
   "⎋ F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 ⎙ ⇳ ⎉
