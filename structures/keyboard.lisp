@@ -209,13 +209,31 @@
   ((modifiers :initform () :accessor modifiers)
    (target :initform NIL :initarg :target :accessor target)))
 
+(defclass keyboard-layout (vertical-linear-layout)
+  ((colcount :initarg :colcount :accessor colcount)))
+
+(defmethod (setf bounds) :after (bounds (layout keyboard-layout))
+  (let ((rh (min (/ (pxh bounds) (element-count layout))
+                 (/ (pxw bounds) (* 2 (colcount layout))))))
+    (do-elements (row layout)
+      (setf (row-sizes row) (list rh))
+      (setf (col-sizes row) (loop for el across (col-sizes row)
+                                  collect (if (eql T el) T rh))))))
+
 (defmethod initialize-instance :after ((keyboard virtual-keyboard) &key (keyboard-spec :100%))
-  (let ((layout (make-instance 'vertical-linear-layout))
-        (focus (make-instance 'visual-focus-manager)))
-    (loop for row in (ensure-keyboard-spec keyboard-spec)
+  (let* ((keyboard-spec (ensure-keyboard-spec keyboard-spec))
+         (ratio (/ (loop for row in keyboard-spec maximize (length row))
+                   (length keyboard-spec)))
+         (layout (make-instance 'keyboard-layout
+                                :cell-margins (px-margins)
+                                :colcount (loop for row in keyboard-spec maximize (length row))
+                                :sizing-strategy (make-instance 'proportional :aspect-ratio ratio)))
+         (focus (make-instance 'visual-focus-manager)))
+    (loop for row in keyboard-spec
           for cols = (loop for (_ extended-p) in row
                            collect (if extended-p T 50))
-          for lay = (make-instance 'grid-layout :col-sizes cols :row-sizes '(50) :layout-parent layout)
+          for lay = (make-instance 'grid-layout :col-sizes cols :row-sizes '(50) :cell-margins (margins 1)
+                                                :layout-parent layout)
           do (loop for (key) in row
                    do (if key
                           (make-instance 'virtual-key :value key
