@@ -62,7 +62,7 @@
     ("K↵" :KP-ENTER)
     ("K." :KP-DECIMAL)))
 
-(defun map-short-key (key)
+(defun parse-key-spec (key)
   (let ((size 1)
         (pos (position #\_ key :start 1)))
     (cond ((null pos))
@@ -72,6 +72,11 @@
           (T
            (setf size (read-from-string key NIL NIL :start (1+ pos)))
            (setf key (subseq key 0 pos))))
+    (values key
+            size)))
+
+(defun map-short-key (key)
+  (multiple-value-bind (key size) (parse-key-spec key)
     (values (unless (string= key "_")
               (or (second (assoc key *keyboard-short-map* :test #'string-equal))
                   (intern (string-upcase key) "KEYWORD")))
@@ -159,7 +164,11 @@
 
 (defmethod text ((key virtual-key))
   (or (key-text (value key) (ui key))
-      (first (find (value key) *keyboard-short-map* :key #'second))
+      (let ((short (first (find (value key) *keyboard-short-map* :key #'second))))
+        (when short
+          (if (< 1 (length short))
+              (string-left-trim "KLR" short)
+              short)))
       (string (value key))))
 
 (defmethod key-text ((key virtual-key) (ui ui))
