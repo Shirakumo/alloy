@@ -121,7 +121,7 @@
    ↹_1.5 Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ _ ⌦ ⇲ ⇟ _ K7 K8 K9 K+
    ⇪_2    A  S  D  F  G  H  J  K  L  ;  ' \\ ↵_ _ _ _ _ _ K4 K5 K6 K+
    L⇧_1.5 < Z  X  C  V  B  N  M  ,  .  /    R⇧_ _ _ ↑ _ _ K1 K2 K3 K↵
-   L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ _ ← ↓ → _ K0_2 K. K↵")
+   L⌃ L⌘ L⌥             ␣_             R⌥ R⌘ R⌃ _ ← ↓ → _ K0_2 K. K↵")
 
 (define-keyboard-spec :80%
   "⎋ _ F1 F2 F3 F4 _ F5 F6 F7 F8 _ F9 F10 F11 F12_ ⎙ ⇳ ⎉

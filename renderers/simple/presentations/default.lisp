@@ -539,6 +539,7 @@
   ((:label simple:text)
    (alloy:margins 1)
    alloy:text
+   :font "NotoSansMath"
    :halign :middle
    :valign :middle))
 
