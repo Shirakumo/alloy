@@ -351,3 +351,24 @@
       (:l1 (send (index-element :left layout)))
       (:r1 (send (index-element :right layout)))
       (T (call-next-method)))))
+
+(defmethod accept ((layout virtual-keyboard))
+  (accept (target layout)))
+
+(defmethod reject ((layout virtual-keyboard))
+  (reject (target layout)))
+
+(defclass popup-keyboard (popup virtual-keyboard)
+  ())
+
+(defmethod exit ((layout popup-keyboard))
+  (when (ui layout)
+    (leave layout (ui layout)))
+  (when (target layout)
+    (setf (focus (target layout)) :strong)))
+
+(defmethod accept :after ((layout virtual-keyboard))
+  (exit layout))
+
+(defmethod reject :after ((layout virtual-keyboard))
+  (exit layout))

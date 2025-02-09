@@ -467,7 +467,8 @@
    #:keyboard-spec
    #:define-keyboard-spec
    #:virtual-key
-   #:virtual-keyboard)
+   #:virtual-keyboard
+   #:popup-keyboard)
   ;; structures/menu.lisp
   (:export
    #:separator
