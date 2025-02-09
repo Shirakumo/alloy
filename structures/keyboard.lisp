@@ -232,19 +232,22 @@
   (with-global-bounds (bounds key)
     (cond ((contained-p (location event) bounds)
            (setf (pressed key) T)
-           (focus key))
+           (setf (focus key) :strong))
           (T
            (decline)))))
-setf
+
 (defmethod handle ((event pointer-up) (key virtual-key))
-  (cond ((pressed key)
-         (activate key)
-         (unless (key-modifier (value key))
-           (setf (modifiers (keyboard key))
-                 (remove-if-not #'lock-modifier-p (modifiers (keyboard key))))
-           (setf (pressed key) NIL)))
-        (T
-         (exit key))))
+  (when (pressed key)
+    (activate key)
+    (unless (key-modifier (value key))
+      (setf (modifiers (keyboard key))
+            (remove-if-not #'lock-modifier-p (modifiers (keyboard key))))
+      (setf (pressed key) NIL))
+    (exit key)))
+
+(defmethod handle ((event pointer-move) (key virtual-key))
+  (unless (pressed key)
+    (call-next-method)))
 
 (defmethod handle ((event key-down) (key virtual-key))
   (when (eq (value key) (key event))
