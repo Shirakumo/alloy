@@ -198,13 +198,26 @@
       (let ((text (key-text key ui)))
         (when text (handle (make-instance 'text-event :text text) target))))))
 
-(defmethod handle :before ((event pointer-down) (key virtual-key))
+(defmethod handle ((event pointer-down) (key virtual-key))
   (let ((mod (key-modifier (value key)))
         (mods (modifiers (keyboard key))))
-    (when mod
-      (if (find mod mods)
-          (setf (modifiers (keyboard key)) (setf mods (remove mod mods)))
-          (setf (modifiers (keyboard key)) (setf mods (list* mod mods)))))))
+    (cond (mod
+           (if (find mod mods)
+               (setf (modifiers (keyboard key)) (setf mods (remove mod mods)))
+               (setf (modifiers (keyboard key)) (setf mods (list* mod mods)))))
+          (T
+           (with-global-bounds (bounds key)
+             (if (contained-p (location event) bounds)
+                 (setf (pressed key) T)
+                 (call-next-method)))))))
+
+(defmethod handle ((event pointer-up) (key virtual-key))
+  (cond ((pressed key)
+         (activate key)
+         (unless (key-modifier (value key))
+           (setf (pressed key) NIL)))
+        (T
+         (exit key))))
 
 (defmethod handle ((event key-down) (key virtual-key))
   (when (eq (value key) (key event))
