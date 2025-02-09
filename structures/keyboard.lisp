@@ -192,43 +192,43 @@
         (value (value key))
         (mods (modifiers (keyboard key)))
         (target (target (keyboard key))))
-    (let ((mod (key-modifier value)))
-      (when mod
-        (cond ((find mod mods)
-               (setf (modifiers (keyboard key)) (setf mods (remove mod mods)))
-               (setf (pressed key) NIL))
-              (T
-               (setf (modifiers (keyboard key)) (setf mods (list* mod mods)))
-               (setf (pressed key) T)))))
     (when target
       (handle (make-instance 'key-down :key value :code 0 :modifiers mods) target)
       (handle (make-instance 'key-up :key value :code 0 :modifiers mods) target)
       (let ((text (key-text key ui)))
         (when text (handle (make-instance 'text-event :text text) target))))))
 
+(defmethod handle :before ((event pointer-down) (key virtual-key))
+  (let ((mod (key-modifier (value key)))
+        (mods (modifiers (keyboard key))))
+    (when mod
+      (if (find mod mods)
+          (setf (modifiers (keyboard key)) (setf mods (remove mod mods)))
+          (setf (modifiers (keyboard key)) (setf mods (list* mod mods)))))))
+
 (defmethod handle ((event key-down) (key virtual-key))
   (when (eq (value key) (key event))
     (activate key)
-    (setf (pressed key) T))
+    (unless (key-modifier (value key))
+      (setf (pressed key) T)))
   (decline))
 
 (defmethod handle ((event key-up) (key virtual-key))
   (when (eq (value key) (key event))
-    (setf (pressed key) NIL))
+    (unless (key-modifier (value key))
+      (setf (pressed key) NIL)))
   (decline))
 
-(defclass virtual-keyboard (structure)
-  ((modifiers :initform () :accessor modifiers)
+(defclass virtual-keyboard (grid-bag-layout visual-focus-manager)
+  ((cell-margins :initform (margins 1))
+   (modifiers :initform () :accessor modifiers)
    (target :initform NIL :initarg :target :accessor target)))
 
-(defclass keyboard-layout (grid-bag-layout visual-focus-manager)
-  ())
-
-(defmethod handle ((ev key-event) (layout keyboard-layout))
+(defmethod handle ((ev key-event) (layout virtual-keyboard))
   (do-elements (element layout)
     (handle ev element)))
 
-(defmethod (setf bounds) :after (bounds (layout keyboard-layout))
+(defmethod (setf bounds) :after (bounds (layout virtual-keyboard))
   ;; FIXME: probably better to do this in suggest-size
   (let* ((cols (length (col-sizes layout)))
          (rows (length (row-sizes layout)))
@@ -240,16 +240,14 @@
     (setf (row-sizes layout) (loop for row across (row-sizes layout)
                                    collect c))))
 
-(defmethod initialize-instance :after ((keyboard virtual-keyboard) &key (keyboard-spec :100%))
+(defmethod initialize-instance :after ((layout virtual-keyboard) &key (keyboard-spec :100%))
   (let* ((keyboard-spec (ensure-keyboard-spec keyboard-spec))
          (cols (loop for row in keyboard-spec maximize
                      (loop for (_ size) in row sum (if (eql size T) 1 size))))
-         (ratio (/ cols (length keyboard-spec)))
-         (layout (make-instance 'keyboard-layout
-                                :col-sizes (append '(T) (loop repeat (* 2 cols) collect 25) '(T))
-                                :row-sizes (loop repeat (length keyboard-spec) collect 50)
-                                :cell-margins (margins 1)
-                                :sizing-strategy (make-instance 'proportional :aspect-ratio ratio))))
+         (ratio (/ cols (length keyboard-spec))))
+    (setf (col-sizes layout) (append '(T) (loop repeat (* 2 cols) collect 25) '(T)))
+    (setf (row-sizes layout) (loop repeat (length keyboard-spec) collect 50))
+    (setf (sizing-strategy layout) (make-instance 'proportional :aspect-ratio ratio))
     (loop for y from 0
           for row in keyboard-spec
           for flex-count = (cl:count T row :key #'second)
@@ -266,13 +264,12 @@
                                          (decf flex-space flex)
                                          flex)))
                    for component = (if key
-                                       (make-instance 'virtual-key :value key :keyboard keyboard)
+                                       (make-instance 'virtual-key :value key :keyboard layout)
                                        (make-instance 'component :data NIL))
-                   do (enter component layout :x x :y y :w w :h 1)))
-    (finish-structure keyboard layout layout)))
+                   do (enter component layout :x x :y y :w w :h 1)))))
 
 (defmethod (setf modifiers) :after (mods (keyboard virtual-keyboard))
-  (do-elements (key (focus-element keyboard))
+  (do-elements (key keyboard)
     (when (typep key 'virtual-key)
       (let ((mod (key-modifier (value key))))
         (when mod (setf (pressed key) (member mod mods)))))))
