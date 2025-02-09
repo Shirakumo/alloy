@@ -187,6 +187,11 @@
     ((:left-control :right-control)
      :control)))
 
+(defun lock-modifier-p (value)
+  (case value
+    ((:caps-lock :scroll-lock :num-lock)
+     T)))
+
 (defmethod activate ((key virtual-key))
   (let ((ui (ui key))
         (value (value key))
@@ -215,6 +220,8 @@
   (cond ((pressed key)
          (activate key)
          (unless (key-modifier (value key))
+           (setf (modifiers (keyboard key))
+                 (remove-if-not #'lock-modifier-p (modifiers (keyboard key))))
            (setf (pressed key) NIL)))
         (T
          (exit key))))
