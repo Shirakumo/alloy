@@ -19,6 +19,7 @@
     ("'" :APOSTROPHE)
     ("\\" :BACKSLASH)
     ("L⇧" :LEFT-SHIFT)
+    ("<" :DEAD) ; FIXME: this
     ("," :COMMA)
     ("." :PERIOD)
     ("/" :SLASH)
@@ -62,14 +63,19 @@
     ("K." :KP-DECIMAL)))
 
 (defun map-short-key (key)
-  (let ((extended NIL))
-    (when (and (< 1 (length key)) (char= #\_ (char key (1- (length key)))))
-      (setf extended T)
-      (setf key (subseq key 0 (1- (length key)))))
+  (let ((size 1)
+        (pos (position #\_ key :start 1)))
+    (cond ((null pos))
+          ((= (1- (length key)) pos)
+           (setf size T)
+           (setf key (subseq key 0 pos)))
+          (T
+           (setf size (read-from-string key NIL NIL :start (1+ pos)))
+           (setf key (subseq key 0 pos))))
     (values (unless (string= key "_")
               (or (second (assoc key *keyboard-short-map* :test #'string-equal))
                   (intern (string-upcase key) "KEYWORD")))
-            extended)))
+            size)))
 
 (defun parse-keyboard-spec (spec)
   (with-input-from-string (s spec)
@@ -106,41 +112,41 @@
 
 (define-keyboard-spec :100%
   "⎋ __ F1 F2 F3 F4 __ F5 F6 F7 F8 __ F9 F10 F11 F12 _ ⎙ ⇳ ⎉ _ F13 F14 F15 F16
-   $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ _ ⌤ ⇱ ⇞ _ ⇭ K/ K* K-
-   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ _ ⌦ ⇲ ⇟ _ K7 K8 K9 K+
-   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ _ _ _ _ _ K4 K5 K6 K+
-   L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_ _ _ ↑ _ _ K1 K2 K3 K↵
-   L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ _ ← ↓ → _ K0 K0 K. K↵")
+     $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ _ ⌤ ⇱ ⇞ _ ⇭ K/ K* K-
+   ↹_1.5 Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ _ ⌦ ⇲ ⇟ _ K7 K8 K9 K+
+   ⇪_2    A  S  D  F  G  H  J  K  L  ;  ' \\ ↵_ _ _ _ _ _ K4 K5 K6 K+
+   L⇧_1.5 < Z  X  C  V  B  N  M  ,  .  /    R⇧_ _ _ ↑ _ _ K1 K2 K3 K↵
+   L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ _ ← ↓ → _ K0_2 K. K↵")
 
 (define-keyboard-spec :80%
   "⎋ _ F1 F2 F3 F4 _ F5 F6 F7 F8 _ F9 F10 F11 F12_ ⎙ ⇳ ⎉
-   $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ _ ⌤ ⇱ ⇞
-   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ _ ⌦ ⇲ ⇟
-   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ _ _ _ _
-   L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_ _ _ ↑ _
+     $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ _ ⌤ ⇱ ⇞
+   ↹_1.5 Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ _ ⌦ ⇲ ⇟
+   ⇪_2    A  S  D  F  G  H  J  K  L  ;  ' \\ ↵_ _ _ _ _
+   L⇧_1.5 < Z  X  C  V  B  N  M  ,  .  /    R⇧_ _ _ ↑ _
    L⌃ L⌘ L⌥           ␣_             R⌥ R⌘ R⌃ _ ← ↓ →")
 
 (define-keyboard-spec :75%
   "⎋ F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 ⎙ ⇳ ⎉
-   $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ ⇱
-   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ ⇞
-   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ ⇟
-   L⇧_   Z  X  C  V  B  N  M  ,  .  /   R⇧_ ↑ ⇲
-   L⌃ L⌘ L⌥          ␣_          R⌥ R⌘ R⌃ ← ↓ →")
+     $  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ ⇱
+   ↹_1.5 Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ ⇞
+   ⇪_2    A  S  D  F  G  H  J  K  L  ;  ' \\ ↵_ ⇟
+   L⇧_1.5 < Z  X  C  V  B  N  M  ,  .  /  R⇧_ ↑ ⇲
+   L⌃ L⌘ L⌥          ␣_            R⌥ R⌘ R⌃ ← ↓ →")
 
 (define-keyboard-spec :65%
   "⎋  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_ $
-   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ ⌦
-   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_ ⇞
-   L⇧_   Z  X  C  V  B  N  M  ,  .  /   R⇧_ ↑ ⇟
-   L⌃ L⌘ L⌥          ␣_          R⌥ R⌘ R⌃ ← ↓ →")
+   ↹_1.5 Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_ ⌦
+   ⇪_2    A  S  D  F  G  H  J  K  L  ;  ' \\ ↵_ ⇞
+   L⇧_1.5 < Z  X  C  V  B  N  M  ,  .  /  R⇧_ ↑ ⇟
+   L⌃ L⌘ L⌥           ␣_           R⌥ R⌘ R⌃ ← ↓ →")
 
 (define-keyboard-spec :60%
   "⎋  1  2  3  4  5  6  7  8  9  0  -  =   ⌫_
-   ↹_  Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_
-   ⇪_   A  S  D  F  G  H  J  K  L  ;  '  \ ↵_
-   L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_
-   L⌃ L⌘ L⌥          ␣_              R⌥ R⌘ R⌃")
+   ↹_1.5 Q  W  E  R  T  Y  U  I  O  P  [  ]  ↵_
+   ⇪_2    A  S  D  F  G  H  J  K  L  ;  ' \\ ↵_
+   L⇧_1.5 < Z  X  C  V  B  N  M  ,  .  /    R⇧_
+   L⌃ L⌘ L⌥           ␣_              R⌥ R⌘ R⌃")
 
 (define-keyboard-spec :40%
   "⎋_  Q  W  E  R  T  Y  U  I  O  P  -  =  ⌫_
@@ -157,15 +163,18 @@
       (string (value key))))
 
 (defmethod key-text ((key virtual-key) (ui ui))
-  (let ((text (key-text (value key) ui))
-        (mods (modifiers (keyboard key))))
-    (when text
-      (let ((caps (member :caps-lock mods))
-            (shift (member :shift mods)))
-        (if (and (or caps shift)
-                   (not (and caps shift)))
-            (string-upcase text)
-            text)))))
+  (case (value key)
+    (:space " ")
+    (T
+     (let ((text (key-text (value key) ui))
+           (mods (modifiers (keyboard key))))
+       (when text
+         (let ((caps (member :caps-lock mods))
+               (shift (member :shift mods)))
+           (if (and (or caps shift)
+                    (not (and caps shift)))
+               (string-upcase text)
+               text)))))))
 
 (defun key-modifier (value)
   (case value
@@ -199,18 +208,25 @@
 
 (defmethod handle ((event key-down) (key virtual-key))
   (when (eq (value key) (key event))
-    (setf (pressed key) T)))
+    (activate key)
+    (setf (pressed key) T))
+  (decline))
 
 (defmethod handle ((event key-up) (key virtual-key))
   (when (eq (value key) (key event))
-    (setf (pressed key) NIL)))
+    (setf (pressed key) NIL))
+  (decline))
 
 (defclass virtual-keyboard (structure)
   ((modifiers :initform () :accessor modifiers)
    (target :initform NIL :initarg :target :accessor target)))
 
-(defclass keyboard-layout (grid-bag-layout)
-  ((colcount :initarg :colcount :accessor colcount)))
+(defclass keyboard-layout (grid-bag-layout visual-focus-manager)
+  ())
+
+(defmethod handle ((ev key-event) (layout keyboard-layout))
+  (do-elements (element layout)
+    (handle ev element)))
 
 (defmethod (setf bounds) :after (bounds (layout keyboard-layout))
   ;; FIXME: probably better to do this in suggest-size
@@ -226,36 +242,37 @@
 
 (defmethod initialize-instance :after ((keyboard virtual-keyboard) &key (keyboard-spec :100%))
   (let* ((keyboard-spec (ensure-keyboard-spec keyboard-spec))
-         (cols (loop for row in keyboard-spec maximize (length row)))
+         (cols (loop for row in keyboard-spec maximize
+                     (loop for (_ size) in row sum (if (eql size T) 1 size))))
          (ratio (/ cols (length keyboard-spec)))
          (layout (make-instance 'keyboard-layout
                                 :col-sizes (append '(T) (loop repeat (* 2 cols) collect 25) '(T))
                                 :row-sizes (loop repeat (length keyboard-spec) collect 50)
                                 :cell-margins (margins 1)
-                                :sizing-strategy (make-instance 'proportional :aspect-ratio ratio)))
-         (focus (make-instance 'visual-focus-manager)))
+                                :sizing-strategy (make-instance 'proportional :aspect-ratio ratio))))
     (loop for y from 0
           for row in keyboard-spec
           for flex-count = (cl:count T row :key #'second)
-          for flex-space = (* 2 (- cols (cl:count NIL row :key #'second)))
+          for flex-space = (* 2 (- cols (loop for (_ size) in row sum (if (eql T size) 0 size))))
           for flex = (floor flex-space flex-count)
           do (loop for x = 1 then (+ x w)
-                   for (key extended-p) in row
-                   for w = (cond ((not extended-p)
-                                  2)
-                                 ((= 1 flex-count)
-                                  flex-space)
-                                 (T
-                                  (decf flex-count)
-                                  (decf flex-space flex)
-                                  flex))
+                   for (key size) in row
+                   for w = (round (cond ((numberp size)
+                                         (* 2 size))
+                                        ((= 1 flex-count)
+                                         flex-space)
+                                        (T
+                                         (decf flex-count)
+                                         (decf flex-space flex)
+                                         flex)))
                    for component = (if key
-                                       (make-instance 'virtual-key :value key :keyboard keyboard :focus-parent focus)
+                                       (make-instance 'virtual-key :value key :keyboard keyboard)
                                        (make-instance 'component :data NIL))
                    do (enter component layout :x x :y y :w w :h 1)))
-    (finish-structure keyboard layout focus)))
+    (finish-structure keyboard layout layout)))
 
 (defmethod (setf modifiers) :after (mods (keyboard virtual-keyboard))
   (do-elements (key (focus-element keyboard))
-    (let ((mod (key-modifier (value key))))
-      (when mod (setf (pressed key) (member mod mods))))))
+    (when (typep key 'virtual-key)
+      (let ((mod (key-modifier (value key))))
+        (when mod (setf (pressed key) (member mod mods)))))))

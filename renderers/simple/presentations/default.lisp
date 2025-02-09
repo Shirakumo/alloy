@@ -532,3 +532,27 @@
      ((:north :south) (alloy:extent 0 (alloy:ph 0.5) (alloy:pw) 1))
      ((:east :west) (alloy:extent (alloy:pw 0.5) 0 1 (alloy:ph))))
    :pattern (colored:color 0.2 0.2 0.2)))
+
+(define-realization (default-look-and-feel alloy:virtual-key)
+  ((:background simple:rectangle)
+   (alloy:margins))
+  ((:label simple:text)
+   (alloy:margins 1)
+   alloy:text
+   :halign :middle
+   :valign :middle))
+
+(define-update (default-look-and-feel alloy:button)
+  (:background
+   :pattern (if (alloy:pressed alloy:renderable)
+                (colored:color 0.9 0.9 0.9)
+                (case alloy:focus
+                  (:strong (colored:color 0.9 0.9 0.9))
+                  (:weak (colored:color 0.5 0.5 0.5))
+                  (T (colored:color 0.2 0.2 0.2)))))
+  (:label
+   :pattern (if (alloy:pressed alloy:renderable)
+                colors:black
+                (case alloy:focus
+                  (:strong colors:black)
+                  (T colors:white)))))
