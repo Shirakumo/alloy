@@ -543,7 +543,7 @@
    :halign :middle
    :valign :middle))
 
-(define-update (default-look-and-feel alloy:button)
+(define-update (default-look-and-feel alloy:virtual-key)
   (:background
    :pattern (if (alloy:pressed alloy:renderable)
                 (colored:color 0.9 0.9 0.9)
@@ -552,6 +552,7 @@
                   (:weak (colored:color 0.5 0.5 0.5))
                   (T (colored:color 0.2 0.2 0.2)))))
   (:label
+   :text alloy:text
    :pattern (if (alloy:pressed alloy:renderable)
                 colors:black
                 (case alloy:focus

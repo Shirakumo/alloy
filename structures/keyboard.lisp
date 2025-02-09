@@ -159,17 +159,28 @@
    L⇧_   Z  X  C  V  B  N  M  ,  .  /     R⇧_
    L⌃ L⌘ L⌥          ␣_              R⌥ R⌘ R⌃")
 
-(defclass virtual-key (direct-value-component button)
-  ((keyboard :initarg :keyboard :accessor keyboard)))
+(defclass virtual-key (direct-value-component)
+  ((keyboard :initarg :keyboard :accessor keyboard)
+   (pressed :initform NIL :accessor pressed)))
+
+(defmethod (setf pressed) :after (value (key virtual-key))
+  (mark-for-render key))
 
 (defmethod text ((key virtual-key))
-  (or (key-text (value key) (ui key))
-      (let ((short (first (find (value key) *keyboard-short-map* :key #'second))))
-        (when short
-          (if (< 1 (length short))
-              (string-left-trim "KLR" short)
-              short)))
-      (string (value key))))
+  (let* ((text (or (key-text (value key) (ui key))
+                   (let ((short (first (find (value key) *keyboard-short-map* :key #'second))))
+                     (when short
+                       (if (< 1 (length short))
+                           (string-left-trim "KLR" short)
+                           short)))
+                   (string (value key))))
+         (mods (modifiers (keyboard key)))
+         (caps (member :caps-lock mods))
+         (shift (member :shift mods)))
+    (if (and (or caps shift)
+             (not (and caps shift)))
+        (string-upcase text)
+        text)))
 
 (defmethod key-text ((key virtual-key) (ui ui))
   (case (value key)
@@ -205,7 +216,12 @@
   (let ((ui (ui key))
         (value (value key))
         (mods (modifiers (keyboard key)))
+        (mod (key-modifier (value key)))
         (target (target (keyboard key))))
+    (when mod
+      (if (find mod mods)
+          (setf (modifiers (keyboard key)) (setf mods (remove mod mods)))
+          (setf (modifiers (keyboard key)) (setf mods (list* mod mods)))))
     (when target
       (handle (make-instance 'key-down :key value :code 0 :modifiers mods) target)
       (handle (make-instance 'key-up :key value :code 0 :modifiers mods) target)
@@ -213,18 +229,13 @@
         (when text (handle (make-instance 'text-event :text text) target))))))
 
 (defmethod handle ((event pointer-down) (key virtual-key))
-  (let ((mod (key-modifier (value key)))
-        (mods (modifiers (keyboard key))))
-    (cond (mod
-           (if (find mod mods)
-               (setf (modifiers (keyboard key)) (setf mods (remove mod mods)))
-               (setf (modifiers (keyboard key)) (setf mods (list* mod mods)))))
+  (with-global-bounds (bounds key)
+    (cond ((contained-p (location event) bounds)
+           (setf (pressed key) T)
+           (focus key))
           (T
-           (with-global-bounds (bounds key)
-             (if (contained-p (location event) bounds)
-                 (setf (pressed key) T)
-                 (call-next-method)))))))
-
+           (decline)))))
+setf
 (defmethod handle ((event pointer-up) (key virtual-key))
   (cond ((pressed key)
          (activate key)
@@ -238,15 +249,36 @@
 (defmethod handle ((event key-down) (key virtual-key))
   (when (eq (value key) (key event))
     (activate key)
-    (unless (key-modifier (value key))
-      (setf (pressed key) T)))
+    (setf (pressed key) T))
   (decline))
 
 (defmethod handle ((event key-up) (key virtual-key))
   (when (eq (value key) (key event))
-    (unless (key-modifier (value key))
-      (setf (pressed key) NIL)))
+    (if (lock-modifier-p (value key))
+        (setf (pressed key) (member (value key) (modifiers (keyboard key))))
+        (let ((mods (modifiers (keyboard key)))
+              (mod (key-modifier (value key))))
+          (when mod
+            (setf (modifiers (keyboard key)) (setf mods (remove mod mods))))
+          (setf (pressed key) NIL))))
   (decline))
+
+(defmethod handle ((event button-down) (key virtual-key))
+  (case (button event)
+    (:a (setf (pressed key) T))
+    (T (call-next-method))))
+
+(defmethod handle ((event button-up) (key virtual-key))
+  (case (button event)
+    (:a (cond ((pressed key)
+               (activate key)
+               (unless (key-modifier (value key))
+                 (setf (modifiers (keyboard key))
+                       (remove-if-not #'lock-modifier-p (modifiers (keyboard key))))
+                 (setf (pressed key) NIL)))
+              (T
+               (exit key))))
+    (T (call-next-method))))
 
 (defclass virtual-keyboard (grid-bag-layout visual-focus-manager)
   ((cell-margins :initform (margins 1))
@@ -263,7 +295,8 @@
   (do-elements (key keyboard)
     (when (typep key 'virtual-key)
       (let ((mod (key-modifier (value key))))
-        (when mod (setf (pressed key) (member mod mods)))))))
+        (when mod (setf (pressed key) (member mod mods)))
+        (mark-for-render key)))))
 
 (defmethod (setf layout) (keyboard-spec (layout virtual-keyboard))
   (clear layout)
