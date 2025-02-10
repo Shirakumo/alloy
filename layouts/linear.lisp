@@ -36,6 +36,7 @@
     (when (or (/= (pxh old) (pxh new))
               (/= (pxw old) (pxw new)))
       (unless (eq layout (layout-parent layout))
+        (setf (bounds layout) new)
         (notice-size layout (layout-parent layout))))))
 
 (defmethod leave :after ((element layout-element) (layout linear-layout))
