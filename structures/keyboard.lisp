@@ -331,16 +331,17 @@
 
 (defmethod index-element ((index symbol) (layout virtual-keyboard))
   (do-elements (element layout)
-    (when (eq index (value element))
+    (when (and (typep element 'virtual-key) (eq index (value element)))
       (return element))))
 
 (defmethod handle ((event button-event) (layout virtual-keyboard))
   (flet ((send (target)
-           (handle (make-instance (typecase event
-                                    (button-down 'pointer-down)
-                                    (button-up 'pointer-up))
-                                  :location (bounds target))
-                   target)))
+           (when target
+             (handle (make-instance (typecase event
+                                      (button-down 'pointer-down)
+                                      (button-up 'pointer-up))
+                                    :location (bounds target))
+                     target))))
     (case (button event)
       (:a (send (focused layout)))
       (:b (exit layout))
