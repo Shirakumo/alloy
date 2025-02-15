@@ -291,7 +291,19 @@
     (leave element (layout-parent element))))
 
 (defclass layout (layout-element container renderable)
-  ())
+  ((layout-needed-p :initform T :accessor layout-needed-p)))
+
+(defmethod notice-size ((child layout-element) (layout layout))
+  (setf (layout-needed-p layout) T))
+
+(defmethod (setf bounds) :after ((extent extent) (layout swap-layout))
+  (setf (layout-needed-p layout) T))
+
+(defmethod refit :after ((layout layout))
+  (setf (layout-needed-p layout) NIL)
+  (do-elements (element layout)
+    (when (and (typep element 'layout) (layout-needed-p element))
+      (refit element))))
 
 (defmethod refresh :after ((layout layout))
   (do-elements (element layout)
@@ -350,6 +362,14 @@
 (defmethod deregister :before ((layout layout) (renderer renderer))
   (do-elements (element layout)
     (deregister element renderer)))
+
+(defmethod render :before ((renderer renderer) (layout layout))
+  (when (layout-needed-p layout)
+    (refit layout)))
+
+(defmethod maybe-render :before ((renderer renderer) (layout layout))
+  (when (layout-needed-p layout)
+    (refit layout)))
 
 (defmethod render ((renderer renderer) (layout layout))
   (do-elements (element layout)

@@ -130,10 +130,6 @@
                                             (- h (if (slot-value layout 'b) (pxb p) 0)
                                                (if (slot-value layout 'u) (pxu p) 0)))))))))
 
-(defmethod notice-size ((element layout-element) (layout border-layout))
-  ;; FIXME: this is slow. Should only update as necessary by the change.
-  (refit layout))
-
 (defmethod suggest-size (new-size (layout border-layout))
   (macrolet ((with-border ((slot dim) &body body)
                `(destructuring-bind (&optional element size) (slot-value layout ',slot)
@@ -165,6 +161,3 @@
           (incf h (pxh (suggest-size (px-size (w new-size) size) element)))
           (incf y h))
         (px-size w h)))))
-
-(defmethod (setf bounds) :after (extent (layout border-layout))
-  (refit layout))
