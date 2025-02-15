@@ -46,12 +46,17 @@
         (setf (cursor ui) :arrow)
         (decline))))
 
+(defmethod prepare-for-render ((ui ui) (renderer renderer))
+  (prepare-for-render (layout-tree ui) renderer))
+
 (defmethod render ((renderer renderer) (ui ui))
   (with-unit-parent ui
+    (prepare-for-render ui renderer)
     (render renderer (layout-tree ui))))
 
 (defmethod maybe-render ((renderer renderer) (ui ui))
   (with-unit-parent ui
+    (prepare-for-render ui renderer)
     (maybe-render renderer (layout-tree ui))))
 
 (defmethod activate ((ui ui))

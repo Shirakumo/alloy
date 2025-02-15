@@ -8,6 +8,7 @@
 (defgeneric register (renderable renderer))
 (defgeneric deregister (renderable renderer))
 
+(defgeneric prepare-for-render (renderable renderer))
 (defgeneric render-needed-p (renderable))
 (defgeneric mark-for-render (renderable))
 (defgeneric render (renderer renderable))
@@ -57,6 +58,8 @@
 
 (defmethod mark-for-render ((renderable renderable))
   (setf (slot-value renderable 'render-needed-p) T))
+
+(defmethod prepare-for-render ((renderable renderable) (renderer renderer)))
 
 (defmethod render :after ((renderer renderer) (renderable renderable))
   (setf (slot-value renderable 'render-needed-p) NIL))
