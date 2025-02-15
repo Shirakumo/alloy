@@ -15,9 +15,6 @@
         (T (suggest-size size (inner layout))))
       size))
 
-(defmethod notice-size ((element layout-element) (layout clip-view))
-  (refit layout))
-
 (defun clamp-offset (offset layout)
   (flet ((clamp (l x u)
            (min (max l x) u)))

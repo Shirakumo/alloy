@@ -34,7 +34,7 @@
   ((stretch :initarg :stretch :initform T :accessor stretch)))
 
 (defmethod (setf stretch) :after (value (layout grid-layout))
-  (suggest-size (bounds layout) layout))
+  (setf (layout-needed-p layout) T))
 
 (defmethod (setf row-sizes) :after ((new-value sequence) (layout grid-layout))
   (adjust-grid layout (length new-value) (length (col-sizes layout))))
@@ -59,8 +59,7 @@
                    do (vector-push (aref old oidx) new)))
     ;; Update if possible
     (setf (slot-value layout 'elements) new)
-    (when (layout-tree layout)
-      (suggest-size (bounds layout) layout))))
+    (setf (layout-needed-p layout) T)))
 
 (defmethod enter :before ((element layout-element) (layout grid-layout) &key row col)
   (when (and row col)
@@ -149,10 +148,8 @@
                  total))))
 
 (defmethod notice-size ((target layout-element) (layout grid-layout))
-  (refit layout))
-
-(defmethod (setf bounds) :after (extent (layout grid-layout))
-  (refit layout))
+  (call-next-method)
+  (notice-size layout T))
 
 (defmethod suggest-size (size (layout grid-layout))
   (with-unit-parent layout

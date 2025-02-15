@@ -10,37 +10,22 @@
 (defgeneric fit-linear-layout-contents (layout extent))
 
 (defmethod (setf align) :after (value (layout linear-layout))
-  (fit-linear-layout-contents layout (bounds layout)))
+  (setf (layout-needed-p layout) T))
 
 (defmethod (setf stretch) :after (value (layout linear-layout))
-  (fit-linear-layout-contents layout (bounds layout)))
+  (setf (layout-needed-p layout) T))
 
 (defmethod (setf min-size) :after (value (layout linear-layout))
-  (fit-linear-layout-contents layout (bounds layout)))
+  (setf (layout-needed-p layout) T))
 
-(defmethod (setf bounds) :after (extent (layout linear-layout))
-  (fit-linear-layout-contents layout extent))
-
-(defmethod resize :after ((layout linear-layout) x y)
-  (fit-linear-layout-contents layout (bounds layout)))
-
-(defmethod refit ((layout linear-layout))
-  (fit-linear-layout-contents layout (bounds layout)))
-
-;; TODO: Update this code to be more efficient and only consider updating the bounds of elements
-;;       that are actively affected by the change.
-(defmethod notice-size ((element layout-element) (layout linear-layout))
-  (let* ((old (bounds layout))
-         (temp (suggest-size old layout))
-         (new (fit-linear-layout-contents layout temp)))
-    (when (or (/= (pxh old) (pxh new))
-              (/= (pxw old) (pxw new)))
-      (unless (eq layout (layout-parent layout))
-        (setf (bounds layout) new)
-        (notice-size layout (layout-parent layout))))))
+(defmethod (setf cell-margins) :after (value (layout linear-layout))
+  (setf (layout-needed-p layout) T))
 
 (defmethod leave :after ((element layout-element) (layout linear-layout))
-  (fit-linear-layout-contents layout (bounds layout)))
+  (setf (layout-needed-p layout) T))
+
+(defmethod notice-size :after ((element layout-element) (layout linear-layout))
+  (notice-size layout T))
 
 (defclass vertical-linear-layout (linear-layout)
   ((align :initform :end)))
@@ -66,11 +51,11 @@
               (:start (incf y eh))
               (:end (decf y eh)))))))))
 
-(defmethod fit-linear-layout-contents ((layout vertical-linear-layout) extent)
+(defmethod refit ((layout vertical-linear-layout))
   (when (layout-tree layout)
     (with-unit-parent layout
       (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
-        (destructure-extent (:w w :h h :to-px T) extent
+        (destructure-extent (:w w :h h :to-px T) (bounds layout)
           (let ((mh (pxh (min-size layout)))
                 (mw (if (stretch layout) (- w l r) (pxw (min-size layout))))
                 (y (ecase (align layout)
@@ -121,10 +106,10 @@
               (:start (incf x ew))
               (:end (decf x ew)))))))))
 
-(defmethod fit-linear-layout-contents ((layout horizontal-linear-layout) extent)
+(defmethod refit ((layout horizontal-linear-layout))
   (with-unit-parent layout
     (destructure-margins (:l l :u u :r r :b b :to-px T) (cell-margins layout)
-      (destructure-extent (:w w :h h :to-px T) extent
+      (destructure-extent (:w w :h h :to-px T) (bounds layout)
         (let ((mw (pxw (min-size layout)))
               (mh (if (stretch layout) (- h u b) (pxh (min-size layout))))
               (x (ecase (align layout)

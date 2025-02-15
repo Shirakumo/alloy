@@ -365,6 +365,7 @@
    #:layout-element
    #:layout-parent
    #:layout
+   #:layout-needed-p
    #:layout-tree
    #:popups)
   ;; layouts/border.lisp
