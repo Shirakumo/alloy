@@ -24,17 +24,6 @@
   (loop for element across (elements layout)
         do (setf (bounds element) size)))
 
-(defmethod render ((renderer renderer) (layout fullscreen-layout))
-  (do-elements (element layout)
-    (render renderer element)))
-
-(defmethod maybe-render ((renderer renderer) (layout fullscreen-layout))
-  (loop for element across (elements layout)
-        do (maybe-render renderer element)))
-
-(defmethod ensure-visible ((element layout-element) (layout fullscreen-layout))
-  (call-next-method))
-
 (defmethod handle ((event layout-event) (layout fullscreen-layout))
   (loop for i downfrom (1- (length (elements layout))) to 0
         for element = (aref (elements layout) i)
