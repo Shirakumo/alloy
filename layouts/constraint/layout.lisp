@@ -56,11 +56,7 @@
   (setf (gethash element (variables layout))
         (make-variables element (solver layout) :strength (if constraints :medium)))
   (when constraints
-    (apply-constraints constraints element layout)
-    (when (alloy:layout-tree layout)
-      (alloy:with-unit-parent layout
-        (suggest-size layout layout (alloy:bounds layout))
-        (update layout element)))))
+    (apply-constraints constraints element layout)))
 
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
   (dolist (constraint (gethash element (constraints layout)))
@@ -72,8 +68,6 @@
     (dolist (constraint (gethash element (constraints layout)))
       (cass:delete-constraint constraint)))
   (apply-constraints constraints element layout))
-
-(defmethod alloy:notice-size ((element alloy:layout-element) (layout layout)))
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
   (alloy:refit layout))
