@@ -70,6 +70,10 @@
     (reset-visibility renderer)
     (render renderer (inner item))))
 
+(defmethod prepare-for-render :after ((item menu-item) (renderer renderer))
+  (when (and (inner item) (focus (inner item)))
+    (prepare-for-render (inner item) renderer)))
+
 (defclass menu (structure)
   ())
 

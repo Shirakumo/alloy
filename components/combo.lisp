@@ -176,6 +176,11 @@
      (reset-visibility renderer)
      (render renderer (combo-list combo)))))
 
+(defmethod prepare-for-render :after ((combo combo) (renderer renderer))
+  (case (state combo)
+    (:selecting
+     (prepare-for-render (combo-list combo) renderer))))
+
 (defmethod (setf bounds) :after (bounds (combo combo))
   (refit combo))
 
