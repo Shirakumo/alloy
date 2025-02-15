@@ -80,6 +80,10 @@
         (alloy:handle event (layout-element window)))
       (alloy:decline)))
 
+(defmethod alloy:prepare-for-render ((window window) (renderer alloy:renderer))
+  (when (layout-element window)
+    (alloy:render (layout-element window) renderer)))
+
 (defmethod alloy:render ((renderer alloy:renderer) (window window))
   (when (layout-element window)
     (alloy:render renderer (layout-element window))))
