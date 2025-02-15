@@ -439,6 +439,7 @@
    #:deregister
    #:render-needed-p
    #:mark-for-render
+   #:prepare-for-render
    #:render
    #:maybe-render
    #:constrain-visibility

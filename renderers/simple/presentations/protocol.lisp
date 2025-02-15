@@ -184,10 +184,12 @@
 ;;; Defer updating the shapes until we have a dirty render.
 ;;; Might cause hiccups during render if there's many updates, but we save
 ;;; on tons of batch updates that would never be shown.
+(defmethod alloy:prepare-for-render :before ((renderable renderable) (renderer renderer))
+  (unless (realized-p renderable)
+    (realize-renderable renderer renderable)))
+
 (defmethod alloy:render :before ((renderer renderer) (renderable renderable))
   (when (alloy:render-needed-p renderable)
-    (unless (realized-p renderable)
-      (realize-renderable renderer renderable))
     (update-shape renderer renderable T NIL)))
 
 ;;; Animation stuff

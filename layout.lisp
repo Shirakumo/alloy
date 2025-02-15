@@ -363,6 +363,10 @@
   (do-elements (element layout)
     (deregister element renderer)))
 
+(defmethod prepare-for-render :after ((layout layout) (renderer renderer))
+  (do-elements (element layout)
+    (prepare-for-render element renderer)))
+
 (defmethod render :before ((renderer renderer) (layout layout))
   (when (layout-needed-p layout)
     (refit layout)))
@@ -470,6 +474,10 @@
 (defmethod refresh ((tree layout-tree))
   (refresh (root tree))
   (refresh (popups tree)))
+
+(defmethod prepare-for-render ((tree layout-tree) (renderer renderer))
+  (prepare-for-render (root tree) renderer)
+  (prepare-for-render (popups tree) renderer))
 
 (defmethod w ((tree layout-tree)) (w (root tree)))
 (defmethod h ((tree layout-tree)) (h (root tree)))
