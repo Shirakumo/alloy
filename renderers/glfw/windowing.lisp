@@ -164,6 +164,10 @@
 (defmethod alloy:deallocate :before ((window window))
   (alloy:leave window (alloy:layout-parent window)))
 
+(defmethod alloy:prepare-for-render :after ((window window) (screen screen))
+  (when (window:layout-element window)
+    (alloy:prepare-for-render (window:layout-element window) window)))
+
 (defmethod alloy:render ((screen screen) (window window))
   (glfw:make-current NIL)
   (glfw:make-current window)

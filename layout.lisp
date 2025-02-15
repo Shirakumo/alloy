@@ -296,7 +296,7 @@
 (defmethod notice-size ((child layout-element) (layout layout))
   (setf (layout-needed-p layout) T))
 
-(defmethod (setf bounds) :after ((extent extent) (layout swap-layout))
+(defmethod (setf bounds) :after ((extent extent) (layout layout))
   (setf (layout-needed-p layout) T))
 
 (defmethod refit :after ((layout layout))
