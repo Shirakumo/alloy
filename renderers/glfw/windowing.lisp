@@ -68,25 +68,27 @@
 (defun call-with-screen (function &optional (screen-class 'screen) &rest initargs)
   (let (screen
         (start (get-internal-real-time)))
-    (glfw:init)
-    (unwind-protect
-         (progn
-           (setf screen (apply #'make-instance screen-class initargs))
-           (alloy:allocate screen)
-           (funcall function screen)
-           (loop until (glfw:should-close-p screen)
-                 do (glfw:poll-events :timeout (float 1/30 0d0))
-                    (alloy:do-elements (window (alloy:root (alloy:layout-tree screen)))
-                      (when (glfw:should-close-p window)
-                        (alloy:deallocate window)))
-                    (when (= 0 (alloy:element-count (alloy:root (alloy:layout-tree screen))))
-                      (window:close screen))
-                    (let ((dt (float (/ (- (get-internal-real-time) start) INTERNAL-TIME-UNITS-PER-SECOND) 0f0)))
-                      (org.shirakumo.alloy.animation:update screen dt)
-                      (setf start (get-internal-real-time)))
-                    (alloy:render screen screen)))
-      (when screen (alloy:deallocate screen))
-      (glfw:shutdown))))
+    (#+darwin float-features:with-float-traps-masked
+     #-darwin progn T
+     (glfw:init)
+     (unwind-protect
+          (progn
+            (setf screen (apply #'make-instance screen-class initargs))
+            (alloy:allocate screen)
+            (funcall function screen)
+            (loop until (glfw:should-close-p screen)
+                  do (glfw:poll-events :timeout (float 1/30 0d0))
+                     (alloy:do-elements (window (alloy:root (alloy:layout-tree screen)))
+                       (when (glfw:should-close-p window)
+                         (alloy:deallocate window)))
+                     (when (= 0 (alloy:element-count (alloy:root (alloy:layout-tree screen))))
+                       (window:close screen))
+                     (let ((dt (float (/ (- (get-internal-real-time) start) INTERNAL-TIME-UNITS-PER-SECOND) 0f0)))
+                       (org.shirakumo.alloy.animation:update screen dt)
+                       (setf start (get-internal-real-time)))
+                     (alloy:render screen screen)))
+       (when screen (alloy:deallocate screen))
+       (glfw:shutdown)))))
 
 (defmacro with-screen ((screen &rest args) &body init-body)
   (let ((init (gensym "INIT")))
