@@ -17,10 +17,11 @@
 (defgeneric add-initializer (name class &key priority function if-exists))
 (defgeneric remove-initializer (name class))
 
-(defmethod c2mop:validate-superclass ((a widget-class) (b T)) NIL)
-(defmethod c2mop:validate-superclass ((a widget-class) (b standard-class)) T)
-(defmethod c2mop:validate-superclass ((a widget-class) (b widget-class)) T)
-(defmethod c2mop:validate-superclass ((a standard-class) (b widget-class)) NIL)
+(#-lispworks progn #+lispworks eval-when #+lispworks (:compile-toplevel :load-toplevel :execute)
+  (defmethod c2mop:validate-superclass ((a widget-class) (b T)) NIL)
+  (defmethod c2mop:validate-superclass ((a widget-class) (b standard-class)) T)
+  (defmethod c2mop:validate-superclass ((a widget-class) (b widget-class)) T)
+  (defmethod c2mop:validate-superclass ((a standard-class) (b widget-class)) NIL))
 
 (defclass direct-initializer-slot (c2mop:standard-direct-slot-definition)
   ((usage :initarg :usage :initform NIL :accessor usage)
@@ -34,7 +35,7 @@
                                          (declare (ignorable widget))
                                          (list ',type ,@initargs))))))
 
-(defmethod c2mop:direct-slot-definition-class ((class widget-class) &key initializer representation)
+(defmethod c2mop:direct-slot-definition-class ((class widget-class) &key initializer representation &allow-other-keys)
   (if (or representation initializer)
       (find-class 'direct-initializer-slot)
       (call-next-method)))

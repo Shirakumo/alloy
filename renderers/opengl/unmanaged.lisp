@@ -59,8 +59,25 @@
   (let ((location (gl:get-uniform-location (gl-resource-name program) uniform)))
     (etypecase value
       (vector
+       #-lispworks
        (cffi:with-pointer-to-vector-data (data value)
-         (%gl:uniform-matrix-3fv location 1 T data)))
+         (%gl:uniform-matrix-3fv location 1 T data))
+       #+lispworks
+       (let ((static-vector (make-array (length value)
+                                        :element-type (cond
+                                                       ((and (array-element-type value)
+                                                             (some (lambda (super)
+                                                                     (subtypep (array-element-type value) super))
+                                                                   '(string unsigned-byte signed-byte single-float double-float)))
+                                                        (array-element-type value))
+                                                       ((zerop (length value)) 'single-float)
+                                                       (T (error "Unsupported element type in LispWorks: ~A"
+                                                                 (array-element-type value))))
+                                        :allocation :static-new)))
+         (dotimes (i (length value))
+           (setf (aref static-vector i) (aref value i)))
+         (cffi:with-pointer-to-vector-data (data static-vector)
+           (%gl:uniform-matrix-3fv location 1 T data))))
       (single-float
        (%gl:uniform-1f location value))
       ((unsigned-byte 32)
@@ -76,8 +93,25 @@
 (defmethod make-vertex-buffer ((renderer renderer) (contents vector) &key (buffer-type :array-buffer) data-usage)
   (let ((name (gl:gen-buffer)))
     (gl:bind-buffer buffer-type name)
+    #-lispworks
     (cffi:with-pointer-to-vector-data (data contents)
       (%gl:buffer-data buffer-type (* (length contents) 4) data data-usage))
+    #+lispworks
+    (let ((static-vector (make-array (length contents)
+                                     :element-type (cond
+                                                    ((and (array-element-type contents)
+                                                          (some (lambda (super)
+                                                                  (subtypep (array-element-type contents) super))
+                                                                '(string unsigned-byte signed-byte single-float double-float)))
+                                                     (array-element-type contents))
+                                                     ((zerop (length contents)) 'single-float)
+                                                     (T (error "Unsupported element type in LispWorks: ~A"
+                                                               (array-element-type contents))))
+                                     :allocation :static-new)))
+      (dotimes (i (length contents))
+        (setf (aref static-vector i) (aref contents i)))
+      (cffi:with-pointer-to-vector-data (data static-vector)
+        (%gl:buffer-data buffer-type (* (length contents) 4) data data-usage)))
     (gl:bind-buffer buffer-type 0)
     (make-vbo name buffer-type)))
 
@@ -90,8 +124,25 @@
 
 (defmethod update-vertex-buffer ((buffer vbo) contents)
   (gl:bind-buffer (vbo-type buffer) (gl-resource-name buffer))
+  #-lispworks
   (cffi:with-pointer-to-vector-data (data contents)
     (%gl:buffer-data (vbo-type buffer) (* (length contents) 4) data :stream-draw))
+  #+lispworks
+  (let ((static-vector (make-array (length contents)
+                                   :element-type (cond
+                                                  ((and (array-element-type contents)
+                                                        (some (lambda (super)
+                                                                (subtypep (array-element-type contents) super))
+                                                              '(string unsigned-byte signed-byte single-float double-float)))
+                                                   (array-element-type contents))
+                                                  ((zerop (length contents)) 'single-float)
+                                                  (T (error "Unsupported element type in LispWorks: ~A"
+                                                            (array-element-type contents))))
+                                   :allocation :static-new)))
+    (dotimes (i (length contents))
+      (setf (aref static-vector i) (aref contents i)))
+    (cffi:with-pointer-to-vector-data (data static-vector)
+      (%gl:buffer-data (vbo-type buffer) (* (length contents) 4) data :stream-draw)))
   (gl:bind-buffer (vbo-type buffer) 0)
   buffer)
 
