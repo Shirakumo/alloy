@@ -6,21 +6,22 @@
 (defun find-slotspec (name slots)
   (find name slots :key (lambda (s) (getf s :name))))
 
-(defclass widget-class (standard-class)
-  ((direct-initializers :initform () :reader direct-initializers)
-   (effective-initializers :initform () :accessor effective-initializers)
-   (foreign-slots :initform () :reader foreign-slots)
-   (direct-slots :initform () :reader direct-slots)))
-
 (defgeneric add-slot (name class &key if-exists))
 (defgeneric remove-slot (name class))
 (defgeneric add-initializer (name class &key priority function if-exists))
 (defgeneric remove-initializer (name class))
 
-(defmethod c2mop:validate-superclass ((a widget-class) (b T)) NIL)
-(defmethod c2mop:validate-superclass ((a widget-class) (b standard-class)) T)
-(defmethod c2mop:validate-superclass ((a widget-class) (b widget-class)) T)
-(defmethod c2mop:validate-superclass ((a standard-class) (b widget-class)) NIL)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defclass widget-class (standard-class)
+    ((direct-initializers :initform () :reader direct-initializers)
+     (effective-initializers :initform () :accessor effective-initializers)
+     (foreign-slots :initform () :reader foreign-slots)
+     (direct-slots :initform () :reader direct-slots)))
+  
+  (defmethod c2mop:validate-superclass ((a widget-class) (b T)) NIL)
+  (defmethod c2mop:validate-superclass ((a widget-class) (b standard-class)) T)
+  (defmethod c2mop:validate-superclass ((a widget-class) (b widget-class)) T)
+  (defmethod c2mop:validate-superclass ((a standard-class) (b widget-class)) NIL))
 
 (defclass direct-initializer-slot (c2mop:standard-direct-slot-definition)
   ((usage :initarg :usage :initform NIL :accessor usage)
@@ -34,7 +35,7 @@
                                          (declare (ignorable widget))
                                          (list ',type ,@initargs))))))
 
-(defmethod c2mop:direct-slot-definition-class ((class widget-class) &key initializer representation)
+(defmethod c2mop:direct-slot-definition-class ((class widget-class) &key initializer representation &allow-other-keys)
   (if (or representation initializer)
       (find-class 'direct-initializer-slot)
       (call-next-method)))
