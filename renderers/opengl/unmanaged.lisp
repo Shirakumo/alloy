@@ -59,7 +59,7 @@
   (let ((location (gl:get-uniform-location (gl-resource-name program) uniform)))
     (etypecase value
       (vector
-       (cffi:with-pointer-to-vector-data (data value)
+       (org.shirakumo.memory-regions:with-pointer-to-array-data (data value)
          (%gl:uniform-matrix-3fv location 1 T data)))
       (single-float
        (%gl:uniform-1f location value))
@@ -76,7 +76,7 @@
 (defmethod make-vertex-buffer ((renderer renderer) (contents vector) &key (buffer-type :array-buffer) data-usage)
   (let ((name (gl:gen-buffer)))
     (gl:bind-buffer buffer-type name)
-    (cffi:with-pointer-to-vector-data (data contents)
+    (org.shirakumo.memory-regions:with-pointer-to-array-data (data contents)
       (%gl:buffer-data buffer-type (* (length contents) 4) data data-usage))
     (gl:bind-buffer buffer-type 0)
     (make-vbo name buffer-type)))
@@ -90,7 +90,7 @@
 
 (defmethod update-vertex-buffer ((buffer vbo) contents)
   (gl:bind-buffer (vbo-type buffer) (gl-resource-name buffer))
-  (cffi:with-pointer-to-vector-data (data contents)
+  (org.shirakumo.memory-regions:with-pointer-to-array-data (data contents)
     (%gl:buffer-data (vbo-type buffer) (* (length contents) 4) data :stream-draw))
   (gl:bind-buffer (vbo-type buffer) 0)
   buffer)

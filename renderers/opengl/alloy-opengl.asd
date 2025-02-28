@@ -13,6 +13,7 @@
                (:file "unmanaged")
                (:file "documentation"))
   :depends-on (:documentation-utils
+               :memory-regions/region
                :alloy-simple
                :cl-opengl
                :alexandria)
