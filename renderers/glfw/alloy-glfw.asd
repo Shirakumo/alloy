@@ -20,5 +20,6 @@
                :float-features
                :cl-opengl
                :glfw
-               :colored)
+               :colored
+               (:feature :darwin :trivial-main-thread))
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))
