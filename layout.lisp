@@ -308,10 +308,7 @@
   layout)
 
 (defmethod refit :after ((layout layout))
-  (setf (layout-needed-p layout) NIL)
-  (do-elements (element layout)
-    (when (and (typep element 'layout) (layout-needed-p element))
-      (refit element))))
+  (setf (layout-needed-p layout) NIL))
 
 (defmethod refresh :after ((layout layout))
   (do-elements (element layout)
