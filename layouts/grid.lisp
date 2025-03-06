@@ -147,8 +147,7 @@
                  (/ total count)
                  total))))
 
-(defmethod notice-size ((target layout-element) (layout grid-layout))
-  (call-next-method)
+(defmethod notice-size :after ((target layout-element) (layout grid-layout))
   (notice-size layout T))
 
 (defmethod suggest-size (size (layout grid-layout))

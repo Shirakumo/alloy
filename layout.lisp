@@ -293,11 +293,19 @@
 (defclass layout (layout-element container renderable)
   ((layout-needed-p :initform T :accessor layout-needed-p)))
 
+(defmethod print-object ((layout layout) stream)
+  (print-unreadable-object (layout stream :type T :identity T)
+    (format stream "~a~@[ DIRTY~]" (bounds layout) (layout-needed-p layout))))
+
 (defmethod notice-size ((child layout-element) (layout layout))
   (setf (layout-needed-p layout) T))
 
 (defmethod (setf bounds) :after ((extent extent) (layout layout))
   (setf (layout-needed-p layout) T))
+
+(defmethod refit :around ((layout layout))
+  (call-next-method)
+  layout)
 
 (defmethod refit :after ((layout layout))
   (setf (layout-needed-p layout) NIL)
