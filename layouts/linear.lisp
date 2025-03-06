@@ -64,7 +64,8 @@
                 (x l))
             (do-elements (element layout :result (px-extent x 0 w y))
               (let* ((size (suggest-size (px-size mw mh) element))
-                     (ew (pxw size))
+                     ;; Stretch if necessary.
+                     (ew (max mw (pxw size)))
                      (eh (pxh size)))
                 (cond ((< 0 eh)
                        (setf eh (max mh eh))
