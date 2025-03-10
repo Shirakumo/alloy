@@ -21,13 +21,15 @@
     (when (and (slot-value layout slot) (not (eq element (first (slot-value layout slot)))))
       (cerror "Replace the element" 'place-already-occupied
               :bad-element element :place place :layout layout :existing (slot-value layout slot)))
-    (setf (slot-value layout slot) (list element size))))
+    (setf (slot-value layout slot) (list element size))
+    (setf (layout-needed-p layout) T)))
 
 (defmethod leave ((element layout-element) (layout border-layout))
   (flet ((test (slot)
            (when (eq element (car (slot-value layout slot)))
              (setf (slot-value layout slot) NIL))))
     (mapc #'test '(l u r b c))
+    (setf (layout-needed-p layout) T)
     element))
 
 (defmethod update ((element layout-element) (layout border-layout) &key place size)
@@ -40,7 +42,8 @@
                (unless size (setf size (second (slot-value layout slot))))
                (setf (slot-value layout slot) NIL))))
       (mapc #'test '(l u r b c)))
-    (setf (slot-value layout slot) (list element size))))
+    (setf (slot-value layout slot) (list element size))
+    (setf (layout-needed-p layout) T)))
 
 (defmethod element-count ((layout border-layout))
   (loop for i in '(l u r b c)
@@ -81,6 +84,7 @@
 (defmethod clear ((layout border-layout))
   (flet ((test (slot) (setf (slot-value layout slot) NIL)))
     (mapc #'test '(l u r b c))
+    (setf (layout-needed-p layout) T)
     layout))
 
 (defmethod refit ((layout border-layout))
