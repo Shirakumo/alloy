@@ -22,19 +22,51 @@
 (defclass sizing-strategy () ())
 
 (defclass fixed-size (sizing-strategy)
-  ((fixed-size :initform (arg! :fixed-size) :initarg :fixed-size :reader fixed-size)))
+  ((%fixed-size :initform (arg! :fixed-size) :initarg :fixed-size :reader %fixed-size)))
+
+(defmethod print-object ((strategy fixed-size) stream)
+  (format stream "~s" (make-load-form strategy)))
+
+(defmethod make-load-form ((strategy fixed-size) &optional env)
+  (declare (ignore env))
+  (list 'fixed-size (w (%fixed-size strategy)) (h (%fixed-size strategy))))
+
+(defun fixed-size (size &optional h)
+  (make-instance 'fixed-size :fixed-size (etypecase size
+                                           (size size)
+                                           (unit (size size h)))))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy fixed-size) (size size))
-  (fixed-size sizing-strategy))
+  (%fixed-size sizing-strategy))
 
 (defclass dynamic-size (sizing-strategy)
   ((size-function :initform (arg! :size-function) :initarg :size-function :reader size-function)))
+
+(defmethod print-object ((strategy dynamic-size) stream)
+  (format stream "~s" (make-load-form strategy)))
+
+(defmethod make-load-form ((strategy dynamic-size) &optional env)
+  (declare (ignore env))
+  (list 'dynamic-size (size-function strategy)))
+
+(defun dynamic-size (function)
+  (make-instance 'dynamic-size :size-function function))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy dynamic-size) (size size))
   (funcall (size-function sizing-strategy) layout-element size))
 
 (defclass proportional (sizing-strategy)
   ((aspect-ratio :initform 1.0 :initarg :aspect-ratio :accessor aspect-ratio)))
+
+(defmethod print-object ((strategy proportional) stream)
+  (format stream "~s" (make-load-form strategy)))
+
+(defmethod make-load-form ((strategy proportional) &optional env)
+  (declare (ignore env))
+  (list 'proportional (aspect-ratio strategy)))
+
+(defun proportional (&optional (aspect-ratio 1.0))
+  (make-instance 'proportional :aspect-ratio (float aspect-ratio 0f0)))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy proportional) (size size))
   (let ((ratio (aspect-ratio sizing-strategy)))
@@ -43,6 +75,16 @@
         (px-size (* (pxh size) ratio) (pxh size)))))
 
 (defclass dont-care (sizing-strategy) ())
+
+(defmethod print-object ((strategy dont-care) stream)
+  (format stream "~s" (make-load-form strategy)))
+
+(defmethod make-load-form ((strategy dont-care) &optional env)
+  (declare (ignore env))
+  (list 'dont-care))
+
+(defun dont-care ()
+  (load-time-value (make-instance 'dont-care)))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy dont-care) (size size))
   size)
@@ -53,6 +95,18 @@
 (defclass at-least (sizing-strategy)
   ((minimum-size :initform (arg! :minimum-size) :initarg :minimum-size :reader minimum-size)))
 
+(defmethod print-object ((strategy at-least) stream)
+  (format stream "~s" (make-load-form strategy)))
+
+(defmethod make-load-form ((strategy at-least) &optional env)
+  (declare (ignore env))
+  (list 'at-least (w (minimum-size strategy)) (h (minimum-size strategy))))
+
+(defun at-least (size &optional h)
+  (make-instance 'at-least :minimum-size (etypecase size
+                                           (size size)
+                                           (unit (size size h)))))
+
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy at-least) (size size))
   (let* ((minimum-size (minimum-size sizing-strategy))
          (minimum (etypecase minimum-size
@@ -61,6 +115,16 @@
     (px-size (max (pxw minimum) (pxw size)) (max (pxh minimum) (pxh size)))))
 
 (defclass fit-to-content (sizing-strategy) ())
+
+(defmethod print-object ((strategy fit-to-content) stream)
+  (format stream "~s" (make-load-form strategy)))
+
+(defmethod make-load-form ((strategy fit-to-content) &optional env)
+  (declare (ignore env))
+  (list 'fit-to-content))
+
+(defun fit-to-content ()
+  (load-time-value (make-instance 'fit-to-content)))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy fit-to-content) (size size))
   (error "Renderer must implement this"))
