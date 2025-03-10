@@ -16,14 +16,6 @@
                (setf h (umax h (h new))))
       (size w h))))
 
-(defmethod (setf bounds) :after ((extent extent) (layout fullscreen-layout))
-  (loop for element across (elements layout)
-        do (setf (bounds element) (size (w layout) (h layout)))))
-
-(defmethod (setf bounds) :after ((size size) (layout fullscreen-layout))
-  (loop for element across (elements layout)
-        do (setf (bounds element) size)))
-
 (defmethod handle ((event layout-event) (layout fullscreen-layout))
   (loop for i downfrom (1- (length (elements layout))) to 0
         for element = (aref (elements layout) i)
