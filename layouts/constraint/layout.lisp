@@ -36,12 +36,14 @@
     (cass:suggest (element-var layout element var) (alloy:to-un size) :make-suggestable)
     (cass:update-variables (solver layout))
     (alloy:do-elements (element layout)
-      (update layout element))))
+      (update layout element))
+    (setf (alloy:layout-needed-p layout) T)))
 
 (defun constrain (layout element var value &key (strength :required))
   (alloy:with-unit-parent layout
     (prog1 (cass:constrain-with (solver layout) `(= ,(element-var layout element var) ,(alloy:to-un value)) :strength strength)
       (cass:update-variables (solver layout))
+      (setf (alloy:layout-needed-p layout) T)
       (alloy:do-elements (element layout)
         (update layout element)))))
 
@@ -61,6 +63,7 @@
 (defmethod alloy:leave :after ((element alloy:layout-element) (layout layout))
   (dolist (constraint (gethash element (constraints layout)))
     (cass:delete-constraint constraint))
+  (setf (alloy:layout-needed-p layout) T)
   (remhash element (variables layout)))
 
 (defmethod alloy:update ((element alloy:layout-element) (layout layout) &key constraints clear)
@@ -70,7 +73,7 @@
   (apply-constraints constraints element layout))
 
 (defmethod (setf alloy:bounds) :after (extent (layout layout))
-  (alloy:refit layout))
+  (setf (alloy:layout-needed-p layout) T))
 
 (defmethod alloy:refit ((layout layout))
   (alloy:with-unit-parent layout
@@ -87,6 +90,7 @@
       (alloy:size (cass:value w) (cass:value h)))))
 
 (defun apply-constraints (constraints element layout)
+  (setf (alloy:layout-needed-p layout) T)
   (dolist (expression constraints layout)
     (multiple-value-bind (expressions strength) (transform-expression expression)
       (dolist (expression expressions)
