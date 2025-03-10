@@ -367,6 +367,9 @@
 (defmethod (setf bounds) :after ((extent extent) (layout layout))
   (setf (layout-needed-p layout) T))
 
+(defmethod (setf bounds) :after ((size size) (layout layout))
+  (setf (layout-needed-p layout) T))
+
 (defmethod refit :around ((layout layout))
   (call-next-method)
   layout)
@@ -385,7 +388,8 @@
 (defmethod set-layout-tree :after (value (layout layout))
   (unless value
     (setf (extent-w (bounds layout)) (px 0))
-    (setf (extent-h (bounds layout)) (px 0))))
+    (setf (extent-h (bounds layout)) (px 0)))
+  (setf (layout-needed-p layout) T))
 
 (defmethod enter :after ((element layout-element) (layout layout) &key)
   (when (layout-tree layout)
