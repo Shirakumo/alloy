@@ -90,8 +90,7 @@
    :pattern (colored:color 0.15 0.15 0.15))
   (:border
    :pattern (colored:color 0.9 0.9 0.9)
-   :hidden-p (null alloy:focus)
-   :z-index 1)
+   :hidden-p (null alloy:focus))
   (:label
    :pattern (case alloy:focus
               ((:weak :strong) colors:black)
