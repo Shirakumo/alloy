@@ -665,7 +665,7 @@
     (simple:with-pushed-transforms (renderer)
       (let* ((bounds (alloy:ensure-extent (simple:bounds shape)))
              (isize (simple:resolve-scale bounds (simple:size (simple:image shape)) (simple:sizing shape)))
-             (off (simple:resolve-alignment bounds :middle :middle isize)))
+             (off (simple:resolve-alignment bounds (simple:halign shape) (simple:valign shape) isize)))
         (simple:clip renderer bounds)
         ;; FIXME: Dunno that alignment and sizing should be done here...
         (bind shader)
