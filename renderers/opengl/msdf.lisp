@@ -93,7 +93,13 @@
   (loop for font being the hash-values of (fontcache renderer)
         do (alloy:deallocate font)))
 
-(defun cache-font (font-file &key (cache-file (fontcache-file font-file)) (size 32) (spread 8))
+(defmethod cache-font ((family string) &rest args &key cache-file &allow-other-keys)
+  (apply #'cache-font
+         (font-discovery:file (or (font-discovery:find-font :family family)
+                                  (error "No font named ~s found." family)))
+         :cache-file (or cache-file (fontcache-file (make-pathname :name family :type "ttf"))) args))
+
+(defmethod cache-font ((font-file pathname) &key (cache-file (fontcache-file font-file)) (size 32) (spread 8))
   (sdf-bmfont:create-bmfont font-file cache-file :size size :mode :msdf+a :type :json :spread spread)
   cache-file)
 
