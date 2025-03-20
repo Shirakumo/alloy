@@ -64,9 +64,16 @@
   (call-next-method))
 
 (defmethod handle ((event pointer-event) (layout swap-layout))
-  (when (and (current layout)
-             (contained-p (location event) (current layout)))
-    (handle event (current layout))))
+  (if (and (current layout)
+           (contained-p (location event) (current layout)))
+      (handle event (current layout))
+      (decline)))
+
+(defmethod handle ((event pointer-move) (layout swap-layout))
+  (if (and (current layout)
+           (contained-p (location event) (current layout)))
+      (handle event (current layout))
+      (decline)))
 
 (defmethod refit ((layout swap-layout))
   (when (< 0 (length (elements layout)))
