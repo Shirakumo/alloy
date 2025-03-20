@@ -62,4 +62,5 @@
                   (tween (alloy:unit-value (alloy:y dst)) (alloy:unit-value (alloy:y src)))))
           (setf (alloy:unit-value (alloy:x dst)) (alloy:unit-value (alloy:x src))
                 (alloy:unit-value (alloy:y dst)) (alloy:unit-value (alloy:y src))))
-      (alloy:notify-observers 'alloy:value layout dst layout))))
+      (alloy:notify-observers 'alloy:value layout dst layout))
+    (call-next-method)))
