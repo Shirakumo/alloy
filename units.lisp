@@ -91,6 +91,7 @@
                ,whole))
          
          (defmethod %to-px ((,name ,name))
+           (declare (optimize speed))
            (let ((,value (unit-value ,name)))
              (if (= 0 ,value)
                  0.0f0
