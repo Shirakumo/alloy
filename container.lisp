@@ -81,11 +81,14 @@
       (array-utils:vector-push-extend-position element (elements container) index)))
   element)
 
-(defmethod call-with-elements (function (container vector-container) &key start end from-end)
+(defmethod call-with-elements ((function function) (container vector-container) &key start end from-end)
+  (declare (optimize speed))
   (let* ((elements (elements container))
          (start (or start 0))
          (end (or end (length elements)))
          (length (length elements)))
+    (declare (type (and (array T (*)) (not simple-array)) elements))
+    (declare (type (unsigned-byte 32) start end))
     (if from-end
         (loop for i downfrom (1- end)
               while (<= start i)
