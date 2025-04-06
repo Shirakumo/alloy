@@ -82,7 +82,7 @@
 
 (defmethod alloy:prepare-for-render ((window window) (renderer alloy:renderer))
   (when (layout-element window)
-    (alloy:render (layout-element window) renderer)))
+    (alloy:prepare-for-render (layout-element window) renderer)))
 
 (defmethod alloy:render ((renderer alloy:renderer) (window window))
   (when (layout-element window)
