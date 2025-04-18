@@ -92,7 +92,8 @@
     (if from-end
         (loop for i downfrom (1- end)
               while (<= start i)
-              do (funcall function (aref elements i))
+              do (let ((element (aref elements i)))
+                   (when element (funcall function element)))
                  (when (< (length elements) length)
                    ;; Decrease to make sure we don't skip or run over.
                    (setf length (length elements))
@@ -100,7 +101,8 @@
                    (setf i (min end (1+ i)))))
         (loop for i from start
               while (< i end)
-              do (funcall function (aref elements i))
+              do (let ((element (aref elements i)))
+                   (when element (funcall function element)))
                  (when (< (length elements) length)
                    ;; Decrease to make sure we don't skip or run over.
                    (setf length (length elements))
