@@ -1,11 +1,16 @@
 (in-package #:org.shirakumo.alloy.renderers.simple)
 
+(deftype matrix ()
+  '(simple-array single-float (12)))
+
+(declaim (inline matrix))
 (defun matrix (&rest values)
-  (let ((matrix (make-array 9 :element-type 'single-float)))
+  (let ((matrix (make-array 12 :element-type 'single-float)))
     (map-into matrix (lambda (x) (float x 0f0)) values)))
 
 (defmacro with-matrix ((mat &rest els) &body body)
-  `(let ((,mat (make-array 9 :element-type 'single-float)))
+  `(let ((,mat (make-array 12 :element-type 'single-float)))
+     (declare (type matrix ,mat))
      (declare (dynamic-extent ,mat))
      ,@(loop for el in els
              for i from 0
@@ -14,24 +19,24 @@
 
 (declaim (inline mat*p mat*v))
 (defun mat*p (mat x y)
-  (declare (type (simple-array single-float (9)) mat))
+  (declare (type matrix mat))
   (declare (type single-float x y))
   (declare (optimize speed (safety 1)))
-  (values (+ (* (aref mat 0) x) (* (aref mat 1) y) (aref mat 2))
-          (+ (* (aref mat 3) x) (* (aref mat 4) y) (aref mat 5))))
+  (values (+ (* (aref mat 0) x) (* (aref mat 1) y) (aref mat 3))
+          (+ (* (aref mat 4) x) (* (aref mat 5) y) (aref mat 7))))
 
 (defun mat*v (mat x y)
-  (declare (type (simple-array single-float (9)) mat))
+  (declare (type matrix mat))
   (declare (type single-float x y))
   (declare (optimize speed (safety 1)))
   (values (+ (* (aref mat 0) x) (* (aref mat 1) y))
-          (+ (* (aref mat 3) x) (* (aref mat 4) y))))
+          (+ (* (aref mat 4) x) (* (aref mat 5) y))))
 
-(declaim (ftype (function () (simple-array single-float (9))) matrix-identity))
+(declaim (ftype (function () matrix) matrix-identity))
 (defun matrix-identity ()
-  (matrix 1 0 0
-          0 1 0
-          0 0 1))
+  (matrix 1 0 0 0
+          0 1 0 0
+          0 0 1 0))
 
 (define-compiler-macro matrix (&rest values &environment env)
   (flet ((fold (arg)
@@ -39,7 +44,8 @@
                `(load-time-value (float ,arg 0f0))
                `(float ,arg 0f0))))
     (let ((matrix (gensym "MATRIX")))
-      `(let ((,matrix (make-array 9 :element-type 'single-float)))
+      `(let ((,matrix (make-array 12 :element-type 'single-float)))
+         (declare (type matrix ,matrix))
          (declare (optimize speed))
          ,@(loop for value in values
                  for i from 0
@@ -47,37 +53,30 @@
          ,matrix))))
 
 (defun mat* (r a b)
-  (declare (type (simple-array single-float (9)) r a b))
+  (declare (type matrix r a b))
   (declare (optimize speed (safety 1)))
-  (let ((a00 (aref a 0))
-        (a10 (aref a 1))
-        (a20 (aref a 2))
-        (a01 (aref a 3))
-        (a11 (aref a 4))
-        (a21 (aref a 5))
-        (a02 (aref a 6))
-        (a12 (aref a 7))
-        (a22 (aref a 8))
-        (b00 (aref b 0))
-        (b10 (aref b 1))
-        (b20 (aref b 2))
-        (b01 (aref b 3))
-        (b11 (aref b 4))
-        (b21 (aref b 5))
-        (b02 (aref b 6))
-        (b12 (aref b 7))
-        (b22 (aref b 8)))
-    (setf (aref r 0) (+ (* a00 b00) (* a10 b01) (* a20 b02)))
-    (setf (aref r 1) (+ (* a00 b10) (* a10 b11) (* a20 b12)))
-    (setf (aref r 2) (+ (* a00 b20) (* a10 b21) (* a20 b22)))
+  (let ((a00 (aref a  0)) (a10 (aref a  1)) (a20 (aref a  2)) (a30 (aref a  3))
+        (a01 (aref a  4)) (a11 (aref a  5)) (a21 (aref a  6)) (a31 (aref a  7))
+        (a02 (aref a  8)) (a12 (aref a  9)) (a22 (aref a 10)) (a32 (aref a 11))
+        (a03           0) (a13           0) (a23           0) (a33           1)
+        (b00 (aref b  0)) (b10 (aref b  1)) (b20 (aref b  2)) (b30 (aref b  3))
+        (b01 (aref b  4)) (b11 (aref b  5)) (b21 (aref b  6)) (b31 (aref b  7))
+        (b02 (aref b  8)) (b12 (aref b  9)) (b22 (aref b 10)) (b32 (aref b 11))
+        (b03           0) (b13           0) (b23           0) (b33           1))
+    (setf (aref r  0) (+ (* a00 b00) (* a10 b01) (* a20 b02) (* a30 b03)))
+    (setf (aref r  1) (+ (* a00 b10) (* a10 b11) (* a20 b12) (* a30 b13)))
+    (setf (aref r  2) (+ (* a00 b20) (* a10 b21) (* a20 b22) (* a30 b23)))
+    (setf (aref r  3) (+ (* a00 b20) (* a10 b21) (* a20 b22) (* a30 b33)))
     
-    (setf (aref r 3) (+ (* a01 b00) (* a11 b01) (* a21 b02)))
-    (setf (aref r 4) (+ (* a01 b10) (* a11 b11) (* a21 b12)))
-    (setf (aref r 5) (+ (* a01 b20) (* a11 b21) (* a21 b22)))
+    (setf (aref r  4) (+ (* a01 b00) (* a11 b01) (* a21 b02) (* a31 b03)))
+    (setf (aref r  5) (+ (* a01 b10) (* a11 b11) (* a21 b12) (* a31 b13)))
+    (setf (aref r  6) (+ (* a01 b20) (* a11 b21) (* a21 b22) (* a31 b23)))
+    (setf (aref r  7) (+ (* a01 b20) (* a11 b21) (* a21 b22) (* a31 b23)))
 
-    (setf (aref r 6) (+ (* a02 b00) (* a12 b01) (* a22 b02)))
-    (setf (aref r 7) (+ (* a02 b10) (* a12 b11) (* a22 b12)))
-    (setf (aref r 8) (+ (* a02 b20) (* a12 b21) (* a22 b22)))
+    (setf (aref r  8) (+ (* a02 b00) (* a12 b01) (* a22 b02) (* a32 b03)))
+    (setf (aref r  9) (+ (* a02 b10) (* a12 b11) (* a22 b12) (* a32 b13)))
+    (setf (aref r 10) (+ (* a02 b20) (* a12 b21) (* a22 b22) (* a32 b23)))
+    (setf (aref r 11) (+ (* a02 b20) (* a12 b21) (* a22 b22) (* a32 b23)))
     r))
 
 (defclass transformed-renderer (renderer)
@@ -86,13 +85,13 @@
 
 (defmethod call-with-pushed-transforms (function (renderer transformed-renderer) &key clear)
   (let ((current (transform-matrix renderer))
-        (new (make-array 9 :element-type 'single-float)))
+        (new (make-array 12 :element-type 'single-float)))
     (declare (dynamic-extent new))
-    (declare (type (simple-array single-float (9)) current new))
+    (declare (type matrix current new))
     (declare (optimize speed))
     (if clear
-        (dotimes (i 9) (setf (aref new i) (aref (the (simple-array single-float (9)) (identity-matrix renderer)) i)))
-        (dotimes (i 9) (setf (aref new i) (aref current i))))
+        (dotimes (i 12) (setf (aref new i) (aref (the matrix (identity-matrix renderer)) i)))
+        (dotimes (i 12) (setf (aref new i) (aref current i))))
     (setf (transform-matrix renderer) new)
     (unwind-protect
          (funcall (the function function))
@@ -105,22 +104,22 @@
 
 (defun translate-by (renderer pxx pxy)
   (let* ((matrix (transform-matrix renderer)))
-    (incf (aref matrix 2) (+ (* (aref matrix 0) pxx)
-                             (* (aref matrix 1) pxy)))
-    (incf (aref matrix 5) (+ (* (aref matrix 3) pxx)
-                             (* (aref matrix 4) pxy)))
-    (incf (aref matrix 8) (+ (* (aref matrix 6) pxx)
-                             (* (aref matrix 7) pxy)))
+    (incf (aref matrix  3) (+ (* (aref matrix 0) pxx)
+                              (* (aref matrix 1) pxy)))
+    (incf (aref matrix  7) (+ (* (aref matrix 4) pxx)
+                              (* (aref matrix 5) pxy)))
+    (incf (aref matrix 11) (+ (* (aref matrix 8) pxx)
+                              (* (aref matrix 9) pxy)))
     renderer))
 
 (defun scale-by (renderer pxw pxh)
   (let* ((matrix (transform-matrix renderer)))
     (setf (aref matrix 0) (* (aref matrix 0) pxw))
     (setf (aref matrix 1) (* (aref matrix 1) pxh))
-    (setf (aref matrix 3) (* (aref matrix 3) pxw))
-    (setf (aref matrix 4) (* (aref matrix 4) pxh))
-    (setf (aref matrix 6) (* (aref matrix 6) pxw))
-    (setf (aref matrix 7) (* (aref matrix 7) pxh))
+    (setf (aref matrix 4) (* (aref matrix 4) pxw))
+    (setf (aref matrix 5) (* (aref matrix 5) pxh))
+    (setf (aref matrix 8) (* (aref matrix 8) pxw))
+    (setf (aref matrix 9) (* (aref matrix 9) pxh))
     renderer))
 
 (defmethod translate ((renderer transformed-renderer) (point alloy:point))
@@ -141,13 +140,13 @@
 (defmethod rotate ((renderer transformed-renderer) (phi float))
   (let ((cos (float (cos phi) 0f0))
         (sin (float (sin phi) 0f0)))
-    (with-matrix (mat cos (- sin) 0
-                      sin cos 0
-                      0 0 1)
+    (with-matrix (mat cos (- sin) 0 0
+                      sin    cos  0 0
+                        0      0  1 0)
       (add-matrix renderer mat))))
 
 (defmethod z-index ((renderer transformed-renderer))
-  (aref (transform-matrix renderer) 8))
+  (aref (transform-matrix renderer) 11))
 
 (defmethod (setf z-index) (z-index (renderer transformed-renderer))
-  (setf (aref (transform-matrix renderer) 8) (float z-index)))
+  (setf (aref (transform-matrix renderer) 11) (float z-index)))
