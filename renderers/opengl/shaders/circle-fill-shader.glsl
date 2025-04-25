@@ -1,6 +1,6 @@
 //VERT
 layout (location=0) in vec2 pos;
-uniform mat3 transform;
+uniform mat4x3 transform;
 uniform float start_angle;
 uniform float end_angle;
 uniform vec2 size;
@@ -11,7 +11,7 @@ out vec2 uv;
 
 void main(){
   uv = pos+vec2(feather)/size-0.5;
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
+  gl_Position = vec4(transform*vec4(pos, 0.0, 1.0), 1.0);
 }
 
 //FRAG

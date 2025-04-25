@@ -1,12 +1,12 @@
 //VERT
 layout (location=0) in vec2 pos;
 layout (location=1) in vec2 vuv;
-uniform mat3 transform;
+uniform mat4x3 transform;
 out vec2 uv;
 
 void main(){
   uv = vuv-0.5;
-  gl_Position = vec4(transform*vec3(pos, 1.0), 1.0);
+  gl_Position = vec4(transform*vec4(pos, 0.0, 1.0), 1.0);
 }
 
 //FRAG
