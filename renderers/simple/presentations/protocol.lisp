@@ -31,6 +31,7 @@
   ;; Reminder for future me: this has to be a vector for insertion order to stay correct.
   ((shapes :initform (make-array 0 :adjustable T :fill-pointer T) :accessor shapes)
    (realized-p :initform NIL :accessor realized-p)
+   (resized-p :initform T :accessor resized-p)
    (update-overrides :initform () :accessor update-overrides)))
 
 (defgeneric realize-renderable (renderer renderable))
@@ -164,7 +165,7 @@
       (loop for k being the hash-keys of argtable using (hash-value v)
             do (push v arglist)
                (push k arglist))
-      (when arglist
+      (when (or arglist (resized-p renderable))
         (flet ((update ()
                  (apply #'reinitialize-instance shape :renderer renderer arglist)))
           (declare (dynamic-extent #'update))
@@ -179,7 +180,8 @@
       (stable-sort shapes #'< :key (lambda (cell) (z-index (cdr cell)))))
     (alloy:with-unit-parent renderable
       (loop for (name . shape) across shapes
-            do (update-shape renderer renderable shape argtable)))))
+            do (update-shape renderer renderable shape argtable)))
+    (setf (resized-p renderable) NIL)))
 
 ;;; Defer updating the shapes until we have a dirty render.
 ;;; Might cause hiccups during render if there's many updates, but we save
@@ -201,6 +203,9 @@
 ;; When scale changed, recreate to ensure we flush shapes.
 (defmethod alloy:handle :before ((event alloy:scale-changed) (renderable renderable))
   (alloy:mark-for-render renderable))
+
+(defmethod (setf alloy:bounds) :after (value (renderable renderable))
+  (setf (resized-p renderable) T))
 
 (defgeneric tracked-shapes (animated)
   (:method-combination append :most-specific-first))
