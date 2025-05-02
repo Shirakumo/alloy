@@ -15,5 +15,6 @@
   :depends-on (:documentation-utils
                :colored
                :alloy
-               (:feature :sbcl (:require :sb-simd)))
+               #++
+               (:feature (:and :sbcl :x86-64) (:require :sb-simd)))
   :in-order-to ((asdf:test-op (asdf:test-op :alloy-test))))

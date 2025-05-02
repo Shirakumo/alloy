@@ -1,12 +1,38 @@
 (in-package #:org.shirakumo.alloy.renderers.simple)
+#.(when (find-package "SB-SIMD-SSE")
+    (pushnew :sb-simd-sse *features*))
 
 (deftype matrix ()
   '(simple-array single-float (12)))
 
-(declaim (inline matrix))
 (defun matrix (&rest values)
   (let ((matrix (make-array 12 :element-type 'single-float)))
     (map-into matrix (lambda (x) (float x 0f0)) values)))
+
+(define-compiler-macro matrix (&rest values &environment env)
+  (flet ((fold (arg)
+           (if (constantp arg env)
+               `(load-time-value (float ,arg 0f0))
+               `(float ,arg 0f0))))
+    (let ((matrix (gensym "MATRIX")))
+      `(let ((,matrix (make-array 12 :element-type 'single-float)))
+         (declare (type matrix ,matrix))
+         (declare (optimize speed))
+         ,@(loop for value in values
+                 for i from 0
+                 collect `(setf (aref ,matrix ,i) ,(fold value)))
+         ,matrix))))
+
+(declaim (inline copy-matrix))
+(defun copy-matrix (matrix)
+  (declare (type matrix matrix))
+  (make-array 12 :element-type 'single-float :initial-contents matrix))
+
+(declaim (ftype (function () matrix) matrix-identity))
+(defun matrix-identity ()
+  (matrix 1 0 0 0
+          0 1 0 0
+          0 0 1 0))
 
 (defmacro with-matrix ((mat &rest els) &body body)
   `(let ((,mat (make-array 12 :element-type 'single-float)))
@@ -32,30 +58,10 @@
   (values (+ (* (aref mat 0) x) (* (aref mat 1) y))
           (+ (* (aref mat 4) x) (* (aref mat 5) y))))
 
-(declaim (ftype (function () matrix) matrix-identity))
-(defun matrix-identity ()
-  (matrix 1 0 0 0
-          0 1 0 0
-          0 0 1 0))
-
-(define-compiler-macro matrix (&rest values &environment env)
-  (flet ((fold (arg)
-           (if (constantp arg env)
-               `(load-time-value (float ,arg 0f0))
-               `(float ,arg 0f0))))
-    (let ((matrix (gensym "MATRIX")))
-      `(let ((,matrix (make-array 12 :element-type 'single-float)))
-         (declare (type matrix ,matrix))
-         (declare (optimize speed))
-         ,@(loop for value in values
-                 for i from 0
-                 collect `(setf (aref ,matrix ,i) ,(fold value)))
-         ,matrix))))
-
 (defun mat* (r a b)
   (declare (type matrix r a b))
   (declare (optimize speed (safety 1)))
-  #-(and x86-64 sbcl)
+  #-sb-simd-sse
   (let ((a00 (aref a  0)) (a10 (aref a  1)) (a20 (aref a  2)) (a30 (aref a  3))
         (a01 (aref a  4)) (a11 (aref a  5)) (a21 (aref a  6)) (a31 (aref a  7))
         (a02 (aref a  8)) (a12 (aref a  9)) (a22 (aref a 10)) (a32 (aref a 11))
@@ -78,7 +84,7 @@
     (setf (aref r  9) (+ (* a02 b10) (* a12 b11) (* a22 b12) (* a32 b13)))
     (setf (aref r 10) (+ (* a02 b20) (* a12 b21) (* a22 b22) (* a32 b23)))
     (setf (aref r 11) (+ (* a02 b30) (* a12 b21) (* a22 b32) (* a32 b33))))
-  #+(and x86-64 sbcl)
+  #+sb-simd-sse
   (let ((b0 (sb-simd-sse:f32.4-row-major-aref b 0))
         (b1 (sb-simd-sse:f32.4-row-major-aref b 4))
         (b2 (sb-simd-sse:f32.4-row-major-aref b 8))
