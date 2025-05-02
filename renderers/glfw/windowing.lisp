@@ -230,20 +230,7 @@
 
 (defmethod (setf alloy:bounds) :after (extent (window window))
   (let ((target (simple:transform-matrix window)))
-    (setf (aref target 0) (/ 2f0 (max 1f0 (alloy:pxw extent))))
-    (setf (aref target 1) 0f0)
-    (setf (aref target 2) 0f0)
-    (setf (aref target 3) -1f0)
-
-    (setf (aref target 4) 0f0)
-    (setf (aref target 5) (/ 2f0 (max 1f0 (alloy:pxh extent))))
-    (setf (aref target 6) 0f0)
-    (setf (aref target 7) -1f0)
-
-    (setf (aref target 8) 0f0)
-    (setf (aref target 9) 0f0)
-    (setf (aref target 10) 1f0)
-    (setf (aref target 11) 0.0001f0)
+    (simple:orthographic-matrix (alloy:pxw extent) (alloy:pxh extent) target)
     (setf (simple:identity-matrix window) (copy-seq target))))
 
 (defmethod alloy:dots-per-cm ((window window))

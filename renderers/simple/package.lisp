@@ -129,6 +129,7 @@
    #:with-pushed-transforms)
   ;; transforms.lisp
   (:export
+   #:with-matrix
    #:matrix
    #:copy-matrix
    #:matrix-identity
@@ -144,4 +145,6 @@
    #:transformed-renderer
    #:translate-by
    #:scale-by
+   #:orthographic-matrix
+   #:perspective-matrix
    #:make-default-transform))

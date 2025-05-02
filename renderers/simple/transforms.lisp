@@ -164,6 +164,52 @@
     (setf (mref matrix 2 1) (* (mref matrix 2 1) pxh))
     renderer))
 
+(defun orthographic-matrix (w h &optional (target (matrix)))
+  (declare (type matrix target))
+  (setf (aref target 0) (/ 2f0 (max 1f0 w)))
+  (setf (aref target 1) 0f0)
+  (setf (aref target 2) 0f0)
+  (setf (aref target 3) -1f0)
+
+  (setf (aref target 4) 0f0)
+  (setf (aref target 5) (/ 2f0 (max 1f0 h)))
+  (setf (aref target 6) 0f0)
+  (setf (aref target 7) -1f0)
+
+  (setf (aref target 8) 0f0)
+  (setf (aref target 9) 0f0)
+  (setf (aref target 10) (- 0.0001f0))
+  (setf (aref target 11) 0.0)
+
+  (setf (aref target 12) 0f0)
+  (setf (aref target 13) 0f0)
+  (setf (aref target 14) 0f0)
+  (setf (aref target 15) 1f0)
+  target)
+
+(defun perspective-matrix (w h &optional (target (matrix)))
+  (declare (type matrix target))
+  (setf (aref target 0) (/ -200f0 (max 1f0 w)))
+  (setf (aref target 1) 0f0)
+  (setf (aref target 2) 1f0)
+  (setf (aref target 3) 0f0)
+
+  (setf (aref target 4) 0f0)
+  (setf (aref target 5) (/ -200f0 (max 1f0 h)))
+  (setf (aref target 6) 1f0)
+  (setf (aref target 7) 0f0)
+
+  (setf (aref target 8) 0f0)
+  (setf (aref target 9) 0f0)
+  (setf (aref target 10) 1f0)
+  (setf (aref target 11) 100f0)
+
+  (setf (aref target 12) 0f0)
+  (setf (aref target 13) 0f0)
+  (setf (aref target 14) -1f0)
+  (setf (aref target 15) 0f0)
+  target)
+
 (defmethod translate ((renderer transformed-renderer) (point alloy:point))
   (translate-by renderer (alloy:pxx point) (alloy:pxy point)))
 
