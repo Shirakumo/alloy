@@ -130,7 +130,9 @@
   ;; transforms.lisp
   (:export
    #:matrix
+   #:copy-matrix
    #:matrix-identity
+   #:with-matrix
    #:mat*p
    #:mat*v
    #:mat*

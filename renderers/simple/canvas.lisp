@@ -188,7 +188,7 @@
                (composite-mode
                 (setf (composite-mode renderer) arg))
                (push-matrix
-                (push (make-array 9 :element-type 'single-float :initial-contents (transform-matrix renderer)) matrix-stack))
+                (push (make-array 12 :element-type 'single-float :initial-contents (transform-matrix renderer)) matrix-stack))
                (pop-matrix
                 (let ((prev (pop matrix-stack)))
                   (when prev
