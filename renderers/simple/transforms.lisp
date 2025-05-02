@@ -141,11 +141,13 @@
 
 (defmethod add-matrix ((renderer transformed-renderer) new)
   (let ((ex (transform-matrix renderer)))
+    (declare (type matrix ex new))
     (setf (transform-matrix renderer) (mat* ex ex new))
     renderer))
 
 (defun translate-by (renderer pxx pxy)
   (let* ((matrix (transform-matrix renderer)))
+    (declare (type matrix matrix))
     (incf (mref matrix 0 3) (+ (* (mref matrix 0 0) pxx)
                                (* (mref matrix 0 1) pxy)))
     (incf (mref matrix 1 3) (+ (* (mref matrix 1 0) pxx)
@@ -156,6 +158,7 @@
 
 (defun scale-by (renderer pxw pxh)
   (let* ((matrix (transform-matrix renderer)))
+    (declare (type matrix matrix))
     (setf (mref matrix 0 0) (* (mref matrix 0 0) pxw))
     (setf (mref matrix 0 1) (* (mref matrix 0 1) pxh))
     (setf (mref matrix 1 0) (* (mref matrix 1 0) pxw))
@@ -189,25 +192,25 @@
 
 (defun perspective-matrix (w h &optional (target (matrix)))
   (declare (type matrix target))
-  (setf (aref target 0) (/ -200f0 (max 1f0 w)))
+  (setf (aref target 0) (/ 2f0 (max 1f0 w)))
   (setf (aref target 1) 0f0)
-  (setf (aref target 2) 1f0)
-  (setf (aref target 3) 0f0)
+  (setf (aref target 2) 0f0)
+  (setf (aref target 3) -1f0)
 
   (setf (aref target 4) 0f0)
-  (setf (aref target 5) (/ -200f0 (max 1f0 h)))
-  (setf (aref target 6) 1f0)
-  (setf (aref target 7) 0f0)
+  (setf (aref target 5) (/ 2f0 (max 1f0 h)))
+  (setf (aref target 6) 0f0)
+  (setf (aref target 7) -1f0)
 
   (setf (aref target 8) 0f0)
   (setf (aref target 9) 0f0)
-  (setf (aref target 10) 1f0)
-  (setf (aref target 11) 100f0)
+  (setf (aref target 10) 0.0001f0)
+  (setf (aref target 11) 0f0)
 
   (setf (aref target 12) 0f0)
   (setf (aref target 13) 0f0)
-  (setf (aref target 14) -1f0)
-  (setf (aref target 15) 0f0)
+  (setf (aref target 14) 0f0)
+  (setf (aref target 15) 1f0)
   target)
 
 (defmethod translate ((renderer transformed-renderer) (point alloy:point))
@@ -235,7 +238,12 @@
       (add-matrix renderer mat))))
 
 (defmethod z-index ((renderer transformed-renderer))
-  (aref (transform-matrix renderer) 11))
+  (let ((mat (transform-matrix renderer)))
+    (declare (type matrix mat))
+    (if (= 0f0 (aref mat 10)) 0f0 (/ (aref mat 11) (aref mat 10)))))
 
 (defmethod (setf z-index) (z-index (renderer transformed-renderer))
-  (setf (aref (transform-matrix renderer) 11) (float z-index)))
+  (let ((mat (transform-matrix renderer)))
+    (declare (type matrix mat))
+    (setf (aref mat 11) (* (float z-index) (aref mat 10))))
+  z-index)
