@@ -60,7 +60,7 @@
     (etypecase value
       (vector
        (org.shirakumo.memory-regions:with-pointer-to-array-data (data value)
-         (%gl:uniform-matrix-4x3-fv location 1 T data)))
+         (%gl:uniform-matrix-4fv location 1 T data)))
       (single-float
        (%gl:uniform-1f location value))
       ((unsigned-byte 32)

@@ -324,7 +324,7 @@
            (call-next-method))
           (T
            (let* ((*clip-depth* *clip-depth*)
-                  (arr (make-array 12 :element-type 'single-float))
+                  (arr (make-array 16 :element-type 'single-float))
                   (*clip-region* (cons arr NIL)))
              (declare (dynamic-extent *clip-region* arr))
              (call-next-method)

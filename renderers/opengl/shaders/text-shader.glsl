@@ -4,7 +4,8 @@ layout (location=1) in vec2 in_uv;
 layout (location=2) in vec4 in_vert_color;
 layout (location=3) in vec3 in_offset;
 layout (location=4) in vec4 in_outline;
-uniform mat4x3 transform;
+
+uniform mat4 transform;
 out vec2 uv;
 out vec4 vert_color;
 out vec4 outline;
@@ -13,7 +14,7 @@ out float bias;
 void main(){
   vec2 rpos = pos+in_offset.xy;
   
-  gl_Position = vec4(transform*vec4(rpos, 0.0, 1.0), 1.0);
+  gl_Position = transform*vec4(rpos, 0.0, 1.0);
   uv = in_uv;
   vert_color = in_vert_color;
   outline = in_outline;

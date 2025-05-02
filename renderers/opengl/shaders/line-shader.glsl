@@ -7,11 +7,11 @@ out vec2 line_normal;
 out float t;
 uniform float line_width = 3.0;
 uniform float gap = 0.0;
-uniform mat4x3 transform;
+uniform mat4 transform;
 uniform vec2 view_size;
 
 void main(){
-  gl_Position = vec4(transform*vec4(pos, 0.0, 1.0), 1.0);
+  gl_Position = transform*vec4(pos, 0.0, 1.0);
   line_normal = normal;
   t = time/(line_width*0.3)*gap;
 }

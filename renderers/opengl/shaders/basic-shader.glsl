@@ -1,9 +1,9 @@
 //VERT
 layout (location=0) in vec2 pos;
-uniform mat4x3 transform;
+uniform mat4 transform;
 
 void main(){
-  gl_Position = vec4(transform*vec4(pos, 0.0, 1.0), 1.0);
+  gl_Position = transform*vec4(pos, 0.0, 1.0);
 }
 
 //FRAG

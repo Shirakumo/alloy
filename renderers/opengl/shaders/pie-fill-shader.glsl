@@ -1,6 +1,6 @@
 //VERT
 layout (location=0) in vec2 pos;
-uniform mat4x3 transform;
+uniform mat4 transform;
 uniform float start_angle;
 uniform float end_angle;
 uniform vec2 size;
@@ -25,7 +25,7 @@ void main(){
   float sstart = sin(aperture+start);
   uv = mat2(cstart,-sstart,
             sstart, cstart)*uv;
-  gl_Position = vec4(transform*vec4(pos, 0.0, 1.0), 1.0);
+  gl_Position = transform*vec4(pos, 0.0, 1.0);
 }
 
 //FRAG
