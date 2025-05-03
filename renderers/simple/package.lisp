@@ -146,5 +146,6 @@
    #:translate-by
    #:scale-by
    #:orthographic-matrix
+   #:activate-perspective
    #:perspective-matrix
    #:make-default-transform))
