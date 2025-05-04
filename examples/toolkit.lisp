@@ -44,6 +44,3 @@
 
 (defun list-examples ()
   (copy-list *examples*))
-
-(defun launch (example &rest args)
-  (apply (find-symbol (string example) #.*package*) args))

@@ -19,7 +19,8 @@
                (:file "gradient")
                (:file "grid-bag-layout")
                (:file "sizing")
-               (:file "virtual-keyboard"))
+               (:file "virtual-keyboard")
+               (:file "alloy-examples"))
   :depends-on (:alloy-glfw
                :alloy-constraint
                :font-discovery))
