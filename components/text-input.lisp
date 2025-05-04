@@ -4,8 +4,15 @@
 ")
 
 (defclass cursor ()
-  ((pos :initform 0 :reader pos :writer set-pos)
+  (;; Index within the text of the input component.
+   (pos :initform 0 :reader pos :writer set-pos)
+   ;; When non-NIL, the region of the text delimited by POS and ANCHOR
+   ;; (either one may be smaller and that one indicates the start of
+   ;; the region) is treated a selection by several of the editing
+   ;; operations and possible visually indicated, depending on the
+   ;; component presentation.
    (anchor :initform NIL :reader anchor :writer set-anchor)
+   ;; The input component to which this cursor is attached.
    (component :initarg :component :initform (arg! :component) :reader component)))
 
 (defmethod (setf pos) ((position integer) (cursor cursor))
@@ -89,6 +96,9 @@
 (defmethod move-to ((position integer) (cursor cursor))
   (set-pos (max 0 (min position (length (text (component cursor))))) cursor))
 
+;;; The value is a string which may consist of a single or multiple
+;;; lines. The cursor slot contains a CURSOR instance that points into
+;;; the string.
 (defclass text-input-component (value-component)
   ((insert-mode :initform :add :initarg :insert-mode :accessor insert-mode)
    (placeholder :initform "" :initarg :placeholder :accessor placeholder)
@@ -417,6 +427,9 @@
   (when (slot-boundp component 'previous-value)
     (setf (value component) (previous-value component))))
 
+;;; A TEXT-INPUT-COMPONENT that does not permit #\Return and
+;;; #\Linefeed as content characters and treats them as ACCEPT
+;;; invocations instead.
 (defclass input-line (text-input-component)
   ())
 
@@ -438,6 +451,9 @@
       (T
        (call-next-method)))))
 
+;;; A TEXT-INPUT-COMPONENT that accepts #\Return and #\Linefeed as
+;;; content characters but also turns #\Return and #\Linefeed when
+;;; pressed with control into ACCEPT invocations.
 (defclass input-box (text-input-component)
   ())
 
