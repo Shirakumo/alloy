@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example constraint-layout (screen)
+  "A simple demonstration of the constraint-based layout."
   (let* ((window (windowing:make-window screen))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (layout (make-instance 'org.shirakumo.alloy.layouts.constraint:layout :layout-parent window))

@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example canvas (screen)
+  "Different drawing operations on a canvas component."
   (let* ((window (windowing:make-window screen :min-size (alloy:px-size 700 480)))
          (canvas (make-instance 'simple:canvas :renderer screen :layout-parent window)))
     (setf (simple:pattern canvas) colors:white)

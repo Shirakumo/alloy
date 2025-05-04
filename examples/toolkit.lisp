@@ -13,15 +13,22 @@
 
 #+alloy-glfw
 (defmacro define-example (name args &body body)
-  (let ((thunk (gensym "THUNK")))
-    `(progn (defun ,name (,@(rest args))
-              (flet ((,thunk (,(first args))
-                       ,@body))
-                (if (boundp '*screen*)
-                    (,thunk *screen*)
-                    (glfw:with-screen (*screen* 'screen :base-scale 2.0)
-                      (,thunk *screen*)))))
-            (pushnew ',name *examples*))))
+  (multiple-value-bind (documentation body)
+      (typecase body
+        ((cons string)
+         (values (first body) (rest body)))
+        (T
+         (values nil body)))
+    (let ((thunk (gensym "THUNK")))
+      `(progn (defun ,name (,@(rest args))
+                ,@(when documentation `(,documentation))
+                (flet ((,thunk (,(first args))
+                         ,@body))
+                  (if (boundp '*screen*)
+                      (,thunk *screen*)
+                      (glfw:with-screen (*screen* 'screen :base-scale 2.0)
+                        (,thunk *screen*)))))
+              (unless (pushnew ',name *examples*))))))
 
 #+alloy-framebuffers
 (defmacro define-example (name args &body body)

@@ -9,6 +9,7 @@
     (setf (alloy:value (label window)) (princ-to-string (alloy:paths ev)))))
 
 (define-example drop-files (screen)
+  "Drag and drop from the host desktop environment to Alloy."
   (let* ((window (windowing:make-window screen :class 'custom-window))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (layout (make-instance 'alloy:border-layout :layout-parent window))

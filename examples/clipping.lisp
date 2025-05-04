@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example clipping (screen)
+  "An example of component clipping in scrolling views."
   (let* ((window (windowing:make-window screen :min-size (alloy:px-size 640 480)))
          (focus (make-instance 'alloy:visual-focus-manager :focus-parent window))
          (border (make-instance 'alloy:border-layout :layout-parent window))
@@ -10,7 +11,7 @@
          (layout (make-instance 'alloy:vertical-linear-layout :layout-parent clip)))
     (alloy:enter scroll-y border :place :west :size (alloy:un 20))
     (alloy:enter scroll-x border :place :south :size (alloy:un 20))
-    
+
     (alloy:represent "Nesting" 'alloy:button :layout-parent layout :focus-parent focus)
     (let* ((border (make-instance 'alloy:border-layout :layout-parent layout))
            (clip (make-instance 'alloy:clip-view :limit :y :layout-parent border))
