@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example gradient (screen)
+  "Render a simple gradient."
   (let* ((window (windowing:make-window screen))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (layout (make-instance 'alloy:vertical-linear-layout :layout-parent window))

@@ -11,6 +11,7 @@
     :mixed "Lorem ipsum dolor sit amet, qui 役ツヌ産掲シリワテ供聞ざもゅち必先ざょ業活特どわ扉8情トワニフ at eros salutandi dissentiet, omnis conclusionemque 速尿独倍間転埼内運択容背成軍写除買球。 Lorèm ïpsùm dôlor sit àmèt 국가나 국민에게 중대한 재정적 ¡Lorem ipsum dolor sit amet"))
 
 (define-example font-mixing (screen)
+  "Mixed scripts within a single text."
   (let* ((window (windowing:make-window screen))
          (layout (make-instance 'alloy:grid-layout :col-sizes '(150 T) :row-sizes '(T) :layout-parent window))
          (focus (make-instance 'alloy:focus-list :focus-parent window))

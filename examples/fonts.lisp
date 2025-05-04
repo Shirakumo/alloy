@@ -19,6 +19,7 @@
    :valign (valign alloy:renderable)))
 
 (define-example fonts (screen)
+  "Render text using different fonts available on the system."
   (let* ((window (windowing:make-window screen))
          (layout (make-instance 'alloy:grid-layout :col-sizes '(T) :row-sizes '(30 T) :layout-parent window))
          (focus (make-instance 'alloy:focus-list :focus-parent window))

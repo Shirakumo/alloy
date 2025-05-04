@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example menu-bar (screen)
+  "A simple window menu example."
   (let* ((window (windowing:make-window screen))
          (layout (make-instance 'alloy:border-layout :layout-parent window))
          (focus (make-instance 'alloy:focus-list :focus-parent window))

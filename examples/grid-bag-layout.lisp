@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example grid-bag-layout (screen)
+  "A grid-bag layout with an arrangement of several children."
   (let* ((window (windowing:make-window screen :preferred-size (alloy:px-size 800 600)))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          ;; TODO keep this?

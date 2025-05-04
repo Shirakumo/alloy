@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example sizing (screen)
+  "An interactive illustration of component sizing strategies."
   (let* ((window (windowing:make-window screen :preferred-size (alloy:px-size 1024 768)))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (layout (make-instance 'org.shirakumo.alloy:vertical-linear-layout))

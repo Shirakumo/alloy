@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.alloy.examples)
 
 (define-example virtual-keyboard (screen)
+  "A window containing Alloy's virtual keyboard."
   (let* ((window (windowing:make-window screen))
          (focus (make-instance 'alloy:focus-list :focus-parent window))
          (layout (make-instance 'alloy:vertical-linear-layout :layout-parent window))
