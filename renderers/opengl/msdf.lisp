@@ -667,7 +667,7 @@
           (when pos
             (alloy:move-to pos component)))))))
 
-(defclass selection (opengl::polygon simple:selection)
+(defclass selection (simple:selection)
   ((%line-rectangles :reader line-rectangles
                      :initform (make-array 0 :adjustable t :fill-pointer 0))))
 
@@ -690,13 +690,7 @@
                         (x1 (alloy:pxx start-rect))
                         (x2 (alloy:pxx end-rect))
                         (y1 (alloy:pxy start-rect))
-                        (y2 (+ y1 line-height))
-                        (points (list (alloy:px-point x2 y1)
-                                      (alloy:px-point x2 y2)
-                                      (alloy:px-point x1 y2)
-                                      (alloy:px-point x1 y1)))
-                        (rect (make-instance 'opengl::polygon :name 'line
-                                                              :points points)))
+                        (rect (alloy:px-extent x1 y1 (- x2 x1) line-height)))
                    (vector-push-extend rect line-rectangles))))
           (loop for line-start = start then (1+ line-end)
                 for line-end = (min (or (position #\Linefeed string :start (min line-start (length string))) end)
@@ -704,7 +698,15 @@
                 while (< line-start end)
                 do (add-text-line line-start line-end)))))))
 
-(defmethod opengl::render-direct ((shape selection) (renderer t) (color t))
-  (map nil (lambda (line-rect)
-             (opengl::render-direct line-rect renderer color))
-       (line-rectangles shape)))
+(defmethod opengl::render-direct ((shape selection) renderer color)
+  (let ((shader (opengl:resource 'opengl::basic-shader renderer)))
+    (opengl:bind shader)
+    (setf (opengl:uniform shader "color") color)
+    (flet ((draw-rect (extent)
+             (simple:with-pushed-transforms (renderer)
+               (simple:translate renderer extent)
+               (simple:scale renderer extent)
+               (setf (opengl:uniform shader "transform") (simple:transform-matrix renderer)))
+             (opengl:draw-vertex-array (opengl:resource 'opengl::rect-fill-vao renderer) :triangles 0 6)))
+      (loop for extent across (line-rectangles shape)
+            do (draw-rect extent)))))
