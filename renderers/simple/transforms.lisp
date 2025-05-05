@@ -186,6 +186,30 @@
     (setf (mref matrix 3 1) (* (mref matrix 3 1) pxh))
     renderer))
 
+(defun rotate-by (renderer phi)
+  (let* ((matrix (transform-matrix renderer))
+         (x (float (cos phi) 0f0))
+         (y (float (sin phi) 0f0)))
+    (declare (type matrix matrix))
+    (declare (optimize speed))
+    (setf (mref matrix 0 0) (+ (* (mref matrix 0 0) x)
+                               (* (mref matrix 0 1) y)))
+    (setf (mref matrix 0 1) (- (* (mref matrix 0 1) x)
+                               (* (mref matrix 0 0) y)))
+    (setf (mref matrix 1 0) (+ (* (mref matrix 1 0) x)
+                               (* (mref matrix 1 1) y)))
+    (setf (mref matrix 1 1) (- (* (mref matrix 1 1) x)
+                               (* (mref matrix 1 0) y)))
+    (setf (mref matrix 2 0) (+ (* (mref matrix 2 0) x)
+                               (* (mref matrix 2 1) y)))
+    (setf (mref matrix 2 1) (- (* (mref matrix 2 1) x)
+                               (* (mref matrix 2 0) y)))
+    (setf (mref matrix 3 0) (+ (* (mref matrix 3 0) x)
+                               (* (mref matrix 3 1) y)))
+    (setf (mref matrix 3 1) (- (* (mref matrix 3 1) x)
+                               (* (mref matrix 3 0) y)))
+    renderer))
+
 (defun orthographic-matrix (w h &optional (target (matrix)))
   (declare (type matrix target))
   (setf (aref target 0) (/ 2f0 (max 1f0 w)))
@@ -258,14 +282,8 @@
 (defmethod scale ((renderer transformed-renderer) (margins alloy:margins))
   (scale renderer (alloy:ensure-extent margins)))
 
-(defmethod rotate ((renderer transformed-renderer) (phi float))
-  (let ((cos (float (cos phi) 0f0))
-        (sin (float (sin phi) 0f0)))
-    (with-matrix (mat cos (- sin) 0 0
-                      sin    cos  0 0
-                        0      0  1 0
-                        0      0  0 1)
-      (add-matrix renderer mat))))
+(defmethod rotate ((renderer transformed-renderer) (phi real))
+  (rotate-by renderer phi))
 
 (defmethod z-index ((renderer transformed-renderer))
   (let ((mat (transform-matrix renderer)))
