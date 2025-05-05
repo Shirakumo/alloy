@@ -31,10 +31,11 @@
     (bind (simple:image image))
     (setf (uniform shader "uv_scale") (simple:scaling image))
     (setf (uniform shader "uv_offset") (simple:offset image))
-    (setf (uniform shader "transform") (load-time-value (make-array 9 :element-type 'single-float
-                                                                      :initial-contents '(2.0 0.0 -1.0
-                                                                                          0.0 2.0 -1.0
-                                                                                          0.0 0.0  1.0))))
+    (setf (uniform shader "transform") (load-time-value (make-array 16 :element-type 'single-float
+                                                                       :initial-contents '(2.0 0.0 0.0 -1.0
+                                                                                           0.0 2.0 0.0 -1.0
+                                                                                           0.0 0.0 1.0  0.0
+                                                                                           0.0 0.0 0.0  1.0))))
     (draw-vertex-array (resource 'rect-fill-vao renderer) :triangles 0 6)))
 
 (defmethod alloy:render :around ((renderer renderer) (shape simple:patterned-shape))
