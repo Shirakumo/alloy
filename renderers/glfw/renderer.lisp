@@ -27,8 +27,8 @@
   (gl:clear-stencil #x00)
   (gl:stencil-func :always 1 #xFF)
   (gl:stencil-mask #xFF)
-  (gl:clear-depth 0.0)
-  (gl:depth-func :gequal)
+  (gl:clear-depth 1.0)
+  (gl:depth-func :lequal)
   (gl:depth-mask T)
   (gl:blend-func :src-alpha :one-minus-src-alpha))
 
