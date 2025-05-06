@@ -107,7 +107,7 @@
   (let ((b0 (sb-simd-sse:f32.4-row-major-aref b 0))
         (b1 (sb-simd-sse:f32.4-row-major-aref b 4))
         (b2 (sb-simd-sse:f32.4-row-major-aref b 8))
-        (b3 (sb-simd-sse:make-f32.4 0.0 0.0 0.0 1.0)))
+        (b3 (sb-simd-sse:f32.4-row-major-aref b 12)))
     (loop for i from 0 below 16 by 4
           do (let ((br0 (sb-simd-sse:f32.4-broadcast (aref a (+ i 0))))
                    (br1 (sb-simd-sse:f32.4-broadcast (aref a (+ i 1))))
