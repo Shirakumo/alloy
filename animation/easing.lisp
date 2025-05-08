@@ -7,6 +7,12 @@
     (or (gethash name *easings*)
         (when errorp (error "No easing function named ~s known." name))))
 
+  (define-compiler-macro easing (&whole whole &environment env name &optional (errorp T))
+    (if (constantp name env)
+        `(load-time-value (or (gethash ,name *easings*)
+                              (when ,errorp (error "No easing function named ~s known." ,name))))
+        whole))
+
   (defun (setf easing) (func name)
     (setf (gethash name *easings*) func)))
 
