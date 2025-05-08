@@ -35,6 +35,10 @@
              ,@body))
      (setf (easing ',(intern (string name) "KEYWORD")) (easing ',name))))
 
+(define-easing constant (x)
+  (declare (ignore x))
+  0f0)
+
 (define-easing linear (x)
   x)
 
