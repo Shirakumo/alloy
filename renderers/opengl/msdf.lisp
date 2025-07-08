@@ -99,8 +99,9 @@
                                   (error "No font named ~s found." family)))
          :cache-file (or cache-file (fontcache-file (make-pathname :name family :type "ttf"))) args))
 
-(defmethod cache-font ((font-file pathname) &key (cache-file (fontcache-file font-file)) (size 32) (spread 8))
-  (sdf-bmfont:create-bmfont font-file cache-file :size size :mode :msdf+a :type :json :spread spread)
+(defmethod cache-font ((font-file pathname) &rest args &key (cache-file (fontcache-file font-file)) (size 32) (spread 8) &allow-other-keys)
+  (remf args :cache-file)
+  (apply #'sdf-bmfont:create-bmfont font-file cache-file :size size :spread spread :mode :msdf+a :type :json args)
   cache-file)
 
 (defun cached-font (renderer file &key family evict-cache)
