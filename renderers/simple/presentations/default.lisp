@@ -329,14 +329,15 @@
      (:horizontal (alloy:extent -5 0 10 (alloy:ph)))
      (:vertical (alloy:extent 0 -5 (alloy:pw) 10)))))
 
+;; TODO: make slider offset fit to accommodate height of slider handle.
 (define-update (default-look-and-feel alloy:slider)
   (:handle
    :offset (ecase (alloy:orientation alloy:renderable)
              (:horizontal (alloy:point (alloy:pw (alloy:slider-unit alloy:renderable)) 0))
              (:vertical (alloy:point 0 (alloy:ph (alloy:slider-unit alloy:renderable)))))
    :pattern (case alloy:focus
-                 (:strong colors:white)
-                 (T (colored:color 0.25 0.2 0.8)))))
+              (:strong colors:white)
+              (T (colored:color 0.25 0.2 0.8)))))
 
 (define-realization (default-look-and-feel alloy:progress)
   ((:background simple:rectangle)
@@ -408,6 +409,7 @@
   (:label
    :pattern colors:white))
 
+;; TODO: make scrollbar handle grow in proportion to scrollable content.
 (define-realization (default-look-and-feel alloy:scrollbar)
   ((:background simple:rectangle)
    (alloy:margins))
