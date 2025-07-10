@@ -329,12 +329,13 @@
      (:horizontal (alloy:extent -5 0 10 (alloy:ph)))
      (:vertical (alloy:extent 0 -5 (alloy:pw) 10)))))
 
-;; TODO: make slider offset fit to accommodate height of slider handle.
 (define-update (default-look-and-feel alloy:slider)
   (:handle
    :offset (ecase (alloy:orientation alloy:renderable)
-             (:horizontal (alloy:point (alloy:pw (alloy:slider-unit alloy:renderable)) 0))
-             (:vertical (alloy:point 0 (alloy:ph (alloy:slider-unit alloy:renderable)))))
+             (:horizontal (alloy:point (- (alloy:to-px (alloy:pw (alloy:slider-unit alloy:renderable)))
+                                          (* 0.5 (alloy:pxw (simple:bounds simple:shape)))) 0))
+             (:vertical (alloy:px-point 0 (- (alloy:to-px (alloy:ph (alloy:slider-unit alloy:renderable)))
+                                             (* 0.5 (alloy:pxh (simple:bounds simple:shape)))))))
    :pattern (case alloy:focus
               (:strong colors:white)
               (T (colored:color 0.25 0.2 0.8)))))

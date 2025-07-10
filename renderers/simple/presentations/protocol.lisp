@@ -67,15 +67,15 @@
 (defmacro define-update ((renderer renderable &optional (shape-class 'shape)) &body shapes)
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
-    `(defmethod update-shape-arguments progn ((alloy:renderer ,renderer) (alloy:renderable ,renderable) (shape ,shape-class) argtable)
+    `(defmethod update-shape-arguments progn ((alloy:renderer ,renderer) (alloy:renderable ,renderable) (simple:shape ,shape-class) argtable)
        (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                          (alloy:bounds (alloy:bounds alloy:renderable))
                          (alloy:value (alloy:value alloy:renderable))
                          (alloy:text (alloy:text alloy:renderable))
                          (alloy:data (alloy:data alloy:renderable)))
          (declare (ignorable alloy:focus alloy:bounds alloy:value))
-         (symbol-macrolet ((alloy:bounds (alloy:ensure-extent (simple:bounds shape) (alloy:bounds alloy:renderable))))
-           (case (name shape)
+         (symbol-macrolet ((alloy:bounds (alloy:ensure-extent (simple:bounds simple:shape) (alloy:bounds alloy:renderable))))
+           (case (name simple:shape)
              ,@(loop for (name . initargs) in shapes
                      collect `(,name
                                ,@(loop for (key val) on initargs by #'cddr
