@@ -9,7 +9,8 @@
   (:import-from #:org.shirakumo.alloy #:arg!)
   ;; default.lisp
   (:export
-   #:default-look-and-feel)
+   #:default-look-and-feel
+   #:fit-to-shapes)
   ;; protocol.lisp
   (:export
    #:renderer

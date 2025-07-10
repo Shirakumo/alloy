@@ -25,6 +25,11 @@
            :reader shapes
            :initform T)))
 
+(defun fit-to-shapes (&optional (shapes T))
+  (if (eql T shapes)
+      (load-time-value (make-instance 'fit-to-shapes))
+      (make-instance 'fit-to-shapes :shapes shapes)))
+
 (defmethod print-object ((object fit-to-shapes) stream)
   (print-unreadable-object (object stream :type T :identity T)
     (let ((shapes (shapes object)))
