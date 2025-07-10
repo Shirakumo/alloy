@@ -36,15 +36,16 @@
 
 (defgeneric realize-renderable (renderer renderable))
 (defgeneric compute-sizing-strategy (renderer renderable))
-(defgeneric update-shape (renderer renderable name argtable)
+(defgeneric update-shape (renderer renderable name))
+(defgeneric update-shape-arguments (renderer renderable name argtable)
   (:method-combination progn :most-specific-last))
 (defgeneric clear-shapes (renderable))
 (defgeneric find-shape (id renderable &optional errorp))
 (defgeneric (setf find-shape) (shape id renderable))
 
 (simple::define-renderer-delegate realize-renderable (simple:renderer renderable))
-(defmethod update-shape progn ((simple:renderer (eql T)) renderable name argtable)
-  (update-shape alloy:+renderer+ renderable name argtable))
+(defmethod update-shape ((simple:renderer (eql T)) renderable name)
+  (update-shape alloy:+renderer+ renderable name))
 
 (defmacro define-realization ((renderer renderable &optional append) &body shapes)
   `(defmethod realize-renderable ((alloy:renderer ,renderer) (alloy:renderable ,renderable))
@@ -63,25 +64,22 @@
                                 (,type alloy:renderer ,@initargs :name ',name)))))
      alloy:renderable))
 
-;; FIXME: The current behaviour of UPDATE-SHAPE causes a ton of
-;;        reinitializations of the same shape through inherited methods.
-;;        We should instead compute the set of initargs per shape and
-;;        then reinitialize only once, if necessary.
-(defmacro define-update ((renderer renderable) &body shapes)
+(defmacro define-update ((renderer renderable &optional (shape-class 'shape)) &body shapes)
   (let* ((default (find T shapes :key #'car))
          (shapes (if default (remove default shapes) shapes)))
-    `(defmethod update-shape progn ((alloy:renderer ,renderer) (alloy:renderable ,renderable) name argtable)
+    `(defmethod update-shape-arguments progn ((alloy:renderer ,renderer) (alloy:renderable ,renderable) (shape ,shape-class) argtable)
        (symbol-macrolet ((alloy:focus (alloy:focus alloy:renderable))
                          (alloy:bounds (alloy:bounds alloy:renderable))
                          (alloy:value (alloy:value alloy:renderable))
                          (alloy:text (alloy:text alloy:renderable))
                          (alloy:data (alloy:data alloy:renderable)))
          (declare (ignorable alloy:focus alloy:bounds alloy:value))
-         (case name
-           ,@(loop for (name . initargs) in shapes
-                   collect `(,name
-                             ,@(loop for (key val) on initargs by #'cddr
-                                     collect `(setf (gethash ,key argtable) ,val)))))))))
+         (symbol-macrolet ((alloy:bounds (alloy:ensure-extent (simple:bounds shape) (alloy:bounds alloy:renderable))))
+           (case (name shape)
+             ,@(loop for (name . initargs) in shapes
+                     collect `(,name
+                               ,@(loop for (key val) on initargs by #'cddr
+                                       collect `(setf (gethash ,key argtable) ,val))))))))))
 
 (defmethod initialize-instance :after ((renderable renderable) &key style shapes)
   (dolist (shape shapes)
@@ -121,7 +119,7 @@
   (setf (realized-p renderable) T)
   ;; Need to update shape immediately, as update methods may change shape sizing and
   ;; other things, that would otherwise be deferred.
-  (update-shape renderer renderable T NIL)
+  (update-shape renderer renderable T)
   ;; If RENDERABLE uses the fallback sizing strategy, replace that strategy with
   ;; one that takes into visual representation produced by RENDERER. Otherwise
   ;; the sizing strategy in RENDERABLE must a user-supplied one, so leave it
@@ -156,9 +154,9 @@
 (defmethod (setf update-overrides) :after (overrides (renderable renderable))
   (alloy:mark-for-render renderable))
 
-(defmethod update-shape progn ((renderer renderer) (renderable renderable) (shape shape) (argtable null))
+(defmethod update-shape ((renderer renderer) (renderable renderable) (shape shape))
   (let ((argtable (make-hash-table :test 'eq)))
-    (update-shape renderer renderable (name shape) argtable)
+    (update-shape-arguments renderer renderable shape argtable)
     (loop for (k v) on (cdr (assoc (name shape) (update-overrides renderable))) by #'cddr
           do (setf (gethash k argtable) v))
     (let ((arglist ()))
@@ -171,7 +169,7 @@
           (declare (dynamic-extent #'update))
           (call-with-tracked-changes renderable shape #'update))))))
 
-(defmethod update-shape progn ((renderer renderer) (renderable renderable) (all (eql T)) argtable)
+(defmethod update-shape ((renderer renderer) (renderable renderable) (all (eql T)))
   (let ((shapes (shapes renderable)))
     (when (loop for previous-index = NIL then current-index
                 for current across shapes
@@ -180,7 +178,7 @@
       (stable-sort shapes #'< :key (lambda (cell) (z-index (cdr cell)))))
     (alloy:with-unit-parent renderable
       (loop for (name . shape) across shapes
-            do (update-shape renderer renderable shape argtable)))
+            do (update-shape renderer renderable shape)))
     (setf (resized-p renderable) NIL)))
 
 ;;; Defer updating the shapes until we have a dirty render.
@@ -192,7 +190,7 @@
 
 (defmethod alloy:render :before ((renderer renderer) (renderable renderable))
   (when (alloy:render-needed-p renderable)
-    (update-shape renderer renderable T NIL)))
+    (update-shape renderer renderable T)))
 
 ;;; Animation stuff
 (defmethod animation:update :after ((renderable renderable) dt)
