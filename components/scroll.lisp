@@ -25,6 +25,13 @@
           (cons 0 (max 0 (- (pxw (bounds (inner layout))) (pxw (bounds layout))))))
         '(0 . 0))))
 
+(defmethod scroll-handle-size ((scrollbar x-scrollbar))
+  (let ((layout (data scrollbar)))
+    (if (inner layout)
+        (with-unit-parent layout
+          (max 0.01 (/ (pxw (bounds layout)) (pxw (bounds (inner layout))))))
+        1.0)))
+
 (defclass y-scrollbar (scrollbar)
   ((orientation :initform :vertical)))
 
@@ -41,3 +48,10 @@
         (with-unit-parent layout
           (cons 0 (max 0 (- (pxh (bounds (inner layout))) (pxh (bounds layout))))))
         '(0 . 0))))
+
+(defmethod scroll-handle-size ((scrollbar y-scrollbar))
+  (let ((layout (data scrollbar)))
+    (if (inner layout)
+        (with-unit-parent layout
+          (max 0.01 (/ (pxh (bounds layout)) (max 1.0 (pxh (bounds (inner layout)))))))
+        1.0)))

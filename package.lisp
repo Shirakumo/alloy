@@ -123,7 +123,8 @@
   (:export
    #:scrollbar
    #:x-scrollbar
-   #:y-scrollbar)
+   #:y-scrollbar
+   #:scroll-handle-size)
   ;; components/slider.lisp
   (:export
    #:slider
