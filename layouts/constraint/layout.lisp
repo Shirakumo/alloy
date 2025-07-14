@@ -34,24 +34,12 @@
 (defun suggest (layout element var size)
   (alloy:with-unit-parent layout
     (cass:suggest (element-var layout element var) (alloy:to-un size) :make-suggestable)
-    (cass:update-variables (solver layout))
-    (alloy:do-elements (element layout)
-      (update layout element))
     (setf (alloy:layout-needed-p layout) T)))
 
 (defun constrain (layout element var value &key (strength :required))
   (alloy:with-unit-parent layout
     (prog1 (cass:constrain-with (solver layout) `(= ,(element-var layout element var) ,(alloy:to-un value)) :strength strength)
-      (cass:update-variables (solver layout))
-      (setf (alloy:layout-needed-p layout) T)
-      (alloy:do-elements (element layout)
-        (update layout element)))))
-
-(defun update (layout element)
-  (with-vars (x y w h layout) element
-    (setf (alloy:bounds element)
-          (alloy:px-extent (alloy:un (cass:value x)) (alloy:un (cass:value y))
-                           (alloy:un (cass:value w)) (alloy:un (cass:value h))))))
+      (setf (alloy:layout-needed-p layout) T))))
 
 (defmethod alloy:enter ((element alloy:layout-element) (layout layout) &key constraints)
   (call-next-method)
@@ -78,8 +66,30 @@
 (defmethod alloy:refit ((layout layout))
   (alloy:with-unit-parent layout
     (suggest-size layout layout (alloy:bounds layout))
-    (alloy:do-elements (element layout)
-      (update layout element))))
+    (let* ((extent (alloy:px-extent))
+           (ui (alloy:ui (alloy:layout-tree layout)))
+           (un-scale (* (alloy:resolution-scale ui) (alloy:base-scale ui))))
+      (flet ((update-extent (x y w h)
+               (setf (alloy:unit-value (alloy:extent-x extent)) (* un-scale (cass:value x)))
+               (setf (alloy:unit-value (alloy:extent-y extent)) (* un-scale (cass:value y)))
+               (setf (alloy:unit-value (alloy:extent-w extent)) (* un-scale (cass:value w)))
+               (setf (alloy:unit-value (alloy:extent-h extent)) (* un-scale (cass:value h)))
+               extent))
+        ;; First make suggestions
+        (alloy:do-elements (element layout)
+          (with-vars (x y w h layout) element
+            (let ((ideal (alloy:suggest-size (update-extent x y w h) element)))
+              (cass:suggest w (alloy:to-un (alloy:pxw ideal)) :make-suggestable)
+              (cass:suggest h (alloy:to-un (alloy:pxh ideal)) :make-suggestable))))
+        ;; Now update again and set
+        (cass:update-variables (solver layout))
+        (alloy:do-elements (element layout)
+          (with-vars (x y w h layout) element
+            (setf (alloy:bounds element) (alloy:px-extent
+                                          (alloy:un (cass:value x))
+                                          (alloy:un (cass:value y))
+                                          (alloy:un (cass:value w))
+                                          (alloy:un (cass:value h))))))))))
 
 (defmethod alloy:suggest-size (size (layout layout))
   (alloy:with-unit-parent layout
