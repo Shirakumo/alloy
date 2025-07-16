@@ -24,10 +24,10 @@
         (:b y)
         (:r `(- ,rw (+ ,x ,w)))
         (:u `(- ,rh (+ ,y ,h)))
-        (:rx rx)
-        (:ry ry)
-        (:rw rw)
-        (:rh rh)
+        ((:px :rx) rx)
+        ((:py :ry) ry)
+        ((:pw :rw) rw)
+        ((:ph :rh) rh)
         (T var)))))
 
 (defun rewrite-expression (expression element layout)
@@ -38,7 +38,7 @@
      (flet ((r (expr)
               (rewrite-expression expr element layout)))
        (case (first expression)
-         ((:x :y :w :h :l :b :r :u :rx :ry :rw :rh)
+         ((:x :y :w :h :l :b :r :u :rx :ry :rw :rh :px :py :pw :ph)
           (rewrite-variable (first expression) (second expression) layout))
          (T
           (list* (first expression)
