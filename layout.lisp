@@ -34,6 +34,7 @@
 (defun fixed-size (size &optional h)
   (make-instance 'fixed-size :fixed-size (etypecase size
                                            (size size)
+                                           (real (size size))
                                            (unit (size size h)))))
 
 (defmethod compute-ideal-size ((layout-element T) (sizing-strategy fixed-size) (size size))
