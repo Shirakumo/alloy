@@ -20,6 +20,7 @@
                (:file "grid-bag-layout")
                (:file "sizing")
                (:file "virtual-keyboard")
+               (:file "components")
                (:file "alloy-examples"))
   :depends-on (:alloy-glfw
                :alloy-constraint
