@@ -93,7 +93,8 @@
                      (let ((dt (float (/ (- (get-internal-real-time) start) INTERNAL-TIME-UNITS-PER-SECOND) 0f0)))
                        (org.shirakumo.alloy.animation:update screen dt)
                        (setf start (get-internal-real-time)))
-                     (alloy:render screen screen)))
+                     (with-simple-restart (abort "Abort the frame render")
+                       (alloy:render screen screen))))
        (when screen (alloy:deallocate screen))
        (glfw:shutdown)))))
 
