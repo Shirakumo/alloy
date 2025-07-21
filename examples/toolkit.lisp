@@ -26,7 +26,7 @@
                          ,@body))
                   (if (boundp '*screen*)
                       (,thunk *screen*)
-                      (glfw:with-screen (*screen* 'screen :base-scale 2.0)
+                      (glfw:with-screen (*screen* 'screen)
                         (,thunk *screen*)))))
               (unless (pushnew ',name *examples*))))))
 

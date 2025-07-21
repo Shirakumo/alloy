@@ -56,7 +56,7 @@
   (loop for example = (catch 'example-selected
                         (if (boundp '*screen*)
                             (%meta-example *screen*)
-                            (glfw:with-screen (*screen* 'screen :base-scale 2.0)
+                            (glfw:with-screen (*screen* 'screen :base-scale 1.0)
                               (%meta-example *screen*))))
         while example
         do (funcall example)))
