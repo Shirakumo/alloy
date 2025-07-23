@@ -19,7 +19,7 @@
   ((cell-margins :initform (margins 0))
    (min-size :initform (extent 10 10))))
 
-(defclass menu-item (button* single-container)
+(defclass menu-item (button* single-container focus-parent)
   ((on-activate :initform NIL)))
 
 (defmethod set-focus-tree :before (value (item menu-item))
