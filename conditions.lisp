@@ -28,7 +28,7 @@
     NIL container bad-element)
 
 (define-alloy-condition element-has-different-parent (hierarchy-error)
-    "Cannot perform operation with~%  ~s~%on~%  ~s~%as it is a parent on~%  ~s"
+    "Cannot perform operation with~%  ~s~%on~%  ~s~%as it is a child on~%  ~s"
   bad-element container parent)
 
 (define-alloy-condition element-already-contained (hierarchy-error)
