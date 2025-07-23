@@ -92,4 +92,4 @@
 
 (defmethod enter ((structure structure) (list section-list) &rest args &key label index expanded-p)
   (declare (ignore label index expanded-p))
-  (enter structure (apply #'ensure-section list args)))
+  (apply #'enter (cons (layout-element structure) (focus-element structure)) list args))
