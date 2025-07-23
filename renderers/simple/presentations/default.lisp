@@ -562,3 +562,36 @@
    :pattern (if (alloy:pressed alloy:renderable)
                 colors:black
                 colors:white)))
+
+(define-realization (default-look-and-feel alloy:section-header)
+  ((:background simple:rectangle)
+   (alloy:margins 0 2 0 0)
+   :pattern (if alloy:focus
+                (colored:color 0.3 0.3 0.3)
+                (colored:color 0.1 0.1 0.1)))
+  ((:caret simple:polygon)
+   (list (alloy:point -5 +2)
+         (alloy:point +5 +2)
+         (alloy:point  0 -2))
+   :offset (alloy:point 10 (alloy:ph 0.5))
+   :rotation (if alloy:value 0 PI)
+   :pattern colors:white)
+  ((:label simple:text)
+   (alloy:margins 20 3 1 1)
+   alloy:text
+   :halign :start
+   :valign :middle))
+
+(define-update (default-look-and-feel alloy:section-header)
+  (:background
+   :pattern (if alloy:focus
+                (colored:color 0.3 0.3 0.3)
+                (colored:color 0.1 0.1 0.1)))
+  (:caret
+   :rotation (if alloy:value 0 PI))
+  (:label
+   :text alloy:text
+   :pattern colors:white))
+
+(define-animated-shapes alloy:section-header
+  (:caret (rotation :duration 0.2)))

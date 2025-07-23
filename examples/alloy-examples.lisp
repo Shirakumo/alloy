@@ -61,5 +61,5 @@
         while example
         do (funcall example)))
 
-(defun launch (&optional (example 'meta-example) &rest args)
+(defun launch (&optional (example :meta-example) &rest args)
   (apply (find-symbol (string example) #.*package*) args))

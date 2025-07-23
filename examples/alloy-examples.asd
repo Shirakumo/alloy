@@ -21,6 +21,7 @@
                (:file "sizing")
                (:file "virtual-keyboard")
                (:file "components")
+               (:file "sections")
                (:file "alloy-examples"))
   :depends-on (:alloy-glfw
                :alloy-constraint

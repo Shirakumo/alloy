@@ -1,0 +1,16 @@
+(in-package #:org.shirakumo.alloy.examples)
+
+(define-example sections (screen)
+  "Expandable sections"
+  (let* ((window (windowing:make-window screen :min-size (alloy:px-size 700 480)))
+         (list (make-instance 'alloy:section-list :layout-parent window :focus-parent window)))
+    (alloy:enter (alloy:represent "Hello" 'alloy:label) list :expanded-p NIL)
+    (alloy:enter (alloy:represent "Test" 'alloy:button) list)
+    (let ((inner (make-instance 'alloy:grid-layout :col-sizes '(100 T) :row-sizes '(30)))
+          (focus (make-instance 'alloy:focus-list))
+          (input ""))
+      (alloy:enter "Input" inner)
+      (alloy:enter (alloy:represent input 'alloy:input-line :focus-parent focus) inner)
+      (alloy:enter "Activate" inner)
+      (alloy:enter (alloy:represent "Go" 'alloy:button :focus-parent focus) inner)
+      (alloy:enter (cons inner focus) list :label "Custom Section"))))

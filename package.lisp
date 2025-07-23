@@ -487,6 +487,10 @@
   ;; structures/scroll-view.lisp
   (:export
    #:scroll-view)
+  ;; structures/section.lisp
+  (:export
+   #:section-header
+   #:section-list)
   ;; structures/sidebar.lisp
   (:export
    #:sidebar)
