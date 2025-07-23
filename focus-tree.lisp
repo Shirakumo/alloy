@@ -113,7 +113,10 @@
 (defmethod handle ((event exit) (element focus-element))
   (exit element))
 
-(defmethod enter :before ((element focus-element) (parent focus-element) &key)
+(defclass focus-parent (focus-element)
+  ())
+
+(defmethod enter :before ((element focus-element) (parent focus-parent) &key)
   (cond ((not (slot-boundp element 'focus-parent))
          (set-focus-tree (focus-tree parent) element)
          (setf (slot-value element 'focus-parent) parent))
@@ -128,7 +131,7 @@
          (error 'element-already-contained
                 :bad-element element :container parent))))
 
-(defmethod leave :before ((element focus-element) (parent focus-element))
+(defmethod leave :before ((element focus-element) (parent focus-parent))
   (unless (eq parent (focus-parent element))
     (error 'element-has-different-parent
            :bad-element element :container parent :parent (focus-parent element)))
@@ -136,7 +139,7 @@
   (when (eq :strong (focus element))
     (setf (focus parent) :strong)))
 
-(defmethod leave :after ((element focus-element) (parent focus-element))
+(defmethod leave :after ((element focus-element) (parent focus-parent))
   (set-focus-tree NIL element)
   (slot-makunbound element 'focus-parent)
   (setf (slot-value element 'focus) NIL))
@@ -145,7 +148,7 @@
   (when (slot-boundp element 'focus-parent)
     (leave element (focus-parent element))))
 
-(defclass focus-chain (focus-element container)
+(defclass focus-chain (focus-parent container)
   ((index :initform NIL :accessor index)
    (focused :initform NIL :accessor focused)
    (wrap-focus :initform T :initarg :wrap-focus :accessor wrap-focus)))

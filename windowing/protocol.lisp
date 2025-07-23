@@ -27,7 +27,7 @@
 (defgeneric size (monitor/screen))
 (defgeneric location (monitor/screen))
 
-(defclass window (alloy:layout-element alloy:focus-element alloy:renderable alloy:observable)
+(defclass window (alloy:layout-element alloy:focus-parent alloy:renderable alloy:observable)
   ((layout-element :initform NIL :accessor layout-element)
    (focus-element :initform NIL :accessor focus-element)))
 

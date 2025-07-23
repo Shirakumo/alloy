@@ -277,6 +277,7 @@
    #:focus-down
    #:root
    #:focus-element
+   #:focus-parent
    #:focus-chain
    #:wrap-focus
    #:focus-list
