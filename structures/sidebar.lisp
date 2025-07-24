@@ -3,9 +3,9 @@
 (defclass sidebar (structure)
   ((dragger :reader dragger)))
 
-(defmethod enter ((element layout-element) (structure sidebar) &key)
+(defmethod enter ((element layout-element) (structure sidebar) &rest args &key (place :center))
   (when (next-method-p) (call-next-method))
-  (enter element (layout-element structure) :place :center))
+  (apply #'enter element (layout-element structure) :place place args))
 
 (defmethod enter ((element focus-element) (structure sidebar) &key)
   (when (next-method-p) (call-next-method))
