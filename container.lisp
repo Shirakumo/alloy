@@ -197,7 +197,10 @@
                  do (leave (aref layer i) container))))
 
 (defclass single-container (container)
-  ((inner :initarg :inner :initform NIL :accessor inner)))
+  ((inner :initform NIL :accessor inner)))
+
+(defmethod initialize-instance :after ((container single-container) &key inner)
+  (when inner (enter inner container)))
 
 (defmethod enter ((element element) (container single-container) &key)
   (when (inner container)
