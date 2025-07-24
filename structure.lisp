@@ -40,6 +40,12 @@
   (define-deferral leave focus-element focus-element)
   (define-deferral leave focus-tree focus-element))
 
+(defmethod set-layout-tree (value (target structure))
+  (set-layout-tree value (layout-element target)))
+
+(defmethod set-focus-tree (value (target structure))
+  (when (focus-element target) (set-focus-tree value (focus-element target))))
+
 (defmethod enter ((source structure) (target structure) &rest initargs)
   (apply #'enter (layout-element source) target initargs)
   (when (focus-element source) (apply #'enter (focus-element source) target initargs)))
