@@ -93,3 +93,8 @@
 (defmethod enter ((structure structure) (list section-list) &rest args &key label index expanded-p)
   (declare (ignore label index expanded-p))
   (apply #'enter (cons (layout-element structure) (focus-element structure)) list args))
+
+(defmethod clear ((list section-list))
+  (clear (layout-element list))
+  (clear (focus-element list))
+  (setf (sections list) (make-array 0 :adjustable T :fill-pointer T)))
