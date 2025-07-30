@@ -550,7 +550,7 @@
   (refresh (popups tree)))
 
 (defmethod prepare-for-render ((tree layout-tree) (renderer renderer))
-  (prepare-for-render (root tree) renderer)
+  (when (root tree) (prepare-for-render (root tree) renderer))
   (prepare-for-render (popups tree) renderer))
 
 (defmethod w ((tree layout-tree)) (w (root tree)))
