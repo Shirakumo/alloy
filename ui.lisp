@@ -88,6 +88,22 @@
 (defmethod refresh ((ui ui))
   (refresh (layout-tree ui)))
 
+(defmethod enter ((element layout-element) (ui ui) &rest args)
+  (when (next-method-p) (call-next-method))
+  (apply #'enter element (layout-tree ui) args))
+
+(defmethod enter ((element focus-element) (ui ui) &rest args)
+  (when (next-method-p) (call-next-method))
+  (apply #'enter element (focus-tree ui) args))
+
+(defmethod leave ((element layout-element) (ui ui))
+  (when (next-method-p) (call-next-method))
+  (leave element (layout-tree ui)))
+
+(defmethod leave ((element focus-element) (ui ui))
+  (when (next-method-p) (call-next-method))
+  (leave element (focus-tree ui)))
+
 (defclass smooth-scaling-ui (ui)
   ())
 
