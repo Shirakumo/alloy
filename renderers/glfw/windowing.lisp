@@ -24,7 +24,8 @@
 
 (defmethod (setf window:icon) ((type symbol) (cursor cursor))
   (let ((type (case type
-                ((:default :crosshair) type)
+                ((:default :cursor NIL) :arrow)
+                ((:crosshair) :crosshair)
                 ((:text :ibeam) :ibeam)
                 ((:pointer :pointing-hand) :pointing-hand)
                 ((:h-resize :ew-resize :resize-ew) :resize-ew)
@@ -33,7 +34,7 @@
                 ((:nesw-resize :resize-nesw) :resize-nesw)
                 ((:resize :resize-all) :resize)
                 ((:deny :not-allowed) :not-allowed)
-                (T :default))))
+                (T :arrow))))
     (setf (glfw:cursor (window cursor)) type)
     (set-icon type cursor)))
 
@@ -52,9 +53,8 @@
   (let ((location (glfw:location monitor)))
     (alloy:px-point (first location) (second location))))
 
-(defclass screen (window:screen renderer
-                  org.shirakumo.alloy.renderers.simple.presentations::default-look-and-feel)
-  ())
+(defclass screen (window:screen)
+  ((glfw:should-close-p :initform NIL :accessor glfw:should-close-p)))
 
 (defmethod window:list-monitors ((screen screen))
   (glfw:list-monitors))
@@ -81,21 +81,19 @@
      (unwind-protect
           (progn
             (setf screen (apply #'make-instance screen-class initargs))
-            (alloy:allocate screen)
             (funcall function screen)
             (loop until (glfw:should-close-p screen)
                   do (glfw:poll-events :timeout (float 1/30 0d0))
-                     (alloy:do-elements (window (alloy:root (alloy:layout-tree screen)))
-                       (when (glfw:should-close-p window)
-                         (alloy:deallocate window)))
-                     (when (= 0 (alloy:element-count (alloy:root (alloy:layout-tree screen))))
-                       (window:close screen))
+                     (loop for window being the hash-values of (window::windows screen)
+                           do (when (glfw:should-close-p window)
+                                (alloy:deallocate window)))
                      (let ((dt (float (/ (- (get-internal-real-time) start) INTERNAL-TIME-UNITS-PER-SECOND) 0f0)))
-                       (org.shirakumo.alloy.animation:update screen dt)
+                       (loop for window being the hash-values of (window::windows screen)
+                             do (org.shirakumo.alloy.animation:update window dt))
                        (setf start (get-internal-real-time)))
                      (with-simple-restart (abort "Abort the frame render")
-                       (alloy:render screen screen))))
-       (when screen (alloy:deallocate screen))
+                       (loop for window being the hash-values of (window::windows screen)
+                             do (alloy:render window window)))))
        (glfw:shutdown)))))
 
 (defmacro with-screen ((screen &rest args) &body init-body)
@@ -116,28 +114,39 @@
   ((cursor :reader window:cursor)
    (icon :initarg :icon :accessor window:icon)
    (cursor-location :initform (alloy:px-point 0 0) :accessor cursor-location)
-   (background-color :initarg :background-color :initform colors:black :accessor window:background-color)))
+   (background-color :initarg :background-color :initform colors:black :accessor window:background-color)
+   (alloy:bounds :initform (alloy:px-extent) :accessor alloy:bounds)))
 
 (defmethod initialize-instance :after ((window window) &key)
   (setf (slot-value window 'cursor) (make-instance 'cursor :window window)))
 
-(defmethod window:make-window ((screen screen) &key (title window:*default-window-title*)
-                                                    (icon window:*default-window-icon*)
-                                                    (bounds window:*default-window-bounds*)
-                                                    (decorated-p T) (state :normal)
-                                                    (resizable-p T)
-                                                    (background-color colors:black)
-                                                    (class 'window)
-                                                    min-size max-size preferred-size always-on-top-p
-                                                    &allow-other-keys)
-  (let ((window (make-instance class :parent screen
-                                     :focus-parent (alloy:root (alloy:focus-tree screen))
-                                     :layout-parent (alloy:root (alloy:layout-tree screen))
-                                     :title title
-                                     :size bounds
-                                     :decorated decorated-p
-                                     :resizable resizable-p
-                                     :background-color background-color)))
+(defun remf* (plist &rest keys)
+  (loop for (k v) on plist by #'cddr
+        for found = (member k keys)
+        unless found collect k
+        unless found collect v))
+
+(defmethod window:make-window ((screen screen) &rest args
+                               &key (title window:*default-window-title*)
+                                    (icon window:*default-window-icon*)
+                                    (bounds window:*default-window-bounds*)
+                                    (decorated-p T)
+                                    (state :normal)
+                                    (resizable-p T)
+                                    (background-color colors:black)
+                                    (class 'window)
+                                    min-size max-size preferred-size always-on-top-p
+                                    parent
+                               &allow-other-keys)
+  (declare (ignore parent))
+  (let ((window (apply #'make-instance class
+                       :title title
+                       :size bounds
+                       :decorated decorated-p
+                       :resizable resizable-p
+                       :background-color background-color
+                       (remf* args :icon :bounds :decorated :state :resizable :background-color :class
+                                   :min-size :max-size :preferred-size :always-on-top-p))))
     (when (typep bounds 'alloy:extent)
       (setf (glfw:location window) (list (round (alloy:pxx bounds)) (round (alloy:pxy bounds)))))
     (when min-size (setf (window:min-size window) min-size))
@@ -151,25 +160,17 @@
       (when preferred-size
         (alloy:suggest-size preferred-size window)))
     (alloy:allocate window)
-    (alloy:render screen window)
+    (alloy:render window window)
     window))
 
 (defmethod window:close ((window window))
   (setf (glfw:should-close-p window) T))
 
-(defmethod animation:update ((window window) dt)
-  (animation:update (window:layout-element window) dt))
+(defmethod alloy:leave :after ((window window) (screen screen))
+  (when (= 0 (hash-table-count (window::windows screen)))
+    (window:close screen)))
 
-(defmethod alloy:register ((window window) (screen screen)))
-
-(defmethod alloy:deallocate :before ((window window))
-  (alloy:leave window (alloy:layout-parent window)))
-
-(defmethod alloy:prepare-for-render :after ((window window) (screen screen))
-  (when (window:layout-element window)
-    (alloy:prepare-for-render (window:layout-element window) window)))
-
-(defmethod alloy:render ((screen screen) (window window))
+(defmethod alloy:render ((window window) (renderer window))
   (glfw:make-current NIL)
   (glfw:make-current window)
   (gl:clear-color (colored:red (window:background-color window))
@@ -179,8 +180,7 @@
   (gl:clear :color-buffer :depth-buffer :stencil-buffer)
   (destructuring-bind (w h) (glfw:framebuffer-size window)
     (gl:viewport 0 0 w h))
-  (when (window:layout-element window)
-    (alloy:render window (window:layout-element window)))
+  (call-next-method)
   (glfw:swap-buffers window))
 
 (defmethod alloy:maybe-render ((screen screen) (window window))
@@ -188,8 +188,7 @@
   (glfw:make-current window)
   (destructuring-bind (w h) (glfw:framebuffer-size window)
     (gl:viewport 0 0 w h))
-  (when (window:layout-element window)
-    (alloy:maybe-render window (window:layout-element window)))
+  (call-next-method)
   ;; FIXME: only do this if anything was actually done.
   (glfw:swap-buffers window))
 
@@ -223,28 +222,15 @@
                                           (when value (round (alloy:pxh value)))))
     value))
 
-(defmethod alloy:suggest-size (size (window window))
-  (setf (glfw:size window) (list (round (alloy:pxw size)) (round (alloy:pxh size)))))
-
 (defmethod (setf alloy:location) :after (location (window window))
   (setf (glfw:location window) (list (round (alloy:pxx location)) (round (alloy:pxy location)))))
 
-(defmethod (setf alloy:bounds) :after (extent (window window))
-  (let ((target (simple:transform-matrix window)))
-    (simple:orthographic-matrix (alloy:pxw extent) (alloy:pxh extent) target)
-    (setf (simple:identity-matrix window) (copy-seq target))))
+(defmethod (setf alloy:bounds) :before ((size alloy:size) (window window))
+  (setf (glfw:size window) (list (round (alloy:pxw size)) (round (alloy:pxh size)))))
 
-(defmethod alloy:dots-per-cm ((window window))
-  (alloy:dots-per-cm (parent window)))
-
-(defmethod alloy:target-resolution ((window window))
-  (alloy:target-resolution (parent window)))
-
-(defmethod alloy:resolution-scale ((window window))
-  (alloy:resolution-scale (parent window)))
-
-(defmethod alloy:base-scale ((window window))
-  (alloy:base-scale (parent window)))
+(defmethod (setf alloy:bounds) :before ((extent alloy:extent) (window window))
+  (ignore-errors
+   (setf (glfw:location window) (list (round (alloy:pxx extent)) (round (alloy:pxy extent))))))
 
 (defmethod alloy:cursor ((window window))
   (or (window:icon window)
@@ -311,10 +297,7 @@
   state)
 
 (defun handle (window ev)
-  (if (typep ev '(or alloy:pointer-event window:window-event))
-      (or (alloy:handle ev (alloy:focus-tree (parent window)))
-          (alloy:handle ev window))
-      (alloy:handle ev (parent window))))
+  (alloy:handle ev window))
 
 (defmethod glfw:key-changed ((window window) key code action mods)
   (case action
@@ -364,7 +347,7 @@
   (handle window (make-instance 'window:state :new-state (if iconify :minimized (window:state window)))))
 
 (defmethod glfw:window-focused ((window window) focused)
-  (setf (alloy:focus window) (if focused
+  #++(setf (alloy:focus window) (if focused
                                  (or (alloy:focus window) :strong)
                                  NIL)))
 
@@ -375,12 +358,17 @@
   (handle window (make-instance 'window:close)))
 
 (defmethod glfw:window-resized ((window window) w h)
-  (let ((bounds (alloy:bounds window)))
-    (setf (alloy:bounds window) (alloy:px-extent (alloy:pxx bounds) (alloy:pxy bounds) w h))))
+  (let* ((bounds (alloy:bounds window))
+         (extent (alloy:px-extent (alloy:pxx bounds) (alloy:pxy bounds) w h)))
+    (setf (slot-value window 'alloy:bounds) extent)
+    (alloy:suggest-size extent window)
+    (let ((target (simple:transform-matrix window)))
+      (simple:orthographic-matrix (alloy:pxw extent) (alloy:pxh extent) target)
+      (setf (simple:identity-matrix window) (copy-seq target)))))
 
 (defmethod glfw:window-moved ((window window) x y)
   (let ((bounds (alloy:bounds window)))
-    (setf (alloy:bounds window) (alloy:px-extent x y (alloy:pxw bounds) (alloy:pxh bounds)))))
+    (setf (slot-value window 'alloy:bounds) (alloy:px-extent x y (alloy:pxw bounds) (alloy:pxh bounds)))))
 
 (defmethod glfw:file-dropped ((window window) files)
   (handle window (make-instance 'alloy:drop-event :paths files)))
