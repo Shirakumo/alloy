@@ -538,12 +538,18 @@
         (setf (cursor (ui tree)) NIL))
       (decline)))
 
-(defmethod suggest-size (size (tree layout-tree))
+(defmethod suggest-size ((size size) (tree layout-tree))
   (let ((root (root tree))
         (popups (popups tree)))
     (suggest-size size root)
     (setf (bounds root) size)
     (setf (bounds popups) size)))
+
+(defmethod suggest-size ((size extent) (tree layout-tree))
+  ;; We do this since the layout tree is always at 0,0 and we want to ensure
+  ;; any size we pass on does not include the offset.
+  (let ((size (size (w size) (h size))))
+    (suggest-size size tree)))
 
 (defmethod refresh ((tree layout-tree))
   (refresh (root tree))
