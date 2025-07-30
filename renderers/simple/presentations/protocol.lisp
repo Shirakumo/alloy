@@ -124,7 +124,8 @@
   ;; one that takes into visual representation produced by RENDERER. Otherwise
   ;; the sizing strategy in RENDERABLE must a user-supplied one, so leave it
   ;; alone in that case.
-  (when (eq (alloy:sizing-strategy renderable) alloy::*fallback-sizing-strategy*)
+  (when (and (typep renderable 'alloy:layout-element)
+             (eq (alloy:sizing-strategy renderable) alloy::*fallback-sizing-strategy*))
     (setf (alloy:sizing-strategy renderable) (compute-sizing-strategy renderer renderable))))
 
 (defmethod alloy:refresh :after ((renderable renderable))
