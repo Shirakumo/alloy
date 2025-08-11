@@ -4,7 +4,7 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "Alloy windowing backend implementation using native Framebuffers"
-  :homepage "https://github.com/Shirakumo/alloy"
+  :homepage "https://shirakumo.org/project/alloy"
   :serial T
   :components ((:file "package")
                (:file "renderer")

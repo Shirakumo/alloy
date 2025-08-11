@@ -9,7 +9,7 @@ Alloy is a user interface toolkit. It is defined through a set of protocols that
 A set of simple examples for Alloy can be found in the ``examples`` directory of the source tree.
 
 # Helping Out
-If you are looking for tasks to help Alloy along, please see the various todo comments in the code base, open "issue tickets"(https://github.com/shirakumo/alloy/issues) on GitHub, and the "TODO file"(link TODO.mess).
+If you are looking for tasks to help Alloy along, please see the various todo comments in the code base, open "issue tickets"(https://shirakumo.org/project/alloy/issues) on GitHub, and the "TODO file"(link TODO.mess).
 
 # Alloy Protocols
 Alloy is structured as a family of protocols. This allows it to be very flexible, and allows you, the user, to put together the system in a way that fits your needs. The Alloy project (henceforth "the project"), consists of the following set of protocols:

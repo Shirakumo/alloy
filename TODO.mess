@@ -19,7 +19,7 @@ The following component types would be very nice to offer as well:
 - ``color``
   Present a color picker popup with an HSV arrangement
 - ``file``
-  Opens the file dialog. This either requires the ''file-select''(https://shinmera.github.io/file-select) library which introduces a CFFI dependency, or implementing our own dialog. The former is problematic due to dependency chains, so should be an optional system, and the latter is a lot of effort to implement.
+  Opens the file dialog. This either requires the ''file-select''(https://shinmera.com/docs/file-select) library which introduces a CFFI dependency, or implementing our own dialog. The former is problematic due to dependency chains, so should be an optional system, and the latter is a lot of effort to implement.
 - ``password``
   A simple variation on the standard ``input-line`` that optionally hides the input with a toggle-button to show it.
 
@@ -42,7 +42,7 @@ Currently we rely on the user to supply actual DPI information about the real sy
 An implementation of the Simple shape drawing protocol using a native Lisp software rasteriser (outputting to an UB8 packed array) would be great as a step-in for direct rendering interfaces. Libraries like Vecto and cl-vectors should aid in this. One concern is the ultimate rendering performance since Alloy's partial redrawing protocol is underbaked atm.
 
 ### Framebuffer Backend
-With the new ''Framebuffers''(https://shirakumo.github.io/framebuffers) library and the above software rasteriser we should have the path cleared for a fully lisp-native backend. This extension would implement the windowing protocol similar to alloy-glfw and tie it into the software rasteriser backend.
+With the new ''Framebuffers''(https://shirakumo.org/docs/framebuffers) library and the above software rasteriser we should have the path cleared for a fully lisp-native backend. This extension would implement the windowing protocol similar to alloy-glfw and tie it into the software rasteriser backend.
 
 ## High Effort Tasks
 ### Cocoa Backend
@@ -83,10 +83,10 @@ This should probably be an independent library that implements a general text la
 
 So given a box to fit the text in and a string, the layouter should take care of:
 
-- Line breaking (See 'UAX-14''(https://shinmera.github.io/uax-14))
+- Line breaking (See 'UAX-14''(https://shinmera.com/docs/uax-14))
 - LtR, RtL, TtB, BtT orientations
 - Start/End/Middle alignment in both directions
-- BiDi text flipping (See ''UAX-9''(https://shinmera.github.io/uax-9))
+- BiDi text flipping (See ''UAX-9''(https://shinmera.com/docs/uax-9))
 - Combining diacritics
 - Switching and combining of text styling (bold, italic, supertext, subtext, strike, underline, monospace, outline, etc)
 - Selecting the correct font for any particular glyph based on a fallback chain

@@ -4,7 +4,7 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "Tests for the Alloy UI protocol."
-  :homepage "https://github.com/Shirakumo/alloy"
+  :homepage "https://shirakumo.org/project/alloy"
   :serial T
   :components ((:file "alloy")
                (:file "container")
